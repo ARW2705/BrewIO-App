@@ -1,0 +1,7 @@
+{
+  "name": "brewIO-app",
+  "integrations": {
+    "cordova": {}
+  },
+  "type": "ionic-angular"
+}
