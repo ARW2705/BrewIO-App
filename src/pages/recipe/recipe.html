@@ -1,0 +1,29 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>Recipes</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content>
+
+  <section *ngIf="hasActiveBatch">
+    Show active batch info here
+  </section>
+
+  <button>
+    Create New Recipe Master
+  </button>
+
+  <section *ngIf="masterList">
+    <ion-list>
+      <ion-item *ngFor="let master of masterList; index as i">
+        <ion-label (click)="expandMaster(i)">{{ master.name }}</ion-label>
+        <ion-item *ngIf="showExpandedMaster(i)">
+          Show more master details
+          <button (click)="navigateToMasterDetail(i)">Nav to master</button>
+        </ion-item>
+      </ion-item>
+    </ion-list>
+  </section>
+
+</ion-content>
