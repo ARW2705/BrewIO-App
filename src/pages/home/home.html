@@ -1,17 +1,47 @@
 <ion-header>
   <ion-navbar>
-    <ion-title>Home</ion-title>
+    <ion-title>Brew IO</ion-title>
   </ion-navbar>
 </ion-header>
 
-<ion-content padding>
-  <h2>Welcome to Ionic!</h2>
-  <p>
-    This starter project comes with simple tabs-based layout for apps
-    that are going to primarily use a Tabbed UI.
-  </p>
-  <p>
-    Take a look at the <code>src/pages/</code> directory to add or change tabs,
-    update any existing page or create new pages.
-  </p>
+<ion-content>
+
+  <ion-grid>
+
+    <ion-row>
+      <ion-item>
+        <img src="assets/imgs/beer-glass.jpg" alt="A glass of beer">
+      </ion-item>
+    </ion-row>
+
+    <ion-row>
+      Welcome {{ user != null ? user.username: 'to BrewIO' }}!
+    </ion-row>
+
+    <ion-row *ngIf="user">
+      <ion-col>
+        In Progress shown here
+      </ion-col>
+      <ion-col>
+        Notifications shown here
+      </ion-col>
+    </ion-row>
+
+    <ion-row *ngIf="!user">
+      <ion-col>
+        login
+      </ion-col>
+      <ion-col>
+        signup
+      </ion-col>
+    </ion-row>
+
+    <!--
+      In Progress...shortcut to process
+      Notifications...show Notifications
+
+    -->
+
+  </ion-grid>
+
 </ion-content>
