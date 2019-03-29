@@ -1,0 +1,51 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>Recipe Overview</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content>
+
+  <section *ngIf="hasActiveBatch">
+    Show active batch info here
+  </section>
+
+  <button>
+    Create New Recipe
+  </button>
+
+  <section *ngIf="recipeMaster">
+
+
+    isPublic: boolean;
+    recipes: Array<Recipe>;
+    <ion-item>
+      {{ recipeMaster.name }}
+    </ion-item>
+    <ion-item>
+      {{ recipeMaster.style }}
+    </ion-item>
+    <ion-item>
+      {{ recipeMaster.isPublic }}
+      <ion-toggle [(ngModel)]="recipeMaster.isPublic"
+                  (ionChange)="setPublic()">
+      </ion-toggle>
+    </ion-item>
+    <ion-item>
+      <ion-label>Notes</ion-label>
+      <ion-item *ngFor="let note of recipeMaster.notes; index as i">
+        {{ note }}
+      </ion-item>
+    </ion-item>
+    <ion-list>
+      <ion-item *ngFor="let recipe of masterRecipe.recipes; index as i">
+        <ion-label (click)="expandRecipe(i)">{{ recipe.name }}<span *ngIf="isMaster(i)">F</span></ion-label>
+        <ion-item *ngIf="showExpandedRecipe(i)">
+          Show more recipe details
+          <button (click)="navigateToRecipeDetail(i)">Nav to recipe</button>
+        </ion-item>
+      </ion-item>
+    </ion-list>
+  </section>
+
+</ion-content>
