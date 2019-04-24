@@ -1,0 +1,72 @@
+calendar {
+  #calendar-card {
+    background: map-get($colors, gray-scale-4) !important;
+    -webkit-box-shadow: inset 0 0 40px 20px map-get($colors, gray-scale-3) !important;
+    box-shadow: inset 0 0 40px 20px map-get($colors, gray-scale-3) !important;
+  }
+  .day-header {
+    text-align: center;
+    border-bottom: 1px solid gray;
+  }
+  .day {
+    text-align: center;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 1em;
+    color: map-get($colors, gray-scale-10);
+    background-color: map-get($colors, gray-scale-7);
+    margin: 0 auto;
+  }
+  .day-span {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .day-button {
+
+  }
+  .change-month-button {
+    background: none;
+    text-align: center;
+    display: block;
+    margin: auto;
+    font-size: 1em;
+    min-width: 40px;
+    min-height: 40px;
+  }
+  .header-month {
+    text-align: center;
+    font-size: 1.5em;
+    color: map-get($colors, gray-scale-9);
+  }
+  .select-button {
+    color: map-get($colors, gray-scale-2);
+    width: 100%;
+    height: 100%;
+  }
+  .active {
+    background-color: map-get($colors, secondary);
+  }
+  .start {
+    button,
+    span {
+      color: map-get($colors, gray-scale-2);
+      background-color: map-get($colors, primary) !important;
+    }
+  }
+  .projected {
+    button,
+    span {
+      color: map-get($colors, gray-scale-2);
+      background-color: map-get($colors, secondary) !important;
+    }
+  }
+  .month {
+    button,
+    span {
+      color: map-get($colors, gray-scale-2);
+      background-color: map-get($colors, gray-scale-9);
+    }
+  }
+}

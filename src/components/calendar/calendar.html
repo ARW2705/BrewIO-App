@@ -1,0 +1,86 @@
+<ion-card id="calendar-card">
+  <ion-card-header no-padding>
+    <ion-card-title>
+      <ion-grid>
+        <ion-row align-items-center>
+          <ion-col col-2>
+            <button (click)="changeMonthYear('prev', 'months')"
+                    class="change-month-button">
+              <ion-icon color="primary"
+                        name="arrow-dropleft-circle"></ion-icon>
+            </button>
+          </ion-col>
+          <ion-col class="header-month">
+            {{ currentDate.format('MMMM') }}
+          </ion-col>
+          <ion-col col-2>
+            <button (click)="changeMonthYear('next', 'months')"
+                    class="change-month-button">
+              <ion-icon color="primary"
+                        name="arrow-dropright-circle"></ion-icon>
+            </button>
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <ion-col>
+            <button ion-button
+                    color="primary"
+                    [ngClass]="{
+                      'select-button': true,
+                      'active': editType == 'start'
+                    }"
+                    (click)="toggleEdit('start')">
+              Select Start
+            </button>
+          </ion-col>
+          <ion-col>
+            <button ion-button
+                    color="primary"
+                    class="select-button"
+                    [ngClass]="{
+                      'select-button': true,
+                      'active': editType == 'alerts'
+                    }"
+                    (click)="toggleEdit('alerts')">
+              Select Alerts
+            </button>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </ion-card-title>
+  </ion-card-header>
+  <ion-card-content no-padding>
+    <ion-grid>
+      <ion-row>
+        <ion-col *ngFor="let day of weekdays"
+                 class="day-header">
+          {{ day }}
+        </ion-col>
+      </ion-row>
+        <ion-row *ngFor="let week of month"
+                 class="week-row">
+          <ion-col *ngFor="let day of week"
+                   [ngClass]="{
+                     'projected': day.isProjected,
+                     'start': day.isStart,
+                     'month': day.isMonth
+                   }">
+            <button *ngIf="editType == 'start'"
+                    (click)="selectDay(day)"
+                    class="day day-button">
+              {{ day.mDate.date() }}
+            </button>
+            <button *ngIf="editType == 'alerts'"
+                    (click)="toggleProjectedDates(day)"
+                    class="day day-button">
+              {{ day.mDate.date() }}
+            </button>
+            <span *ngIf="editType == ''"
+                    class="day day-span">
+              {{ day.mDate.date() }}
+            </span>
+          </ion-col>
+        </ion-row>
+    </ion-grid>
+  </ion-card-content>
+</ion-card>
