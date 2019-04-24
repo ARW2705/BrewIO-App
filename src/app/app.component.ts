@@ -2,13 +2,10 @@ import { Component } from '@angular/core';
 import { Platform } from 'ionic-angular';
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
-import { NativeStorage } from '@ionic-native/native-storage/ngx';
 
 import { TabsPage } from '../pages/tabs/tabs';
 
-import { storageName } from '../shared/constants/storage-name';
-
-import { NativeStorageProvider } from '../providers/native-storage/native-storage';
+import { LibraryProvider } from '../providers/library/library';
 
 @Component({
   templateUrl: 'app.html'
@@ -19,23 +16,12 @@ export class MyApp {
   constructor(platform: Platform,
     statusBar: StatusBar,
     splashScreen: SplashScreen,
-    private nativeStorage: NativeStorage,
-    private storageUtil: NativeStorageProvider) {
+    private libraryService: LibraryProvider) {
     platform.ready().then(() => {
+      this.libraryService.fetchAllLibraries();
       statusBar.styleDefault();
-      this.storageUtil.checkStorage()
-        .subscribe(hasStorage => {
-          if (!hasStorage) {
-            this.nativeStorage.setItem(storageName, JSON.stringify([]))
-              .then(
-                () => console.log('Storage initialized'),
-                error => this.storageUtil.onNativeStorageError('Initialize storage', error)
-              )
-              .then(() => splashScreen.hide());
-          } else {
-            splashScreen.hide();
-          }
-        })
+      splashScreen.hide();
+      // TODO init storage once storage system has been implemented
     });
   }
 }
