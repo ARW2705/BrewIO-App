@@ -1,0 +1,204 @@
+<app-header [title]="title"></app-header>
+
+<ion-content>
+
+  <ion-grid id="process-grid">
+
+    <ng-container *ngIf="recipe && recipe.processSchedule.length">
+
+      <ion-row *ngIf="getViewStepType() == 'manual'">
+        <ion-col col-12>
+          <h2>{{ getViewStepName() }}</h2>
+        </ion-col>
+        <ion-col col-12>
+          <p>{{ getViewStepDescription() }}<p>
+        </ion-col>
+      </ion-row>
+
+      <ion-row *ngIf="getViewStepType() == 'timer'">
+
+        <ion-row *ngIf="viewStepIndex == recipe.currentStep"
+                 id="timer-master-controls">
+          <ion-col col-12>
+            <h2>All Timer Controls</h2>
+          </ion-col>
+          <ion-col col-6>
+            <button ion-button
+                    color="primary"
+                    class="button timer-button"
+                    (click)="setTimerFunction('start')">
+              Start All
+            </button>
+          </ion-col>
+          <ion-col col-6>
+            <button ion-button
+                    color="primary"
+                    class="button timer-button"
+                    (click)="setTimerFunction('stop')">
+              Stop All
+            </button>
+          </ion-col>
+          <ion-col col-6>
+            <button ion-button
+                    color="primary"
+                    class="button timer-button"
+                    (click)="setTimerFunction('add')">
+              +1min All
+            </button>
+          </ion-col>
+          <ion-col col-6>
+            <button ion-button
+                    color="secondary"
+                    class="button timer-button"
+                    (click)="setTimerFunction('reset')">
+              Reset All
+            </button>
+          </ion-col>
+          <ion-col col-12>
+            <button ion-button
+                    class="button timer-button"
+                    (click)="toggleShowDescription()">
+              {{ showDescription ? 'Hide Descriptions': 'Show Descriptions' }}
+            </button>
+          </ion-col>
+        </ion-row>
+
+        <ng-container *ngFor="let timer of timers[currentTimers]">
+
+          <ion-row *ngIf="viewStepIndex != recipe.currentStep" class="timer-summary-container">
+            <ion-col col-12>
+              <h2>{{ timer.timer.name }}</h2>
+            </ion-col>
+            <ion-col col-6>
+              <span>Duration: {{ getFormattedDurationString(timer.timer.duration) }}</span>
+            </ion-col>
+            <ion-col col-6>
+              <span>Intervals: {{ timer.timer.splitInterval }}</span>
+            </ion-col>
+            <ion-col col-12>
+              <p>{{ timer.timer.description }}<p>
+            </ion-col>
+          </ion-row>
+
+          <ng-container *ngIf="viewStepIndex == recipe.currentStep">
+
+            <ion-row class="timer-row">
+              <ion-col col-12>
+                <h2>{{ timer.timer.name }}</h2>
+              </ion-col>
+              <ion-col col-12
+                       *ngIf="showDescription"
+                       class="description">
+                <p>{{ timer.timer.description }}</p>
+              </ion-col>
+            </ion-row>
+
+            <ion-row align-items-center class="timer-row">
+              <ion-col>
+                <progress-circle [settings]="timer.settings"
+                                 (click)="toggleTimerControls(timer)">
+                </progress-circle>
+              </ion-col>
+              <ion-col *ngIf="isConcurrent && timer.show"
+                       [@slideInOut]
+                       class="timer-individual-controls">
+                <ion-row>
+                  <button ion-button
+                          color="primary"
+                          class="button timer-button"
+                          (click)="setTimerFunction('start', timer)">
+                    Start
+                  </button>
+                </ion-row>
+                <ion-row>
+                  <button ion-button
+                          color="primary"
+                          class="button timer-button"
+                          (click)="setTimerFunction('stop', timer)">
+                    Stop
+                  </button>
+                </ion-row>
+                <ion-row>
+                  <button ion-button
+                          color="primary"
+                          class="button timer-button"
+                          (click)="setTimerFunction('add', timer)">
+                    +1min
+                  </button>
+                </ion-row>
+                <ion-row>
+                  <button ion-button
+                          color="secondary"
+                          class="button timer-button"
+                          (click)="setTimerFunction('reset', timer)">
+                    Reset
+                  </button>
+                </ion-row>
+              </ion-col>
+            </ion-row>
+
+          </ng-container>
+
+        </ng-container>
+
+      </ion-row>
+
+      <ion-row *ngIf="getViewStepType() == 'calendar'">
+        <ion-col col-12>
+          <button class="button expand-button"
+                  (click)="toggleShowDescription()">
+            <h2>{{ getViewStepName() }}</h2>
+          </button>
+        </ion-col>
+        <ion-col col-12
+                 class="description"
+                 *ngIf="viewStepIndex != recipe.currentStep || showDescription">
+          <p>{{ getViewStepDescription() }}</p>
+        </ion-col>
+
+        <calendar #calendar *ngIf="viewStepIndex == recipe.currentStep" [data]="getCurrentStepCalendarData()"></calendar>
+      </ion-row>
+
+      <ion-row justify-content-between
+               id="step-control-buttons">
+        <ion-col>
+          <button ion-button
+                  color="primary"
+                  [disabled]="viewStepIndex == 0"
+                  (click)="changeStep('prev')">
+            <ion-icon class="nav-process-button"
+                      name="arrow-dropleft"></ion-icon>
+          </button>
+        </ion-col>
+        <ion-col *ngIf="viewStepIndex == recipe.currentStep">
+          <button ion-button
+                  class="nav-process-button"
+                  color="primary"
+                  (click)="completeStep()">
+            Done
+          </button>
+        </ion-col>
+        <ion-col *ngIf="viewStepIndex != recipe.currentStep">
+          <button ion-button
+                  class="nav-process-button"
+                  color="primary"
+                  (click)="goToActiveStep()">
+            Go To Active
+          </button>
+        </ion-col>
+        <ion-col>
+          <button ion-button
+                  color="primary"
+                  [disabled]="viewStepIndex >= recipe.processSchedule.length - 1"
+                  (click)="changeStep('next')">
+            <ion-icon class="nav-process-button"
+                      name="arrow-dropright"></ion-icon>
+          </button>
+        </ion-col>
+      </ion-row>
+
+    </ng-container>
+
+  </ion-grid>
+
+</ion-content>

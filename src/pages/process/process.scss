@@ -1,0 +1,58 @@
+page-process {
+  #process-grid {
+    padding-top: 56px;
+  }
+  #timer-master-controls {
+    text-align: center;
+    background: map-get($colors, gray-scale-4);
+    -webkit-box-shadow: inset 0 0 40px 20px map-get($colors, gray-scale-3);
+    box-shadow: inset 0 0 40px 20px map-get($colors, gray-scale-3);
+    .timer-button {
+      font-size: 1.3em;
+    }
+  }
+  #step-control-buttons {
+    ion-col {
+      flex-grow: 0;
+    }
+    ion-icon {
+      font-size: 2em;
+    }
+  }
+  .row {
+    justify-content: center;
+  }
+  .timer-row {
+    width: 100%;
+    ion-col {
+      h2 {
+        font-size: 2em;
+        text-align: center;
+      }
+    }
+  }
+  .timer-button {
+    font-size: 1.1em;
+    width: 100%;
+    color: map-get($colors, gray-scale-2);
+  }
+  .expand-button {
+    width: 100%;
+    background: transparent;
+    font-size: 2em;
+    color: map-get($colors, gray-scale-10);
+    h2 {
+      margin: 0.5rem 0 0;
+    }
+  }
+  .description {
+    p {
+      font-size: 1.5em;
+      margin: 0 !important;
+      text-align: center;
+    }
+  }
+  .nav-process-button {
+    color: map-get($colors, gray-scale-2);
+  }
+}
