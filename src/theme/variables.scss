@@ -24,7 +24,6 @@ $app-direction: ltr;
 
 
 
-
 // Named Color Variables
 // --------------------------------------------------
 // Named colors makes it easy to reuse colors on various components.
@@ -34,13 +33,85 @@ $app-direction: ltr;
 // The "primary" color is the only required color in the map.
 
 $colors: (
-  primary:    #488aff,
-  secondary:  #32db64,
-  danger:     #f53d3d,
-  light:      #f4f4f4,
-  dark:       #222
+  primary:               #40e0cf,
+  secondary:             #ff9649,
+  danger:                #fd4855,
+  light:                 #f4f4f4,
+  dark:                  #222,
+  gray-scale-1:          #161312,
+  gray-scale-2:          #32302f,
+  gray-scale-3:          #4a4a4a,
+  gray-scale-4:          #5a5a5a,
+  gray-scale-5:          #807c79,
+  gray-scale-6:          #a29d9a,
+  gray-scale-7:          #bab6b4,
+  gray-scale-8:          #dbdbdb,
+  gray-scale-9:          #f4f4f4,
+  gray-scale-10:         #ffffff
 );
 
+$background-color: map-get($colors, gray-scale-2);
+$toolbar-background: map-get($colors, gray-scale-2);
+$tabs-background: map-get($colors, primary);
+$text-color: map-get($colors, gray-scale-8);
+
+$tabs-md-tab-text-color-active: map-get($colors, gray-scale-1);
+$tabs-md-tab-text-color: map-get($colors, gray-scale-5);
+$tabs-md-tab-icon-color: map-get($colors, gray-scale-5);
+$tabs-md-tab-icon-color-active: map-get($colors, gray-scale-1);
+$toolbar-md-title-text-color: map-get($colors, primary);
+
+$button-md-background-color: map-get($colors, primary);
+$button-md-text-color: map-get($colors, gray-scale-1);
+
+$button-md-box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.2),
+                       0 1px 2px rgba(0, 0, 0, 0.5);
+
+.tabs-md .tab-button[aria-selected=true] {
+  background-color: map-get($colors, primary) !important;
+}
+
+.tabs-md .tab-button[aria-selected=false] {
+  background-color: map-get($colors, gray-scale-8) !important;
+}
+
+.item-md-primary,
+.item-divider-md-primary {
+  color: map-get($colors, gray-scale-1) !important;
+}
+
+.action-sheet-group { overflow: auto; }
+
+.scroll-content {
+  overflow-y: auto !important;
+}
+
+.item-inner {
+  box-shadow: none !important;
+}
+
+.item.item-block.item-md.item-toggle {
+  height: 100%;
+}
+
+.left-col {
+  text-align: left;
+}
+.right-col {
+  text-align: right;
+}
+
+.toggle-md .toggle-inner {
+  background-color: map-get($colors, gray-scale-4) !important;
+  width: 25px !important;
+  height: 25px !important;
+  top: -5px !important;
+  left: -2px !important;
+}
+
+.toggle-md.toggle-checked .toggle-inner {
+  background-color: map-get($colors, primary) !important;
+}
 
 // App iOS Variables
 // --------------------------------------------------
