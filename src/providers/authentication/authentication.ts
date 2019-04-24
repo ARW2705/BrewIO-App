@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { NativeStorage } from '@ionic-native/native-storage/ngx';
+import { Storage } from '@ionic/storage';
 import { Observable, Subject } from 'rxjs';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/catch';
@@ -32,6 +33,7 @@ export class AuthenticationProvider {
   private tokenKey: string = 'JWT';
 
   constructor(public http: HttpClient,
+    private storage: Storage,
     private nativeStorage: NativeStorage,
     private processHttpError: ProcessHttpErrorProvider,
     private storageUtils: NativeStorageProvider) {
@@ -72,7 +74,7 @@ export class AuthenticationProvider {
   }
 
   loadUserCredentials() {
-    this.nativeStorage.getItem(this.tokenKey)
+    this.storage.get(this.tokenKey)
       .then(
         token => {
           if (token) {
@@ -86,17 +88,13 @@ export class AuthenticationProvider {
               console.log('Token not found');
             }
           }
-        },
-        error => this.storageUtils.onNativeStorageError('Loading credentials', error)
-      );
+        }
+      )
+      .catch(err => console.log('loadUserCredentials', err));
   }
 
   storeUserCredentials(credentials: any) {
-    this.nativeStorage.setItem(this.tokenKey, JSON.stringify(credentials))
-      .then(
-        () => console.log('Stored Credentials'),
-        error => this.storageUtils.onNativeStorageError('Storing credentials', error)
-      );
+    this.storage.set(this.tokenKey, JSON.stringify(credentials));
     this.useCredentials(credentials);
   }
 
@@ -109,11 +107,8 @@ export class AuthenticationProvider {
   destroyUserCredentials() {
     this.authToken = undefined;
     this.clearUsername();
-    this.nativeStorage.remove(this.tokenKey)
-      .then(
-        () => console.log('JWT removed from storage'),
-        error => this.storageUtils.onNativeStorageError('Destroying credentials', error)
-      );
+    this.storage.remove(this.tokenKey)
+      .then(() => console.log('Removed token'));
   }
 
   logIn(user: any): Observable<any> {
