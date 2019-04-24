@@ -1,0 +1,91 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>Recipe General Details</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding>
+  <form [formGroup]="generalForm">
+    <ion-item *ngIf="formType == 'master'">
+      <ion-label floating>
+        Enter Recipe Name
+      </ion-label>
+      <ion-input type="text" formControlName="name"></ion-input>
+    </ion-item>
+    <ion-item *ngIf="formType == 'recipe'">
+      <ion-label floating>
+        Enter Batch Variant Name
+      </ion-label>
+      <ion-input type="text" formControlName="variantName"></ion-input>
+    </ion-item>
+    <ion-item *ngIf="formType == 'master'">
+      <ion-label floating>Select Style</ion-label>
+      <ion-select formControlName="style"
+                  okText="Okay"
+                  cancelText="Dismiss"
+                  [(ngModel)]="styleSelection"
+                  (ionChange)="onStyleSelection($event)"
+                  [compareWith]="compareWithFn">
+        <ion-option *ngFor="let style of styles"
+                    [value]="style">
+          {{ style.name }}
+        </ion-option>
+      </ion-select>
+    </ion-item>
+    <ion-item *ngIf="!(formType == 'master' && docMethod == 'update')">
+      <ion-label floating>Brewing Type</ion-label>
+      <ion-select formControlName="brewingType" okText="Okay" cancelText="Dismiss">
+        <ion-option value="extract">Extract</ion-option>
+        <ion-option value="biab">BIAB</ion-option>
+        <ion-option value="allgrain">All Grain</ion-option>
+      </ion-select>
+    </ion-item>
+    <ion-item *ngIf="!(formType == 'master' && docMethod == 'update')">
+      <ion-label floating>Efficiency</ion-label>
+      <ion-input formControlName="efficiency" type="number"></ion-input>
+    </ion-item>
+    <ion-item *ngIf="!(formType == 'master' && docMethod == 'update')">
+      <ion-label floating>Batch Volume</ion-label>
+      <ion-input formControlName="batchVolume" type="number"></ion-input>
+    </ion-item>
+    <ion-item *ngIf="!(formType == 'master' && docMethod == 'update')">
+      <ion-label floating>Boil Volume</ion-label>
+      <ion-input formControlName="boilVolume" type="number"></ion-input>
+    </ion-item>
+    <ion-item *ngIf="!(formType == 'master' && docMethod == 'update')">
+      <ion-label floating>Mash Volume</ion-label>
+      <ion-input formControlName="mashVolume" type="number"></ion-input>
+    </ion-item>
+    <ng-container *ngIf="formType == 'recipe'">
+      <ion-item>
+        <ion-label position="floating">Set as favorite</ion-label>
+        <ion-toggle formControlName="isFavorite" color="primary"></ion-toggle>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">Set as recipe master</ion-label>
+        <ion-toggle formControlName="isMaster" color="primary"></ion-toggle>
+      </ion-item>
+    </ng-container>
+    <ion-grid>
+      <ion-row>
+        <ion-col>
+          <button ion-button
+                  color="primary"
+                  class="formButton"
+                  (click)="dismiss()">
+            Cancel
+          </button>
+        </ion-col>
+        <ion-col>
+          <button ion-button
+                  color="primary"
+                  class="formButton"
+                  [disabled]="!generalForm.valid"
+                  (click)="onSubmit()">
+            Submit
+          </button>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </form>
+</ion-content>
