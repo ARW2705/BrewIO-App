@@ -1,0 +1,58 @@
+page-recipe-form {
+  #submit-button {
+    color: map-get($colors, gray-scale-1);
+    width: 100%;
+    margin-top: 15px;
+  }
+  .addition-button {
+    color: map-get($colors, gray-scale-1);
+    width: 100%;
+  }
+  .left-col {
+    text-align: left;
+  }
+  .right-col {
+    text-align: right;
+  }
+  .item-buttons,
+  .item-buttons .item-inner {
+    padding: 0 !important;
+  }
+  .item-buttons .label-md {
+    height: 100%;
+    margin: 0 !important;
+  }
+  .item-buttons .item-inner .input-wrapper .label.label-md button {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 1px;
+  }
+  .item-buttons .item-inner .input-wrapper .label.label-md button ion-grid {
+    height: 100%;
+  }
+  .other-ingredient-description {
+    text-align: left;
+    white-space: normal;
+  }
+  .grains-button {
+
+  }
+  .hops-button {
+
+  }
+  .yeast-button {
+
+  }
+  .other-ingredient-button {
+
+  }
+  ion-grid {
+    background: map-get($colors, gray-scale-4);
+    -webkit-box-shadew: inset 0 0 40px 20px map-get($colors, gray-scale-3);
+    box-shadow: inset 0 0 40px 20px map-get($colors, gray-scale-3);
+  }
+  ion-icon {
+    font-size: 2.5em;
+  }
+}
