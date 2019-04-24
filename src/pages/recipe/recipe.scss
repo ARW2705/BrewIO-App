@@ -1,3 +1,69 @@
 page-recipe {
-
+  #no-active-batch-header > h2 {
+    width: 100%;
+    text-align: center;
+  }
+  #create-button {
+    width: 100%;
+    margin: 10px 0;
+  }
+  #master-list {
+    width: 100%;
+    padding: 0 !important;
+    margin-top: 10px;
+  }
+  .expand-button {
+    padding: 0 10px;
+    ion-label {
+      margin: 13px 0 6px;
+    }
+  }
+  .recipe-card {
+    margin-bottom: 1px;
+    background: map-get($colors, gray-scale-4);
+    -webkit-box-shadow: inset 0 0 40px 20px map-get($colors, gray-scale-3);
+    box-shadow: inset 0 0 40px 20px map-get($colors, gray-scale-3);
+    ion-card-header {
+      padding: 0;
+    }
+    ion-item-divider {
+      background-color: map-get($colors, primary);
+    }
+    ion-item {
+      color: map-get($colors, gray-scale-9);
+      background-color: transparent;
+    }
+    ion-item:not(:last-child) {
+      border-bottom: 1px solid map-get($colors, gray-scale-7);
+    }
+  }
+  .card-divider {
+    border-bottom: 0 !important;
+  }
+  .recipe-name {
+    display: block;
+    color: map-get($colors, gray-scale-9);
+    font-size: 1.5em;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+  }
+  .master-summary-header {
+    ion-col {
+      font-size: 0.8em;
+      color: map-get($colors, gray-scale-9);
+      flex-grow: 0;
+      padding-right: 5px !important;
+    }
+  }
+  .master-summary-subheader {
+    ion-col {
+      p {
+        color: map-get($colors, gray-scale-7);
+      }
+    }
+  }
+  ion-label {
+    font-size: 1.5em;
+    margin: 5px 0 !important;
+  }
 }
