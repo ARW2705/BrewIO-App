@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import 'rxjs/add/operator/catch';
+import 'rxjs/add/operator/map';
 
 import { baseURL } from '../../shared/constants/base-url';
 import { apiVersion } from '../../shared/constants/api-version';
@@ -11,129 +12,117 @@ import { ProcessHttpErrorProvider } from '../process-http-error/process-http-err
 
 @Injectable()
 export class LibraryProvider {
+  private grainsLibrary: Array<Grains> = null;
+  private hopsLibrary: Array<Hops> = null;
+  private yeastLibrary: Array<Yeast> = null;
+  private styleLibrary: Array<Style> = null;
 
   constructor(public http: HttpClient,
     private processHttpError: ProcessHttpErrorProvider) {
     console.log('Hello LibraryProvider Provider');
   }
 
-  /* Grains Routes */
-
-  getAllGrains(): Observable<any> {
-    return this.http.get(baseURL + apiVersion + '/library/grains')
-      .catch(error => this.processHttpError.handleError(error));
+  getAllLibraries(): Observable<any> {
+    return Observable.forkJoin(
+      this.getGrainsLibrary(),
+      this.getHopsLibrary(),
+      this.getYeastLibrary(),
+      this.getStyleLibrary()
+    );
   }
 
-  postGrainsEntry(grains: Grains): Observable<any> {
-    return this.http.post(baseURL + apiVersion + '/library/grains', grains)
-      .catch(error => this.processHttpError.handleError(error));
+  getGrainsLibrary(): Observable<any> {
+    return this.grainsLibrary == null
+            ? this.fetchGrainsLibrary()
+            : Observable.of(this.grainsLibrary);
   }
 
-  getGrainsById(grainsId: string): Observable<any> {
-    return this.http.get(baseURL + apiVersion + `/library/grains/${grainsId}`)
-      .catch(error => this.processHttpError.handleError(error));
+  getGrainsById(grainId: string): Observable<any> {
+    let grains;
+    if (this.grainsLibrary != null) {
+      grains = this.grainsLibrary.find(entry => entry._id == grainId);
+    }
+    return grains != undefined
+            ? Observable.of(grains)
+            : this.fetchGrainsLibrary()
+              .map(library => library.find(entry => entry._id == grainId));
   }
 
-  patchGrainsById(grainsId: string, update: any): Observable<any> {
-    return this.http.patch(baseURL + apiVersion + `/library/grains/${grainsId}`, update)
-      .catch(error => this.processHttpError.handleError(error));
-  }
-
-  deleteGrainsById(grainsId: string): Observable<any> {
-    return this.http.delete(baseURL + apiVersion + `/library/grains/${grainsId}`)
-      .catch(error => this.processHttpError.handleError(error));
-  }
-
-  /* END Grains Routes */
-
-
-  /* Hops Routes */
-
-  getAllHops(): Observable<any> {
-    return this.http.get(baseURL + apiVersion + '/library/hops')
-      .catch(error => this.processHttpError.handleError(error));
-  }
-
-  postHopsEntry(hops: Hops): Observable<any> {
-    return this.http.post(baseURL + apiVersion + '/library/hops', hops)
-      .catch(error => this.processHttpError.handleError(error));
+  getHopsLibrary(): Observable<any> {
+    return this.hopsLibrary == null
+            ? this.fetchHopsLibrary()
+            : Observable.of(this.hopsLibrary);
   }
 
   getHopsById(hopsId: string): Observable<any> {
-    return this.http.get(baseURL + apiVersion + `/library/hops/${hopsId}`)
-      .catch(error => this.processHttpError.handleError(error));
+    let hops;
+    if (this.hopsLibrary != null) {
+      hops = this.hopsLibrary.find(entry => entry._id == hopsId);
+    }
+    return hops != undefined
+            ? Observable.of(hops)
+            : this.fetchHopsLibrary()
+              .map(library => library.find(entry => entry._id == hopsId));
   }
 
-  patchHopsById(hopsId: string, update: any): Observable<any> {
-    return this.http.patch(baseURL + apiVersion + `/library/hops/${hopsId}`, update)
-      .catch(error => this.processHttpError.handleError(error));
-  }
-
-  deleteHopsById(hopsId: string): Observable<any> {
-    return this.http.delete(baseURL + apiVersion + `/library/hops/${hopsId}`)
-      .catch(error => this.processHttpError.handleError(error));
-  }
-
-  /* END Hops Routes */
-
-
-  /* Yeast Routes */
-
-  getAllYeast(): Observable<any> {
-    return this.http.get(baseURL + apiVersion + '/library/yeast')
-      .catch(error => this.processHttpError.handleError(error));
-  }
-
-  postYeastEntry(yeast: Yeast): Observable<any> {
-    return this.http.post(baseURL + apiVersion + '/library/yeast', yeast)
-      .catch(error => this.processHttpError.handleError(error));
+  getYeastLibrary(): Observable<any> {
+    return this.yeastLibrary == null
+            ? this.fetchYeastLibrary()
+            : Observable.of(this.yeastLibrary);
   }
 
   getYeastById(yeastId: string): Observable<any> {
-    return this.http.get(baseURL + apiVersion + `/library/yeast/${yeastId}`)
+    let yeast;
+    if (this.yeastLibrary != null) {
+      yeast = this.yeastLibrary.find(entry => entry._id == yeastId);
+    }
+    return yeast != undefined
+            ? Observable.of(yeast)
+            : this.fetchYeastLibrary()
+              .map(library => library.find(entry => entry._id == yeastId));
+  }
+
+  getStyleLibrary(): Observable<any> {
+    return this.styleLibrary == null
+            ? this.fetchStyleLibrary()
+            : Observable.of(this.styleLibrary);
+  }
+
+  fetchAllLibraries() {
+    this.fetchGrainsLibrary();
+    this.fetchHopsLibrary();
+    this.fetchYeastLibrary();
+    this.fetchStyleLibrary();
+  }
+
+  fetchGrainsLibrary(): Observable<any> {
+    return this.http.get(baseURL + apiVersion + '/library/grains')
+      .map((grains: Array<Grains>) => this.grainsLibrary = grains.sort(this.sortAlpha))
       .catch(error => this.processHttpError.handleError(error));
   }
 
-  patchYeastById(yeastId: string, update: any): Observable<any> {
-    return this.http.patch(baseURL + apiVersion + `/library/yeast/${yeastId}`, update)
+  fetchHopsLibrary(): Observable<any> {
+    return this.http.get(baseURL + apiVersion + '/library/hops')
+      .map((hops: Array<Hops>) => this.hopsLibrary = hops.sort(this.sortAlpha))
       .catch(error => this.processHttpError.handleError(error));
   }
 
-  deleteYeastById(yeastId: string): Observable<any> {
-    return this.http.delete(baseURL + apiVersion + `/library/yeast/${yeastId}`)
+  fetchYeastLibrary(): Observable<any> {
+    return this.http.get(baseURL + apiVersion + '/library/yeast')
+      .map((yeast: Array<Yeast>) => this.yeastLibrary = yeast.sort(this.sortAlpha))
       .catch(error => this.processHttpError.handleError(error));
   }
 
-  /* END Yeast Routes */
-
-
-  /* Style Routes */
-
-  getAllStyle(): Observable<any> {
+  fetchStyleLibrary(): Observable<any> {
     return this.http.get(baseURL + apiVersion + '/library/style')
+      .map((style: Array<Style>) => this.styleLibrary = style.sort(this.sortAlpha))
       .catch(error => this.processHttpError.handleError(error));
   }
 
-  postStyleEntry(style: Style): Observable<any> {
-    return this.http.post(baseURL + apiVersion + '/library/style', style)
-      .catch(error => this.processHttpError.handleError(error));
+  private sortAlpha(a, b) {
+    if (a.name < b.name) return -1;
+    if (a.name > b.name) return 1;
+    return 0;
   }
-
-  getStyleById(styleId: string): Observable<any> {
-    return this.http.get(baseURL + apiVersion + `/library/style/${styleId}`)
-      .catch(error => this.processHttpError.handleError(error));
-  }
-
-  patchStyleById(styleId: string, update: any): Observable<any> {
-    return this.http.patch(baseURL + apiVersion + `/library/style/${styleId}`, update)
-      .catch(error => this.processHttpError.handleError(error));
-  }
-
-  deleteStyleById(styleId: string): Observable<any> {
-    return this.http.delete(baseURL + apiVersion + `/library/style/${styleId}`)
-      .catch(error => this.processHttpError.handleError(error));
-  }
-
-  /* END Style Routes */
 
 }
