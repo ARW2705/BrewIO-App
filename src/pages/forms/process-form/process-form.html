@@ -1,0 +1,72 @@
+<app-header [title]="title"></app-header>
+
+<ion-header>
+  <ion-navbar>
+    <ion-title>process-form</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding>
+
+  <form [formGroup]="processForm">
+    <ion-item>
+      <ion-label floating>Name</ion-label>
+      <ion-input type="text" formControlName="name"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label floating>Description</ion-label>
+      <ion-textarea rows="3" formControlName="description"></ion-textarea>
+    </ion-item>
+    <ion-item *ngIf="stepType == 'manual'">
+      <ion-label floating>Expected Duration</ion-label>
+      <ion-input type="number" formControlName="expectedDuration"></ion-input>
+    </ion-item>
+    <ng-container *ngIf="stepType != 'manual'">
+      <ion-item>
+        <ion-label floating>Duration {{ stepType == 'timer' ? '(Minutes)': '(Days)' }}</ion-label>
+        <ion-input type="number" formControlName="duration"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label floating>Split Interval</ion-label>
+        <ion-input type="number" formControlName="splitInterval"></ion-input>
+      </ion-item>
+      <ion-item *ngIf="stepType == 'timer'">
+        <ion-label position="floating">Concurrent</ion-label>
+        <ion-toggle formControlName="concurrent" color="primary"></ion-toggle>
+      </ion-item>
+    </ng-container>
+
+    <ion-grid>
+      <ion-row>
+        <ion-col>
+          <button ion-button
+                  color="primary"
+                  class="formButton"
+                  (click)="dismiss()">
+            Cancel
+          </button>
+        </ion-col>
+        <ion-col>
+          <button ion-button
+                  color="primary"
+                  class="formButton"
+                  [disabled]="!processForm.valid"
+                  (click)="onSubmit()">
+            Submit
+          </button>
+        </ion-col>
+      </ion-row>
+      <ion-row *ngIf="formMode == 'update'">
+        <ion-col>
+          <button ion-button
+                  color="danger"
+                  class="formButton"
+                  (click)="deleteStep()">
+            Delete
+          </button>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </form>
+
+</ion-content>
