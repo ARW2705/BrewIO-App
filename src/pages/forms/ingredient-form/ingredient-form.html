@@ -1,0 +1,156 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>{{ title | titlecase }}</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding>
+
+  <ion-grid *ngIf="ingredientForm">
+
+    <form [formGroup]="ingredientForm">
+
+      <ion-row *ngIf="ingredientLibrary">
+        <ion-col>
+          <ion-item>
+            <ion-label floating>Select {{ ingredientType | titlecase }}</ion-label>
+            <ion-select formControlName="type"
+                        okText="Okay"
+                        cancelText="Dismiss">
+              <ion-option *ngFor="let ingredient of ingredientLibrary"
+                          [value]="ingredient">
+                {{ ingredient.name }}
+              </ion-option>
+            </ion-select>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+
+      <!-- GRAIN BILL SPECIFIC -->
+
+      <ion-row *ngIf="ingredientType == 'grains'">
+        <ion-col>
+          <ion-item>
+            <ion-label floating>Quantity</ion-label>
+            <ion-input type="number" formControlName="quantity"></ion-input>
+          </ion-item>
+        </ion-col>
+        <ion-col>
+          <ion-item>
+            <ion-label floating>Mill Setting</ion-label>
+            <ion-input type="number" formControlName="mill"></ion-input>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+
+    <!-- HOPS SCHEDULE SPECIFIC -->
+
+      <ion-row *ngIf="ingredientType == 'hops'">
+        <ion-col>
+          <ion-item>
+            <ion-label floating>Quantity</ion-label>
+            <ion-input type="number" formControlName="quantity"></ion-input>
+          </ion-item>
+        </ion-col>
+        <ion-col>
+          <ion-item>
+            <ion-label floating>Add At</ion-label>
+            <ion-input type="number" formControlName="addAt"></ion-input>
+          </ion-item>
+        </ion-col>
+        <ion-col>
+          <ion-item>
+            <ion-label>Dry Hop</ion-label>
+            <ion-toggle formControlName="dryHop"></ion-toggle>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+
+    <!-- YEAST BATCH SPECIFIC -->
+
+      <ion-row *ngIf="ingredientType == 'yeast'">
+        <ion-col>
+          <ion-item>
+            <ion-label floating>Quantity</ion-label>
+            <ion-input type="number" formControlName="quantity"></ion-input>
+          </ion-item>
+        </ion-col>
+        <ion-col>
+          <ion-item>
+            <ion-label>Starter</ion-label>
+            <ion-toggle formControlName="requiresStarter"></ion-toggle>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+
+    <!-- OTHER INGREDIENTS -->
+
+      <ion-row *ngIf="ingredientType == 'otherIngredients'">
+        <ion-col col-6>
+          <ion-item>
+            <ion-label floating>Name</ion-label>
+            <ion-input type="text" formControlName="name"></ion-input>
+          </ion-item>
+        </ion-col>
+        <ion-col col-6>
+          <ion-item>
+            <ion-label floating>Type</ion-label>
+            <ion-input type="text" formControlName="type"></ion-input>
+          </ion-item>
+        </ion-col>
+        <ion-col col-6>
+          <ion-item>
+            <ion-label floating>Quantity</ion-label>
+            <ion-input type="number" formControlName="quantity"></ion-input>
+          </ion-item>
+        </ion-col>
+        <ion-col col-6>
+          <ion-item>
+            <ion-label floating>Units</ion-label>
+            <ion-input type="text" formControlName="units"></ion-input>
+          </ion-item>
+        </ion-col>
+        <ion-col col-12>
+          <ion-item>
+            <ion-label floating>Description</ion-label>
+            <ion-textarea rows="3" formControlName="description"></ion-textarea>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+
+      <ion-row>
+        <ion-col>
+          <button ion-button
+                  class="form-button"
+                  color="primary"
+                  (click)="dismiss()">
+            Cancel
+          </button>
+        </ion-col>
+        <ion-col>
+          <button ion-button
+                  class="form-button"
+                  color="primary"
+                  [disabled]="!ingredientForm.valid"
+                  (click)="onSubmit()">
+            Submit
+          </button>
+        </ion-col>
+      </ion-row>
+      
+      <ion-row *ngIf="formType == 'update'">
+        <ion-col>
+          <button ion-button
+                  class="form-button"
+                  color="danger"
+                  (click)="onDeletion()">
+            Delete
+          </button>
+        </ion-col>
+      </ion-row>
+
+    </form>
+
+  </ion-grid>
+
+</ion-content>
