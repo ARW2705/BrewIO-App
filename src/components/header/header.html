@@ -1,0 +1,29 @@
+<ion-header>
+  <ion-navbar>
+    <ion-grid no-padding>
+      <ion-row>
+        <ion-col align-self-center>
+          <ion-title>{{ title }}</ion-title>
+        </ion-col>
+        <ion-col>
+          <button ion-button
+                  float-right
+                  *ngIf="!username"
+                  (click)="openLogin()">
+            Log In
+          </button>
+          <ion-row *ngIf="username">
+            <ion-col col-12
+                     class="login-header-text">
+              Logged in as...
+            </ion-col>
+            <ion-col col-12
+                     class="login-header-text">
+              {{ username }}
+            </ion-col>
+          </ion-row>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </ion-navbar>
+</ion-header>

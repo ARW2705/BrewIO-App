@@ -1,0 +1,10 @@
+app-header {
+  .login-header-text {
+    text-align: right;
+    padding: 0 5px 0 0;
+    color: map-get($colors, primary);
+  }
+  .toolbar-title.toolbar-title-md {
+    // padding: 0;
+  }
+}
