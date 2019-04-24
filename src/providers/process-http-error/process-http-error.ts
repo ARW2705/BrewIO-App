@@ -13,9 +13,13 @@ export class ProcessHttpErrorProvider {
   handleError(error: HttpErrorResponse | any) {
     let errMsg: string;
     if (error instanceof HttpErrorResponse) {
+      console.log('handle error', error);
       const errStatus = error.status ? error.status: 503;
       const errText = error.status ? error.statusText: 'Service unavailable';
-      errMsg = `<${errStatus}> ${errText || ''}`;
+      const additionalText = error.error.name == 'ValidationError'
+                             ? error.error.message
+                             : '';
+      errMsg = `<${errStatus}> ${errText || ''}: ${additionalText}`;
     } else {
       errMsg = (error.message) ? error.message: error.toString();
     }
