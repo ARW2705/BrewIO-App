@@ -1,0 +1,35 @@
+<div class="progress-circle-container">
+  <svg [attr.height]="settings.height"
+       [attr.width]="settings.width">
+    <circle #circle
+            class="progress-circle"
+            [attr.stroke-dasharray]="settings.circle.strokeDasharray"
+            [attr.stroke-dashoffset]="settings.circle.strokeDashoffset"
+            [attr.stroke-width]="settings.circle.strokeWidth"
+            [attr.stroke]="settings.circle.stroke"
+            [attr.fill]="settings.circle.fill"
+            [attr.r]="settings.circle.radius"
+            [attr.cx]="settings.circle.originX"
+            [attr.cy]="settings.circle.originY"/>
+    <text #timerText
+          [attr.x]="settings.text.textX"
+          [attr.y]="settings.text.textY"
+          [attr.text-anchor]="settings.text.textAnchor"
+          [attr.fill]="settings.text.fill"
+          [attr.font-size]="settings.text.fontSize"
+          [attr.font-family]="settings.text.fontFamily"
+          [attr.dy]="settings.text.dY">
+      {{ settings.text.content }}
+    </text>
+    <text #nameText
+          [attr.x]="settings.text.textX"
+          [attr.y]="settings.text.textY"
+          [attr.text-anchor]="settings.text.textAnchor"
+          [attr.fill]="settings.text.fill"
+          [attr.font-size]="settings.text.smallFontSize"
+          [attr.font-family]="settings.text.fontFamily"
+          [attr.dy]="settings.text.smallDY">
+      {{ settings.text.name }}
+    </text>
+  </svg>
+</div>
