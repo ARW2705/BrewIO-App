@@ -1,10 +1,13 @@
-import { CalendarStep, ManualStep, TimerStep } from './process-steps';
-
 export interface Process {
-  _id: string;
-  createdAt: string;
-  updatedAt: string;
-  calendarSteps: Array<CalendarStep>;
-  manualSteps: Array<ManualStep>;
-  timerSteps: Array<TimerStep>;
+  _id?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  type: string;
+  name: string;
+  description?: string;
+  startDatetime?: string;
+  splitInterval?: number;
+  expectedDuration?: number;
+  concurrent?: boolean;
+  duration?: number;
 };
