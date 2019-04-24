@@ -1,0 +1,40 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>Log In</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding>
+  <form [formGroup]="loginForm">
+    <ion-item>
+      <ion-label floating>Username</ion-label>
+      <ion-input type="text" formControlName="username"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label floating>Password</ion-label>
+      <ion-input type="{{ showPassword ? 'text': 'password' }}" formControlName="password"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label>Show Password</ion-label>
+      <ion-checkbox (ionChange)="togglePasswordVisible()"></ion-checkbox>
+    </ion-item>
+    <ion-item>
+      <ion-label>Remember Me</ion-label>
+      <ion-checkbox formControlName="remember"></ion-checkbox>
+    </ion-item>
+  </form>
+  <button ion-button
+          color="primary"
+          (click)="dismiss()">
+    Cancel
+  </button>
+  <button ion-button
+          color="primary"
+          (click)="onSubmit()"
+          [disabled]="!loginForm.valid">
+    Submit
+  </button>
+  <ng-container *ngIf="errMsg">
+    Error {{ errMsg }}
+  </ng-container>
+</ion-content>
