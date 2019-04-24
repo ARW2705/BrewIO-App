@@ -1,51 +1,152 @@
-<ion-header>
-  <ion-navbar>
-    <ion-title>Recipe Overview</ion-title>
-  </ion-navbar>
-</ion-header>
+<app-header [title]="title"></app-header>
 
 <ion-content>
 
-  <section *ngIf="hasActiveBatch">
-    Show active batch info here
-  </section>
+  <ion-grid id="batch-grid">
 
-  <button>
-    Create New Recipe
-  </button>
+    <ion-row id="active-batch-summary"
+             *ngIf="hasActiveBatch">
+      Show active batch info here
+    </ion-row>
 
-  <section *ngIf="recipeMaster">
+    <ion-row>
+      <button ion-button
+              class="form-button"
+              (click)="navToRecipeForm('master')">
+        Update {{ recipeMaster.name }}
+      </button>
+    </ion-row>
 
+    <ion-row>
+      <button ion-button
+              class="form-button"
+              (click)="navToRecipeForm('recipe')">
+        Create New Batch
+      </button>
+    </ion-row>
 
-    isPublic: boolean;
-    recipes: Array<Recipe>;
-    <ion-item>
-      {{ recipeMaster.name }}
-    </ion-item>
-    <ion-item>
-      {{ recipeMaster.style }}
-    </ion-item>
-    <ion-item>
-      {{ recipeMaster.isPublic }}
-      <ion-toggle [(ngModel)]="recipeMaster.isPublic"
-                  (ionChange)="setPublic()">
-      </ion-toggle>
-    </ion-item>
-    <ion-item>
-      <ion-label>Notes</ion-label>
-      <ion-item *ngFor="let note of recipeMaster.notes; index as i">
-        {{ note }}
-      </ion-item>
-    </ion-item>
-    <ion-list>
-      <ion-item *ngFor="let recipe of masterRecipe.recipes; index as i">
-        <ion-label (click)="expandRecipe(i)">{{ recipe.name }}<span *ngIf="isMaster(i)">F</span></ion-label>
-        <ion-item *ngIf="showExpandedRecipe(i)">
-          Show more recipe details
-          <button (click)="navigateToRecipeDetail(i)">Nav to recipe</button>
-        </ion-item>
-      </ion-item>
-    </ion-list>
-  </section>
+    <ion-row *ngIf="recipeMaster">
+      <ion-col id="style-name">
+        {{ recipeMaster.style.name }}
+      </ion-col>
+    </ion-row>
+
+    <ion-row>
+      <ion-col>
+        <ion-label>Notes for {{ recipeMaster.name }}</ion-label>
+        <ion-list>
+          <ion-item *ngFor="let note of recipeMaster.notes; index as i">
+            {{ note }}
+          </ion-item>
+        </ion-list>
+      </ion-col>
+    </ion-row>
+
+    <ion-row>
+      <ion-list id="batch-list">
+        <ng-container *ngFor="let recipe of recipeMaster.recipes; index as i">
+          <ion-item-sliding>
+
+            <ion-item-options side="left"
+                              *ngIf="recipeMaster.recipes.length > 1">
+              <button ion-button
+                      color="danger"
+                      (click)="deleteRecipe(recipe)">
+                <ion-icon name="trash"></ion-icon>
+                Delete
+              </button>
+            </ion-item-options>
+
+            <button detail-none
+                    class="expand-button"
+                    (click)="expandRecipe(i)"
+                    ion-item
+                    lines="none">
+              <ion-grid no-padding>
+                <ion-row class="recipe-summary-header">
+                  <ion-col>
+                    {{ recipe.variantName | titlecase }} <ion-icon color="primary" *ngIf="recipe.isMaster" name="star"></ion-icon>
+                  </ion-col>
+                </ion-row>
+                <ion-row class="recipe-summary-subheader">
+                  <ion-col>
+                    <p>
+                      {{ recipe.batchVolume }} gal
+                       • {{ recipe.brewingType | titlecase }}
+                       • {{ recipe.ABV.toFixed(1) }}% ABV
+                       • {{ recipe.IBU.toFixed(1) }} IBU
+                       • {{ recipe.SRM.toFixed(1) }} SRM
+                    </p>
+                  </ion-col>
+                </ion-row>
+              </ion-grid>
+            </button>
+
+            <ion-item-options side="right">
+              <button ion-button
+                      color="primary"
+                      (click)="navToBrewProcess(master)">
+                <ion-icon name="beer"></ion-icon>
+                Brew
+              </button>
+              <button ion-button
+                      color="secondary"
+                      (click)="navToRecipeForm('recipe', recipe)">
+                <ion-icon name="menu"></ion-icon>
+                Edit
+              </button>
+            </ion-item-options>
+
+          </ion-item-sliding>
+          <accordion [expanded]="showExpandedRecipe(i)">
+            <ion-card class="variant-card">
+              <ion-card-content>
+                <ion-list>
+                  <ion-item-group *ngIf="recipe.grains">
+                    <ion-item-divider color="primary" class="card-divider">
+                      Grains
+                    </ion-item-divider>
+                    <ion-item *ngFor="let grains of recipe.grains">
+                      <span item-start>{{ grains.grainType.name }}</span>
+                      <span item-end>{{ grains.quantity }} lbs</span>
+                    </ion-item>
+                  </ion-item-group>
+                  <ion-item-group *ngIf="recipe.hops.length">
+                    <ion-item-divider color="primary" class="card-divider">
+                      Hops
+                    </ion-item-divider>
+                    <ion-item *ngFor="let hops of recipe.hops">
+                      <span item-start>{{ hops.hopsType.name }}</span>
+                      <span item-end>{{ hops.quantity }} oz</span>
+                    </ion-item>
+                  </ion-item-group>
+                  <ion-item-group *ngIf="recipe.yeast.length">
+                    <ion-item-divider color="primary" class="card-divider">
+                      Yeast
+                    </ion-item-divider>
+                    <ion-item *ngFor="let yeast of recipe.yeast">
+                      <span item-start>{{ yeast.yeastType.name }}</span>
+                      <span item-end>{{ yeast.quantity }} pack</span>
+                    </ion-item>
+                  </ion-item-group>
+                  <ion-item-group *ngIf="recipe.otherIngredients.length">
+                    <ion-item-divider color="primary" class="card-divider">
+                      Other Ingredients
+                    </ion-item-divider>
+                    <ion-item *ngFor="let other of recipe.otherIngredients">
+                      <span item-start>{{ other.name }}</span>
+                      <span item-end>{{ other.type }}</span>
+                      <span>{{ other.description }}</span>
+                    </ion-item>
+                  </ion-item-group>
+                </ion-list>
+              </ion-card-content>
+            </ion-card>
+          </accordion>
+        </ng-container>
+      </ion-list>
+    </ion-row>
+
+  </ion-grid>
 
 </ion-content>
