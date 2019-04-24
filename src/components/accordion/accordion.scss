@@ -1,0 +1,13 @@
+accordion {
+  .expand-accordion {
+    margin-top: 5px;
+    height: auto;
+    transition: 0.2s linear;
+  }
+  .collapsed,
+  .collapsed * {
+    height: 0 !important;
+    transition: 0.2s linear;
+    margin: 0 !important;
+  }
+}
