@@ -2,4 +2,36 @@ page-home {
   .content {
     margin-top: 56px;
   }
+  #home-img {
+    width: 100%;
+    max-height: 200px;
+  }
+  #batch-list {
+    width: 100%;
+    margin: 0;
+  }
+  #no-notifications {
+    text-align: center;
+  }
+  .messages-header {
+    h3 {
+      width: 100%;
+      text-align: center;
+    }
+  }
+  .sliding-item {
+    border-bottom: 1px solid map-get($colors, gray-scale-6);
+  }
+  .sliding-button {
+    margin-top: 1px !important;
+  }
+  .user-button-container {
+    display: flex;
+    justify-content: center;
+    button {
+      width: 100%;
+      font-size: 1.2em;
+      color: map-get($colors, gray-scale-2);
+    }
+  }
 }
