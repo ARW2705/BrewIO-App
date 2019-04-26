@@ -1,0 +1,40 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>{{ title | titlecase }}</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding>
+  <ion-grid>
+    <ion-row id="form-container">
+      <form>
+        <ion-textarea id="textarea"
+                      [formControl]="note">
+        </ion-textarea>
+      </form>
+    </ion-row>
+    <ion-row id="button-container">
+      <ion-col>
+        <button ion-button
+                color="primary"
+                (click)="dismiss()">
+          Cancel
+        </button>
+      </ion-col>
+      <ion-col>
+        <button ion-button
+                color="primary"
+                (click)="onSubmit()">
+          Submit
+        </button>
+      </ion-col>
+      <ion-col *ngIf="formMethod == 'update'">
+        <button ion-button
+                color="secondary"
+                (click)="onDelete()">
+          Delete
+        </button>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>

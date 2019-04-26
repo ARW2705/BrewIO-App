@@ -6,291 +6,293 @@
 
 <ion-content padding>
 
-  <ng-container *ngIf="noteForm">
+  <ng-container *ngIf="isLoaded">
 
-    <form [formGroup]="noteForm">
-
-      <ion-grid>
-        <button (click)="openGeneralModal()">
-          <ion-row id="form-header">
-            <ion-col *ngIf="formType == 'master'">
-              {{ master.name == '' ? 'Untitled Recipe': master.name }}
-            </ion-col>
-            <ion-col *ngIf="formType == 'recipe'">
-              {{ recipe.variantName == '' ? 'Untitled Batch': recipe.variantName }}
-            </ion-col>
-          </ion-row>
-          <ion-row>
-            <ion-col>
-              {{ recipe.ABV.toFixed(1) }}% ABV
-            </ion-col>
-            <ion-col>
-              {{ master.style.name }}
-            </ion-col>
-          </ion-row>
-        </button>
-
-      <!------------------------------------------------>
-
-        <ion-row>
-          <ion-col class="col-header">
-            Recipe
+    <ion-grid>
+      <button (click)="openGeneralModal()">
+        <ion-row id="form-header">
+          <ion-col *ngIf="formType == 'master'">
+            {{ master.name == '' ? 'Untitled Recipe': master.name }}
           </ion-col>
-          <ion-col class="right-col col-header">
-            Style
+          <ion-col *ngIf="formType == 'recipe'">
+            {{ recipe.variantName == '' ? 'Untitled Batch': recipe.variantName }}
           </ion-col>
         </ion-row>
         <ion-row>
           <ion-col>
-            Original Gravity {{ recipe.originalGravity.toFixed(3) }}
+            {{ recipe.ABV.toFixed(1) }}% ABV
           </ion-col>
-          <ion-col class="right-col">
-            {{ master.style._id != -1 ? master.style.originalGravity[0].toFixed(3): '--' }} - {{ master.style._id != -1 ? master.style.originalGravity[1].toFixed(3): '--' }}
-          </ion-col>
-        </ion-row>
-        <ion-row>
           <ion-col>
-            Final Gravity {{ recipe.finalGravity.toFixed(3) }}
-          </ion-col>
-          <ion-col class="right-col">
-            {{ master.style._id != -1 ? master.style.finalGravity[0].toFixed(3): '--' }} - {{ master.style._id != -1 ? master.style.finalGravity[1].toFixed(3): '--' }}
+            {{ master.style.name }}
           </ion-col>
         </ion-row>
-        <ion-row>
-          <ion-col>
-            IBU {{ recipe.IBU.toFixed(1) }}
-          </ion-col>
-          <ion-col class="right-col">
-            {{ master.style._id != -1 ? master.style.IBU[0]: '--' }} - {{ master.style._id != -1 ? master.style.IBU[1]: '--' }}
-          </ion-col>
-        </ion-row>
-        <ion-row>
-          <ion-col>
-            SRM {{ recipe.SRM.toFixed(1) }}
-          </ion-col>
-          <ion-col class="right-col">
-            {{ master.style._id != -1 ? master.style.SRM[0]: '--' }} - {{ master.style._id != -1 ? master.style.SRM[1]: '--' }}
-          </ion-col>
-        </ion-row>
+      </button>
 
-      <!------------------------------------------------>
+    <!------------------------------------------------>
 
-        <ion-row *ngIf="!(formType == 'master' && docMethod == 'update')">
-          <ion-col col-12>
-            <button class="addition-button"
-                    ion-button
-                    color="primary"
-                    (click)="openIngredientActionSheet()">
-              Add Ingredient
-            </button>
-          </ion-col>
-          <ion-col *ngIf="recipe.grains.length || recipe.hops.length || recipe.yeast.length || recipe.otherIngredients.length">
+      <ion-row>
+        <ion-col class="col-header">
+          Recipe
+        </ion-col>
+        <ion-col class="right-col col-header">
+          Style
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col>
+          Original Gravity {{ recipe.originalGravity.toFixed(3) }}
+        </ion-col>
+        <ion-col class="right-col">
+          {{ master.style._id != -1 ? master.style.originalGravity[0].toFixed(3): '--' }} - {{ master.style._id != -1 ? master.style.originalGravity[1].toFixed(3): '--' }}
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col>
+          Final Gravity {{ recipe.finalGravity.toFixed(3) }}
+        </ion-col>
+        <ion-col class="right-col">
+          {{ master.style._id != -1 ? master.style.finalGravity[0].toFixed(3): '--' }} - {{ master.style._id != -1 ? master.style.finalGravity[1].toFixed(3): '--' }}
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col>
+          IBU {{ recipe.IBU.toFixed(1) }}
+        </ion-col>
+        <ion-col class="right-col">
+          {{ master.style._id != -1 ? master.style.IBU[0]: '--' }} - {{ master.style._id != -1 ? master.style.IBU[1]: '--' }}
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col>
+          SRM {{ recipe.SRM.toFixed(1) }}
+        </ion-col>
+        <ion-col class="right-col">
+          {{ master.style._id != -1 ? master.style.SRM[0]: '--' }} - {{ master.style._id != -1 ? master.style.SRM[1]: '--' }}
+        </ion-col>
+      </ion-row>
 
-            <!-- Grain Bill -->
+    <!------------------------------------------------>
 
-            <ng-container *ngIf="recipe.grains.length">
-              <ion-label class="recipe-group-label">Grain Bill</ion-label>
-              <ion-list no-lines>
-                <ion-item *ngFor="let grains of recipe.grains" class="item-buttons">
-                  <ion-grid no-padding>
-                    <button class="grains-button"
-                            (click)="openIngredientFormModal('grains', grains)">
-                      <ion-row>
-                        <ion-col col-10>
-                          <ion-row>
-                            <ion-col class="left-col">
-                              {{ grains.grainType.name }}
-                            </ion-col>
-                            <ion-col class="right-col">
-                              {{ grains.quantity }}lbs
-                            </ion-col>
-                          </ion-row>
-                          <ion-row>
-                            <ion-col class="left-col">
-                              {{ grains.grainType.gravity }}
-                            </ion-col>
-                            <ion-col>
-                              {{ grains.grainType.lovibond }}°
-                            </ion-col>
-                            <ion-col *ngIf="grains.mill">
-                              {{ grains.mill }}
-                            </ion-col>
-                            <ion-col class="right-col">
-                              {{ getGristRatio(grains.quantity).toFixed(1) }}%
-                            </ion-col>
-                          </ion-row>
-                        </ion-col>
-                        <ion-col align-self-center col-2>
-                          <ion-icon color="secondary" name="create"></ion-icon>
-                        </ion-col>
-                      </ion-row>
-                    </button>
-                  </ion-grid>
-                </ion-item>
-              </ion-list>
-            </ng-container>
+      <ion-row *ngIf="!(formType == 'master' && docMethod == 'update')">
+        <ion-col col-12>
+          <button class="addition-button"
+                  ion-button
+                  color="primary"
+                  (click)="openIngredientActionSheet()">
+            Add Ingredient
+          </button>
+        </ion-col>
+        <ion-col *ngIf="recipe.grains.length || recipe.hops.length || recipe.yeast.length || recipe.otherIngredients.length">
 
-            <!-- Hops Schedule -->
+          <!-- Grain Bill -->
 
-            <ng-container *ngIf="recipe.hops.length">
-              <ion-label class="recipe-group-label">Hops Schedule</ion-label>
-              <ion-list no-lines>
-                <ion-item *ngFor="let hops of recipe.hops" class="item-buttons">
-                  <ion-grid no-padding>
-                    <button class="hops-button"
-                            (click)="openIngredientFormModal('hops', hops)">
-                      <ion-row>
-                        <ion-col col-10>
-                          <ion-row>
-                            <ion-col class="left-col">
-                              {{ hops.hopsType.name }}
-                            </ion-col>
-                            <ion-col class="right-col">
-                              {{ hops.quantity }}
-                            </ion-col>
-                          </ion-row>
-                          <ion-row>
-                            <ion-col class="left-col">
-                              {{ hops.hopsType.alphaAcid }}% AA
-                            </ion-col>
-                            <ion-col>
-                              {{ getIndividualIBU(hops).toFixed(1) }} IBU
-                            </ion-col>
-                            <ion-col class="right-col">
-                              {{ hops.dryHop ? 'Dry Hop': hops.addAt }}
-                            </ion-col>
-                          </ion-row>
-                        </ion-col>
-                        <ion-col align-self-center col-2>
-                          <ion-icon color="secondary" name="create"></ion-icon>
-                        </ion-col>
-                      </ion-row>
-                    </button>
-                  </ion-grid>
-                </ion-item>
-              </ion-list>
-            </ng-container>
-
-            <!-- Yeast Batch -->
-
-            <ng-container *ngIf="recipe.yeast.length">
-              <ion-label class="recipe-group-label">Yeast</ion-label>
-              <ion-list no-lines>
-                <ion-item *ngFor="let yeast of recipe.yeast" class="item-buttons">
-                  <ion-grid no-padding>
-                    <button class="yeast-button"
-                            (click)="openIngredientFormModal('yeast', yeast)">
-                      <ion-row>
-                        <ion-col col-10>
-                          <ion-row>
-                            <ion-col class="left-col">
-                              {{ yeast.yeastType.name }}
-                            </ion-col>
-                            <ion-col class="right-col">
-                              {{ yeast.quantity }}
-                            </ion-col>
-                          </ion-row>
-                          <ion-row>
-                            <ion-col class="left-col">
-                              {{ yeast.yeastType.form | titlecase }}
-                            </ion-col>
-                            <ion-col class="right-col">
-                              {{ yeast.requiresStarter ? 'Starter Required': 'Starter Not Required' }}
-                            </ion-col>
-                          </ion-row>
-                        </ion-col>
-                        <ion-col align-self-center col-2>
-                          <ion-icon color="secondary" name="create"></ion-icon>
-                        </ion-col>
-                      </ion-row>
-                    </button>
-                  </ion-grid>
-                </ion-item>
-              </ion-list>
-            </ng-container>
-
-            <!-- Other Ingredients -->
-
-            <ng-container *ngIf="recipe.otherIngredients.length">
-              <ion-label class="recipe-group-label">Other Ingredients</ion-label>
-              <ion-list no-lines>
-                <ion-item *ngFor="let other of recipe.otherIngredients" class="item-buttons">
-                  <ion-grid no-padding>
-                    <button class="other-ingredient-button"
-                            (click)="openIngredientFormModal('otherIngredients', other)">
-                      <ion-row>
-                        <ion-col col-10>
-                          <ion-row>
-                            <ion-col class="left-col">
-                              {{ other.name }}
-                            </ion-col>
-                            <ion-col class="right-col">
-                              {{ other.quantity }} - {{ other.units }}
-                            </ion-col>
-                          </ion-row>
-                          <ion-row>
-                            <ion-col class="other-ingredient-description">
-                              {{ other.type | titlecase }} • {{ other.description }}
-                            </ion-col>
-                          </ion-row>
-                        </ion-col>
-                        <ion-col align-self-center col-2>
-                          <ion-icon color="secondary" name="create"></ion-icon>
-                        </ion-col>
-                      </ion-row>
-                    </button>
-                  </ion-grid>
-                </ion-item>
-              </ion-list>
-            </ng-container>
-
-          </ion-col>
-        </ion-row>
-
-        <!------------------------------------------------>
-
-        <ion-row *ngIf="!(formType == 'master' && docMethod == 'update')">
-          <ion-col col-12>
-            <button class="addition-button"
-                    ion-button
-                    color="primary"
-                    (click)="openProcessActionSheet()">
-              Add Process
-            </button>
-          </ion-col>
-          <ion-col *ngIf="recipe.processSchedule.length">
+          <ng-container *ngIf="recipe.grains.length">
+            <ion-label class="recipe-group-label">Grain Bill</ion-label>
             <ion-list no-lines>
-              <ion-item-group reorder="true" (ionItemReorder)="$event.applyTo(recipe.processSchedule)">
-                <ion-item *ngFor="let step of recipe.processSchedule; index as i">
-                  <ion-label>
-                    <button (click)="openProcessModal('update', step, i)">
-                      <ion-icon color="secondary" [name]="processIcons[step.type]"></ion-icon>
-                    </button>
-                    {{ step.name }}
-                  </ion-label>
-                </ion-item>
-              </ion-item-group>
+              <ion-item *ngFor="let grains of recipe.grains" class="item-buttons">
+                <ion-grid no-padding>
+                  <button class="grains-button"
+                          (click)="openIngredientFormModal('grains', grains)">
+                    <ion-row>
+                      <ion-col col-10>
+                        <ion-row>
+                          <ion-col class="left-col">
+                            {{ grains.grainType.name }}
+                          </ion-col>
+                          <ion-col class="right-col">
+                            {{ grains.quantity }}lbs
+                          </ion-col>
+                        </ion-row>
+                        <ion-row>
+                          <ion-col class="left-col">
+                            {{ grains.grainType.gravity }}
+                          </ion-col>
+                          <ion-col>
+                            {{ grains.grainType.lovibond }}°
+                          </ion-col>
+                          <ion-col *ngIf="grains.mill">
+                            {{ grains.mill }}
+                          </ion-col>
+                          <ion-col class="right-col">
+                            {{ getGristRatio(grains.quantity).toFixed(1) }}%
+                          </ion-col>
+                        </ion-row>
+                      </ion-col>
+                      <ion-col align-self-center col-2>
+                        <ion-icon color="secondary" name="create"></ion-icon>
+                      </ion-col>
+                    </ion-row>
+                  </button>
+                </ion-grid>
+              </ion-item>
             </ion-list>
-          </ion-col>
-        </ion-row>
+          </ng-container>
 
-        <!------------------------------------------------>
+          <!-- Hops Schedule -->
 
-        <ion-row *ngIf="formType == 'master'">
-          <ion-col col-12>
-            <button class="addition-button"
-                    ion-button
-                    color="primary"
-                    (click)="toggleNoteTextarea('recipe')">
-              Add Recipe Note
-            </button>
-          </ion-col>
-          <ion-col col-12
-                   *ngIf="textarea == 'recipe'">
-            <ion-textarea class="note-textarea"
-                          rows="3"
-                          formControlName="recipeNoteTextArea">
-            </ion-textarea>
+          <ng-container *ngIf="recipe.hops.length">
+            <ion-label class="recipe-group-label">Hops Schedule</ion-label>
+            <ion-list no-lines>
+              <ion-item *ngFor="let hops of recipe.hops" class="item-buttons">
+                <ion-grid no-padding>
+                  <button class="hops-button"
+                          (click)="openIngredientFormModal('hops', hops)">
+                    <ion-row>
+                      <ion-col col-10>
+                        <ion-row>
+                          <ion-col class="left-col">
+                            {{ hops.hopsType.name }}
+                          </ion-col>
+                          <ion-col class="right-col">
+                            {{ hops.quantity }}
+                          </ion-col>
+                        </ion-row>
+                        <ion-row>
+                          <ion-col class="left-col">
+                            {{ hops.hopsType.alphaAcid }}% AA
+                          </ion-col>
+                          <ion-col>
+                            {{ getIndividualIBU(hops).toFixed(1) }} IBU
+                          </ion-col>
+                          <ion-col class="right-col">
+                            {{ hops.dryHop ? 'Dry Hop': hops.addAt }}
+                          </ion-col>
+                        </ion-row>
+                      </ion-col>
+                      <ion-col align-self-center col-2>
+                        <ion-icon color="secondary" name="create"></ion-icon>
+                      </ion-col>
+                    </ion-row>
+                  </button>
+                </ion-grid>
+              </ion-item>
+            </ion-list>
+          </ng-container>
+
+          <!-- Yeast Batch -->
+
+          <ng-container *ngIf="recipe.yeast.length">
+            <ion-label class="recipe-group-label">Yeast</ion-label>
+            <ion-list no-lines>
+              <ion-item *ngFor="let yeast of recipe.yeast" class="item-buttons">
+                <ion-grid no-padding>
+                  <button class="yeast-button"
+                          (click)="openIngredientFormModal('yeast', yeast)">
+                    <ion-row>
+                      <ion-col col-10>
+                        <ion-row>
+                          <ion-col class="left-col">
+                            {{ yeast.yeastType.name }}
+                          </ion-col>
+                          <ion-col class="right-col">
+                            {{ yeast.quantity }}
+                          </ion-col>
+                        </ion-row>
+                        <ion-row>
+                          <ion-col class="left-col">
+                            {{ yeast.yeastType.form | titlecase }}
+                          </ion-col>
+                          <ion-col class="right-col">
+                            {{ yeast.requiresStarter ? 'Starter Required': 'Starter Not Required' }}
+                          </ion-col>
+                        </ion-row>
+                      </ion-col>
+                      <ion-col align-self-center col-2>
+                        <ion-icon color="secondary" name="create"></ion-icon>
+                      </ion-col>
+                    </ion-row>
+                  </button>
+                </ion-grid>
+              </ion-item>
+            </ion-list>
+          </ng-container>
+
+          <!-- Other Ingredients -->
+
+          <ng-container *ngIf="recipe.otherIngredients.length">
+            <ion-label class="recipe-group-label">Other Ingredients</ion-label>
+            <ion-list no-lines>
+              <ion-item *ngFor="let other of recipe.otherIngredients" class="item-buttons">
+                <ion-grid no-padding>
+                  <button class="other-ingredient-button"
+                          (click)="openIngredientFormModal('otherIngredients', other)">
+                    <ion-row>
+                      <ion-col col-10>
+                        <ion-row>
+                          <ion-col class="left-col">
+                            {{ other.name }}
+                          </ion-col>
+                          <ion-col class="right-col">
+                            {{ other.quantity }} - {{ other.units }}
+                          </ion-col>
+                        </ion-row>
+                        <ion-row>
+                          <ion-col class="other-ingredient-description">
+                            {{ other.type | titlecase }} • {{ other.description }}
+                          </ion-col>
+                        </ion-row>
+                      </ion-col>
+                      <ion-col align-self-center col-2>
+                        <ion-icon color="secondary" name="create"></ion-icon>
+                      </ion-col>
+                    </ion-row>
+                  </button>
+                </ion-grid>
+              </ion-item>
+            </ion-list>
+          </ng-container>
+
+        </ion-col>
+      </ion-row>
+
+      <!------------------------------------------------>
+
+      <ion-row *ngIf="!(formType == 'master' && docMethod == 'update')">
+        <ion-col col-12>
+          <button class="addition-button"
+                  ion-button
+                  color="primary"
+                  (click)="openProcessActionSheet()">
+            Add Process
+          </button>
+        </ion-col>
+        <ion-col *ngIf="recipe.processSchedule.length">
+          <ion-list no-lines>
+            <ion-item-group reorder="true" (ionItemReorder)="$event.applyTo(recipe.processSchedule)">
+              <ion-item *ngFor="let step of recipe.processSchedule; index as i"
+                        class="process-item">
+                <ion-label>
+                  <button (click)="openProcessModal('update', step, i)">
+                    <ion-icon color="secondary"
+                              [name]="processIcons[step.type]">
+                    </ion-icon>
+                  </button>
+                  {{ step.name }}
+                </ion-label>
+              </ion-item>
+            </ion-item-group>
+          </ion-list>
+        </ion-col>
+      </ion-row>
+
+      <!------------------------------------------------>
+
+      <ion-row *ngIf="formType == 'master'">
+        <ion-col col-12>
+          <button class="addition-button"
+                  ion-button
+                  color="primary"
+                  (click)="openNoteModal('recipe')">
+            Add Recipe Note
+          </button>
+        </ion-col>
+        <!-- <ion-col col-12
+                 *ngIf="textarea == 'recipe'">
+          <ion-textarea class="note-textarea"
+                        rows="3"
+                        formControlName="recipeNoteTextArea">
+          </ion-textarea>
+          <div class="note-operation-button-container">
             <button ion-button
                     color="primary"
                     (click)="submitNote('recipe')">
@@ -302,36 +304,41 @@
                     (click)="deleteNote('recipe')">
               Delete
             </button>
-          </ion-col>
-          <ion-col col-12
-                   *ngIf="master.notes.length">
-            <ion-list>
-              <ion-item *ngFor="let note of master.notes; index as i">
-                <button (click)="toggleNoteTextarea('recipe', i)">{{ note }}</button>
-              </ion-item>
-            </ion-list>
-          </ion-col>
-        </ion-row>
+          </div>
+        </ion-col> -->
+        <ion-col col-12
+                 *ngIf="master.notes.length">
+          <ion-list>
+            <ion-item *ngFor="let note of master.notes; index as i"
+                      class="note-item">
+              <button (click)="openNoteModal('recipe', i)">
+                <span>{{ note }}</span>
+              </button>
+            </ion-item>
+          </ion-list>
+        </ion-col>
+      </ion-row>
 
-        <ion-row *ngIf="formType == 'recipe'">
-          <ion-col col-12>
-            <button class="addition-button"
-                    ion-button
-                    color="primary"
-                    (click)="toggleNoteTextarea('batch')">
-              Add Batch Note
-            </button>
-          </ion-col>
-          <ion-col col-12
-                   *ngIf="textarea == 'batch'">
-            <ion-textarea class="note-textarea"
-                          rows="3"
-                          formControlName="batchNoteTextArea">
-            </ion-textarea>
+      <ion-row *ngIf="formType == 'recipe'">
+        <ion-col col-12>
+          <button class="addition-button"
+                  ion-button
+                  color="primary"
+                  (click)="openNoteModal('batch')">
+            Add Batch Note
+          </button>
+        </ion-col>
+        <!-- <ion-col col-12
+                 *ngIf="textarea == 'batch'">
+          <ion-textarea class="note-textarea"
+                        rows="3"
+                        formControlName="batchNoteTextArea">
+          </ion-textarea>
+          <div class="note-operation-button-container">
             <button ion-button
                     color="primary"
                     (click)="submitNote('batch')">
-              Submit
+              Add Note
             </button>
             <button *ngIf="updateIndex != -1"
                     ion-button
@@ -339,34 +346,36 @@
                     (click)="deleteNote('batch')">
               Delete
             </button>
-          </ion-col>
-          <ion-col col-12
-                   *ngIf="recipe.notes.length">
-            <ion-list>
-              <ion-item *ngFor="let note of recipe.notes; index as i">
-                <button (click)="toggleNoteTextarea('batch', i)">{{ note }}</button>
-              </ion-item>
-            </ion-list>
-          </ion-col>
-        </ion-row>
+          </div>
+        </ion-col> -->
+        <ion-col col-12
+                 *ngIf="recipe.notes.length">
+          <ion-list>
+            <ion-item *ngFor="let note of recipe.notes; index as i"
+                      class="note-item">
+              <button (click)="openNoteModal('batch', i)">
+                <span>{{ note }}</span>
+              </button>
+            </ion-item>
+          </ion-list>
+        </ion-col>
+      </ion-row>
 
-        <!------------------------------------------------>
+      <!------------------------------------------------>
 
-        <ion-row>
-          <ion-col>
-            <button ion-button
-                    id="submit-button"
-                    color="primary"
-                    (click)="onSubmit()"
-                    [disabled]="!isRecipeValid()">
-              Submit
-            </button>
-          </ion-col>
-        </ion-row>
+      <ion-row>
+        <ion-col>
+          <button ion-button
+                  id="submit-button"
+                  color="primary"
+                  (click)="onSubmit()"
+                  [disabled]="!isRecipeValid()">
+            Save
+          </button>
+        </ion-col>
+      </ion-row>
 
-      </ion-grid>
-
-    </form>
+    </ion-grid>
 
   </ng-container>
 

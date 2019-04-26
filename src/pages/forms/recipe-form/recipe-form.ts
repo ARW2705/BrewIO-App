@@ -1,6 +1,5 @@
 import { Component, ChangeDetectorRef } from '@angular/core';
 import { NavController, NavParams, ModalController, ActionSheetController } from 'ionic-angular';
-import { FormGroup, FormBuilder, FormControl, FormArray } from '@angular/forms';
 
 import { Recipe } from '../../../shared/interfaces/recipe';
 import { RecipeMaster } from '../../../shared/interfaces/recipe-master';
@@ -13,6 +12,7 @@ import { clone } from '../../../shared/utility-functions/utilities';
 import { GeneralFormPage } from '../general-form/general-form';
 import { ProcessFormPage } from '../process-form/process-form';
 import { IngredientFormPage } from '../ingredient-form/ingredient-form';
+import { NoteFormPage } from '../note-form/note-form';
 
 import { LibraryProvider } from '../../../providers/library/library';
 import { RecipeProvider } from '../../../providers/recipe/recipe';
@@ -25,10 +25,10 @@ import { CalculationsProvider } from '../../../providers/calculations/calculatio
 export class RecipeFormPage {
   title: string = '';
   processIcons = {'manual': 'hand', 'timer': 'timer', 'calendar': 'calendar'};
+  private isLoaded: boolean = false;
   private formType: string = null;
   private mode: string = null;
   private docMethod: string = '';
-  private noteForm: FormGroup;
   private grainsLibrary: Array<Grains> = null;
   private hopsLibrary: Array<Hops> = null;
   private yeastLibrary: Array<Yeast> = null;
@@ -40,7 +40,6 @@ export class RecipeFormPage {
 
   constructor(public navCtrl: NavController,
     public navParams: NavParams,
-    private formBuilder: FormBuilder,
     private modalCtrl: ModalController,
     private actionCtrl: ActionSheetController,
     private cdRef: ChangeDetectorRef,
@@ -59,7 +58,7 @@ export class RecipeFormPage {
         this.hopsLibrary = hopsLibrary;
         this.yeastLibrary = yeastLibrary;
         this.styleLibrary = styleLibrary;
-        this.initForm();
+        this.isLoaded = true;
       });
   }
 
@@ -71,7 +70,7 @@ export class RecipeFormPage {
           master: {
             name: this.master.name,
             style: this.master.style._id,
-            notes: this.noteForm.value.recipeNotes,
+            notes: this.master.notes,
             isPublic: this.master.isPublic,
           },
           recipe: this.recipe
@@ -80,7 +79,7 @@ export class RecipeFormPage {
         payload = {
           name: this.master.name,
           style: this.master.style._id,
-          notes: this.noteForm.value.recipeNotes,
+          notes: this.recipe.notes,
           isPublic: this.master.isPublic
         };
       }
@@ -93,18 +92,6 @@ export class RecipeFormPage {
       }
     }
     return payload;
-  }
-
-  deleteNote(area: string) {
-    const control = <FormArray>this.noteForm.controls[`${area}Notes`];
-    control.removeAt(this.updateIndex);
-    this.noteForm.get(`${area}NoteTextArea`).reset();
-    this.textarea = '';
-    if (area == 'recipe') {
-      this.master.notes = this.noteForm.value.recipeNotes;
-    } else {
-      this.recipe.notes = this.noteForm.value.batchNotes;
-    }
   }
 
   getGristRatio(quantity: number): number {
@@ -129,15 +116,6 @@ export class RecipeFormPage {
     return total;
   }
 
-  initForm() {
-    this.noteForm = this.formBuilder.group({
-      recipeNotes: this.formBuilder.array([]),
-      recipeNoteTextArea: [''],
-      batchNotes: this.formBuilder.array([]),
-      batchNoteTextArea: [''],
-    });
-  }
-
   isRecipeValid(): boolean {
     return this.master.style._id != defaultStyle._id;
   }
@@ -148,13 +126,11 @@ export class RecipeFormPage {
       if (this.formType == 'master') {
         this.recipeService.postRecipeMaster(payload)
           .subscribe(response => {
-            this.resetFields();
             this.navCtrl.pop();
           });
       } else if (this.formType == 'recipe') {
         this.recipeService.postRecipeToMasterById(this.master._id, payload)
           .subscribe(response => {
-            this.resetFields();
             this.navCtrl.pop();
           });
       }
@@ -162,7 +138,6 @@ export class RecipeFormPage {
       if (this.formType == 'master') {
         this.recipeService.patchRecipeMasterById(this.master._id, payload)
           .subscribe(response => {
-            this.resetFields();
             // TODO map response to master
             // TODO show confirmation
             this.navCtrl.pop();
@@ -219,7 +194,7 @@ export class RecipeFormPage {
     modal.onDidDismiss(data => {
       if (data) {
         this.mode = 'update';
-        this.updateFormAndDisplay(data);
+        this.updateDisplay(data);
         this.calculator.calculateRecipeValues(this.recipe);
       }
     });
@@ -294,6 +269,45 @@ export class RecipeFormPage {
     modal.present();
   }
 
+  private openNoteModal(noteType: string, index?: number): void {
+    let toUpdate;
+    if (index == undefined) {
+      toUpdate = '';
+    } else {
+      toUpdate = noteType == 'recipe' ? this.master.notes[index]: this.recipe.notes[index];
+    }
+    const options = {
+      noteType: noteType,
+      formMethod: index == undefined ? 'create': 'update',
+      toUpdate: toUpdate
+    };
+    const modal = this.modalCtrl.create(NoteFormPage, options);
+    modal.onDidDismiss(data => {
+      if (data) {
+        if (data.method == 'create') {
+          if (noteType == 'recipe') {
+            this.master.notes.push(data.note);
+          } else if (noteType == 'batch') {
+            this.recipe.notes.push(data.note);
+          }
+        } else if (data.method == 'update') {
+          if (noteType == 'recipe') {
+            this.master.notes[index] = data.note;
+          } else if (noteType == 'batch') {
+            this.recipe.notes[index] = data.note;
+          }
+        } else if (data.method == 'delete') {
+          if (noteType == 'recipe') {
+            this.master.notes.splice(index, 1);
+          } else if (noteType == 'batch') {
+            this.recipe.notes.splice(index, 1);
+          }
+        }
+      }
+    });
+    modal.present();
+  }
+
   openProcessActionSheet() {
     const actionSheet = this.actionCtrl.create({
       title: 'Add a process step',
@@ -349,12 +363,6 @@ export class RecipeFormPage {
       }
     });
     modal.present();
-  }
-
-  resetFields() {
-    this.noteForm.reset();
-    this.master = clone(defaultRecipeMaster);
-    this.recipe = clone(defaultRecipeMaster.recipes[0]);
   }
 
   setFormTypeConfiguration(formType: string, mode: string, master: RecipeMaster, recipe: Recipe) {
@@ -426,42 +434,7 @@ export class RecipeFormPage {
     }
   }
 
-  submitNote(area: string) {
-    const control = <FormArray>this.noteForm.controls[`${area}Notes`];
-    if (this.updateIndex != -1) {
-      control.at(this.updateIndex).setValue(this.noteForm.get(`${area}NoteTextArea`).value);
-      this.textarea = '';
-      if (area == 'recipe') {
-        this.master.notes[this.updateIndex] = this.noteForm.value.recipeNotes[this.updateIndex];
-      } else {
-        this.recipe.notes[this.updateIndex] = this.noteForm.value.batchNotes[this.updateIndex];
-      }
-      this.updateIndex = -1;
-    } else {
-      control.push(new FormControl(this.noteForm.get(`${area}NoteTextArea`).value))
-      if (area == 'recipe') {
-        this.master.notes.push(this.noteForm.get('recipeNoteTextArea').value);
-      } else {
-        this.recipe.notes.push(this.noteForm.get('batchNoteTextArea').value);
-      }
-    }
-    this.noteForm.get(`${area}NoteTextArea`).reset();
-  }
-
-  toggleNoteTextarea(area: string, index?: number) {
-    if (index != undefined) {
-      this.updateIndex = index;
-      const control = <FormArray>this.noteForm.controls[`${area}Notes`];
-      const text = control.at(index).value;
-      this.noteForm.controls[`${area}NoteTextArea`].setValue(text);
-      this.textarea = area;
-    } else {
-      this.updateIndex = -1;
-      this.textarea = this.textarea != area ? area: '';
-    }
-  }
-
-  updateFormAndDisplay(data: FormGroup) {
+  updateDisplay(data) {
     for (const key in data) {
       if (this.master.hasOwnProperty(key)) {
         this.master[key] = data[key];

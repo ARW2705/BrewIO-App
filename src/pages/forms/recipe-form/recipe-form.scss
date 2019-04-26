@@ -4,6 +4,9 @@ page-recipe-form {
     width: 100%;
     margin-top: 15px;
   }
+  #form-header {
+    font-size: 1.5em;
+  }
   .addition-button {
     color: map-get($colors, gray-scale-1);
     width: 100%;
@@ -47,6 +50,44 @@ page-recipe-form {
   .other-ingredient-button {
 
   }
+  .note-item {
+    background: map-get($colors, gray-scale-6);
+    color: map-get($colors, gray-scale-2);
+    padding: 0;
+    margin: 5px 0;
+    div {
+      padding: 0 !important;
+    }
+    ion-label {
+      margin: 0;
+      height: 100%;
+      button {
+        height: 100%;
+        width: 100%;
+        font-size: 1em;
+        span {
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          overflow: hidden;
+          display: block;
+        }
+      }
+    }
+  }
+  .note-operation-button-container {
+    display: flex;
+    justify-content: space-around;
+  }
+  .process-item {
+    ion-label {
+      display: flex;
+      align-items: center;
+    }
+    button {
+      background: transparent;
+      margin-right: 5px;
+    }
+  }
   ion-grid {
     background: map-get($colors, gray-scale-4);
     -webkit-box-shadew: inset 0 0 40px 20px map-get($colors, gray-scale-3);
@@ -54,5 +95,8 @@ page-recipe-form {
   }
   ion-icon {
     font-size: 2.5em;
+  }
+  ion-reorder {
+    margin-right: 16px;
   }
 }
