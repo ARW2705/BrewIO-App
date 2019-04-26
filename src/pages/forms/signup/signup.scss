@@ -1,0 +1,12 @@
+page-signup {
+  .form-button {
+    display: block;
+    margin: 20px auto 0;
+  }
+  .form-error {
+    padding-top: 4px;
+    padding-left: 16px;
+    font-size: 1.2em;
+    color: map-get($colors, danger);
+  }
+}

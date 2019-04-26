@@ -1,0 +1,120 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>Sign Up</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding>
+  <form [formGroup]="signupForm">
+
+    <ion-item>
+      <ion-label floating>Username</ion-label>
+      <ion-input type="text"
+                 formControlName="username"
+                 autocapitalize="off">
+      </ion-input>
+    </ion-item>
+    <ng-container *ngIf="hasFormError('username')">
+      <div *ngFor="let error of getFormErrors('username')"
+           class="form-error"
+           [innerText]="error">
+      </div>
+    </ng-container>
+
+    <ion-item>
+      <ion-label floating>Password</ion-label>
+      <ion-input type="{{ showPassword ? 'text': 'password' }}"
+                 formControlName="password"
+                 autocapitalize="off">
+      </ion-input>
+    </ion-item>
+    <ng-container *ngIf="hasFormError('password')">
+      <div *ngFor="let error of getFormErrors('password')"
+           class="form-error"
+           [innerText]="error">
+      </div>
+    </ng-container>
+
+    <ion-item>
+      <ion-label floating>Confirm Password</ion-label>
+      <ion-input type="{{ showPassword ? 'text': 'password' }}"
+                 formControlName="passwordConfirmation"
+                 autocapitalize="off">
+      </ion-input>
+    </ion-item>
+    <ng-container *ngIf="hasFormError('passwordConfirmation')">
+      <div *ngFor="let error of getFormErrors('passwordConfirmation')"
+           class="form-error"
+           [innerText]="error">
+      </div>
+    </ng-container>
+
+    <ion-item class="item-checkbox">
+      <ion-label>Show Password</ion-label>
+      <ion-checkbox (ionChange)="togglePasswordVisible()"></ion-checkbox>
+    </ion-item>
+
+    <ion-item>
+      <ion-label>Email</ion-label>
+      <ion-input type="text"
+                 formControlName="email"
+                 autocapitalize="off">
+      </ion-input>
+    </ion-item>
+    <ng-container *ngIf="hasFormError('email')">
+      <div *ngFor="let error of getFormErrors('email')"
+           class="form-error"
+           [innerText]="error">
+      </div>
+    </ng-container>
+
+    <ion-item>
+      <ion-label>First Name</ion-label>
+      <ion-input type="text" formControlName="firstname"></ion-input>
+    </ion-item>
+    <ng-container *ngIf="hasFormError('firstname')">
+      <div *ngFor="let error of getFormErrors('firstname')"
+           class="form-error"
+           [innerText]="error">
+      </div>
+    </ng-container>
+
+    <ion-item>
+      <ion-label>Last Name</ion-label>
+      <ion-input type="text" formControlName="lastname"></ion-input>
+    </ion-item>
+    <ng-container *ngIf="hasFormError('lastname')">
+      <div *ngFor="let error of getFormErrors('lastname')"
+           class="form-error"
+           [innerText]="error">
+      </div>
+    </ng-container>
+
+  </form>
+
+  <ion-grid>
+    <ion-row>
+      <ion-col>
+        <button ion-button
+                color="primary"
+                class="form-button"
+                (click)="dismiss()">
+          Cancel
+        </button>
+      </ion-col>
+      <ion-col>
+        <button ion-button
+                color="primary"
+                class="form-button"
+                (click)="onSubmit()"
+                [disabled]="!signupForm.valid">
+          Sign Up
+        </button>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+  <ng-container *ngIf="errMsg">
+    Error {{ errMsg }}
+  </ng-container>
+
+</ion-content>
