@@ -26,14 +26,16 @@
         <ion-label floating>Duration {{ stepType == 'timer' ? '(Minutes)': '(Days)' }}</ion-label>
         <ion-input type="number" formControlName="duration"></ion-input>
       </ion-item>
-      <ion-item>
-        <ion-label floating>Split Interval</ion-label>
-        <ion-input type="number" formControlName="splitInterval"></ion-input>
-      </ion-item>
-      <ion-item *ngIf="stepType == 'timer'">
-        <ion-label position="floating">Concurrent</ion-label>
-        <ion-toggle formControlName="concurrent" color="primary"></ion-toggle>
-      </ion-item>
+      <ng-container *ngIf="stepType == 'timer'">
+        <ion-item>
+          <ion-label floating>Split Interval</ion-label>
+          <ion-input type="number" formControlName="splitInterval"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="floating">Concurrent</ion-label>
+          <ion-toggle formControlName="concurrent" color="primary"></ion-toggle>
+        </ion-item>
+      </ng-container>
     </ng-container>
 
     <ion-grid>
