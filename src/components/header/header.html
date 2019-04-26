@@ -10,7 +10,10 @@
                   float-right
                   *ngIf="!username"
                   (click)="openLogin()">
-            Log In
+            <!-- Log In -->
+            <ion-icon id="log-in-icon"
+                      name="log-in">
+            </ion-icon>
           </button>
           <ion-row *ngIf="username">
             <ion-col col-12

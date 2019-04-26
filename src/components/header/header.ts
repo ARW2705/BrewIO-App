@@ -5,6 +5,7 @@ import { LoginPage } from '../../pages/forms/login/login';
 import { SignupPage } from '../../pages/forms/signup/signup';
 
 import { UserProvider } from '../../providers/user/user';
+import { ModalProvider } from '../../providers/modal/modal';
 
 @Component({
   selector: 'app-header',
@@ -15,14 +16,17 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private username: string = '';
   private _titleChange: any;
   private _tabChange: any;
+  private _login: any;
 
   constructor(private modalCtrl: ModalController,
     private cdRef: ChangeDetectorRef,
     public events: Events,
-    private userService: UserProvider) {
+    private userService: UserProvider,
+    private modalService: ModalProvider) {
       this.getUsername();
       this._titleChange = this.titleChangeEventHandler.bind(this);
       this._tabChange = this.tabChangeEventHandler.bind(this);
+      this._login = this.loginEventHandler.bind(this);
   }
 
   getUsername() {
@@ -33,22 +37,21 @@ export class HeaderComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.events.unsubscribe('title-change', this._titleChange);
     this.events.unsubscribe('tab-change', this._tabChange);
+    this.events.unsubscribe('on-login', this._login);
   }
 
   ngOnInit() {
     this.events.subscribe('title-change', this._titleChange);
     this.events.subscribe('tab-change', this._tabChange);
+    this.events.subscribe('on-login', this._login);
   }
 
   openLogin() {
-    const modal = this.modalCtrl.create(LoginPage);
-    modal.onDidDismiss(data => {
-      if (data) {
-        this.username = data;
-        this.cdRef.detectChanges();
-      }
-    });
-    modal.present();
+    this.modalService.openLogin();
+  }
+
+  loginEventHandler(): void {
+    this.getUsername();
   }
 
   tabChangeEventHandler() {
@@ -56,7 +59,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   titleChangeEventHandler(title: string) {
-    console.log(title);
     this.title = title;
   }
 
