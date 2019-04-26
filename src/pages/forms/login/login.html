@@ -8,11 +8,17 @@
   <form [formGroup]="loginForm">
     <ion-item>
       <ion-label floating>Username</ion-label>
-      <ion-input type="text" formControlName="username"></ion-input>
+      <ion-input type="text"
+                 formControlName="username"
+                 autocapitalize="off">
+      </ion-input>
     </ion-item>
     <ion-item>
       <ion-label floating>Password</ion-label>
-      <ion-input type="{{ showPassword ? 'text': 'password' }}" formControlName="password"></ion-input>
+      <ion-input type="{{ showPassword ? 'text': 'password' }}"
+                 formControlName="password"
+                 autocapitalize="off">
+      </ion-input>
     </ion-item>
     <ion-item>
       <ion-label>Show Password</ion-label>
@@ -23,17 +29,27 @@
       <ion-checkbox formControlName="remember"></ion-checkbox>
     </ion-item>
   </form>
-  <button ion-button
-          color="primary"
-          (click)="dismiss()">
-    Cancel
-  </button>
-  <button ion-button
-          color="primary"
-          (click)="onSubmit()"
-          [disabled]="!loginForm.valid">
-    Submit
-  </button>
+  <ion-grid>
+    <ion-row>
+      <ion-col>
+        <button ion-button
+                color="primary"
+                class="form-button"
+                (click)="dismiss()">
+          Cancel
+        </button>
+      </ion-col>
+      <ion-col>
+        <button ion-button
+                color="primary"
+                class="form-button"
+                (click)="onSubmit()"
+                [disabled]="!loginForm.valid">
+          Log In
+        </button>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
   <ng-container *ngIf="errMsg">
     Error {{ errMsg }}
   </ng-container>
