@@ -23,6 +23,8 @@ import { ProcessFormPage } from '../pages/forms/process-form/process-form';
 import { IngredientFormPage } from '../pages/forms/ingredient-form/ingredient-form';
 import { LoginPage } from '../pages/forms/login/login';
 import { ProcessPage } from '../pages/process/process';
+import { SignupPage } from '../pages/forms/signup/signup';
+import { NoteFormPage } from '../pages/forms/note-form/note-form';
 
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
@@ -37,6 +39,8 @@ import { StorageProvider } from '../providers/storage/storage';
 import { PlatformInformationProvider } from '../providers/platform-information/platform-information';
 import { CalculationsProvider } from '../providers/calculations/calculations';
 import { ProcessProvider } from '../providers/process/process';
+import { ModalProvider } from '../providers/modal/modal';
+import { FormValidatorProvider } from '../providers/form-validator/form-validator';
 
 @NgModule({
   declarations: [
@@ -54,7 +58,9 @@ import { ProcessProvider } from '../providers/process/process';
     IngredientFormPage,
     LoginPage,
     ProcessFormPage,
-    ProcessPage
+    ProcessPage,
+    SignupPage,
+    NoteFormPage
   ],
   imports: [
     BrowserModule,
@@ -83,7 +89,9 @@ import { ProcessProvider } from '../providers/process/process';
     IngredientFormPage,
     LoginPage,
     ProcessFormPage,
-    ProcessPage
+    ProcessPage,
+    SignupPage,
+    NoteFormPage
   ],
   providers: [
     StatusBar,
@@ -109,7 +117,9 @@ import { ProcessProvider } from '../providers/process/process';
     StorageProvider,
     PlatformInformationProvider,
     CalculationsProvider,
-    ProcessProvider
+    ProcessProvider,
+    ModalProvider,
+    FormValidatorProvider
   ]
 })
 export class AppModule {}
