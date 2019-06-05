@@ -79,6 +79,7 @@
                                 *ngIf="recipeMaster.recipes.length > 1">
                 <button ion-button
                         color="danger"
+                        [disabled]="!canDelete()"
                         (click)="deleteRecipe(recipe)">
                   <ion-icon name="trash"></ion-icon>
                   Delete
@@ -93,7 +94,16 @@
                 <ion-grid no-padding>
                   <ion-row class="recipe-summary-header">
                     <ion-col>
-                      {{ recipe.variantName | titlecase }} <ion-icon color="primary" *ngIf="recipe.isMaster" name="star"></ion-icon>
+                      {{ recipe.variantName | titlecase }}
+                      <ion-icon *ngIf="recipe.isMaster"
+                                name="star"
+                                color="primary" ></ion-icon>
+                      <ion-icon *ngIf="!recipe.isMaster && recipe.isFavorite"
+                                name="heart"
+                                color="danger"></ion-icon>
+                      <ion-icon *ngIf="!recipe.isMaster && !recipe.isFavorite"
+                                name="heart-outline"
+                                color="danger"></ion-icon>
                     </ion-col>
                   </ion-row>
                   <ion-row class="recipe-summary-subheader">
@@ -111,6 +121,12 @@
               </button>
 
               <ion-item-options side="right">
+                <button ion-button
+                        color="heart"
+                        (click)="toggleFavorite(recipe)">
+                  <ion-icon name="heart"></ion-icon>
+                  Fav
+                </button>
                 <button ion-button
                         color="primary"
                         (click)="navToBrewProcess(recipe)">

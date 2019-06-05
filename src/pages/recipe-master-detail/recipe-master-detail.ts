@@ -22,6 +22,7 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
   private noteIndex: number = -1;
   private showNotes: boolean = false;
   private showNotesIcon: string = 'arrow-down';
+  private deletionInProgress: boolean = false;
   private _updateMaster: any;
   private _addRecipe: any;
   private _updateRecipe: any;
@@ -61,15 +62,35 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
   }
 
   deleteRecipe(recipe: Recipe) {
+    this.deletionInProgress = true;
     this.recipeService.deleteRecipeById(this.recipeMaster._id, recipe._id)
       .subscribe(response => {
         console.log('deleted recipe');
+        this.deletionInProgress = false;
         const index = getIndexById(recipe._id, this.recipeMaster.recipes);
       });
   }
 
+  canDelete(): boolean {
+    return  this.recipeMaster.recipes.length > 1
+            && !this.deletionInProgress;
+  }
+
   expandRecipe(index: number) {
     this.recipeIndex = this.recipeIndex == index ? -1: index;
+  }
+
+  toggleFavorite(recipe: Recipe): void {
+    this.recipeService.patchRecipeById(
+      this.recipeMaster._id,
+      recipe._id,
+      {isFavorite: !recipe.isFavorite}
+    )
+    .subscribe(response => {
+      if (response) {
+        console.log('set fav', response);
+      }
+    })
   }
 
   isMaster(index: number) {
