@@ -1,3 +1,5 @@
-<div #expandAccordion class='expand-accordion' [class.collapsed]="!expanded">
+<div  class='expand-accordion'
+      [@slideUpDown]="expand"
+      #accordionContainer>
   <ng-content></ng-content>
 </div>
