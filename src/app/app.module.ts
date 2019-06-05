@@ -4,7 +4,6 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { IonicApp, IonicModule, IonicErrorHandler } from 'ionic-angular';
 import { MyApp } from './app.component';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
-import { NativeStorage } from '@ionic-native/native-storage/ngx';
 import { IonicStorageModule } from '@ionic/storage';
 import { CommonModule } from '@angular/common';
 import { ComponentsModule } from '../components/components.module';
@@ -34,9 +33,6 @@ import { AuthenticationProvider } from '../providers/authentication/authenticati
 import { AuthorizedInterceptor, UnauthorizedInterceptor } from '../providers/interceptor/interceptor';
 import { ProcessHttpErrorProvider } from '../providers/process-http-error/process-http-error';
 import { LibraryProvider } from '../providers/library/library';
-import { NativeStorageProvider } from '../providers/native-storage/native-storage';
-import { StorageProvider } from '../providers/storage/storage';
-import { PlatformInformationProvider } from '../providers/platform-information/platform-information';
 import { CalculationsProvider } from '../providers/calculations/calculations';
 import { ProcessProvider } from '../providers/process/process';
 import { ModalProvider } from '../providers/modal/modal';
@@ -112,10 +108,6 @@ import { FormValidatorProvider } from '../providers/form-validator/form-validato
     },
     ProcessHttpErrorProvider,
     LibraryProvider,
-    NativeStorageProvider,
-    NativeStorage,
-    StorageProvider,
-    PlatformInformationProvider,
     CalculationsProvider,
     ProcessProvider,
     ModalProvider,

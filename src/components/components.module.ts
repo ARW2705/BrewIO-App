@@ -4,15 +4,18 @@ import { AccordionComponent } from './accordion/accordion';
 import { HeaderComponent } from './header/header';
 import { ProgressCircleComponent } from './progress-circle/progress-circle';
 import { CalendarComponent } from './calendar/calendar';
+import { ActiveBatchesComponent } from './active-batches/active-batches';
 @NgModule({
 	declarations: [AccordionComponent,
     HeaderComponent,
     ProgressCircleComponent,
-    CalendarComponent],
+    CalendarComponent,
+    ActiveBatchesComponent],
 	imports: [IonicModule],
 	exports: [AccordionComponent,
     HeaderComponent,
     ProgressCircleComponent,
-    CalendarComponent]
+    CalendarComponent,
+    ActiveBatchesComponent]
 })
 export class ComponentsModule {}
