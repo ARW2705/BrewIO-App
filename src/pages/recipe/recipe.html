@@ -1,18 +1,15 @@
 <app-header [title]="title"></app-header>
 
-<ion-content>
+<ion-content class="content">
 
   <ion-grid>
 
-    <ion-row id="active-batch-summary"
-             *ngIf="hasActiveBatch">
-      Show active batch info here
-    </ion-row>
-
-    <ion-row id="no-active-batch-header"
-             *ngIf="!hasActiveBatch">
-      <h2>No Active Batches</h2>
-    </ion-row>
+    <ng-container *ngIf="isLoggedIn">
+      <ion-row class="messages-header">
+        <h3>Active Batches</h3>
+      </ion-row>
+      <active-batches></active-batches>
+    </ng-container>
 
     <ion-row justify-content-center>
       <button ion-button
@@ -25,7 +22,7 @@
     <ion-row *ngIf="masterList">
       <ion-list id="master-list">
         <ng-container *ngFor="let master of masterList; index as i">
-          <ion-item-sliding>
+          <ion-item-sliding class="recipe-master-item">
 
             <ion-item-options side="left">
               <button ion-button
@@ -84,42 +81,79 @@
             <ion-card class="recipe-card">
               <ion-card-content>
                 <ion-list *ngIf="masterRecipeList[i]">
-                  <ion-item-group *ngIf="masterRecipeList[i].grains">
+                  <ion-item-group *ngIf="masterRecipeList[i].grains.length">
                     <ion-item-divider color="primary" class="card-divider">
                       Grains
                     </ion-item-divider>
-                    <ion-item *ngFor="let grains of masterRecipeList[i].grains">
-                      <span item-start>{{ grains.grainType.name }}</span>
-                      <span item-end>{{ grains.quantity }} lbs</span>
-                    </ion-item>
+                    <ion-grid>
+                      <ion-row  *ngFor="let grains of masterRecipeList[i].grains"
+                                justify-content-between
+                                align-items-center
+                                class="ingredient-row">
+                        <ion-col col-7>
+                          {{ grains.grainType.name }}
+                        </ion-col>
+                        <ion-col col-4>
+                          {{ grains.quantity }} lbs
+                        </ion-col>
+                      </ion-row>
+                    </ion-grid>
                   </ion-item-group>
                   <ion-item-group *ngIf="masterRecipeList[i].hops.length">
                     <ion-item-divider color="primary" class="card-divider">
                       Hops
                     </ion-item-divider>
-                    <ion-item *ngFor="let hops of masterRecipeList[i].hops">
-                      <span item-start>{{ hops.hopsType.name }}</span>
-                      <span item-end>{{ hops.quantity }} oz</span>
-                    </ion-item>
+                    <ion-grid>
+                      <ion-row  *ngFor="let hops of masterRecipeList[i].hops"
+                                justify-content-between
+                                align-items-center
+                                class="ingredient-row">
+                        <ion-col col-7>
+                          {{ hops.hopsType.name }}
+                        </ion-col>
+                        <ion-col col-4>
+                          {{ hops.quantity }} oz
+                        </ion-col>
+                      </ion-row>
+                    </ion-grid>
                   </ion-item-group>
                   <ion-item-group *ngIf="masterRecipeList[i].yeast.length">
                     <ion-item-divider color="primary" class="card-divider">
                       Yeast
                     </ion-item-divider>
-                    <ion-item *ngFor="let yeast of masterRecipeList[i].yeast">
-                      <span item-start>{{ yeast.yeastType.name }}</span>
-                      <span item-end>{{ yeast.quantity }} pack</span>
-                    </ion-item>
+                    <ion-grid>
+                      <ion-row  *ngFor="let yeast of masterRecipeList[i].yeast"
+                                justify-content-between
+                                align-items-center
+                                class="ingredient-row">
+                        <ion-col col-7>
+                          {{ yeast.yeastType.name }}
+                        </ion-col>
+                        <ion-col col-4>
+                          {{ yeast.quantity }} pack
+                        </ion-col>
+                      </ion-row>
+                    </ion-grid>
                   </ion-item-group>
                   <ion-item-group *ngIf="masterRecipeList[i].otherIngredients.length">
                     <ion-item-divider color="primary" class="card-divider">
                       Other Ingredients
                     </ion-item-divider>
-                    <ion-item *ngFor="let other of masterRecipeList[i].otherIngredients">
-                      <span item-start>{{ other.name }}</span>
-                      <span item-end>{{ other.type }}</span>
-                      <span>{{ other.description }}</span>
-                    </ion-item>
+                    <ion-grid>
+                      <ion-row  *ngFor="let other of masterRecipeList[i].otherIngredients"
+                                justify-content-between
+                                class="ingredient-row">>
+                        <ion-col col-7>
+                          {{ other.name }}
+                        </ion-col>
+                        <ion-col col-4>
+                          {{ other.type }}
+                        </ion-col>
+                        <ion-col col-12>
+                          {{ other.description }}
+                        </ion-col>
+                      </ion-row>
+                    </ion-grid>
                   </ion-item-group>
                 </ion-list>
               </ion-card-content>

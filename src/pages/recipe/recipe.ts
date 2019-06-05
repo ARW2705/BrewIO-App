@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { NavController, NavParams, Events } from 'ionic-angular';
 import { NativeStorage } from '@ionic-native/native-storage/ngx';
 
@@ -18,7 +18,7 @@ import { RecipeProvider } from '../../providers/recipe/recipe';
   selector: 'page-recipe',
   templateUrl: 'recipe.html',
 })
-export class RecipePage implements OnInit {
+export class RecipePage implements OnInit, OnDestroy {
   title: string = 'Recipes';
   private masterList: Array<RecipeMaster> = null;
   private masterRecipeList: Array<Recipe> = null;
@@ -26,6 +26,10 @@ export class RecipePage implements OnInit {
   private hasActiveBatch: boolean = false;
   private masterIndex: number = -1;
   private creationMode: boolean = false;
+  private _onLogin: any;
+  private _tabChange: any;
+  private _newMaster: any;
+  private _updateRecipe: any;
 
   constructor(public navCtrl: NavController,
     public navParams: NavParams,
@@ -34,17 +38,10 @@ export class RecipePage implements OnInit {
     private cdRef: ChangeDetectorRef,
     private userService: UserProvider,
     private recipeService: RecipeProvider) {
-      events.subscribe('on-login', () => {
-        this.getMasterList();
-      });
-      events.subscribe('tab-change', data => {
-        if (data.dest == 'recipes') {
-          console.log('recipe dest');
-        }
-      })
-      events.subscribe('new-master', master => {
-        this.getMasterList();
-      });
+      this._onLogin = this.onLoginEventHandler.bind(this);
+      this._tabChange = this.tabChangeEventHandler.bind(this);
+      this._newMaster = this.newMasterEventHandler.bind(this);
+      this._updateRecipe = this.updateRecipeEventHandler.bind(this);
   }
 
   deleteMaster(master: RecipeMaster) {
@@ -80,7 +77,11 @@ export class RecipePage implements OnInit {
   }
 
   navToBrewProcess(master: RecipeMaster) {
-    this.navCtrl.push(ProcessPage, {master: master, selected: master.master});
+    this.navCtrl.push(ProcessPage, {
+      master: master,
+      requestedUserId: master.owner,
+      selectedRecipeId: master.master
+    });
   }
 
   navToDetails(index: number) {
@@ -99,6 +100,17 @@ export class RecipePage implements OnInit {
     } else {
       // TODO check and pull from storage
     }
+    this.events.subscribe('on-login', this._onLogin);
+    this.events.subscribe('tab-change', this._tabChange);
+    this.events.subscribe('new-master', this._newMaster);
+    this.events.subscribe('update-recipe', this._updateRecipe);
+  }
+
+  ngOnDestroy() {
+    this.events.unsubscribe('on-login', this._onLogin);
+    this.events.unsubscribe('tab-change', this._tabChange);
+    this.events.unsubscribe('new-master', this._newMaster);
+    this.events.unsubscribe('update-recipe', this._updateRecipe);
   }
 
   showExpandedMaster(index: number): boolean {
@@ -107,6 +119,32 @@ export class RecipePage implements OnInit {
 
   toggleCreationMode() {
     this.creationMode = !this.creationMode;
+  }
+
+  onLoginEventHandler() {
+    this.getMasterList();
+  }
+
+  tabChangeEventHandler(data) {
+    if (data.dest == 'recipes') {
+      console.log('recipe dest');
+    }
+  }
+
+  newMasterEventHandler() {
+    this.getMasterList();
+  }
+
+  updateRecipeEventHandler(recipe: Recipe) {
+    const recipeMaster = this.masterList.find(master => {
+      return master.recipes.some(_recipe => {
+        return _recipe._id == recipe._id;
+      });
+    });
+    const indexToUpdate = recipeMaster.recipes.findIndex(item => item._id == recipe._id);
+    recipeMaster.recipes[indexToUpdate] = recipe;
+    recipeMaster.master = recipe._id;
+    this.mapMasterRecipes();
   }
 
 }
