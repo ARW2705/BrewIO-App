@@ -237,8 +237,6 @@ export class ProcessPage implements OnInit {
       timeRemaining = timeRemaining % 60;
       result += minutes < 10 ? '0': '';
       result += minutes + ':';
-    } else {
-      result += '00:';
     }
     result += timeRemaining < 10 ? '0': '';
     result += timeRemaining;
@@ -599,10 +597,11 @@ export class ProcessPage implements OnInit {
     timer.settings.text.fontSize = this.getFontSize(timer.timeRemaining);
     timer.settings.circle.strokeDashoffset = `${this.circumference - timer.timeRemaining / (timer.timer.duration * 60) * this.circumference}`;
     timer.settings.text.content = this.formatProgressCircleText(timer.timeRemaining);
-    if (timer.timeRemaining == 0) {
+    if (timer.timeRemaining < 1) {
       console.log('timer expired');
       this.clearTimer(timer);
       // TODO activate alarm
+      console.log('timer expired alarm');
     } else if (timer.timer.splitInterval > 1) {
       const interval = timer.timer.duration * 60 / timer.timer.splitInterval;
       if (timer.timeRemaining % interval == 0) {
@@ -625,13 +624,17 @@ export class ProcessPage implements OnInit {
     if (mode == 'start') {
       if (timer) {
         timer.interval = setInterval(() => {
-          timer.timeRemaining--;
+          if (timer.timeRemaining > 0) {
+            timer.timeRemaining--;
+          }
           this.setProgress(timer);
         }, 1000);
       } else {
         for (let timer of this.timers[this.currentTimers]) {
           timer.interval = setInterval(() => {
-            timer.timeRemaining--;
+            if (timer.timeRemaining > 0) {
+              timer.timeRemaining--;
+            }
             this.setProgress(timer);
           }, 1000);
         }

@@ -1,5 +1,5 @@
 import { Component, ChangeDetectorRef, AfterViewInit } from '@angular/core';
-import { NavController, NavParams, ModalController, ActionSheetController } from 'ionic-angular';
+import { NavController, NavParams, ModalController } from 'ionic-angular';
 
 import { Recipe } from '../../../shared/interfaces/recipe';
 import { RecipeMaster } from '../../../shared/interfaces/recipe-master';
@@ -7,7 +7,7 @@ import { Grains, Hops, Yeast, Style } from '../../../shared/interfaces/library';
 import { HopsSchedule } from '../../../shared/interfaces/hops-schedule';
 import { defaultRecipeMaster } from '../../../shared/defaults/default-recipe-master';
 import { defaultStyle } from '../../../shared/defaults/default-style';
-import { clone } from '../../../shared/utility-functions/utilities';
+import { clone, toTitleCase } from '../../../shared/utility-functions/utilities';
 
 import { GeneralFormPage } from '../general-form/general-form';
 import { ProcessFormPage } from '../process-form/process-form';
@@ -17,6 +17,8 @@ import { NoteFormPage } from '../note-form/note-form';
 import { LibraryProvider } from '../../../providers/library/library';
 import { RecipeProvider } from '../../../providers/recipe/recipe';
 import { CalculationsProvider } from '../../../providers/calculations/calculations';
+import { ToastProvider } from '../../../providers/toast/toast';
+import { ActionSheetProvider } from '../../../providers/action-sheet/action-sheet';
 
 @Component({
   selector: 'page-recipe-form',
@@ -37,31 +39,31 @@ export class RecipeFormPage implements AfterViewInit {
   private master: RecipeMaster = null;
   private recipe: Recipe = null;
   private textarea = '';
-  private updateIndex = -1;
 
   constructor(public navCtrl: NavController,
     public navParams: NavParams,
     private modalCtrl: ModalController,
-    private actionCtrl: ActionSheetController,
     private cdRef: ChangeDetectorRef,
     private libraryService: LibraryProvider,
     private recipeService: RecipeProvider,
-    private calculator: CalculationsProvider) {
-    this.setFormTypeConfiguration(
-      navParams.get('formType'),
-      navParams.get('mode'),
-      navParams.get('masterData'),
-      navParams.get('recipeData'),
-      navParams.get('other')
-    );
-    this.libraryService.getAllLibraries()
-      .subscribe(([grainsLibrary, hopsLibrary, yeastLibrary, styleLibrary]) => {
-        this.grainsLibrary = grainsLibrary;
-        this.hopsLibrary = hopsLibrary;
-        this.yeastLibrary = yeastLibrary;
-        this.styleLibrary = styleLibrary;
-        this.isLoaded = true;
-      });
+    private calculator: CalculationsProvider,
+    private toastService: ToastProvider,
+    private actionService: ActionSheetProvider) {
+      this.setFormTypeConfiguration(
+        navParams.get('formType'),
+        navParams.get('mode'),
+        navParams.get('masterData'),
+        navParams.get('recipeData'),
+        navParams.get('other')
+      );
+      this.libraryService.getAllLibraries()
+        .subscribe(([grainsLibrary, hopsLibrary, yeastLibrary, styleLibrary]) => {
+          this.grainsLibrary = grainsLibrary;
+          this.hopsLibrary = hopsLibrary;
+          this.yeastLibrary = yeastLibrary;
+          this.styleLibrary = styleLibrary;
+          this.isLoaded = true;
+        });
   }
 
   constructPayload(): any {
@@ -138,30 +140,49 @@ export class RecipeFormPage implements AfterViewInit {
 
   onSubmit() {
     const payload = this.constructPayload();
+    const message = toTitleCase(`${this.formType} ${this.docMethod} Successful!`);
     if (this.docMethod == 'create') {
       if (this.formType == 'master') {
         this.recipeService.postRecipeMaster(payload)
           .subscribe(response => {
-            this.navCtrl.pop();
+            if (response) {
+              this.toastService.presentToast(message);
+              this.navCtrl.pop();
+            } else {
+              // TODO show toast error
+            }
           });
       } else if (this.formType == 'recipe') {
         this.recipeService.postRecipeToMasterById(this.master._id, payload)
           .subscribe(response => {
-            this.navCtrl.pop();
+            if (response) {
+              this.toastService.presentToast(message);
+              this.navCtrl.pop();
+            } else {
+              // TODO show toast error
+            }
           });
       }
     } else if (this.docMethod == 'update') {
       if (this.formType == 'master') {
         this.recipeService.patchRecipeMasterById(this.master._id, payload)
           .subscribe(response => {
-            // TODO map response to master
-            // TODO show confirmation
-            this.navCtrl.pop();
+            if (response) {
+              this.toastService.presentToast(message);
+              this.navCtrl.pop();
+            } else {
+              // TODO show toast error
+            }
           });
       } else if (this.formType == 'recipe') {
         this.recipeService.patchRecipeById(this.master._id, this.recipe._id, payload)
           .subscribe(response => {
-            this.navCtrl.pop();
+            if (response) {
+              this.toastService.presentToast(message);
+              this.navCtrl.pop();
+            } else {
+              // TODO show toast error
+            }
           });
       }
     }
@@ -209,9 +230,9 @@ export class RecipeFormPage implements AfterViewInit {
   }
 
   openIngredientActionSheet() {
-    const actionSheet = this.actionCtrl.create({
-      title: 'Select an Ingredient',
-      buttons: [
+    this.actionService.openActionSheet(
+      'Select an Ingredient',
+      [
         {
           text: 'Grains',
           handler: () => {
@@ -235,17 +256,9 @@ export class RecipeFormPage implements AfterViewInit {
           handler: () => {
             this.openIngredientFormModal('otherIngredients');
           }
-        },
-        {
-          text: 'Cancel',
-          role: 'cancel',
-          handler: () => {
-            console.log('Action sheet cancelled');
-          }
         }
       ]
-    });
-    actionSheet.present({keyboardClose: false});
+    );
   }
 
   openIngredientFormModal(type: string, toUpdate?: any) {
@@ -319,9 +332,9 @@ export class RecipeFormPage implements AfterViewInit {
   }
 
   openProcessActionSheet() {
-    const actionSheet = this.actionCtrl.create({
-      title: 'Add a process step',
-      buttons: [
+    this.actionService.openActionSheet(
+      'Add a process step',
+      [
         {
           text: 'Manual',
           handler: () => {
@@ -339,17 +352,9 @@ export class RecipeFormPage implements AfterViewInit {
           handler: () => {
             this.openProcessModal('calendar');
           }
-        },
-        {
-          text: 'Cancel',
-          role: 'cancel',
-          handler: () => {
-            console.log('Action sheet cancelled');
-          }
         }
       ]
-    });
-    actionSheet.present({keyboardClose: false});
+    );
   }
 
   openProcessModal(processType: string, toUpdate?: any, index?: number) {

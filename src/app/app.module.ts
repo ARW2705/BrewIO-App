@@ -37,6 +37,8 @@ import { CalculationsProvider } from '../providers/calculations/calculations';
 import { ProcessProvider } from '../providers/process/process';
 import { ModalProvider } from '../providers/modal/modal';
 import { FormValidatorProvider } from '../providers/form-validator/form-validator';
+import { ToastProvider } from '../providers/toast/toast';
+import { ActionSheetProvider } from '../providers/action-sheet/action-sheet';
 
 @NgModule({
   declarations: [
@@ -111,7 +113,9 @@ import { FormValidatorProvider } from '../providers/form-validator/form-validato
     CalculationsProvider,
     ProcessProvider,
     ModalProvider,
-    FormValidatorProvider
+    FormValidatorProvider,
+    ToastProvider,
+    ActionSheetProvider
   ]
 })
 export class AppModule {}
