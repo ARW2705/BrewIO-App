@@ -15,6 +15,10 @@ export function getIndexById(id: string, arr: Array<any>) {
   return -1;
 }
 
+export function toTitleCase(str: string): string {
+  return str.replace(/\b[a-z]/g, firstChar => firstChar.toUpperCase());
+}
+
 function _removeShared(obj: any) {
   for (const key in obj) {
     if (sharedProperties.indexOf(key) != -1) {
