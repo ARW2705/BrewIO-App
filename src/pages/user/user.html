@@ -1,15 +1,115 @@
-<!--
-  Generated template for the UserPage page.
+<app-header [title]="title"></app-header>
 
-  See http://ionicframework.com/docs/components/#navigation for more info on
-  Ionic pages and navigation.
--->
-<ion-header>
-  <ion-navbar>
-    <ion-title>user</ion-title>
-  </ion-navbar>
-</ion-header>
+<ion-content class="content">
+  <!--
+    show login/signup if not logged in
+    show user profile
+    user profile update form
+  -->
 
-<ion-content padding>
+  <ion-grid>
+
+    <ng-container *ngIf="user">
+      <ion-row id="user-router-nav">
+        <ion-col>
+          About
+        </ion-col>
+        <ion-col>
+          Friends
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <form id="form" [formGroup]="userForm">
+          <ion-item *ngIf="!isEditing('email')">
+            <button class="profile-field-button"
+                    (click)="changeEdit('email')">
+              Email: <span>{{ userForm.value.email || 'NONE' }}</span>
+            </button>
+          </ion-item>
+          <ion-item *ngIf="isEditing('email')">
+            <ion-label floating>Email</ion-label>
+            <ion-input type="text"
+                        #email
+                       formControlName="email"
+                       autocapitalize="off"
+                       (keyup.enter)="changeEdit('email', email)"
+                       (ionBlur)="changeEdit('email', email)">
+            </ion-input>
+          </ion-item>
+
+          <ion-item *ngIf="!isEditing('firstname')">
+            <button class="profile-field-button"
+                    (click)="changeEdit('firstname')">
+              First name: <span>{{ userForm.value.firstname }}</span>
+            </button>
+          </ion-item>
+          <ion-item *ngIf="isEditing('firstname')">
+            <ion-label floating>First name</ion-label>
+            <ion-input type="text"
+                        #firstname
+                       formControlName="firstname"
+                       autocapitalize="off"
+                       (keyup.enter)="changeEdit('firstname', firstname)"
+                       (ionBlur)="changeEdit('firstname', firstname)">
+            </ion-input>
+          </ion-item>
+
+          <ion-item *ngIf="!isEditing('lastname')">
+            <button class="profile-field-button"
+                    (click)="changeEdit('lastname')">
+              Last name: <span>{{ userForm.value.lastname }}</span>
+            </button>
+          </ion-item>
+          <ion-item *ngIf="isEditing('lastname')">
+            <ion-label floating>Last name</ion-label>
+            <ion-input type="text"
+                        #lastname
+                       formControlName="lastname"
+                       autocapitalize="off"
+                       (keyup.enter)="changeEdit('lastname', lastname)"
+                       (ionBlur)="changeEdit('lastname', lastname)">
+            </ion-input>
+          </ion-item>
+
+        </form>
+      </ion-row>
+      <ion-row>
+        <!-- TODO friends list -->
+      </ion-row>
+      <ion-row *ngIf="hasValuesToUpdate()">
+        <ion-col class="user-button-container">
+          <button ion-button
+                  color="primary"
+                  [disabled]="!userForm.valid"
+                  (click)="onUpdate()">
+            Update profile
+          </button>
+        </ion-col>
+      </ion-row>
+    </ng-container>
+
+    <ng-container *ngIf="!user">
+      <ion-row justify-content-center>
+        <h2>Not logged in...</h2>
+      </ion-row>
+      <ion-row justify-content-around>
+        <ion-col col-4 class="user-button-container">
+          <button ion-button
+                  color="primary"
+                  (click)="openLogin()">
+            Log In
+          </button>
+        </ion-col>
+        <ion-col col-4 class="user-button-container">
+          <button ion-button
+                  color="primary"
+                  (click)="openSignup()">
+            Sign Up
+          </button>
+        </ion-col>
+      </ion-row>
+    </ng-container>
+
+  </ion-grid>
 
 </ion-content>
