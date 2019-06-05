@@ -13,6 +13,7 @@ $app-direction: ltr;
 
 
 @import "ionic.globals";
+@import './mixins';
 
 
 // Shared Variables
@@ -36,6 +37,7 @@ $colors: (
   primary:               #40e0cf,
   secondary:             #ff9649,
   danger:                #fd4855,
+  heart:                 #fe707a,
   light:                 #f4f4f4,
   dark:                  #222,
   gray-scale-1:          #161312,
@@ -120,6 +122,10 @@ $toolbar-md-title-font-size: 2.2rem; // 2rem
   color: map-get($colors, gray-scale-1) !important;
 }
 
+.button-md-heart {
+  color: map-get($colors, gray-scale-2) !important;
+}
+
 .tabs-md .tab-button[aria-selected=true] {
   background-color: map-get($colors, primary) !important;
 }
@@ -174,6 +180,33 @@ $toolbar-md-title-font-size: 2.2rem; // 2rem
 
 button {
   min-height: 48px;
+}
+
+.main-toast {
+  .toast-wrapper {
+    background: transparent !important;
+  }
+  .toast-message {
+    border-radius: 8px;
+    font-size: 1.25em !important;
+    margin: 0 5px 6px;
+    padding: 12px !important;
+    text-align: center;
+    color: map-get($colors, gray-scale-9) !important;
+    @include background-opacity(map-get($colors, gray-scale-1), 0.9);
+  }
+}
+
+.main-action-sheet {
+  .action-sheet-title {
+    text-align: center !important;
+  }
+  button {
+    span {
+      display: inline-block;
+      text-align: center !important;
+    }
+  }
 }
 
 // App iOS Variables
