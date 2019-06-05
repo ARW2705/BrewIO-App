@@ -4,22 +4,47 @@ page-recipe-master-detail {
   }
   .form-button {
     width: 100%;
-    margin: 10px 0;
+    margin: 5% 0;
   }
   #batch-list {
     width: 100%;
     padding: 0 !important;
-    margin-top: 10px;
+    margin: 10px 0 75px;
   }
   #style-name {
     font-size: 2em;
     text-align: center;
+  }
+  #note-name {
+    padding: 0 !important;
+    button {
+      ion-icon {
+        padding-left: 10px;
+      }
+    }
   }
   .expand-button {
     padding: 0 10px;
     ion-label {
       margin: 13px 0 6px;
     }
+  }
+  .note-button {
+    background-color: map-get($colors, gray-scale-8);
+    border-radius: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    font-size: 1.5em;
+    text-align: left;
+    padding: 10px;
+    margin: 5px 0;
+  }
+  .note-buttons-container {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 15px;
   }
   .variant-card {
     margin-bottom: 1px;
@@ -68,5 +93,8 @@ page-recipe-master-detail {
   ion-label {
     font-size: 1.5em;
     margin: 5px 0 !important;
+  }
+  ion-item-options {
+    border: none !important;
   }
 }

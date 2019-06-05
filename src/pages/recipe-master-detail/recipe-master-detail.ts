@@ -6,6 +6,7 @@ import { Recipe } from '../../shared/interfaces/recipe';
 import { getIndexById } from '../../shared/utility-functions/utilities';
 
 import { RecipeFormPage } from '../forms/recipe-form/recipe-form';
+import { ProcessPage } from '../process/process';
 
 import { RecipeProvider } from '../../providers/recipe/recipe';
 
@@ -18,6 +19,9 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
   private recipeMaster: RecipeMaster = null;
   private hasActiveBatch: boolean = false;
   private recipeIndex: number = -1;
+  private noteIndex: number = -1;
+  private showNotes: boolean = false;
+  private showNotesIcon: string = 'arrow-down';
   private _updateMaster: any;
   private _addRecipe: any;
   private _updateRecipe: any;
@@ -73,11 +77,26 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
   }
 
   navToBrewProcess(recipe: Recipe) {
-
+    this.navCtrl.push(ProcessPage, {
+      master: this.recipeMaster,
+      requestedUserId: this.recipeMaster.owner,
+      selectedRecipeId: recipe._id
+    });
   }
 
-  navToRecipeForm(formType: string, recipe?: Recipe) {
-    const options = {formType: formType};
+  expandNote(index: number): void {
+    this.noteIndex = this.noteIndex == index ? -1: index;
+  }
+
+  showExpandedNote(index: number): boolean {
+    return index == this.noteIndex;
+  }
+
+  navToRecipeForm(formType: string, recipe?: Recipe, other?: any) {
+    const options = {
+      formType: formType,
+      other: other
+    };
     if (formType == 'master') {
       options['masterData'] = this.recipeMaster;
       options['mode'] = 'update';
@@ -94,11 +113,10 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    const um = this.events.unsubscribe('update-master', this._updateMaster);
-    const ar = this.events.unsubscribe('new-recipe', this._addRecipe);
-    const ur = this.events.unsubscribe('update-recipe', this._updateRecipe);
-    const dr = this.events.unsubscribe('delete-recipe', this._deleteRecipe);
-    console.log('on destroy', um, ar, ur, dr);
+    this.events.unsubscribe('update-master', this._updateMaster);
+    this.events.unsubscribe('new-recipe', this._addRecipe);
+    this.events.unsubscribe('update-recipe', this._updateRecipe);
+    this.events.unsubscribe('delete-recipe', this._deleteRecipe);
   }
 
   ngOnInit() {
@@ -118,6 +136,23 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
 
   showExpandedRecipe(index: number): boolean {
     return index == this.recipeIndex;
+  }
+
+  deleteNote(index: number): void {
+    this.recipeMaster.notes.splice(index, 1);
+    this.recipeService.patchRecipeMasterById(this.recipeMaster._id, {notes: this.recipeMaster.notes})
+      .subscribe(response => {
+        console.log(response);
+      });
+  }
+
+  expandNoteMain() {
+    this.showNotes = !this.showNotes;
+    this.showNotesIcon = this.showNotes ? 'arrow-up': 'arrow-down';
+  }
+
+  updateNote(index: number): void {
+    this.navToRecipeForm('master', null, {noteIndex: index});
   }
 
   updateSetMaster(data: Recipe) {
