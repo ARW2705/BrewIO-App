@@ -10,7 +10,10 @@
       <ion-label floating>
         Enter Recipe Name
       </ion-label>
-      <ion-input type="text" formControlName="name"></ion-input>
+      <ion-input  type="text"
+                  autofocus
+                  formControlName="name">
+      </ion-input>
     </ion-item>
     <ion-item *ngIf="formType == 'recipe'">
       <ion-label floating>
@@ -45,6 +48,14 @@
       <ion-input formControlName="efficiency" type="number"></ion-input>
     </ion-item>
     <ion-item *ngIf="!(formType == 'master' && docMethod == 'update')">
+      <ion-label floating>Mash Duration</ion-label>
+      <ion-input formControlName="mashDuration" type="number"></ion-input>
+    </ion-item>
+    <ion-item *ngIf="!(formType == 'master' && docMethod == 'update')">
+      <ion-label floating>Boil Duration</ion-label>
+      <ion-input formControlName="boilDuration" type="number"></ion-input>
+    </ion-item>
+    <ion-item *ngIf="!(formType == 'master' && docMethod == 'update')">
       <ion-label floating>Batch Volume</ion-label>
       <ion-input formControlName="batchVolume" type="number"></ion-input>
     </ion-item>
@@ -71,7 +82,7 @@
         <ion-col>
           <button ion-button
                   color="primary"
-                  class="formButton"
+                  class="form-button"
                   (click)="dismiss()">
             Cancel
           </button>
@@ -79,7 +90,7 @@
         <ion-col>
           <button ion-button
                   color="primary"
-                  class="formButton"
+                  class="form-button"
                   [disabled]="!generalForm.valid"
                   (click)="onSubmit()">
             Submit

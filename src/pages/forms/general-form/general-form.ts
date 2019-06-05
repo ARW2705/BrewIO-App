@@ -15,6 +15,14 @@ export class GeneralFormPage {
   private docMethod: string = '';
   private styles: Array<Style> = null;
   private styleSelection;
+  private controlsToConvert: Array<string> = [
+    'efficiency',
+    'batchVolume',
+    'boilVolume',
+    'mashVolume',
+    'boilDuration',
+    'mashDuration'
+  ];
 
   constructor(public navCtrl: NavController,
     public navParams: NavParams,
@@ -32,10 +40,9 @@ export class GeneralFormPage {
   }
 
   private convertFormValuesToNumbers() {
-    this.generalForm.controls['efficiency'].setValue(parseFloat(this.generalForm.value.efficiency));
-    this.generalForm.controls['batchVolume'].setValue(parseFloat(this.generalForm.value.batchVolume));
-    this.generalForm.controls['boilVolume'].setValue(parseFloat(this.generalForm.value.boilVolume));
-    this.generalForm.controls['mashVolume'].setValue(parseFloat(this.generalForm.value.mashVolume));
+    this.controlsToConvert.forEach(key => {
+      this.generalForm.controls[key].setValue(parseFloat(this.generalForm.value[key]));
+    });
   }
 
   private dismiss() {
@@ -47,6 +54,8 @@ export class GeneralFormPage {
       style: ['', [Validators.required]],
       brewingType: ['', [Validators.required]],
       efficiency: 70,
+      mashDuration: 60,
+      boilDuration: 60,
       batchVolume: [null, [Validators.required]],
       boilVolume: [null, [Validators.required]],
       mashVolume: [null, [Validators.required]],
