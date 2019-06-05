@@ -9,43 +9,44 @@
 
     <ion-item>
       <ion-label floating>Username</ion-label>
-      <ion-input type="text"
-                 formControlName="username"
-                 autocapitalize="off">
+      <ion-input  type="text"
+                  formControlName="username"
+                  autofocus
+                  autocapitalize="off">
       </ion-input>
     </ion-item>
     <ng-container *ngIf="hasFormError('username')">
-      <div *ngFor="let error of getFormErrors('username')"
-           class="form-error"
-           [innerText]="error">
+      <div  *ngFor="let error of getFormErrors('username')"
+            class="form-error"
+            [innerText]="error">
       </div>
     </ng-container>
 
     <ion-item>
       <ion-label floating>Password</ion-label>
-      <ion-input type="{{ showPassword ? 'text': 'password' }}"
-                 formControlName="password"
-                 autocapitalize="off">
+      <ion-input  type="{{ showPassword ? 'text': 'password' }}"
+                  formControlName="password"
+                  autocapitalize="off">
       </ion-input>
     </ion-item>
     <ng-container *ngIf="hasFormError('password')">
-      <div *ngFor="let error of getFormErrors('password')"
-           class="form-error"
-           [innerText]="error">
+      <div  *ngFor="let error of getFormErrors('password')"
+            class="form-error"
+            [innerText]="error">
       </div>
     </ng-container>
 
     <ion-item>
       <ion-label floating>Confirm Password</ion-label>
-      <ion-input type="{{ showPassword ? 'text': 'password' }}"
-                 formControlName="passwordConfirmation"
-                 autocapitalize="off">
+      <ion-input  type="{{ showPassword ? 'text': 'password' }}"
+                  formControlName="passwordConfirmation"
+                  autocapitalize="off">
       </ion-input>
     </ion-item>
     <ng-container *ngIf="hasFormError('passwordConfirmation')">
-      <div *ngFor="let error of getFormErrors('passwordConfirmation')"
-           class="form-error"
-           [innerText]="error">
+      <div  *ngFor="let error of getFormErrors('passwordConfirmation')"
+            class="form-error"
+            [innerText]="error">
       </div>
     </ng-container>
 
@@ -56,37 +57,41 @@
 
     <ion-item>
       <ion-label>Email</ion-label>
-      <ion-input type="text"
-                 formControlName="email"
-                 autocapitalize="off">
+      <ion-input  type="text"
+                  formControlName="email"
+                  autocapitalize="off">
       </ion-input>
     </ion-item>
     <ng-container *ngIf="hasFormError('email')">
-      <div *ngFor="let error of getFormErrors('email')"
-           class="form-error"
-           [innerText]="error">
+      <div  *ngFor="let error of getFormErrors('email')"
+            class="form-error"
+            [innerText]="error">
       </div>
     </ng-container>
 
     <ion-item>
       <ion-label>First Name</ion-label>
-      <ion-input type="text" formControlName="firstname"></ion-input>
+      <ion-input  type="text"
+                  formControlName="firstname">
+      </ion-input>
     </ion-item>
     <ng-container *ngIf="hasFormError('firstname')">
-      <div *ngFor="let error of getFormErrors('firstname')"
-           class="form-error"
-           [innerText]="error">
+      <div  *ngFor="let error of getFormErrors('firstname')"
+            class="form-error"
+            [innerText]="error">
       </div>
     </ng-container>
 
     <ion-item>
       <ion-label>Last Name</ion-label>
-      <ion-input type="text" formControlName="lastname"></ion-input>
+      <ion-input  type="text"
+                  formControlName="lastname">
+      </ion-input>
     </ion-item>
     <ng-container *ngIf="hasFormError('lastname')">
-      <div *ngFor="let error of getFormErrors('lastname')"
-           class="form-error"
-           [innerText]="error">
+      <div  *ngFor="let error of getFormErrors('lastname')"
+            class="form-error"
+            [innerText]="error">
       </div>
     </ng-container>
 
