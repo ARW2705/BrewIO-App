@@ -21,6 +21,7 @@ export class HomePage implements OnInit, OnDestroy {
   notifications = [];
   private _login: any;
   private _tabChange: any;
+  private _updateMaster: any;
 
   constructor(public navCtrl: NavController,
     private cdRef: ChangeDetectorRef,
@@ -30,6 +31,7 @@ export class HomePage implements OnInit, OnDestroy {
     private modalService: ModalProvider) {
       this._login = this.loginEventHandler.bind(this);
       this._tabChange = this.tabChangeEventHandler.bind(this);
+      this._updateMaster = this.updateMasterEventHandler.bind(this);
   }
 
   private dismissBatch(batch: Recipe): void {
@@ -39,21 +41,14 @@ export class HomePage implements OnInit, OnDestroy {
   }
 
   private getActiveBatches(): void {
-    console.log('get actives');
     if (this.user) {
       this.activeBatches = [];
       this.user.masterList.forEach(recipeMaster => {
-        if (recipeMaster.hasActiveBatch) {
-          // this.activeBatches.push(recipeMaster);
-          recipeMaster.recipes.forEach(recipe => {
-            if (recipe.isActive) {
-              this.activeBatches.push(recipe);
-            }
-          });
-        }
+        // if (recipeMaster.hasActiveBatch) {
+        //   this.activeBatches.push(recipeMaster);
+        // }
       });
     }
-    console.log(this.activeBatches);
   }
 
   private getBatchCurrentStep(batch: Recipe): string {
@@ -82,7 +77,11 @@ export class HomePage implements OnInit, OnDestroy {
         return recipe._id == batch._id;
       });
     });
-    this.navCtrl.push(ProcessPage, {master: master, selected: batch._id});
+    this.navCtrl.push(ProcessPage, {
+      master: master,
+      requestedUserId: master.owner,
+      selectedRecipeId: batch._id
+    });
   }
 
   private openLogin() {
@@ -96,11 +95,13 @@ export class HomePage implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.events.unsubscribe('on-login', this._login);
     this.events.unsubscribe('tab-change', this._tabChange);
+    this.events.unsubscribe('update-master', this._updateMaster);
   }
 
   ngOnInit() {
     this.events.subscribe('on-login', this._login);
     this.events.subscribe('tab-change', this._tabChange);
+    this.events.subscribe('update-master', this._updateMaster);
     this.getActiveBatches();
   }
 
@@ -114,6 +115,12 @@ export class HomePage implements OnInit, OnDestroy {
           }
         });
     }
+  }
+
+  private updateMasterEventHandler(update: any) {
+    const indexToUpdate = this.user.masterList.findIndex(master => master._id == update._id);
+    this.user.masterList[indexToUpdate] = update;
+    this.getActiveBatches();
   }
 
 }
