@@ -1,6 +1,5 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { NativeStorage } from '@ionic-native/native-storage/ngx';
 import { Storage } from '@ionic/storage';
 import { Observable, Subject } from 'rxjs';
 import 'rxjs/add/operator/map';
@@ -11,7 +10,6 @@ import { apiVersion } from '../../shared/constants/api-version';
 import { User } from '../../shared/interfaces/user';
 
 import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
-import { NativeStorageProvider } from '../native-storage/native-storage';
 
 interface AuthResponse {
   status: string;
@@ -34,9 +32,7 @@ export class AuthenticationProvider {
 
   constructor(public http: HttpClient,
     private storage: Storage,
-    private nativeStorage: NativeStorage,
-    private processHttpError: ProcessHttpErrorProvider,
-    private storageUtils: NativeStorageProvider) {
+    private processHttpError: ProcessHttpErrorProvider) {
     console.log('Hello AuthenticationProvider Provider');
   }
 
