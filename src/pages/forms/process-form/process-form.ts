@@ -19,8 +19,8 @@ export class ProcessFormPage {
     private viewCtrl: ViewController) {
       this.stepType = navParams.get('processType');
       this.formMode = navParams.get('formMode');
+      this.title = `${this.formMode} ${this.stepType}`;
       this.initForm(navParams.get('update'));
-      console.log(this.stepType, this.formMode);
   }
 
   deleteStep() {
@@ -56,9 +56,9 @@ export class ProcessFormPage {
       } else {
         if (data.type == 'timer') {
           control.concurrent.setValue(data.concurrent);
+          control.splitInterval.setValue(data.setInterval);
         }
         control.duration.setValue(data.duration);
-        control.splitInterval.setValue(data.setInterval);
       }
     }
   }

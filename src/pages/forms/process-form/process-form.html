@@ -1,8 +1,6 @@
-<app-header [title]="title"></app-header>
-
 <ion-header>
   <ion-navbar>
-    <ion-title>process-form</ion-title>
+    <ion-title>{{ title | titlecase }}</ion-title>
   </ion-navbar>
 </ion-header>
 
@@ -11,29 +9,42 @@
   <form [formGroup]="processForm">
     <ion-item>
       <ion-label floating>Name</ion-label>
-      <ion-input type="text" formControlName="name"></ion-input>
+      <ion-input  type="text"
+                  autofocus
+                  formControlName="name">
+      </ion-input>
     </ion-item>
     <ion-item>
       <ion-label floating>Description</ion-label>
-      <ion-textarea rows="3" formControlName="description"></ion-textarea>
+      <ion-textarea rows="3"
+                    formControlName="description">
+      </ion-textarea>
     </ion-item>
     <ion-item *ngIf="stepType == 'manual'">
       <ion-label floating>Expected Duration</ion-label>
-      <ion-input type="number" formControlName="expectedDuration"></ion-input>
+      <ion-input  type="number"
+                  formControlName="expectedDuration">
+      </ion-input>
     </ion-item>
     <ng-container *ngIf="stepType != 'manual'">
       <ion-item>
         <ion-label floating>Duration {{ stepType == 'timer' ? '(Minutes)': '(Days)' }}</ion-label>
-        <ion-input type="number" formControlName="duration"></ion-input>
+        <ion-input  type="number"
+                    formControlName="duration">
+        </ion-input>
       </ion-item>
       <ng-container *ngIf="stepType == 'timer'">
         <ion-item>
           <ion-label floating>Split Interval</ion-label>
-          <ion-input type="number" formControlName="splitInterval"></ion-input>
+          <ion-input  type="number"
+                      formControlName="splitInterval">
+          </ion-input>
         </ion-item>
         <ion-item>
           <ion-label position="floating">Concurrent</ion-label>
-          <ion-toggle formControlName="concurrent" color="primary"></ion-toggle>
+          <ion-toggle formControlName="concurrent"
+                      color="primary">
+          </ion-toggle>
         </ion-item>
       </ng-container>
     </ng-container>
