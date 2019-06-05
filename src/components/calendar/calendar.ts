@@ -35,7 +35,11 @@ export class CalendarComponent implements OnInit, OnChanges {
       _id: this.stepData.id,
       startDatetime: this.startDate.mDate.toISOString(),
       alerts: this.projectedDates.map(date => {
-        return date.mDate.toISOString();
+        return {
+          title: this.stepData.title,
+          description: '',
+          datetime: date.mDate.toISOString()
+        };
       })
     };
   }

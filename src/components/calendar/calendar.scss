@@ -13,18 +13,17 @@ calendar {
     border-radius: 50%;
     width: 30px;
     height: 30px;
+    min-height: 30px !important;
     font-size: 1em;
     color: map-get($colors, gray-scale-10);
     background-color: map-get($colors, gray-scale-7);
     margin: 0 auto;
   }
-  .day-span {
+  .day-span,
+  .day-button {
     display: flex;
     justify-content: center;
     align-items: center;
-  }
-  .day-button {
-
   }
   .change-month-button {
     background: none;
