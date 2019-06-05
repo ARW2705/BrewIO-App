@@ -1,5 +1,5 @@
-import { Component, Input, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
-import { ModalController, Events } from 'ionic-angular';
+import { Component, Input, OnInit, OnDestroy, AfterViewInit, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { ModalController, NavController, Events, Navbar } from 'ionic-angular';
 
 import { LoginPage } from '../../pages/forms/login/login';
 import { SignupPage } from '../../pages/forms/signup/signup';
@@ -11,14 +11,16 @@ import { ModalProvider } from '../../providers/modal/modal';
   selector: 'app-header',
   templateUrl: 'header.html'
 })
-export class HeaderComponent implements OnInit, OnDestroy {
+export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
   @Input() title: string;
+  @ViewChild(Navbar) navBar: Navbar;
   private username: string = '';
   private _titleChange: any;
   private _tabChange: any;
   private _login: any;
 
   constructor(private modalCtrl: ModalController,
+    private navCtrl: NavController,
     private cdRef: ChangeDetectorRef,
     public events: Events,
     private userService: UserProvider,
@@ -27,6 +29,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this._titleChange = this.titleChangeEventHandler.bind(this);
       this._tabChange = this.tabChangeEventHandler.bind(this);
       this._login = this.loginEventHandler.bind(this);
+  }
+
+  ngAfterViewInit() {
+    this.navBar.backButtonClick = (e: UIEvent) => {
+      this.events.publish('header-nav-pop', this.navCtrl.getActive().name);
+      this.navCtrl.pop();
+    }
   }
 
   getUsername() {
