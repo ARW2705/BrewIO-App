@@ -20,7 +20,7 @@ export class ModalProvider {
         this.events.publish('on-login', data);
       }
     });
-    modal.present();
+    modal.present({keyboardClose: false});
   }
 
   public openSignup(): void {
@@ -31,7 +31,7 @@ export class ModalProvider {
         this.events.publish('on-signup', data);
       }
     });
-    modal.present();
+    modal.present({keyboardClose: false});
   }
 
 }
