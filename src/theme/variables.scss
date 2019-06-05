@@ -63,9 +63,62 @@ $toolbar-md-title-text-color: map-get($colors, primary);
 
 $button-md-background-color: map-get($colors, primary);
 $button-md-text-color: map-get($colors, gray-scale-1);
-
+$button-md-border-radius: 10px;
 $button-md-box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.2),
                        0 1px 2px rgba(0, 0, 0, 0.5);
+
+$action-sheet-md-button-font-size: 2.5rem; // 2rem
+$action-sheet-md-icon-font-size: 2.6rem; // 2.4rem
+$action-sheet-md-title-font-size: 2.2rem; // 1.3rem
+$alert-button-font-size: 18px; // 14px
+$alert-md-message-font-size: 19px; // 15px
+$alert-md-sub-title-font-size: 20px; // 16px
+$alert-md-title-font-size: 26px; // 22px
+$badge-font-size: 1.5rem; // 1.3rem
+$button-md-font-size: 1.8rem; // 1.4rem
+$button-md-large-font-size: 2.3rem; // 2rem
+$button-md-small-font-size: 1.5rem; // 1.3rem
+$button-md-small-icon-font-size: 1.6rem; // 1.4rem
+$card-md-font-size: 1.6rem; //1.4rem
+$card-md-header-font-size: 1.8rem; // 1.6rem
+$card-md-title-font-size: 2.6rem; // 2.4rem
+$chip-icon-font-size: 20px; // 18px
+$chip-md-font-size: 15px; // 13px
+$font-size-base: 1.6rem; // 1.4rem
+$font-size-root: 67%; // 62.5%
+$h1-font-size: 2.9rem; // 2.6rem
+$h2-font-size: 2.7rem; // 2.4rem
+$h3-font-size: 2.5rem; // 2.2rem
+$h4-font-size: 2.3rem; // 2rem
+$h5-font-size: 2.1rem; // 1.8rem
+$h6-font-size: 1.9rem; // 1.6rem
+$item-md-body-text-font-size: 1.7rem; // 1.4rem
+$item-md-font-size: 1.9rem; // 1.6rem
+$list-md-header-font-size: 1.7rem; // 1.4rem
+$picker-md-option-font-size: 25px; // 22px
+$range-md-pin-font-size: 15px; // 12px
+$refresher-icon-font-size: 33px; // 30px
+$refresher-text-font-size: 19px; // 16px
+$segment-button-md-font-size: 1.5rem; // 1.2rem
+$tabs-md-tab-font-size: 1.4rem; // 1.2rem
+$tabs-md-tab-font-size-active: 1.6rem; // 1.4rem
+$toast-md-title-font-size: 1.7rem; // 1.5rem
+$toolbar-md-button-font-size: 1.9rem; // 1.7rem
+$toolbar-md-title-font-size: 2.2rem; // 2rem
+
+
+
+.button-md-primary {
+  color: map-get($colors, gray-scale-2) !important;
+}
+
+.button-md-secondary {
+  color: map-get($colors, gray-scale-2) !important;
+}
+
+.button-md-danger {
+  color: map-get($colors, gray-scale-1) !important;
+}
 
 .tabs-md .tab-button[aria-selected=true] {
   background-color: map-get($colors, primary) !important;
@@ -94,6 +147,12 @@ $button-md-box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.2),
   height: 100%;
 }
 
+.item-checkbox {
+  .item-inner {
+    border: none !important;
+  }
+}
+
 .left-col {
   text-align: left;
 }
@@ -111,6 +170,10 @@ $button-md-box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.2),
 
 .toggle-md.toggle-checked .toggle-inner {
   background-color: map-get($colors, primary) !important;
+}
+
+button {
+  min-height: 48px;
 }
 
 // App iOS Variables
