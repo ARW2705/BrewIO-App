@@ -9,32 +9,41 @@
     <ion-row id="form-container">
       <form>
         <ion-textarea id="textarea"
+                      rows="8"
+                      autofocus
                       [formControl]="note">
         </ion-textarea>
       </form>
     </ion-row>
-    <ion-row id="button-container">
-      <ion-col>
-        <button ion-button
-                color="primary"
-                (click)="dismiss()">
-          Cancel
-        </button>
-      </ion-col>
-      <ion-col>
-        <button ion-button
-                color="primary"
-                (click)="onSubmit()">
-          Submit
-        </button>
-      </ion-col>
-      <ion-col *ngIf="formMethod == 'update'">
-        <button ion-button
-                color="secondary"
-                (click)="onDelete()">
-          Delete
-        </button>
-      </ion-col>
-    </ion-row>
+    <div id="button-container">
+      <ion-row>
+        <ion-col>
+          <button ion-button
+                  class="note-button"
+                  color="primary"
+                  (click)="dismiss()">
+            Cancel
+          </button>
+        </ion-col>
+        <ion-col *ngIf="formMethod == 'update'">
+          <button ion-button
+                  class="note-button"
+                  color="secondary"
+                  (click)="onDelete()">
+            Delete
+          </button>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col>
+          <button ion-button
+                  class="note-button"
+                  color="primary"
+                  (click)="onSubmit()">
+            Submit
+          </button>
+        </ion-col>
+      </ion-row>
+    </div>
   </ion-grid>
 </ion-content>

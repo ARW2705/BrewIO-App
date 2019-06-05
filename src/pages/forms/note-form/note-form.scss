@@ -1,3 +1,21 @@
 page-note-form {
-
+  #form-container {
+    margin-bottom: 5%;
+    form {
+      width: 100%;
+    }
+    #textarea {
+      border-radius: 10px;
+      padding: 1% 0;
+      color: map-get($colors, gray-scale-1);
+      background-color: map-get($colors, gray-scale-8);
+    }
+  }
+  .note-button {
+    width: 100%;
+    min-height: 48px;
+    margin: 3% 0;
+    font-size: 1.5em;
+    padding: 0;
+  }
 }
