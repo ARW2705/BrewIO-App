@@ -4,7 +4,7 @@
 
   <ion-grid id="process-grid">
 
-    <ng-container *ngIf="recipe && recipe.processSchedule.length">
+    <ng-container *ngIf="recipe && selectedBatch">
 
       <ion-row *ngIf="getViewStepType() == 'manual'">
         <ion-col col-12>
@@ -17,8 +17,8 @@
 
       <ion-row *ngIf="getViewStepType() == 'timer'">
 
-        <ion-row *ngIf="viewStepIndex == recipe.currentStep"
-                 id="timer-master-controls">
+      <ion-row  *ngIf="viewStepIndex == selectedBatch.currentStep"
+                id="timer-master-controls">
           <ion-col col-12>
             <h2>All Timer Controls</h2>
           </ion-col>
@@ -65,7 +65,7 @@
 
         <ng-container *ngFor="let timer of timers[currentTimers]">
 
-          <ion-row *ngIf="viewStepIndex != recipe.currentStep" class="timer-summary-container">
+          <ion-row *ngIf="viewStepIndex != selectedBatch.currentStep" class="timer-summary-container">
             <ion-col col-12>
               <h2>{{ timer.timer.name }}</h2>
             </ion-col>
@@ -80,7 +80,7 @@
             </ion-col>
           </ion-row>
 
-          <ng-container *ngIf="viewStepIndex == recipe.currentStep">
+          <ng-container *ngIf="viewStepIndex == selectedBatch.currentStep">
 
             <ion-row class="timer-row">
               <ion-col col-12>
@@ -100,7 +100,7 @@
                 </progress-circle>
               </ion-col>
               <ion-col *ngIf="isConcurrent && timer.show"
-                       [@slideInOut]
+                       [@slideUpDown]
                        class="timer-individual-controls">
                 <ion-row>
                   <button ion-button
@@ -150,13 +150,31 @@
             <h2>{{ getViewStepName() }}</h2>
           </button>
         </ion-col>
-        <ion-col col-12
-                 class="description"
-                 *ngIf="viewStepIndex != recipe.currentStep || showDescription">
+        <ion-col  col-12
+                  class="description"
+                  *ngIf="viewStepIndex != selectedBatch.currentStep || showDescription">
           <p>{{ getViewStepDescription() }}</p>
         </ion-col>
 
-        <calendar #calendar *ngIf="viewStepIndex == recipe.currentStep" [data]="getCurrentStepCalendarData()"></calendar>
+        <ion-col  col-12
+                  *ngIf="getViewStepType() == 'calendar' && calendarInProgress()">
+          <p class="calendar-description">{{ getNextDateSummary() }}</p>
+          <ion-list class="alert-list">
+            <h3>Next Checks</h3>
+            <ion-item *ngFor="let alert of getCurrentStepCalendarAlerts()"
+                       [ngClass]="getAlertClass(alert)">
+              <p class="alert-description">{{ alert.description || '' }}</p>
+              <p class="alert-datetime">{{ alert.datetime | date:'mediumDate' }}</p>
+            </ion-item>
+          </ion-list>
+          <button class="change-button"
+                  ion-button
+                  (click)="changeDate()">
+            Change Dates
+          </button>
+        </ion-col>
+
+        <calendar #calendar *ngIf="viewStepIndex == selectedBatch.currentStep && !calendarInProgress()" [data]="getCurrentStepCalendarData()"></calendar>
       </ion-row>
 
       <ion-row justify-content-between
@@ -164,13 +182,14 @@
         <ion-col>
           <button ion-button
                   color="primary"
-                  [disabled]="viewStepIndex == 0"
+                  [disabled]="atViewEnd('prev')"
                   (click)="changeStep('prev')">
             <ion-icon class="nav-process-button"
                       name="arrow-dropleft"></ion-icon>
           </button>
         </ion-col>
-        <ion-col *ngIf="viewStepIndex == recipe.currentStep">
+        <ion-col *ngIf="viewStepIndex == selectedBatch.currentStep
+                        && (getViewStepType() != 'calendar' || calendarInProgress())">
           <button ion-button
                   class="nav-process-button"
                   color="primary"
@@ -178,7 +197,7 @@
             Done
           </button>
         </ion-col>
-        <ion-col *ngIf="viewStepIndex != recipe.currentStep">
+        <ion-col *ngIf="viewStepIndex != selectedBatch.currentStep">
           <button ion-button
                   class="nav-process-button"
                   color="primary"
@@ -186,10 +205,20 @@
             Go To Active
           </button>
         </ion-col>
+        <ion-col *ngIf="viewStepIndex == selectedBatch.currentStep
+                        && getViewStepType() == 'calendar'
+                        && !calendarInProgress()">
+          <button ion-button
+                  class="nav-process-button"
+                  color="primary"
+                  (click)="startCalendar()">
+            Start
+          </button>
+        </ion-col>
         <ion-col>
           <button ion-button
                   color="primary"
-                  [disabled]="viewStepIndex >= recipe.processSchedule.length - 1"
+                  [disabled]="atViewEnd('next')"
                   (click)="changeStep('next')">
             <ion-icon class="nav-process-button"
                       name="arrow-dropright"></ion-icon>

@@ -5,21 +5,24 @@ import * as moment from 'moment';
 import { RecipeMaster } from '../../shared/interfaces/recipe-master';
 import { Recipe } from '../../shared/interfaces/recipe';
 import { Process } from '../../shared/interfaces/process';
+import { Batch } from '../../shared/interfaces/batch';
+import { Alert } from '../../shared/interfaces/alerts';
 import { ProgressCircleSettings } from '../../shared/interfaces/progress-circle';
 import { Timer } from '../../shared/interfaces/timers';
 import { clone } from '../../shared/utility-functions/utilities';
 
-import { slideInOut } from '../../animations/slide';
+import { slideUpDown } from '../../animations/slide';
 
 import { CalendarComponent } from '../../components/calendar/calendar';
 
 import { RecipeProvider } from '../../providers/recipe/recipe';
 import { ProcessProvider } from '../../providers/process/process';
+import { UserProvider } from '../../providers/user/user';
 
 @Component({
   selector: 'page-process',
   templateUrl: 'process.html',
-  animations: [slideInOut()]
+  animations: [slideUpDown()]
 })
 export class ProcessPage implements OnInit {
   title: string = '';
@@ -27,11 +30,14 @@ export class ProcessPage implements OnInit {
   private showDescription: boolean = false;
   private master: RecipeMaster = null;
   private recipe: Recipe = null;
+  private batchId: string = null;
+  private requestedUserId: string = null;
   public circumference: number = 0;
   public timers: Array<Array<Timer>> = [];
   private currentTimers: number = 0;
   private viewStepIndex = 0;
   private isConcurrent = false;
+  private selectedBatch: Batch = null;
 
   private timerHeight: number;
   private timerWidth: number;
@@ -53,123 +59,146 @@ export class ProcessPage implements OnInit {
     public navParams: NavParams,
     private platform: Platform,
     private recipeService: RecipeProvider,
-    private processService: ProcessProvider) {
+    private processService: ProcessProvider,
+    private userService: UserProvider) {
       this.master = navParams.get('master');
-      this.recipe = this.master.recipes.find(recipe => recipe._id == navParams.get('selected'));
-      console.log('recipe', this.recipe);
+      this.requestedUserId = navParams.get('requestedUserId');
+      this.recipe = this.master.recipes.find(recipe => recipe._id == navParams.get('selectedRecipeId'));
+      this.batchId = navParams.get('selectedBatchId');
       this.title = this.recipe.variantName;
-      this.recipeService.patchRecipeMasterById(this.master._id, {hasActiveBatch: true})
-        .subscribe(response => {
-          console.log('starting batch, update master', response);
-        });
-      this.recipeService.patchRecipeById(this.master._id, this.recipe._id, {isActive: true})
-        .subscribe(response => {
-          console.log('starting batch, update recipe', response);
-        });
   }
 
-  changeStep(direction: string) {
-    let nextIndex;
-    if (direction == 'next') {
-      if (this.recipe.processSchedule[this.viewStepIndex].concurrent) {
-        for (let i=this.viewStepIndex; i < this.recipe.processSchedule.length; i++) {
-          if (!this.recipe.processSchedule[i].concurrent) {
-            nextIndex = i;
-            break;
-          }
-        }
-      } else {
-        nextIndex = this.viewStepIndex + 1;
-      }
-    } else {
-      if (this.recipe.processSchedule[this.viewStepIndex - 1].concurrent) {
-        for (let i=this.viewStepIndex - 1; i >= 0; i--) {
-          if (!this.recipe.processSchedule[i].concurrent) {
-            nextIndex = i + 1;
-            break;
-          }
-        }
-      } else {
-        nextIndex = this.viewStepIndex - 1;
-      }
-    }
-    this.getViewTimers(nextIndex);
-    this.viewStepIndex = nextIndex;
+  /**
+   * Check if current view is at the beginning or end of process schedule
+   *
+   * params: string
+   * direction - either 'prev' or 'next'
+   *
+   * return: boolean
+   * - true if current view index is at the beginning or end of schedule
+  **/
+  private atViewEnd(direction: string): boolean {
+    return this.getStep(false, direction) == -1;
   }
 
-  completeStep() {
-    let isFinished = false;
-    let nextIndex = 0;
-    if (this.recipe.processSchedule[this.recipe.currentStep].type == 'calendar') {
-      const calendarValues = this.calendarRef.getFinal();
-      const update = {
-        startDatetime: calendarValues.startDatetime,
-        alerts: calendarValues.alerts
-      };
-      this.processService.patchStepById(this.master._id, this.recipe._id, calendarValues._id, update)
-        .subscribe(response => {
-          console.log('submitted calendar', response);
-        });
+  /**
+   * Check if a calendar step has been started, but not finished
+   *
+   * params: none
+   *
+   * return: boolean
+   * - true if a calendar step has been started, but not completed yet
+  **/
+  private calendarInProgress(): boolean {
+    return  this.selectedBatch.currentStep < this.selectedBatch.schedule.length
+            && this.selectedBatch.schedule[this.selectedBatch.currentStep].hasOwnProperty('startDatetime');
+  }
+
+  /**
+   * Delete the started calendar values - triggers calendar view to choose dates
+   *
+   * params: none
+   *
+   * return: none
+  **/
+  private changeDate(): void {
+    delete this.selectedBatch.schedule[this.selectedBatch.currentStep].startDatetime;
+  }
+
+  /**
+   * Change view index only, does not trigger step completion
+   *
+   * params: string
+   * direction - either 'prev' or 'next'
+   *
+   * return: none
+  **/
+  private changeStep(direction: string): void {
+    const nextIndex = this.getStep(false, direction);
+    if (nextIndex != -1) {
+      this.getViewTimers(nextIndex);
+      this.viewStepIndex = nextIndex;
     }
-    if (this.recipe.currentStep == this.recipe.processSchedule.length - 1) {
-      // TODO create route to check if master has other active batches. only update if this was the only active
-      this.recipeService.patchRecipeMasterById(this.master._id, {hasActiveBatch: false})
-        .subscribe(response => {
-          console.log('ending batch, update master', response);
-        });
-      this.recipeService.patchRecipeById(this.master._id, this.recipe._id, {isActive: false})
-        .subscribe(response => {
-          console.log('ending batch, update recipe', response);
-        });
-      nextIndex = 0;
-      isFinished = true;
-    } else if (this.recipe.processSchedule[this.recipe.currentStep].concurrent) {
-      for (let i=this.recipe.currentStep; i < this.recipe.processSchedule.length; i++) {
-        if (!this.recipe.processSchedule[i].concurrent) {
-          nextIndex = i;
-          break;
-        }
-      }
-    } else {
-      nextIndex = this.recipe.currentStep + 1;
+  }
+
+  /**
+   * Clear setInterval of a timer
+   *
+   * params: Timer
+   * timer - a timer type process step instance
+   *
+   * return: none
+  **/
+  private clearTimer(timer: Timer): void {
+    clearInterval(timer.interval);
+    timer.interval = null;
+  }
+
+  /**
+   * Complete the current process step and proceed to next step,
+   * update the server with the next step index,
+   * if on last step, end the process, update the server, then nav back
+   *
+   * params: none
+   *
+   * return: none
+  **/
+  private completeStep(): void {
+    const nextIndex = this.getStep(true);
+    const isFinished = nextIndex == -1;
+    if (!isFinished && this.selectedBatch.schedule[this.selectedBatch.currentStep + 1].type == 'timer') {
+      this.getViewTimers(nextIndex);
     }
-    this.getViewTimers(nextIndex);
-    this.recipeService.patchRecipeById(this.master._id, this.recipe._id, {currentStep: nextIndex})
+    this.processService.incrementCurrentStep(this.batchId)
       .subscribe(response => {
-        this.recipe.currentStep = nextIndex;
-        this.viewStepIndex = nextIndex;
         if (isFinished) {
-          // TODO toast to finishing
-          this.navCtrl.pop();
+          this.processService.endBatchById(this.batchId)
+            .subscribe(response => {
+              this.updateRecipeMasterActive(false)
+              this.navCtrl.pop();
+            });
+        } else {
+          this.selectedBatch.currentStep = nextIndex;
+          this.viewStepIndex = nextIndex;
         }
       });
   }
 
-  composeTimers() {
+  /**
+   * Group timers in the process schedule into arrays stored in timers array,
+   * concurrent timers will be handled as a single step
+   *
+   * params: none
+   *
+   * return: none
+  **/
+  private composeTimers(): void {
     let first = null;
     let concurrent = [];
-    for (let i=0; i < this.recipe.processSchedule.length; i++) {
-      if (this.recipe.processSchedule[i].type == 'timer') {
-        const timeRemaining = this.recipe.processSchedule[i].duration * 60;
-        if (this.recipe.processSchedule[i].concurrent) {
+    for (let i=0; i < this.selectedBatch.schedule.length; i++) {
+      if (this.selectedBatch.schedule[i].type == 'timer') {
+        const timeRemaining = this.selectedBatch.schedule[i].duration * 60; // change duration from minutes to seconds
+        if (this.selectedBatch.schedule[i].concurrent) {
           concurrent.push({
-            first: first == null ? this.recipe.processSchedule[i]._id: first,
-            timer: clone(this.recipe.processSchedule[i]),
+            first: first == null ? this.selectedBatch.schedule[i]._id: first,
+            timer: clone(this.selectedBatch.schedule[i]),
             interval: null,
             timeRemaining: timeRemaining,
             show: false,
             settings: this.initTimerSettings(i, timeRemaining)
           });
-        } else {
-          if (concurrent.length) {
+          if ((i == this.selectedBatch.schedule.length - 1
+              || !this.selectedBatch.schedule[i + 1].concurrent)
+              && concurrent.length) {
             this.timers.push(concurrent);
             concurrent = [];
             first = null;
           }
-          const timeRemaining = this.recipe.processSchedule[i].duration * 60;
+        } else {
+          // const timeRemaining = this.selectedBatch.schedule[i].duration * 60;
           this.timers.push([{
-            first: this.recipe.processSchedule[i]._id,
-            timer: clone(this.recipe.processSchedule[i]),
+            first: this.selectedBatch.schedule[i]._id,
+            timer: clone(this.selectedBatch.schedule[i]),
             interval: null,
             timeRemaining: timeRemaining,
             show: false,
@@ -184,17 +213,122 @@ export class ProcessPage implements OnInit {
         }
       }
     }
-    console.log(this.timers);
   }
 
-  getCurrentStepCalendarData() {
+  /**
+   * Format the progress circle text time remaining
+   *
+   * params: number
+   * timeRemaining - time remaining in seconds
+   *
+   * return: string
+   * - return string in hh:mm:ss format - hour/minutes removed if zero
+  **/
+  private formatProgressCircleText(timeRemaining: number): string {
+    let result = '';
+    let hours, minutes, seconds;
+    if (timeRemaining > 3599) {
+      hours = Math.floor(timeRemaining / 3600);
+      timeRemaining = timeRemaining % 3600;
+      result += hours + ':';
+    }
+    if (timeRemaining > 59) {
+      minutes = Math.floor(timeRemaining / 60);
+      timeRemaining = timeRemaining % 60;
+      result += minutes < 10 ? '0': '';
+      result += minutes + ':';
+    } else {
+      result += '00:';
+    }
+    result += timeRemaining < 10 ? '0': '';
+    result += timeRemaining;
+    return result;
+  }
+
+  /**
+   * Get css classes by alert values
+   *
+   * params: Alert
+   * alert - calendar alert
+   *
+   * return: obj
+   * - ngClass object with associated class names
+  **/
+  private getAlertClass(alert: Alert): any {
+    const closest = this.getClosestAlertByGroup(alert);
     return {
-      id: this.recipe.processSchedule[this.viewStepIndex]._id,
-      duration: this.recipe.processSchedule[this.viewStepIndex].duration
+      'next-datetime': alert == closest,
+      'past-datetime': new Date().getTime() > new Date(alert.datetime).getTime()
     };
   }
 
-  getFontSize(timeRemaining): string {
+  /**
+   * Get alerts for a particular step and sort in chronological order
+   *
+   * params: Alert
+   * alert - an alert instance, use to find all alerts with the same title
+   *
+   * return: Array<Alert>
+   * - array of alerts with the same title and in ascending chronological order
+  **/
+  private getClosestAlertByGroup(alert: Alert): Alert {
+    const alerts = this.selectedBatch.alerts.filter(item => {
+      return item.title == alert.title;
+    });
+    return alerts.reduce((acc, curr) => {
+      const accDiff = new Date(acc.datetime).getTime() - new Date().getTime();
+      const currDiff = new Date(curr.datetime).getTime() - new Date().getTime();
+      const isCurrCloser = Math.abs(currDiff) < Math.abs(accDiff) && currDiff > 0;
+      return isCurrCloser ? curr: acc;
+    });
+  }
+
+  /**
+   * Get array of alerts associated with current calendar step
+   *
+   * params: none
+   *
+   * return: Array<Alert>
+   * - alerts sorted in chronological order for the currently started calendar step
+  **/
+  private getCurrentStepCalendarAlerts(): Array<Alert> {
+    const alerts = this.selectedBatch.alerts.filter(alert => {
+      return alert.title == this.selectedBatch.schedule[this.selectedBatch.currentStep].name;
+    });
+    alerts.sort((d1, d2) => {
+      return new Date(d1.datetime).getTime() - new Date(d2.datetime).getTime();
+    });
+    return alerts;
+  }
+
+  /**
+   * Get values from current calendar step
+   *
+   * params: none
+   *
+   * return: obj
+   * - calendar values to use in template
+  **/
+  private getCurrentStepCalendarData(): any {
+    return {
+      id: this.selectedBatch.schedule[this.viewStepIndex]._id,
+      duration: this.selectedBatch.schedule[this.viewStepIndex].duration,
+      title: this.selectedBatch.schedule[this.viewStepIndex].name,
+      description: this.selectedBatch.schedule[this.viewStepIndex].description
+    };
+  }
+
+  /**
+   * Get the appropriate font size for timer display based on the
+   * number of digits to be displayed
+   *
+   * params: number
+   * timeRemaining - remaining time in seconds
+   *
+   * return: string
+   * - css font size valu
+  **/
+  private getFontSize(timeRemaining: number): string {
     if (timeRemaining > 3600) {
       return `${Math.round(this.timerWidth / 5)}px`;
     } else if (timeRemaining > 60) {
@@ -204,7 +338,181 @@ export class ProcessPage implements OnInit {
     }
   }
 
-  initTimerSettings(index: number, timeRemaining: number): ProgressCircleSettings {
+  /**
+   * Get step duration to be used in description display
+   *
+   * params: number
+   * duration - stored duration in minutes
+   *
+   * return: string
+   * - formatted time string hh hours mm minutes
+  **/
+  private getFormattedDurationString(duration: number): string {
+    let result = '';
+    if (duration > 59) {
+      const hours = Math.floor(duration / 60);
+      result += `${hours} hour${hours > 1 ? 's': ''}`;
+      duration = duration % 60;
+    }
+    if (duration) {
+      result += ` ${duration} minutes`;
+    }
+    return result;
+  }
+
+  /**
+   * Get the next index, treating adjacent concurrent timers as a single step
+   *
+   * params: string, number
+   * direction - either 'prev' or 'next'
+   * startIndex - the current index
+   *
+   * return: number
+   * - the next index to use or -1 if at the beginning or end of schedule
+  **/
+  private getIndexAfterSkippingConcurrent(direction: string, startIndex: number): number {
+    let nextIndex = -1;
+    if (direction == 'next') {
+      for (let i=startIndex; i < this.selectedBatch.schedule.length; i++) {
+        if (!this.selectedBatch.schedule[i].concurrent) {
+          nextIndex = i;
+          break;
+        }
+      }
+    } else {
+      for (let i=startIndex - 1; i >= 0; i--) {
+        if (!this.selectedBatch.schedule[i].concurrent) {
+          nextIndex = i;
+          break;
+        }
+      }
+    }
+    return nextIndex;
+  }
+
+  /**
+   * Get current step description
+   *
+   * params: none
+   *
+   * return: string
+   * - the current step's description
+  **/
+  private getNextDateSummary(): string {
+    return this.selectedBatch.schedule[this.selectedBatch.currentStep].description;
+  }
+
+  /**
+   * Get the next or previous schedule step
+   *
+   * params: boolean, direction
+   * onComplete - true if step is being completed
+   * direction - either 'prev' or 'next'
+   *
+   * return: number
+   * - the next index to use or -1 if at the beginning or end of schedule
+  **/
+  private getStep(onComplete: boolean = false, direction: string = 'next'): number {
+    let nextIndex = -1;
+    const viewIndex = onComplete ? this.selectedBatch.currentStep: this.viewStepIndex;
+    if (direction == 'next') {
+      if (viewIndex < this.selectedBatch.schedule.length - 1) {
+        if (this.selectedBatch.schedule[viewIndex].concurrent) {
+          nextIndex = this.getIndexAfterSkippingConcurrent(direction, viewIndex);
+        } else {
+          nextIndex = viewIndex + 1;
+        }
+      }
+    } else {
+      if (viewIndex > 0) {
+        if (this.selectedBatch.schedule[viewIndex].concurrent) {
+          nextIndex = this.getIndexAfterSkippingConcurrent(direction, viewIndex);
+        } else {
+          nextIndex = viewIndex - 1;
+        }
+      }
+    }
+    return nextIndex;
+  }
+
+  /**
+   * Get the currently viewed step description
+   *
+   * params: none
+   *
+   * return: string
+   * - step description at the current view step index
+  **/
+  private getViewStepDescription(): string {
+    return `${this.selectedBatch.schedule[this.viewStepIndex].description}`;
+  }
+
+  /**
+   * Get the currently viewed step's name
+   *
+   * params: none
+   *
+   * return: string
+   * - the process step's name at current view index
+  **/
+  private getViewStepName(): string {
+    return `${this.selectedBatch.schedule[this.viewStepIndex].name}`;
+  }
+
+  /**
+   * Get the currently viewed step type
+   *
+   * params: none
+   *
+   * return: string
+   * - the process step's type at current view index
+  **/
+  private getViewStepType(): string {
+    return `${this.selectedBatch.schedule[this.viewStepIndex].type}`;
+  }
+
+  /**
+   * Get index in array of timers to use from step index
+   *
+   * params: number
+   * index - step index
+   *
+   * return: none
+  **/
+  private getViewTimers(index: number): void {
+    for (let i=0; i < this.timers.length; i++) {
+      if (this.timers[i][0].first == this.selectedBatch.schedule[index]._id) {
+        this.isConcurrent = this.timers[i].length > 1;
+        this.currentTimers = i;
+        return;
+      }
+    }
+    this.currentTimers = 0;
+  }
+
+  /**
+   * Change view index to the currently active step
+   *
+   * params: none
+   *
+   * return: none
+  **/
+  private goToActiveStep(): void {
+    this.getViewTimers(this.selectedBatch.currentStep);
+    this.viewStepIndex = this.selectedBatch.currentStep;
+  }
+
+  /**
+   * Compose process circle css values
+   *
+   * params: number, number
+   * index - process schedule index of the timer
+   * timeRemaining - time remaining in seconds
+   *
+   * return: ProcessCircleSettings
+   * - object containing formatted css values
+  **/
+  private initTimerSettings(index: number, timeRemaining: number): ProgressCircleSettings {
     return {
       height: this.timerHeight,
       width: this.timerWidth,
@@ -226,41 +534,73 @@ export class ProcessPage implements OnInit {
         fontSize: this.getFontSize(timeRemaining),
         fontFamily: this.timerFontFamily,
         dY: this.timerDY,
-        content: this.formatProgressCircleText(this.recipe.processSchedule[index].duration * 60)
+        content: this.formatProgressCircleText(this.selectedBatch.schedule[index].duration * 60)
       }
     };
   }
 
-  formatProgressCircleText(timeRemaining: number): string {
-    let result = '';
-    let hours, minutes, seconds;
-    if (timeRemaining > 3599) {
-      hours = Math.floor(timeRemaining / 3600);
-      timeRemaining = timeRemaining % 3600;
-      result += hours + ':';
-    }
-    if (timeRemaining > 59) {
-      minutes = Math.floor(timeRemaining / 60);
-      timeRemaining = timeRemaining % 60;
-      result += minutes < 10 ? '0': '';
-      result += minutes + ':';
+  ngOnInit() {
+    const timerWidth = Math.round(this.platform.width() * 2 / 3);
+    this.timerWidth = timerWidth;
+    this.timerHeight = timerWidth;
+    this.timerStrokeWidth = 8;
+    this.timerRadius = (timerWidth / 2) - (this.timerStrokeWidth * 2);
+    this.circumference = this.timerRadius * 2 * Math.PI;
+    this.timerOriginX = timerWidth / 2;
+    this.timerOriginY = timerWidth / 2;
+    this.timerFontSize = `${Math.round(timerWidth / 3)}px`;
+    this.timerDY = `${timerWidth / 800}em`;
+    if (!this.batchId) {
+      // Start a new batch
+      this.processService.startNewBatch(this.requestedUserId, this.master._id, this.recipe._id)
+        .subscribe(response => {
+          this.userService.updateUserInProgressList(response);
+          this.selectedBatch = response[response.length - 1];
+          this.batchId = this.selectedBatch._id;
+          this.updateRecipeMasterActive(true);
+          this.composeTimers();
+        });
     } else {
-      result += '00:';
+      // Continue an existing batch
+      this.processService.getBatchById(this.batchId)
+        .subscribe(response => {
+          this.selectedBatch = response;
+          this.updateRecipeMasterActive(true);
+          this.composeTimers();
+          this.goToActiveStep();
+        });
     }
-    result += timeRemaining < 10 ? '0': '';
-    result += timeRemaining;
-    return result;
   }
 
-  toggleTimerControls(timer: Timer) {
-    timer.show = !timer.show;
+  /**
+   * Reset a timer
+   *
+   * params: Timer
+   * timer - a timer type process step instance
+   *
+   * return: none
+  **/
+  private resetDuration(timer: Timer): void {
+    const process = this.selectedBatch.schedule.find(process => {
+      return process._id == timer.first;
+    });
+    timer.timer.duration = process.duration;
   }
 
-  setProgress(timer: Timer) {
+  /**
+   * Update css values as timer progresses
+   *
+   * params: Timer
+   * timer - a timer type process step instance
+   *
+   * return: none
+  **/
+  private setProgress(timer: Timer): void {
     timer.settings.text.fontSize = this.getFontSize(timer.timeRemaining);
     timer.settings.circle.strokeDashoffset = `${this.circumference - timer.timeRemaining / (timer.timer.duration * 60) * this.circumference}`;
     timer.settings.text.content = this.formatProgressCircleText(timer.timeRemaining);
     if (timer.timeRemaining == 0) {
+      console.log('timer expired');
       this.clearTimer(timer);
       // TODO activate alarm
     } else if (timer.timer.splitInterval > 1) {
@@ -272,18 +612,16 @@ export class ProcessPage implements OnInit {
     }
   }
 
-  clearTimer(timer: Timer) {
-    clearInterval(timer.interval);
-    timer.interval = null;
-  }
-
-  goToActiveStep() {
-    this.getViewTimers(this.recipe.currentStep);
-    this.viewStepIndex = this.recipe.currentStep;
-  }
-
-  setTimerFunction(mode: string, timer?: any) {
-    console.log('timer', mode, timer);
+  /**
+   * User interface timer functions
+   *
+   * params: string, obj
+   * mode - timer function 'start', 'stop', 'add', 'reset'
+   * timer - a timer type process step instance
+   *
+   * return: none
+  **/
+  private setTimerFunction(mode: string, timer?: Timer): void {
     if (mode == 'start') {
       if (timer) {
         timer.interval = setInterval(() => {
@@ -326,7 +664,6 @@ export class ProcessPage implements OnInit {
       } else {
         for (let timer of this.timers[this.currentTimers]) {
           this.clearTimer(timer);
-          console.log(this.recipe.processSchedule);
           this.resetDuration(timer);
           timer.timeRemaining = timer.timer.duration * 60;
           this.setProgress(timer);
@@ -335,78 +672,60 @@ export class ProcessPage implements OnInit {
     }
   }
 
-  resetDuration(timer: Timer) {
-    const process = this.recipe.processSchedule.find(process => {
-      return process._id == timer.first;
-    });
-    timer.timer.duration = process.duration;
+  /**
+   * Set the start of a calendar step and update server
+   *
+   * params: none
+   *
+   * return: none
+  **/
+  private startCalendar(): void {
+    const calendarValues = this.calendarRef.getFinal();
+    const update = {
+      startDatetime: calendarValues.startDatetime,
+      alerts: calendarValues.alerts
+    };
+    this.processService.patchBatchById(this.batchId, calendarValues._id, update)
+      .subscribe(response => {
+        this.selectedBatch = response;
+      });
   }
 
-  ngOnInit() {
-    console.log(this.platform.width());
-    const timerWidth = Math.round(this.platform.width() * 2 / 3);
-    console.log(timerWidth);
-    this.timerWidth = timerWidth;
-    this.timerHeight = timerWidth;
-    this.timerStrokeWidth = 8;
-    this.timerRadius = (timerWidth / 2) - (this.timerStrokeWidth * 2);
-    this.circumference = this.timerRadius * 2 * Math.PI;
-    this.timerOriginX = timerWidth / 2;
-    this.timerOriginY = timerWidth / 2;
-    this.timerFontSize = `${Math.round(timerWidth / 3)}px`;
-    this.timerDY = `${timerWidth / 800}em`;
-    console.log('init complete, compose timers');
-    this.composeTimers();
-  }
-
-  toggleShowDescription(): void {
+  /**
+   * Show or hide the current step description
+   *
+   * params: none
+   *
+   * return: none
+  **/
+  private toggleShowDescription(): void {
     this.showDescription = !this.showDescription;
   }
 
-  getViewStepDescription(): string {
-    return `${this.recipe.processSchedule[this.viewStepIndex].description}`;
+  /**
+   * Show or hide individual timer controls
+   *
+   * params: Timer
+   * timer - a timer type process step instance
+   *
+   * return: none
+  **/
+  private toggleTimerControls(timer: Timer): void {
+    timer.show = !timer.show;
   }
 
-  getFormattedDurationString(duration: number): string {
-    let result = '';
-    if (duration > 59) {
-      const hours = Math.floor(duration / 60);
-      result += `${hours} hour${hours > 1 ? 's': ''}`;
-      duration = duration % 60;
-    }
-    if (duration) {
-      result += ` ${duration} minutes`;
-    }
-    return result;
+  /**
+   * Update recipe master active batch property on server
+   *
+   * params: boolean
+   * start - true if recipe master has an active batch
+   *
+   * return: none
+  **/
+  private updateRecipeMasterActive(start: boolean): void {
+    this.recipeService.patchRecipeMasterById(this.master._id, {hasActiveBatch: start})
+      .subscribe(master => {
+        console.log('Recipe master has active batch', master);
+      });
   }
-
-  getViewTimers(index) {
-    console.log('get timers for index', index);
-    for (let i=0; i < this.timers.length; i++) {
-      if (this.timers[i][0].first == this.recipe.processSchedule[index]._id) {
-        console.log('found the timer', this.timers[i]);
-        this.isConcurrent = this.timers[i].length > 1;
-        this.currentTimers = i;
-        return;
-      }
-    }
-    this.currentTimers = 0;
-  }
-
-  getViewStepName(): string {
-    return `${this.recipe.processSchedule[this.viewStepIndex].name}`;
-  }
-
-  getViewStepType(): string {
-    return `${this.recipe.processSchedule[this.viewStepIndex].type}`;
-  }
-
-  getQuickviewNextStep(batch: Recipe): string {
-    return `${batch.processSchedule[batch.currentStep].name}`;
-  }
-
-  goToActiveBatchDetails(batch: Recipe) {
-    // TODO map this batch to show in page
-  }
-
 }

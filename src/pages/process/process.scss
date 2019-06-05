@@ -19,12 +19,61 @@ page-process {
       font-size: 2em;
     }
   }
+  .calendar-description {
+    text-align: center;
+  }
+  .alert-list {
+    h3 {
+      text-align: center;
+    }
+    .item-inner {
+      border: none !important;
+    }
+  }
+  .alert-description {
+    white-space: normal;
+    text-align: center;
+    color: map-get($colors, gray-scale-8);
+  }
+  .alert-datetime {
+    font-size: 1.1em;
+    color: map-get($colors, gray-scale-8);
+    border-bottom: 1px solid map-get($colors, gray-scale-6);
+    text-align: center;
+  }
+  .next-datetime {
+    ion-label {
+      p:not(:first-child) {
+        color: map-get($colors, secondary) !important;
+      }
+    }
+  }
+  .past-datetime {
+    ion-label {
+      p {
+        color: map-get($colors, gray-scale-5);
+      }
+    }
+  }
+  .past-datetime:hover {
+    ion-label {
+      p {
+        color: map-get($colors, gray-scale-8);
+      }
+    }
+  }
+  .change-button {
+    display: block;
+    margin: 0.6rem auto;
+  }
   .row {
     justify-content: center;
   }
   .timer-row {
     width: 100%;
     ion-col {
+      z-index: 2;
+      background-color: map-get($colors, gray-scale-2);
       h2 {
         font-size: 2em;
         text-align: center;
@@ -54,5 +103,8 @@ page-process {
   }
   .nav-process-button {
     color: map-get($colors, gray-scale-2);
+  }
+  .timer-individual-controls {
+    z-index: 1 !important;
   }
 }
