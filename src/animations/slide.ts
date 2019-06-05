@@ -1,22 +1,23 @@
 import { animate, state, style, transition, trigger } from '@angular/animations';
 
-export function slideInOut() {
-  return trigger('slideInOut', [
-    transition(':enter', [
+export function slideUpDown() {
+  return trigger('slideUpDown', [
+    state('collapsed', style({
+      height: 0,
+      margin: 0,
+      opacity: 0
+    })),
+    state('expanded', style({
+      margin: '15px 0',
+    })),
+    transition('void => *', []),
+    transition('collapsed <=> expanded', [
       style({
-        transform: 'translateX(100%)',
-        opacity: 0
+        height: '{{ height }}px'
       }),
-      animate('150ms', style({
-        transform: 'translateX(0)',
-        opacity: 1
-      }))
-    ]),
-    transition(':leave', [
-      animate('150ms', style({
-        transform: 'translateX(100%)',
-        opacity: 0
-      }))
-    ])
+      animate('500ms cubic-bezier(0.645, 0.045, 0.355, 1)')
+    ], {params: {
+      height: 0
+    }})
   ]);
 }
