@@ -1,6 +1,5 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { NavController, NavParams, Events } from 'ionic-angular';
-import { NativeStorage } from '@ionic-native/native-storage/ngx';
 
 import { RecipeMaster } from '../../shared/interfaces/recipe-master';
 import { Recipe } from '../../shared/interfaces/recipe';
@@ -33,7 +32,6 @@ export class RecipePage implements OnInit, OnDestroy {
 
   constructor(public navCtrl: NavController,
     public navParams: NavParams,
-    private nativeStorage: NativeStorage,
     private events: Events,
     private cdRef: ChangeDetectorRef,
     private userService: UserProvider,
