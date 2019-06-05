@@ -1,4 +1,5 @@
 import { RecipeMaster } from './recipe-master';
+import { Batch } from './batch';
 
 export interface User {
   _id?: string;
@@ -8,5 +9,6 @@ export interface User {
   firstname?: string;
   lastname?: string;
   email?: string;
-  masterList: Array<RecipeMaster>;
+  masterList?: Array<RecipeMaster>;
+  inProgressList?: Array<Batch>;
 };

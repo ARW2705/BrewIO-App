@@ -16,6 +16,8 @@ export interface Recipe {
   rating?: number;
   efficiency: number;
   brewingType: string;
+  mashDuration: number;
+  boilDuration: number;
   batchVolume: number;
   boilVolume: number;
   mashVolume: number;

@@ -9,6 +9,7 @@ export interface RecipeMaster {
   style: Style;
   notes: Array<string>;
   master: string;
+  owner: string;
   hasActiveBatch: boolean;
   isPublic: boolean;
   recipes: Array<Recipe>;

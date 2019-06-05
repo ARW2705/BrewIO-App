@@ -8,6 +8,8 @@ export const defaultRecipe: Recipe = {
   isMaster: false,
   efficiency: 70,
   brewingType: 'None Selected',
+  mashDuration: 60,
+  boilDuration: 60,
   batchVolume: 5,
   boilVolume: 6,
   mashVolume: 6.5,

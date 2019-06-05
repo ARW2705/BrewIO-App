@@ -7,6 +7,7 @@ export const defaultRecipeMaster: RecipeMaster = {
   style: defaultStyle,
   notes: [],
   master: '',
+  owner: '',
   hasActiveBatch: false,
   isPublic: false,
   recipes: [defaultRecipe]
