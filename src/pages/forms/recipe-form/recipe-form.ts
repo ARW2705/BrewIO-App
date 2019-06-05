@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, AfterViewInit } from '@angular/core';
 import { NavController, NavParams, ModalController, ActionSheetController } from 'ionic-angular';
 
 import { Recipe } from '../../../shared/interfaces/recipe';
@@ -22,11 +22,12 @@ import { CalculationsProvider } from '../../../providers/calculations/calculatio
   selector: 'page-recipe-form',
   templateUrl: 'recipe-form.html',
 })
-export class RecipeFormPage {
+export class RecipeFormPage implements AfterViewInit {
   title: string = '';
   processIcons = {'manual': 'hand', 'timer': 'timer', 'calendar': 'calendar'};
   private isLoaded: boolean = false;
   private formType: string = null;
+  private formOptions: any = null;
   private mode: string = null;
   private docMethod: string = '';
   private grainsLibrary: Array<Grains> = null;
@@ -50,7 +51,8 @@ export class RecipeFormPage {
       navParams.get('formType'),
       navParams.get('mode'),
       navParams.get('masterData'),
-      navParams.get('recipeData')
+      navParams.get('recipeData'),
+      navParams.get('other')
     );
     this.libraryService.getAllLibraries()
       .subscribe(([grainsLibrary, hopsLibrary, yeastLibrary, styleLibrary]) => {
@@ -79,7 +81,7 @@ export class RecipeFormPage {
         payload = {
           name: this.master.name,
           style: this.master.style._id,
-          notes: this.recipe.notes,
+          notes: this.master.notes,
           isPublic: this.master.isPublic
         };
       }
@@ -91,6 +93,7 @@ export class RecipeFormPage {
         payload = this.recipe;
       }
     }
+    console.log(payload);
     return payload;
   }
 
@@ -116,8 +119,21 @@ export class RecipeFormPage {
     return total;
   }
 
+  private handleFormOptions(options: any): void {
+    if (!options) return;
+    console.log('got options', options);
+    if (options.hasOwnProperty('noteIndex')) {
+      console.log('push to index', options.noteIndex);
+      this.openNoteModal('recipe', options.noteIndex);
+    }
+  }
+
   isRecipeValid(): boolean {
     return this.master.style._id != defaultStyle._id;
+  }
+
+  ngAfterViewInit() {
+    this.handleFormOptions(this.formOptions);
   }
 
   onSubmit() {
@@ -156,32 +172,22 @@ export class RecipeFormPage {
       formType: this.formType,
       mode: this.mode,
       docMethod: this.docMethod,
-      data: null
-    };
-    if (this.mode == 'create') {
-      if (this.formType == 'master') {
-        data['styles'] = this.styleLibrary;
-      } else if (this.formType == 'recipe') {
-        data.data = {
-          style: this.master.style,
-          brewingType: this.recipe.brewingType,
-          batchVolume: this.recipe.batchVolume,
-          boilVolume: this.recipe.boilVolume,
-          mashVolume: this.recipe.mashVolume,
-          isFavorite: this.recipe.isFavorite,
-          isMaster: this.recipe.isMaster
-        }
-      }
-    } else if (this.mode == 'update') {
-      data.data = {
+      data: {
         style: this.master.style,
         brewingType: this.recipe.brewingType,
+        mashDuration: this.recipe.mashDuration,
+        boilDuration: this.recipe.boilDuration,
         batchVolume: this.recipe.batchVolume,
         boilVolume: this.recipe.boilVolume,
         mashVolume: this.recipe.mashVolume,
         isFavorite: this.recipe.isFavorite,
         isMaster: this.recipe.isMaster
       }
+    };
+    if (this.mode == 'create' && this.formType == 'master') {
+      data['styles'] = this.styleLibrary;
+      data.data = null;
+    } else if (this.mode == 'update') {
       if (this.formType == 'master') {
         data.data['name'] = this.master.name;
         data['styles'] = this.styleLibrary;
@@ -196,9 +202,10 @@ export class RecipeFormPage {
         this.mode = 'update';
         this.updateDisplay(data);
         this.calculator.calculateRecipeValues(this.recipe);
+        this.autoSetProcess('duration', data);
       }
     });
-    modal.present();
+    modal.present({keyboardClose: false});
   }
 
   openIngredientActionSheet() {
@@ -238,7 +245,7 @@ export class RecipeFormPage {
         }
       ]
     });
-    actionSheet.present();
+    actionSheet.present({keyboardClose: false});
   }
 
   openIngredientFormModal(type: string, toUpdate?: any) {
@@ -264,9 +271,12 @@ export class RecipeFormPage {
       if (data) {
         this.updateIngredientList(data, type, toUpdate, data.delete);
         this.calculator.calculateRecipeValues(this.recipe);
+        if (data.hopsType != undefined) {
+          this.autoSetProcess('hops-addition', data);
+        }
       }
     });
-    modal.present();
+    modal.present({keyboardClose: false});
   }
 
   private openNoteModal(noteType: string, index?: number): void {
@@ -305,7 +315,7 @@ export class RecipeFormPage {
         }
       }
     });
-    modal.present();
+    modal.present({keyboardClose: false});
   }
 
   openProcessActionSheet() {
@@ -339,7 +349,7 @@ export class RecipeFormPage {
         }
       ]
     });
-    actionSheet.present();
+    actionSheet.present({keyboardClose: false});
   }
 
   openProcessModal(processType: string, toUpdate?: any, index?: number) {
@@ -348,11 +358,9 @@ export class RecipeFormPage {
       update: toUpdate,
       formMode: toUpdate == undefined ? 'create': 'update'
     };
-    console.log('process', options);
     const modal = this.modalCtrl.create(ProcessFormPage, options);
     modal.onDidDismiss(data => {
       if (data) {
-        console.log(data);
         if (data.delete) {
           this.recipe.processSchedule.splice(index, 1);
         } else if (data.update) {
@@ -362,12 +370,13 @@ export class RecipeFormPage {
         }
       }
     });
-    modal.present();
+    modal.present({keyboardClose: false});
   }
 
-  setFormTypeConfiguration(formType: string, mode: string, master: RecipeMaster, recipe: Recipe) {
+  setFormTypeConfiguration(formType: string, mode: string, master: RecipeMaster, recipe: Recipe, options: any) {
     console.log(formType, mode, master, recipe);
     this.formType = formType;
+    this.formOptions = options;
     this.mode = mode;
     this.docMethod = mode;
     if (formType == 'master') {
@@ -514,6 +523,92 @@ export class RecipeFormPage {
 
   updateRecipeValues() {
     this.calculator.calculateRecipeValues(this.recipe);
+  }
+
+  private autoSetProcess(type: string, data: any): void {
+    if (type == 'hops-addition') {
+      // remove hops timers
+      this.recipe.processSchedule = this.recipe.processSchedule.filter(process => {
+        return !process.name.match(/^(Add).*(hops)$/);
+      });
+      console.log('clear hops timers', this.recipe.processSchedule);
+
+      // add hops timers for each hops instance
+      // combine hops additions that occur at the same time
+      const hopsForTimers = this.recipe.hops.filter(hops => {
+        return !hops.dryHop;
+      });
+      console.log('gather hops instances', hopsForTimers);
+
+      hopsForTimers.sort((h1, h2) => {
+        if (h1.addAt < h2.addAt) {
+          return 1;
+        } else if (h1.addAt > h2.addAt) {
+          return -1;
+        }
+        return 0;
+      });
+
+      console.log('sort hops in order of duration', hopsForTimers);
+
+      hopsForTimers.forEach(hopsAddition => {
+        this.recipe.processSchedule.push({
+          type: 'timer',
+          name: `Add ${hopsAddition.hopsType.name} hops`,
+          concurrent: true,
+          description: 'Hops addition',
+          duration: this.getHopsTimeRemaining(hopsAddition.addAt)
+        })
+      });
+
+      console.log('add hops timers', this.recipe.processSchedule);
+    } else if (type == 'duration') {
+      const mashIndex = this.recipe.processSchedule.findIndex(process => {
+        return process.name == 'Mash';
+      });
+      if (mashIndex == -1) {
+        // add mash timer
+        console.log('duration', data);
+        this.recipe.processSchedule.push({
+          type: 'timer',
+          name: 'Mash',
+          description: 'Mash grains',
+          duration: data.mashDuration
+        });
+      } else {
+        // update mash timer
+        for (const key in this.recipe.processSchedule[mashIndex]) {
+          if (data.hasOwnProperty(key)) {
+            this.recipe.processSchedule[mashIndex][key] == data[key];
+          }
+        }
+      }
+
+      const boilIndex = this.recipe.processSchedule.findIndex(process => {
+        return process.name == 'Boil';
+      });
+      if (boilIndex == -1) {
+        // add boil timer
+        this.recipe.processSchedule.push({
+          type: 'timer',
+          name: 'Boil',
+          description: 'Boil wort',
+          duration: data.boilDuration
+        });
+      } else {
+        // update boil timer
+        for (const key in this.recipe.processSchedule[boilIndex]) {
+          if (data.hasOwnProperty(key)) {
+            this.recipe.processSchedule[boilIndex][key] == data[key];
+          }
+        }
+      }
+    }
+  }
+
+  getHopsTimeRemaining(addAt: number): number {
+    const boilTime = this.recipe.processSchedule.find(item => item.name == 'Boil').duration;
+    return boilTime - addAt;
   }
 
 }

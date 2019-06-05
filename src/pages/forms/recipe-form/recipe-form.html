@@ -38,38 +38,40 @@
           Style
         </ion-col>
       </ion-row>
-      <ion-row>
-        <ion-col>
-          Original Gravity {{ recipe.originalGravity.toFixed(3) }}
-        </ion-col>
-        <ion-col class="right-col">
-          {{ master.style._id != -1 ? master.style.originalGravity[0].toFixed(3): '--' }} - {{ master.style._id != -1 ? master.style.originalGravity[1].toFixed(3): '--' }}
-        </ion-col>
-      </ion-row>
-      <ion-row>
-        <ion-col>
-          Final Gravity {{ recipe.finalGravity.toFixed(3) }}
-        </ion-col>
-        <ion-col class="right-col">
-          {{ master.style._id != -1 ? master.style.finalGravity[0].toFixed(3): '--' }} - {{ master.style._id != -1 ? master.style.finalGravity[1].toFixed(3): '--' }}
-        </ion-col>
-      </ion-row>
-      <ion-row>
-        <ion-col>
-          IBU {{ recipe.IBU.toFixed(1) }}
-        </ion-col>
-        <ion-col class="right-col">
-          {{ master.style._id != -1 ? master.style.IBU[0]: '--' }} - {{ master.style._id != -1 ? master.style.IBU[1]: '--' }}
-        </ion-col>
-      </ion-row>
-      <ion-row>
-        <ion-col>
-          SRM {{ recipe.SRM.toFixed(1) }}
-        </ion-col>
-        <ion-col class="right-col">
-          {{ master.style._id != -1 ? master.style.SRM[0]: '--' }} - {{ master.style._id != -1 ? master.style.SRM[1]: '--' }}
-        </ion-col>
-      </ion-row>
+      <div id="calculated-values">
+        <ion-row>
+          <ion-col>
+            Original Gravity {{ recipe.originalGravity.toFixed(3) }}
+          </ion-col>
+          <ion-col class="right-col">
+            {{ master.style._id != -1 ? master.style.originalGravity[0].toFixed(3): '--' }} - {{ master.style._id != -1 ? master.style.originalGravity[1].toFixed(3): '--' }}
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <ion-col>
+            Final Gravity {{ recipe.finalGravity.toFixed(3) }}
+          </ion-col>
+          <ion-col class="right-col">
+            {{ master.style._id != -1 ? master.style.finalGravity[0].toFixed(3): '--' }} - {{ master.style._id != -1 ? master.style.finalGravity[1].toFixed(3): '--' }}
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <ion-col>
+            IBU {{ recipe.IBU.toFixed(1) }}
+          </ion-col>
+          <ion-col class="right-col">
+            {{ master.style._id != -1 ? master.style.IBU[0]: '--' }} - {{ master.style._id != -1 ? master.style.IBU[1]: '--' }}
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <ion-col>
+            SRM {{ recipe.SRM.toFixed(1) }}
+          </ion-col>
+          <ion-col class="right-col">
+            {{ master.style._id != -1 ? master.style.SRM[0]: '--' }} - {{ master.style._id != -1 ? master.style.SRM[1]: '--' }}
+          </ion-col>
+        </ion-row>
+      </div>
 
     <!------------------------------------------------>
 
@@ -286,26 +288,6 @@
             Add Recipe Note
           </button>
         </ion-col>
-        <!-- <ion-col col-12
-                 *ngIf="textarea == 'recipe'">
-          <ion-textarea class="note-textarea"
-                        rows="3"
-                        formControlName="recipeNoteTextArea">
-          </ion-textarea>
-          <div class="note-operation-button-container">
-            <button ion-button
-                    color="primary"
-                    (click)="submitNote('recipe')">
-              Add Note
-            </button>
-            <button *ngIf="updateIndex != -1"
-                    ion-button
-                    color="primary"
-                    (click)="deleteNote('recipe')">
-              Delete
-            </button>
-          </div>
-        </ion-col> -->
         <ion-col col-12
                  *ngIf="master.notes.length">
           <ion-list>
@@ -328,26 +310,6 @@
             Add Batch Note
           </button>
         </ion-col>
-        <!-- <ion-col col-12
-                 *ngIf="textarea == 'batch'">
-          <ion-textarea class="note-textarea"
-                        rows="3"
-                        formControlName="batchNoteTextArea">
-          </ion-textarea>
-          <div class="note-operation-button-container">
-            <button ion-button
-                    color="primary"
-                    (click)="submitNote('batch')">
-              Add Note
-            </button>
-            <button *ngIf="updateIndex != -1"
-                    ion-button
-                    color="primary"
-                    (click)="deleteNote('batch')">
-              Delete
-            </button>
-          </div>
-        </ion-col> -->
         <ion-col col-12
                  *ngIf="recipe.notes.length">
           <ion-list>
