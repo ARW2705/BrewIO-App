@@ -34,6 +34,10 @@ export class UserProvider {
       this.events.subscribe('update-batch', this._updateBatch);
   }
 
+  public getUsername(): string {
+    return this.user ? this.user.username: '';
+  }
+
   private updateMasterEventHandler(update: RecipeMaster) {
     const indexToUpdate = this.user.masterList.findIndex(master => {
       return master._id == update._id;
@@ -102,6 +106,13 @@ export class UserProvider {
       });
   }
 
+  public logOut(): void {
+    this.authService.logOut();
+    this.loggedIn = false;
+    this.user = null;
+    this.events.publish('user-update', this.user);
+  }
+
   public getLoginStatus(): boolean {
     return this.loggedIn;
   }
@@ -114,7 +125,7 @@ export class UserProvider {
     return this.http.get(baseURL + apiVersion + '/users/profile')
       .map((profile: User) => {
         this.user = profile;
-        this.events.publish('on-login');
+        this.events.publish('user-update', this.user);
         return profile;
       })
       .catch(error => this.processHttpError.handleError(error));
