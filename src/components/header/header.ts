@@ -1,5 +1,5 @@
 import { Component, Input, OnInit, OnDestroy, AfterViewInit, ViewChild, ChangeDetectorRef } from '@angular/core';
-import { ModalController, NavController, Events, Navbar } from 'ionic-angular';
+import { ModalController, NavController, Events, Navbar, Tabs } from 'ionic-angular';
 
 import { LoginPage } from '../../pages/forms/login/login';
 import { SignupPage } from '../../pages/forms/signup/signup';
@@ -15,20 +15,21 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
   @Input() title: string;
   @ViewChild(Navbar) navBar: Navbar;
   private username: string = '';
+  private userTab: boolean = false;
   private _titleChange: any;
   private _tabChange: any;
-  private _login: any;
+  private _userUpdate: any;
 
   constructor(private modalCtrl: ModalController,
     private navCtrl: NavController,
     private cdRef: ChangeDetectorRef,
     public events: Events,
+    private tabs: Tabs,
     private userService: UserProvider,
     private modalService: ModalProvider) {
-      this.getUsername();
       this._titleChange = this.titleChangeEventHandler.bind(this);
       this._tabChange = this.tabChangeEventHandler.bind(this);
-      this._login = this.loginEventHandler.bind(this);
+      this._userUpdate = this.userUpdateEventHandler.bind(this);
   }
 
   ngAfterViewInit() {
@@ -38,37 +39,42 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  getUsername() {
-    const user = this.userService.getUser();
-    this.username = user != null ? user.username: '';
-  }
-
   ngOnDestroy() {
     this.events.unsubscribe('title-change', this._titleChange);
     this.events.unsubscribe('tab-change', this._tabChange);
-    this.events.unsubscribe('on-login', this._login);
+    this.events.subscribe('user-update', this._userUpdate);
   }
 
   ngOnInit() {
     this.events.subscribe('title-change', this._titleChange);
     this.events.subscribe('tab-change', this._tabChange);
-    this.events.subscribe('on-login', this._login);
+    this.events.subscribe('user-update', this._userUpdate);
   }
 
   openLogin() {
     this.modalService.openLogin();
   }
 
-  loginEventHandler(): void {
-    this.getUsername();
+  logout(): void {
+    this.userService.logOut();
   }
 
-  tabChangeEventHandler() {
-    this.getUsername();
+  tabChangeEventHandler(data: any) {
+    this.userTab = data.dest == 'user';
+    this.username = this.userService.getUsername();
   }
 
   titleChangeEventHandler(title: string) {
     this.title = title;
+  }
+
+  userUpdateEventHandler(data: any) {
+    if (data) {
+      this.username = data.username;
+    } else {
+      this.username = '';
+      this.tabs.select(0);
+    }
   }
 
 }

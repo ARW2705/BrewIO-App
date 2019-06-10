@@ -15,7 +15,13 @@
                       name="log-in">
             </ion-icon>
           </button>
-          <ion-row *ngIf="username">
+          <button ion-button
+                  float-right
+                  *ngIf="username && userTab"
+                  (click)="logout()">
+            Log out
+          </button>
+          <ion-row *ngIf="username && !userTab">
             <ion-col col-12
                      class="login-header-text">
               Logged in as...
