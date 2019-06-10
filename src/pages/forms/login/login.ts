@@ -4,6 +4,7 @@ import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 
 import { AuthenticationProvider } from '../../../providers/authentication/authentication';
 import { UserProvider } from '../../../providers/user/user';
+import { ToastProvider } from '../../../providers/toast/toast';
 
 @Component({
   selector: 'page-login',
@@ -12,13 +13,13 @@ import { UserProvider } from '../../../providers/user/user';
 export class LoginPage {
   private loginForm: FormGroup;
   private showPassword: boolean = true;
-  errMsg: string = '';
 
   constructor(public navCtrl: NavController,
     public navParams: NavParams,
     private viewCtrl: ViewController,
     private formBuilder: FormBuilder,
     private userService: UserProvider,
+    private toastService: ToastProvider,
     private authService: AuthenticationProvider) {
     this.initForm();
   }
@@ -37,16 +38,17 @@ export class LoginPage {
 
   onSubmit() {
     this.userService.logIn(this.loginForm.value)
-      .subscribe(response => {
-        if (this.userService.getLoginStatus()) {
-          this.viewCtrl.dismiss(response);
-        } else {
-          console.log(response);
+      .subscribe(
+        response => {
+          if (this.userService.getLoginStatus()) {
+            this.toastService.presentToast(`Welcome ${response}!`, 1000, 'middle', 'bright-toast');
+            this.viewCtrl.dismiss(response);
+          }
+        },
+        error => {
+          this.toastService.presentToast(error, 5000, 'bottom');
         }
-      },
-      error => {
-        this.errMsg = error;
-      });
+      );
   }
 
   togglePasswordVisible() {
