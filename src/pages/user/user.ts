@@ -15,7 +15,7 @@ export class UserPage implements OnInit, OnDestroy {
   private user: User = null;
   private userForm: FormGroup = null;
   title: string = 'User'
-  private _login: any;
+  private _userUpdate: any;
   private editing = '';
   @ViewChild('email') emailField: TextInput;
   @ViewChild('firstname') firstnameField: TextInput;
@@ -33,16 +33,22 @@ export class UserPage implements OnInit, OnDestroy {
     private cdRef: ChangeDetectorRef,
     private userService: UserProvider,
     private modalService: ModalProvider) {
-      this._login = this.loginEventHandler.bind(this);
+      this._userUpdate = this.userUpdateEventHandler.bind(this);
       this.initUser();
   }
 
+  private clearForm(): void {
+    this.originalValues.email = '';
+    this.originalValues.firstname = '';
+    this.originalValues.lastname = '';
+  }
+
   ngOnInit() {
-    this.events.subscribe('on-login', this._login);
+    this.events.subscribe('user-update', this._userUpdate);
   }
 
   ngOnDestroy() {
-    this.events.unsubscribe('on-login', this._login);
+    this.events.unsubscribe('user-update', this._userUpdate);
   }
 
   initUser() {
@@ -55,9 +61,14 @@ export class UserPage implements OnInit, OnDestroy {
     }
   }
 
-  private loginEventHandler(): void {
-    this.initUser();
-    this.cdRef.detectChanges();
+  private userUpdateEventHandler(data: any): void {
+    if (data) {
+      this.initUser();
+      this.cdRef.detectChanges();
+    } else {
+      this.clearForm();
+      this.user = null;
+    }
   }
 
   private initForm(): void {
