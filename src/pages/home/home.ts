@@ -19,7 +19,7 @@ export class HomePage implements OnInit, OnDestroy {
   private user = null;
   activeBatches = [];
   notifications = [];
-  private _login: any;
+  private _userUpdate: any;
   private _tabChange: any;
   private _updateMaster: any;
 
@@ -29,7 +29,7 @@ export class HomePage implements OnInit, OnDestroy {
     private userService: UserProvider,
     private recipeService: RecipeProvider,
     private modalService: ModalProvider) {
-      this._login = this.loginEventHandler.bind(this);
+      this._userUpdate = this.userUpdateEventHandler.bind(this);
       this._tabChange = this.tabChangeEventHandler.bind(this);
       this._updateMaster = this.updateMasterEventHandler.bind(this);
   }
@@ -38,17 +38,6 @@ export class HomePage implements OnInit, OnDestroy {
     const toRemove = this.activeBatches.findIndex(_batch => _batch._id == batch._id);
     this.activeBatches.splice(toRemove, 1);
     this.cdRef.detectChanges();
-  }
-
-  private getActiveBatches(): void {
-    if (this.user) {
-      this.activeBatches = [];
-      this.user.masterList.forEach(recipeMaster => {
-        // if (recipeMaster.hasActiveBatch) {
-        //   this.activeBatches.push(recipeMaster);
-        // }
-      });
-    }
   }
 
   private getBatchCurrentStep(batch: Recipe): string {
@@ -65,10 +54,12 @@ export class HomePage implements OnInit, OnDestroy {
            : 'Finished';
   }
 
-  private loginEventHandler() {
-    this.user = this.userService.getUser();
-    this.getActiveBatches();
-    this.cdRef.detectChanges();
+  private userUpdateEventHandler(data: any) {
+    if (data) {
+      this.user = data;
+    } else {
+      this.user = null;
+    }
   }
 
   private navToBrewProcess(batch: Recipe) {
@@ -93,16 +84,15 @@ export class HomePage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.events.unsubscribe('on-login', this._login);
+    this.events.unsubscribe('user-update', this._userUpdate);
     this.events.unsubscribe('tab-change', this._tabChange);
     this.events.unsubscribe('update-master', this._updateMaster);
   }
 
   ngOnInit() {
-    this.events.subscribe('on-login', this._login);
+    this.events.subscribe('user-update', this._userUpdate);
     this.events.subscribe('tab-change', this._tabChange);
     this.events.subscribe('update-master', this._updateMaster);
-    this.getActiveBatches();
   }
 
   private tabChangeEventHandler(tab: any): void {
@@ -111,7 +101,6 @@ export class HomePage implements OnInit, OnDestroy {
         .subscribe(user => {
           if (user) {
             this.user = user;
-            this.getActiveBatches();
           }
         });
     }
@@ -120,7 +109,6 @@ export class HomePage implements OnInit, OnDestroy {
   private updateMasterEventHandler(update: any) {
     const indexToUpdate = this.user.masterList.findIndex(master => master._id == update._id);
     this.user.masterList[indexToUpdate] = update;
-    this.getActiveBatches();
   }
 
 }
