@@ -18,6 +18,7 @@ import { CalendarComponent } from '../../components/calendar/calendar';
 import { RecipeProvider } from '../../providers/recipe/recipe';
 import { ProcessProvider } from '../../providers/process/process';
 import { UserProvider } from '../../providers/user/user';
+import { ToastProvider } from '../../providers/toast/toast';
 
 @Component({
   selector: 'page-process',
@@ -60,7 +61,8 @@ export class ProcessPage implements OnInit {
     private platform: Platform,
     private recipeService: RecipeProvider,
     private processService: ProcessProvider,
-    private userService: UserProvider) {
+    private userService: UserProvider,
+    private toastService: ToastProvider) {
       this.master = navParams.get('master');
       this.requestedUserId = navParams.get('requestedUserId');
       this.recipe = this.master.recipes.find(recipe => recipe._id == navParams.get('selectedRecipeId'));
@@ -102,6 +104,7 @@ export class ProcessPage implements OnInit {
    * return: none
   **/
   private changeDate(): void {
+    this.toastService.presentToast('Select new dates', 1000, 'top');
     delete this.selectedBatch.schedule[this.selectedBatch.currentStep].startDatetime;
   }
 
@@ -155,6 +158,7 @@ export class ProcessPage implements OnInit {
           this.processService.endBatchById(this.batchId)
             .subscribe(response => {
               this.updateRecipeMasterActive(false)
+              this.toastService.presentToast('Enjoy!', 1000, 'bright-toast');
               this.navCtrl.pop();
             });
         } else {
