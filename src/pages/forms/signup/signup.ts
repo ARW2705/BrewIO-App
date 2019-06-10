@@ -4,6 +4,7 @@ import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 
 import { FormValidatorProvider } from '../../../providers/form-validator/form-validator';
 import { UserProvider } from '../../../providers/user/user';
+import { ToastProvider } from '../../../providers/toast/toast';
 
 @Component({
   selector: 'page-signup',
@@ -19,7 +20,8 @@ export class SignupPage {
     private cdRef: ChangeDetectorRef,
     private viewCtrl: ViewController,
     private formBuilder: FormBuilder,
-    private userService: UserProvider) {
+    private userService: UserProvider,
+    private toastService: ToastProvider) {
       this.initForm();
   }
 
@@ -42,10 +44,16 @@ export class SignupPage {
 
   private onSubmit(): void {
     this.userService.signUp(this.signupForm.value)
-      .subscribe(response => {
-        console.log(response);
-        this.viewCtrl.dismiss(response);
-      });
+      .subscribe(
+        response => {
+          console.log(response);
+          this.toastService.presentToast('Sign up complete!', 1500, 'bright-toast');
+          this.viewCtrl.dismiss(response);
+        },
+        error => {
+          this.toastService.presentToast(error.error.error.message, 2000);
+        }
+      );
   }
 
   private togglePasswordVisible(): void {
