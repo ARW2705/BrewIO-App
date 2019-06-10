@@ -12,6 +12,7 @@ import { ProcessPage } from '../process/process';
 
 import { UserProvider } from '../../providers/user/user';
 import { RecipeProvider } from '../../providers/recipe/recipe';
+import { ToastProvider } from '../../providers/toast/toast';
 
 @Component({
   selector: 'page-recipe',
@@ -25,8 +26,7 @@ export class RecipePage implements OnInit, OnDestroy {
   private hasActiveBatch: boolean = false;
   private masterIndex: number = -1;
   private creationMode: boolean = false;
-  private _onLogin: any;
-  private _tabChange: any;
+  private _userUpdate: any;
   private _newMaster: any;
   private _updateRecipe: any;
 
@@ -35,9 +35,9 @@ export class RecipePage implements OnInit, OnDestroy {
     private events: Events,
     private cdRef: ChangeDetectorRef,
     private userService: UserProvider,
-    private recipeService: RecipeProvider) {
-      this._onLogin = this.onLoginEventHandler.bind(this);
-      this._tabChange = this.tabChangeEventHandler.bind(this);
+    private recipeService: RecipeProvider,
+    private toastService: ToastProvider) {
+      this._userUpdate = this.userUpdateEventHandler.bind(this);
       this._newMaster = this.newMasterEventHandler.bind(this);
       this._updateRecipe = this.updateRecipeEventHandler.bind(this);
   }
@@ -49,6 +49,7 @@ export class RecipePage implements OnInit, OnDestroy {
         const index = getIndexById(master._id, this.masterList);
         if (index != -1) {
           this.masterList.splice(index, 1);
+          this.toastService.presentToast('Recipe master deleted!', 1500);
         }
       });
   }
@@ -75,11 +76,15 @@ export class RecipePage implements OnInit, OnDestroy {
   }
 
   navToBrewProcess(master: RecipeMaster) {
-    this.navCtrl.push(ProcessPage, {
-      master: master,
-      requestedUserId: master.owner,
-      selectedRecipeId: master.master
-    });
+    if (this.recipeService.isRecipeProcessPresent(master.recipes.find(recipe => recipe._id == master.master))) {
+      this.navCtrl.push(ProcessPage, {
+        master: master,
+        requestedUserId: master.owner,
+        selectedRecipeId: master.master
+      });
+    } else {
+      this.toastService.presentToast('Recipe missing a process guide!', 2000);
+    }
   }
 
   navToDetails(index: number) {
@@ -98,15 +103,13 @@ export class RecipePage implements OnInit, OnDestroy {
     } else {
       // TODO check and pull from storage
     }
-    this.events.subscribe('on-login', this._onLogin);
-    this.events.subscribe('tab-change', this._tabChange);
+    this.events.subscribe('user-update', this._userUpdate);
     this.events.subscribe('new-master', this._newMaster);
     this.events.subscribe('update-recipe', this._updateRecipe);
   }
 
   ngOnDestroy() {
-    this.events.unsubscribe('on-login', this._onLogin);
-    this.events.unsubscribe('tab-change', this._tabChange);
+    this.events.unsubscribe('user-update', this._userUpdate);
     this.events.unsubscribe('new-master', this._newMaster);
     this.events.unsubscribe('update-recipe', this._updateRecipe);
   }
@@ -119,13 +122,9 @@ export class RecipePage implements OnInit, OnDestroy {
     this.creationMode = !this.creationMode;
   }
 
-  onLoginEventHandler() {
-    this.getMasterList();
-  }
-
-  tabChangeEventHandler(data) {
-    if (data.dest == 'recipes') {
-      console.log('recipe dest');
+  userUpdateEventHandler(data: any) {
+    if (data) {
+      this.getMasterList();
     }
   }
 
