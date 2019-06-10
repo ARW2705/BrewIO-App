@@ -197,6 +197,13 @@ button {
   }
 }
 
+.bright-toast {
+  .toast-message {
+    color: map-get($colors, gray-scale-1) !important;
+    background-color: map-get($colors, primary) !important;
+  }
+}
+
 .main-action-sheet {
   .action-sheet-title {
     text-align: center !important;
