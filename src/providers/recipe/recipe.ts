@@ -173,4 +173,9 @@ export class RecipeProvider {
 
   /* END private access methods */
 
+
+  public isRecipeProcessPresent(recipe: Recipe): boolean {
+    return recipe.processSchedule.length > 0;
+  }
+
 }
