@@ -8,14 +8,26 @@ export class ToastProvider {
     console.log('Hello ToastProvider Provider');
   }
 
-  public presentToast(message: string, position?: string, duration?: number, customClass?: string): void {
-    const toast = this.toastCtrl.create({
-      message: message,
-      position: position || 'bottom',
-      duration: duration || 2000,
-      cssClass: customClass || 'main-toast'
-    });
-    toast.present();
+  public presentToast(
+    message: string,
+    duration?: number,
+    position?: string,
+    customClass?: string,
+    showCloseButton?: boolean,
+    closeButtonText?: string,
+    dismissOnPageChange?: boolean
+  ): void {
+      const defaultClass = 'main-toast';
+      const toast = this.toastCtrl.create({
+        message: message,
+        duration: duration || 2000,
+        position: position || 'bottom',
+        cssClass: `${defaultClass} ${customClass}` || defaultClass,
+        showCloseButton: showCloseButton || false,
+        closeButtonText: closeButtonText || 'Close',
+        dismissOnPageChange: dismissOnPageChange || false
+      });
+      toast.present();
   }
 
 }
