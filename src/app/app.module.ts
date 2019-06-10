@@ -9,11 +9,9 @@ import { CommonModule } from '@angular/common';
 import { ComponentsModule } from '../components/components.module';
 
 import { AboutPage } from '../pages/about/about';
-import { ContactPage } from '../pages/contact/contact';
 import { HomePage } from '../pages/home/home';
 import { TabsPage } from '../pages/tabs/tabs';
 import { RecipePage } from '../pages/recipe/recipe';
-import { RecipeDetailPage } from '../pages/recipe-detail/recipe-detail';
 import { RecipeMasterDetailPage } from '../pages/recipe-master-detail/recipe-master-detail';
 import { UserPage } from '../pages/user/user';
 import { RecipeFormPage } from '../pages/forms/recipe-form/recipe-form';
@@ -44,12 +42,10 @@ import { ActionSheetProvider } from '../providers/action-sheet/action-sheet';
   declarations: [
     MyApp,
     AboutPage,
-    ContactPage,
     HomePage,
     TabsPage,
     RecipePage,
     UserPage,
-    RecipeDetailPage,
     RecipeMasterDetailPage,
     RecipeFormPage,
     GeneralFormPage,
@@ -76,7 +72,6 @@ import { ActionSheetProvider } from '../providers/action-sheet/action-sheet';
   entryComponents: [
     MyApp,
     AboutPage,
-    ContactPage,
     HomePage,
     TabsPage,
     RecipePage,
