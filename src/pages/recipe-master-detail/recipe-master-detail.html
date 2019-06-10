@@ -1,4 +1,8 @@
-<app-header [title]="title"></app-header>
+<ion-header>
+  <ion-navbar>
+    <ion-title>{{ title }}</ion-title>
+  </ion-navbar>
+</ion-header>
 
 <ion-content>
 
@@ -123,6 +127,7 @@
               <ion-item-options side="right">
                 <button ion-button
                         color="heart"
+                        *ngIf="!recipe.isMaster"
                         (click)="toggleFavorite(recipe)">
                   <ion-icon name="heart"></ion-icon>
                   Fav
