@@ -1,5 +1,3 @@
-<app-header [title]="title"></app-header>
-
 <ion-content class="content">
 
   <ion-grid id="home-container">
@@ -18,42 +16,9 @@
       <ion-row class="messages-header">
         <h3>Active Batches</h3>
       </ion-row>
+
       <active-batches></active-batches>
-      <!-- <ion-row *ngIf="activeBatches.length">
-        <ion-list id="batch-list">
-          <ng-container *ngFor="let batch of activeBatches">
-            <ion-item-sliding class="sliding-item">
-              <ion-item-options side="left">
-                <button ion-button
-                        color="secondary"
-                        class="sliding-button"
-                        (click)="dismissBatch(batch)">
-                  <ion-icon name="arrow-round-back"></ion-icon>
-                  Dismiss
-                </button>
-              </ion-item-options>
 
-              <ion-item class="active-batch-summary">
-                <ion-icon name="beer"
-                          color="primary">
-                </ion-icon>
-                {{ getBatchName(batch) | titlecase }} • {{ getBatchCurrentStep(batch) | titlecase }}
-              </ion-item>
-
-              <ion-item-options side="right">
-                <button ion-button
-                        color="primary"
-                        class="sliding-button"
-                        (click)="navToBrewProcess(batch)">
-                  <ion-icon name="list-box"></ion-icon>
-                  Go to Step
-                </button>
-              </ion-item-options>
-
-            </ion-item-sliding>
-          </ng-container>
-        </ion-list>
-      </ion-row> -->
       <ion-row class="messages-header">
         <h3>Notifications</h3>
       </ion-row>

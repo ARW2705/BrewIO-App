@@ -9,12 +9,11 @@ import { ModalProvider } from '../../providers/modal/modal';
 
 @Component({
   selector: 'page-user',
-  templateUrl: 'user.html',
+  templateUrl: 'user.html'
 })
 export class UserPage implements OnInit, OnDestroy {
   private user: User = null;
   private userForm: FormGroup = null;
-  title: string = 'User'
   private _userUpdate: any;
   private editing = '';
   @ViewChild('email') emailField: TextInput;

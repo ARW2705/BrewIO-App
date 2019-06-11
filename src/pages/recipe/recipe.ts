@@ -16,10 +16,10 @@ import { ToastProvider } from '../../providers/toast/toast';
 
 @Component({
   selector: 'page-recipe',
-  templateUrl: 'recipe.html',
+  templateUrl: 'recipe.html'
 })
 export class RecipePage implements OnInit, OnDestroy {
-  title: string = 'Recipes';
+  private recipeTabState = 'outOfView';
   private masterList: Array<RecipeMaster> = null;
   private masterRecipeList: Array<Recipe> = null;
   private isLoggedIn: boolean = false;
@@ -27,6 +27,7 @@ export class RecipePage implements OnInit, OnDestroy {
   private masterIndex: number = -1;
   private creationMode: boolean = false;
   private _userUpdate: any;
+  private _tabChange: any;
   private _newMaster: any;
   private _updateRecipe: any;
 
@@ -38,6 +39,7 @@ export class RecipePage implements OnInit, OnDestroy {
     private recipeService: RecipeProvider,
     private toastService: ToastProvider) {
       this._userUpdate = this.userUpdateEventHandler.bind(this);
+      this._tabChange = this.tabChangeEventHandler.bind(this);
       this._newMaster = this.newMasterEventHandler.bind(this);
       this._updateRecipe = this.updateRecipeEventHandler.bind(this);
   }
@@ -104,12 +106,14 @@ export class RecipePage implements OnInit, OnDestroy {
       // TODO check and pull from storage
     }
     this.events.subscribe('user-update', this._userUpdate);
+    this.events.subscribe('tab-change', this._tabChange);
     this.events.subscribe('new-master', this._newMaster);
     this.events.subscribe('update-recipe', this._updateRecipe);
   }
 
   ngOnDestroy() {
     this.events.unsubscribe('user-update', this._userUpdate);
+    this.events.unsubscribe('tab-change', this._tabChange);
     this.events.unsubscribe('new-master', this._newMaster);
     this.events.unsubscribe('update-recipe', this._updateRecipe);
   }
@@ -130,6 +134,10 @@ export class RecipePage implements OnInit, OnDestroy {
 
   newMasterEventHandler() {
     this.getMasterList();
+  }
+
+  tabChangeEventHandler(tab: any): void {
+    this.recipeTabState = tab.dest == 'recipe' ? 'inView': 'outOfView';
   }
 
   updateRecipeEventHandler(recipe: Recipe) {

@@ -10,4 +10,11 @@ app-header {
   .toolbar-title.toolbar-title-md {
     // padding: 0;
   }
+  .header-button {
+    min-height: 40px;
+    height: 40px;
+  }
+  ion-title {
+    text-align: left;
+  }
 }

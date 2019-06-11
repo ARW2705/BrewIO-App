@@ -15,10 +15,10 @@ import { ModalProvider } from '../../providers/modal/modal';
   templateUrl: 'home.html'
 })
 export class HomePage implements OnInit, OnDestroy {
-  title = "Brew IO";
   private user = null;
   activeBatches = [];
   notifications = [];
+  private homeTabState = 'inView';
   private _userUpdate: any;
   private _tabChange: any;
   private _updateMaster: any;
@@ -32,6 +32,16 @@ export class HomePage implements OnInit, OnDestroy {
       this._userUpdate = this.userUpdateEventHandler.bind(this);
       this._tabChange = this.tabChangeEventHandler.bind(this);
       this._updateMaster = this.updateMasterEventHandler.bind(this);
+  }
+
+  ionViewDidEnter() {
+    console.log('in view');
+    this.homeTabState = 'inView';
+  }
+
+  ionViewDidLeave() {
+    console.log('out view');
+    this.homeTabState = 'outOfView';
   }
 
   private dismissBatch(batch: Recipe): void {

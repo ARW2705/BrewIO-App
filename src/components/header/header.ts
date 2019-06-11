@@ -1,5 +1,5 @@
 import { Component, Input, OnInit, OnDestroy, AfterViewInit, ViewChild, ChangeDetectorRef } from '@angular/core';
-import { ModalController, NavController, Events, Navbar, Tabs } from 'ionic-angular';
+import { ModalController, NavController, Events, Navbar } from 'ionic-angular';
 
 import { LoginPage } from '../../pages/forms/login/login';
 import { SignupPage } from '../../pages/forms/signup/signup';
@@ -24,7 +24,6 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
     private navCtrl: NavController,
     private cdRef: ChangeDetectorRef,
     public events: Events,
-    private tabs: Tabs,
     private userService: UserProvider,
     private modalService: ModalProvider) {
       this._titleChange = this.titleChangeEventHandler.bind(this);
@@ -73,7 +72,6 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
       this.username = data.username;
     } else {
       this.username = '';
-      this.tabs.select(0);
     }
   }
 

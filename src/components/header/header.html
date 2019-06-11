@@ -8,6 +8,7 @@
         <ion-col>
           <button ion-button
                   float-right
+                  class="header-button"
                   *ngIf="!username"
                   (click)="openLogin()">
             <!-- Log In -->
@@ -17,6 +18,7 @@
           </button>
           <button ion-button
                   float-right
+                  class="header-button"
                   *ngIf="username && userTab"
                   (click)="logout()">
             Log out
