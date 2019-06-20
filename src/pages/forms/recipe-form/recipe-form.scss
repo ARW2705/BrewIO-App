@@ -1,4 +1,10 @@
 page-recipe-form {
+  #form-container {
+    border-radius: 15px;
+  }
+  #generalInfoModalButton {
+    border-radius: 10px;
+  }
   #submit-button {
     color: map-get($colors, gray-scale-1);
     width: 100%;
@@ -7,18 +13,27 @@ page-recipe-form {
   #form-header {
     font-size: 1.5em;
   }
+  #calculated-values {
+    ion-col {
+      text-align: left;
+      font-size: 0.8em;
+    }
+    .left-col {
+      text-align: left;
+    }
+    .right-col {
+      text-align: right;
+    }
+    .col-header {
+      font-size: 1.2em;
+    }
+  }
+  .scroll-content {
+    margin: 60px 0 120px;
+  }
   .addition-button {
     color: map-get($colors, gray-scale-1);
     width: 100%;
-  }
-  .left-col {
-    text-align: left;
-  }
-  .right-col {
-    text-align: right;
-  }
-  .col-header {
-    font-size: 1.2em;
   }
   .item-buttons,
   .item-buttons .item-inner {

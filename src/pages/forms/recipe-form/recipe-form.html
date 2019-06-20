@@ -1,15 +1,10 @@
-<ion-header>
-  <ion-navbar>
-    <ion-title>{{ title }}</ion-title>
-  </ion-navbar>
-</ion-header>
-
 <ion-content padding>
 
   <ng-container *ngIf="isLoaded">
 
-    <ion-grid>
-      <button (click)="openGeneralModal()">
+    <ion-grid id="form-container">
+      <button id="generalInfoModalButton"
+              (click)="openGeneralModal()">
         <ion-row id="form-header">
           <ion-col *ngIf="formType == 'master'">
             {{ master.name == '' ? 'Untitled Recipe': master.name }}
@@ -31,7 +26,7 @@
     <!------------------------------------------------>
 
       <ion-row>
-        <ion-col class="col-header">
+        <ion-col class="left-col col-header">
           Recipe
         </ion-col>
         <ion-col class="right-col col-header">
