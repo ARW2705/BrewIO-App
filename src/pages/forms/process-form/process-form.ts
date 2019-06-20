@@ -37,10 +37,10 @@ export class ProcessFormPage {
       name: ['', [Validators.minLength(2), Validators.maxLength(25), Validators.required]],
       description: ['']
     });
-    if (this.stepType == 'manual') {
+    if (this.stepType === 'manual') {
       this.processForm.addControl('expectedDuration', new FormControl());
     } else {
-      if (this.stepType == 'timer') {
+      if (this.stepType === 'timer') {
         this.processForm.addControl('concurrent', new FormControl(false));
         this.processForm.addControl('splitInterval', new FormControl(1));
       }
@@ -51,10 +51,10 @@ export class ProcessFormPage {
       const control = this.processForm.controls;
       control.name.setValue(data.name);
       control.description.setValue(data.description);
-      if (data.type == 'manual') {
+      if (data.type === 'manual') {
         control.expectedDuration.setValue(data.expectedDuration);
       } else {
-        if (data.type == 'timer') {
+        if (data.type === 'timer') {
           control.concurrent.setValue(data.concurrent);
           control.splitInterval.setValue(data.setInterval);
         }
@@ -70,7 +70,7 @@ export class ProcessFormPage {
   }
 
   onSubmit() {
-    if (this.formMode == 'create') {
+    if (this.formMode === 'create') {
       this.viewCtrl.dismiss(this.processForm.value);
     } else {
       this.viewCtrl.dismiss({update: this.processForm.value});
