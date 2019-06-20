@@ -1,8 +1,15 @@
 import { sharedProperties } from '../constants/shared-properties';
 
 export function clone(obj: any): any {
-  const result = JSON.parse(JSON.stringify(obj));
-  _removeShared(result);
+  // const result = JSON.parse(JSON.stringify(obj));
+  // _removeShared(result);
+  // return result;
+  const result = {};
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key) && sharedProperties.indexOf(key) == -1) {
+      result[key] = obj[key];
+    }
+  }
   return result;
 }
 
@@ -15,14 +22,18 @@ export function getIndexById(id: string, arr: Array<any>) {
   return -1;
 }
 
+export function roundToDecimalPlace(numToRound: number, places: number): number {
+  return Math.round(numToRound * Math.pow(10, places)) / Math.pow(10, places);
+}
+
 export function toTitleCase(str: string): string {
   return str.replace(/\b[a-z]/g, firstChar => firstChar.toUpperCase());
 }
 
-function _removeShared(obj: any) {
-  for (const key in obj) {
-    if (sharedProperties.indexOf(key) != -1) {
-      delete obj[key];
-    }
-  }
-}
+// function _removeShared(obj: any) {
+//   for (const key in obj) {
+//     if (sharedProperties.indexOf(key) != -1) {
+//       delete obj[key];
+//     }
+//   }
+// }
