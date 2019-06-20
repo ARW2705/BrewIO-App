@@ -33,9 +33,7 @@ export class FormValidatorProvider {
     }
   };
 
-  constructor() {
-    console.log('Hello FormValidatorProvider Provider');
-  }
+  constructor() { }
 
   static PasswordMatch(): ValidatorFn {
     return (group: FormGroup): {[key: string]: any} | null => {
@@ -43,7 +41,7 @@ export class FormValidatorProvider {
       const confirmation = group.get('passwordConfirmation');
       if (!confirmation.value) {
         confirmation.setErrors({required: true});
-      } else if (password.value != confirmation.value) {
+      } else if (password.value !== confirmation.value) {
         confirmation.setErrors({mismatch: true});
       }
       return null;
