@@ -4,11 +4,9 @@ import { ToastController } from 'ionic-angular';
 @Injectable()
 export class ToastProvider {
 
-  constructor(private toastCtrl: ToastController) {
-    console.log('Hello ToastProvider Provider');
-  }
+  constructor(private toastCtrl: ToastController) { }
 
-  public presentToast(
+  presentToast(
     message: string,
     duration?: number,
     position?: string,
