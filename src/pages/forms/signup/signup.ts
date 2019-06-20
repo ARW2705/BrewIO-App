@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component } from '@angular/core';
 import { NavController, NavParams, ViewController } from 'ionic-angular';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 
@@ -11,25 +11,23 @@ import { ToastProvider } from '../../../providers/toast/toast';
   templateUrl: 'signup.html',
 })
 export class SignupPage {
-  private signupForm: FormGroup;
-  private showPassword: boolean = true;
-  errMsg: string = '';
+  signupForm: FormGroup;
+  showPassword: boolean = true;
 
   constructor(public navCtrl: NavController,
     public navParams: NavParams,
-    private cdRef: ChangeDetectorRef,
-    private viewCtrl: ViewController,
-    private formBuilder: FormBuilder,
-    private userService: UserProvider,
-    private toastService: ToastProvider) {
+    public viewCtrl: ViewController,
+    public formBuilder: FormBuilder,
+    public userService: UserProvider,
+    public toastService: ToastProvider) {
       this.initForm();
   }
 
-  private dismiss(): void {
+  dismiss(): void {
     this.viewCtrl.dismiss();
   }
 
-  private initForm(): void {
+  initForm(): void {
     this.signupForm = this.formBuilder.group({
       username: ['', [Validators.minLength(6), Validators.maxLength(20), Validators.required]],
       password: ['', [Validators.minLength(8), Validators.maxLength(20), Validators.required, FormValidatorProvider.PasswordPattern()]],
@@ -42,7 +40,7 @@ export class SignupPage {
     });
   }
 
-  private onSubmit(): void {
+  onSubmit(): void {
     this.userService.signUp(this.signupForm.value)
       .subscribe(
         response => {
@@ -56,11 +54,11 @@ export class SignupPage {
       );
   }
 
-  private togglePasswordVisible(): void {
+  togglePasswordVisible(): void {
     this.showPassword = !this.showPassword;
   }
 
-  private hasFormError(control: string): boolean {
+  hasFormError(control: string): boolean {
     if (this.signupForm.controls[control].touched) {
       for (const key in this.signupForm.controls[control].errors) {
         if (this.signupForm.controls[control].errors.hasOwnProperty(key)) {
@@ -71,7 +69,7 @@ export class SignupPage {
     return false;
   }
 
-  private getFormErrors(control: string): Array<string> {
+  getFormErrors(control: string): Array<string> {
     const result = [];
     for (const key in this.signupForm.controls[control].errors) {
       result.push(FormValidatorProvider.GetErrorMessage(control, key));
