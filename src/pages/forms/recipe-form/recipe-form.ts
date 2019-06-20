@@ -1,5 +1,5 @@
 import { Component, ChangeDetectorRef, AfterViewInit } from '@angular/core';
-import { NavController, NavParams, ModalController } from 'ionic-angular';
+import { NavController, NavParams, ModalController, Events } from 'ionic-angular';
 
 import { Recipe } from '../../../shared/interfaces/recipe';
 import { RecipeMaster } from '../../../shared/interfaces/recipe-master';
@@ -27,28 +27,31 @@ import { ActionSheetProvider } from '../../../providers/action-sheet/action-shee
 export class RecipeFormPage implements AfterViewInit {
   title: string = '';
   processIcons = {'manual': 'hand', 'timer': 'timer', 'calendar': 'calendar'};
-  private isLoaded: boolean = false;
-  private formType: string = null;
-  private formOptions: any = null;
-  private mode: string = null;
-  private docMethod: string = '';
-  private grainsLibrary: Array<Grains> = null;
-  private hopsLibrary: Array<Hops> = null;
-  private yeastLibrary: Array<Yeast> = null;
-  private styleLibrary: Array<Style> = null;
-  private master: RecipeMaster = null;
-  private recipe: Recipe = null;
-  private textarea = '';
+  isLoaded: boolean = false;
+  formType: string = null;
+  formOptions: any = null;
+  mode: string = null;
+  docMethod: string = '';
+  grainsLibrary: Array<Grains> = null;
+  hopsLibrary: Array<Hops> = null;
+  yeastLibrary: Array<Yeast> = null;
+  styleLibrary: Array<Style> = null;
+  master: RecipeMaster = null;
+  recipe: Recipe = null;
+  textarea = '';
+  _headerNavPop: any;
 
   constructor(public navCtrl: NavController,
     public navParams: NavParams,
-    private modalCtrl: ModalController,
-    private cdRef: ChangeDetectorRef,
-    private libraryService: LibraryProvider,
-    private recipeService: RecipeProvider,
-    private calculator: CalculationsProvider,
-    private toastService: ToastProvider,
-    private actionService: ActionSheetProvider) {
+    public modalCtrl: ModalController,
+    public cdRef: ChangeDetectorRef,
+    public events: Events,
+    public libraryService: LibraryProvider,
+    public recipeService: RecipeProvider,
+    public calculator: CalculationsProvider,
+    public toastService: ToastProvider,
+    public actionService: ActionSheetProvider) {
+      this._headerNavPop = this.headerNavPopEventHandler.bind(this);
       this.setFormTypeConfiguration(
         navParams.get('formType'),
         navParams.get('mode'),
@@ -74,13 +77,12 @@ export class RecipeFormPage implements AfterViewInit {
    *
    * return: none
   **/
-  private autoSetBoilMashDuration(data: any): void {
+  autoSetBoilMashDuration(data: any): void {
     const mashIndex = this.recipe.processSchedule.findIndex(process => {
-      return process.name == 'Mash';
+      return process.name === 'Mash';
     });
-    if (mashIndex == -1) {
+    if (mashIndex === -1) {
       // add mash timer
-      console.log('duration', data);
       this.recipe.processSchedule.push({
         type: 'timer',
         name: 'Mash',
@@ -91,27 +93,28 @@ export class RecipeFormPage implements AfterViewInit {
       // update mash timer
       for (const key in this.recipe.processSchedule[mashIndex]) {
         if (data.hasOwnProperty(key)) {
-          this.recipe.processSchedule[mashIndex][key] == data[key];
+          this.recipe.processSchedule[mashIndex][key] === data[key];
         }
       }
     }
 
     const boilIndex = this.recipe.processSchedule.findIndex(process => {
-      return process.name == 'Boil';
+      return process.name === 'Boil';
     });
-    if (boilIndex == -1) {
+    if (boilIndex === -1) {
       // add boil timer
       this.recipe.processSchedule.push({
         type: 'timer',
         name: 'Boil',
         description: 'Boil wort',
-        duration: data.boilDuration
+        duration: data.boilDuration,
+        concurrent: true
       });
     } else {
       // update boil timer
       for (const key in this.recipe.processSchedule[boilIndex]) {
         if (data.hasOwnProperty(key)) {
-          this.recipe.processSchedule[boilIndex][key] == data[key];
+          this.recipe.processSchedule[boilIndex][key] === data[key];
         }
       }
     }
@@ -125,19 +128,18 @@ export class RecipeFormPage implements AfterViewInit {
    *
    * return: none
   **/
-  private autoSetHopsAddition(data: any): void {
+  autoSetHopsAddition(data: any): void {
     // remove hops timers
     this.recipe.processSchedule = this.recipe.processSchedule.filter(process => {
       return !process.name.match(/^(Add).*(hops)$/);
     });
-    console.log('clear hops timers', this.recipe.processSchedule);
 
     // add hops timers for each hops instance
+    // ignore dry hop additions
     // combine hops additions that occur at the same time
     const hopsForTimers = this.recipe.hops.filter(hops => {
       return !hops.dryHop;
     });
-    console.log('gather hops instances', hopsForTimers);
 
     hopsForTimers.sort((h1, h2) => {
       if (h1.addAt < h2.addAt) {
@@ -153,7 +155,7 @@ export class RecipeFormPage implements AfterViewInit {
         type: 'timer',
         name: `Add ${hopsAddition.hopsType.name} hops`,
         concurrent: true,
-        description: 'Hops addition',
+        description: `Hops addition: ${hopsAddition.quantity} oz`,
         duration: this.getHopsTimeRemaining(hopsAddition.addAt)
       })
     });
@@ -168,10 +170,10 @@ export class RecipeFormPage implements AfterViewInit {
    *
    * return: none
   **/
-  private autoSetProcess(type: string, data: any): void {
-    if (type == 'hops-addition') {
+  autoSetProcess(type: string, data: any): void {
+    if (type === 'hops-addition') {
       this.autoSetHopsAddition(data);
-    } else if (type == 'duration') {
+    } else if (type === 'duration') {
       this.autoSetBoilMashDuration(data);
     }
   }
@@ -184,10 +186,10 @@ export class RecipeFormPage implements AfterViewInit {
    * return: object
    * - structured form data for http request
   **/
-  private constructPayload(): any {
+  constructPayload(): any {
     let payload;
-    if (this.formType == 'master') {
-      if (this.docMethod == 'create') {
+    if (this.formType === 'master') {
+      if (this.docMethod === 'create') {
         payload = {
           master: {
             name: this.master.name,
@@ -205,11 +207,10 @@ export class RecipeFormPage implements AfterViewInit {
           isPublic: this.master.isPublic
         };
       }
-    } else if (this.formType == 'recipe') {
-      if (this.docMethod == 'create') {
-        console.log(this.recipe);
+    } else if (this.formType === 'recipe') {
+      if (this.docMethod === 'create') {
         payload = this.recipe;
-      } else if (this.docMethod == 'update') {
+      } else if (this.docMethod === 'update') {
         payload = this.recipe;
       }
     }
@@ -225,7 +226,7 @@ export class RecipeFormPage implements AfterViewInit {
    * return: number
    * - percentage of total quantity for given quantity
   **/
-  private getGristRatio(quantity: number): number {
+  getGristRatio(quantity: number): number {
     return quantity / this.getTotalGristWeight() * 100;
   }
 
@@ -238,8 +239,9 @@ export class RecipeFormPage implements AfterViewInit {
    * return: number
    * - difference between boil time and addAt time point
   **/
-  private getHopsTimeRemaining(addAt: number): number {
-    const boilTime = this.recipe.processSchedule.find(item => item.name == 'Boil').duration;
+  getHopsTimeRemaining(addAt: number): number {
+    const boilStep = this.recipe.processSchedule.find(item => item.name === 'Boil');
+    const boilTime = boilStep ? boilStep.duration: 60;
     return boilTime - addAt;
   }
 
@@ -252,7 +254,7 @@ export class RecipeFormPage implements AfterViewInit {
    * return: number
    * - IBU contribution of given hops addition
   **/
-  private getIndividualIBU(hops: HopsSchedule): number {
+  getIndividualIBU(hops: HopsSchedule): number {
     return this.calculator.getIBU(
       hops.hopsType,
       hops,
@@ -270,7 +272,7 @@ export class RecipeFormPage implements AfterViewInit {
    * return: number
    * - sum of all recipe grain bill quantities
   **/
-  private getTotalGristWeight(): number {
+  getTotalGristWeight(): number {
     let total = 0;
     for (let i=0; i < this.recipe.grains.length; i++) {
       total += this.recipe.grains[i].quantity;
@@ -286,11 +288,15 @@ export class RecipeFormPage implements AfterViewInit {
    *
    * return: none
   **/
-  private handleFormOptions(options: any): void {
+  handleFormOptions(options: any): void {
     if (!options) return;
     if (options.hasOwnProperty('noteIndex')) {
       this.openNoteModal('recipe', options.noteIndex);
     }
+  }
+
+  headerNavPopEventHandler(): void {
+    this.navCtrl.pop();
   }
 
   /**
@@ -301,12 +307,20 @@ export class RecipeFormPage implements AfterViewInit {
    * return: boolean
    * - true if master style id has been changed from default
   **/
-  private isRecipeValid(): boolean {
-    return this.master.style._id != defaultStyle._id;
+  isRecipeValid(): boolean {
+    return this.master.style._id !== defaultStyle._id;
   }
 
   ngAfterViewInit() {
     this.handleFormOptions(this.formOptions);
+  }
+
+  ngOnDestroy() {
+    this.events.unsubscribe('header-nav-pop', this._headerNavPop);
+  }
+
+  ngOnInit() {
+    this.events.subscribe('header-nav-pop', this._headerNavPop);
   }
 
   /**
@@ -316,11 +330,11 @@ export class RecipeFormPage implements AfterViewInit {
    *
    * return: none
   **/
-  private onSubmit(): void {
+  onSubmit(): void {
     const payload = this.constructPayload();
     const message = toTitleCase(`${this.formType} ${this.docMethod} Successful!`);
-    if (this.docMethod == 'create') {
-      if (this.formType == 'master') {
+    if (this.docMethod === 'create') {
+      if (this.formType === 'master') {
         this.recipeService.postRecipeMaster(payload)
           .subscribe(
             response => {
@@ -331,7 +345,7 @@ export class RecipeFormPage implements AfterViewInit {
               this.toastService.presentToast(error.error.error.message);
             }
           );
-      } else if (this.formType == 'recipe') {
+      } else if (this.formType === 'recipe') {
         this.recipeService.postRecipeToMasterById(this.master._id, payload)
           .subscribe(
             response => {
@@ -343,8 +357,8 @@ export class RecipeFormPage implements AfterViewInit {
             }
           );
       }
-    } else if (this.docMethod == 'update') {
-      if (this.formType == 'master') {
+    } else if (this.docMethod === 'update') {
+      if (this.formType === 'master') {
         this.recipeService.patchRecipeMasterById(this.master._id, payload)
           .subscribe(
             response => {
@@ -355,7 +369,7 @@ export class RecipeFormPage implements AfterViewInit {
               this.toastService.presentToast(error.error.error.message);
             }
           );
-      } else if (this.formType == 'recipe') {
+      } else if (this.formType === 'recipe') {
         this.recipeService.patchRecipeById(this.master._id, this.recipe._id, payload)
           .subscribe(
             response => {
@@ -377,7 +391,7 @@ export class RecipeFormPage implements AfterViewInit {
    *
    * return: none
   **/
-  private openGeneralModal(): void {
+  openGeneralModal(): void {
     const data = {
       formType: this.formType,
       mode: this.mode,
@@ -394,15 +408,15 @@ export class RecipeFormPage implements AfterViewInit {
         isMaster: this.recipe.isMaster
       }
     };
-    if (this.mode == 'create' && this.formType == 'master') {
+    if (this.mode === 'create' && this.formType === 'master') {
       data['styles'] = this.styleLibrary;
       data.data = null;
-    } else if (this.mode == 'update') {
-      if (this.formType == 'master') {
+    } else if (this.mode === 'update') {
+      if (this.formType === 'master') {
         data.data['name'] = this.master.name;
         data['styles'] = this.styleLibrary;
       }
-      if (this.formType == 'recipe') {
+      if (this.formType === 'recipe') {
         data.data['variantName'] = this.recipe.variantName;
       }
     }
@@ -425,7 +439,7 @@ export class RecipeFormPage implements AfterViewInit {
    *
    * return: none
   **/
-  private openIngredientActionSheet(): void {
+  openIngredientActionSheet(): void {
     this.actionService.openActionSheet(
       'Select an Ingredient',
       [
@@ -466,7 +480,7 @@ export class RecipeFormPage implements AfterViewInit {
    *
    * return: none
   **/
-  private openIngredientFormModal(type: string, toUpdate?: any): void {
+  openIngredientFormModal(type: string, toUpdate?: any): void {
     const data = {
       ingredientType: type,
       update: toUpdate
@@ -489,7 +503,7 @@ export class RecipeFormPage implements AfterViewInit {
       if (data) {
         this.updateIngredientList(data, type, toUpdate, data.delete);
         this.calculator.calculateRecipeValues(this.recipe);
-        if (data.hopsType != undefined) {
+        if (data.hopsType !== undefined) {
           this.autoSetProcess('hops-addition', data);
         }
       }
@@ -506,37 +520,37 @@ export class RecipeFormPage implements AfterViewInit {
    *
    * return: none
   **/
-  private openNoteModal(noteType: string, index?: number): void {
+  openNoteModal(noteType: string, index?: number): void {
     let toUpdate;
-    if (index == undefined) {
+    if (index === undefined) {
       toUpdate = '';
     } else {
-      toUpdate = noteType == 'recipe' ? this.master.notes[index]: this.recipe.notes[index];
+      toUpdate = noteType === 'recipe' ? this.master.notes[index]: this.recipe.notes[index];
     }
     const options = {
       noteType: noteType,
-      formMethod: index == undefined ? 'create': 'update',
+      formMethod: index === undefined ? 'create': 'update',
       toUpdate: toUpdate
     };
     const modal = this.modalCtrl.create(NoteFormPage, options);
     modal.onDidDismiss(data => {
       if (data) {
-        if (data.method == 'create') {
-          if (noteType == 'recipe') {
+        if (data.method === 'create') {
+          if (noteType === 'recipe') {
             this.master.notes.push(data.note);
-          } else if (noteType == 'batch') {
+          } else if (noteType === 'batch') {
             this.recipe.notes.push(data.note);
           }
-        } else if (data.method == 'update') {
-          if (noteType == 'recipe') {
+        } else if (data.method === 'update') {
+          if (noteType === 'recipe') {
             this.master.notes[index] = data.note;
-          } else if (noteType == 'batch') {
+          } else if (noteType === 'batch') {
             this.recipe.notes[index] = data.note;
           }
-        } else if (data.method == 'delete') {
-          if (noteType == 'recipe') {
+        } else if (data.method === 'delete') {
+          if (noteType === 'recipe') {
             this.master.notes.splice(index, 1);
-          } else if (noteType == 'batch') {
+          } else if (noteType === 'batch') {
             this.recipe.notes.splice(index, 1);
           }
         }
@@ -552,7 +566,7 @@ export class RecipeFormPage implements AfterViewInit {
    *
    * return: none
   **/
-  private openProcessActionSheet(): void {
+  openProcessActionSheet(): void {
     this.actionService.openActionSheet(
       'Add a process step',
       [
@@ -588,11 +602,11 @@ export class RecipeFormPage implements AfterViewInit {
    *
    * return: none
   **/
-  private openProcessModal(processType: string, toUpdate?: any, index?: number): void {
+  openProcessModal(processType: string, toUpdate?: any, index?: number): void {
     const options = {
-      processType: toUpdate == undefined ? processType: toUpdate.type,
+      processType: toUpdate === undefined ? processType: toUpdate.type,
       update: toUpdate,
-      formMode: toUpdate == undefined ? 'create': 'update'
+      formMode: toUpdate === undefined ? 'create': 'update'
     };
     const modal = this.modalCtrl.create(ProcessFormPage, options);
     modal.onDidDismiss(data => {
@@ -619,7 +633,7 @@ export class RecipeFormPage implements AfterViewInit {
    * recipe - Recipe instance
    * options - additional configuration object
   **/
-  private setFormTypeConfiguration(
+  setFormTypeConfiguration(
     formType: string,
     mode: string,
     master: RecipeMaster,
@@ -630,9 +644,9 @@ export class RecipeFormPage implements AfterViewInit {
       this.formOptions = options;
       this.mode = mode;
       this.docMethod = mode;
-      if (formType == 'master') {
-        if (mode == 'create') {
-          this.title = 'Create a Recipe';
+      if (formType === 'master') {
+        if (mode === 'create') {
+          this.title = 'Create Recipe';
           this.master = clone(defaultRecipeMaster);
           this.recipe = clone(defaultRecipeMaster.recipes[0]);
         } else {
@@ -641,11 +655,11 @@ export class RecipeFormPage implements AfterViewInit {
           this.recipe = master.recipes.find(elem => elem.isMaster);
         }
       } else {
-        if (mode == 'create') {
-          this.title = `Add Batch to ${master.name}`;
+        if (mode === 'create') {
+          this.title = `Add Variant to ${master.name}`;
           this.master = master;
           this.recipe = clone(master.recipes.find(elem => elem.isMaster));
-          this.recipe.variantName = '< Add Batch Name >';
+          this.recipe.variantName = '< Add Variant Name >';
         } else {
           this.title = `Update ${recipe.variantName}`;
           this.master = master;
@@ -665,7 +679,7 @@ export class RecipeFormPage implements AfterViewInit {
    *
    * return: none
   **/
-  private sortIngredients(ingredientType: string): void {
+  sortIngredients(ingredientType: string): void {
     switch(ingredientType) {
       case 'grains':
         this.recipe.grains.sort((g1, g2) => {
@@ -713,7 +727,7 @@ export class RecipeFormPage implements AfterViewInit {
    *
    * return: none
   **/
-  private updateDisplay(data: any): void {
+  updateDisplay(data: any): void {
     for (const key in data) {
       if (this.master.hasOwnProperty(key)) {
         this.master[key] = data[key];
@@ -735,12 +749,12 @@ export class RecipeFormPage implements AfterViewInit {
    *
    * return: none
   **/
-  private updateIngredientList(ingredient: any, type: string, toUpdate?: any, deletion?: boolean): void {
+  updateIngredientList(ingredient: any, type: string, toUpdate?: any, deletion?: boolean): void {
     switch(type) {
       case 'grains':
         if (toUpdate) {
           const index = this.recipe.grains.findIndex(elem => {
-            return elem.grainType._id == toUpdate.grainType._id;
+            return elem.grainType._id === toUpdate.grainType._id;
           });
           if (deletion) {
             this.recipe.grains.splice(index, 1);
@@ -755,7 +769,7 @@ export class RecipeFormPage implements AfterViewInit {
       case 'hops':
         if (toUpdate) {
           const index = this.recipe.hops.findIndex(elem => {
-            return elem.hopsType._id == toUpdate.hopsType._id;
+            return elem.hopsType._id === toUpdate.hopsType._id;
           });
           if (deletion) {
             this.recipe.hops.splice(index, 1);
@@ -770,7 +784,7 @@ export class RecipeFormPage implements AfterViewInit {
       case 'yeast':
         if (toUpdate) {
           const index = this.recipe.yeast.findIndex(elem => {
-            return elem.yeastType._id == toUpdate.yeastType._id;
+            return elem.yeastType._id === toUpdate.yeastType._id;
           });
           if (deletion) {
             this.recipe.yeast.splice(index, 1);
@@ -785,7 +799,7 @@ export class RecipeFormPage implements AfterViewInit {
       case 'otherIngredients':
         if (toUpdate) {
           const index = this.recipe.otherIngredients.findIndex(elem => {
-            return elem.name == toUpdate.name;
+            return elem.name === toUpdate.name;
           });
           if (deletion) {
             this.recipe.otherIngredients.splice(index, 1);
@@ -809,7 +823,7 @@ export class RecipeFormPage implements AfterViewInit {
    *
    * return: none
   **/
-  private updateRecipeValues(): void {
+  updateRecipeValues(): void {
     this.calculator.calculateRecipeValues(this.recipe);
   }
 
