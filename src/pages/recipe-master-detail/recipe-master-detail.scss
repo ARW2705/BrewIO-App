@@ -1,6 +1,6 @@
 page-recipe-master-detail {
   #batch-grid {
-
+    margin-top: 60px;
   }
   .form-button {
     width: 100%;
@@ -20,6 +20,21 @@ page-recipe-master-detail {
     button {
       ion-icon {
         padding-left: 10px;
+      }
+    }
+  }
+  .item-md.activated {
+    background-color: map-get($colors, primary);
+    .recipe-summary-header {
+      ion-col {
+        color: map-get($colors, gray-scale-2);
+      }
+    }
+    .recipe-summary-subheader {
+      ion-col {
+        p {
+          color: map-get($colors, gray-scale-2);
+        }
       }
     }
   }

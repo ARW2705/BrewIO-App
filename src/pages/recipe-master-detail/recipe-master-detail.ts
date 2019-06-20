@@ -1,9 +1,8 @@
-import { Component, ChangeDetectorRef, OnInit, OnDestroy } from '@angular/core';
-import { NavController, NavParams, Events } from 'ionic-angular';
+import { Component, OnInit, OnDestroy, ViewChildren, QueryList } from '@angular/core';
+import { NavController, NavParams, Events, ItemSliding } from 'ionic-angular';
 
 import { RecipeMaster } from '../../shared/interfaces/recipe-master';
 import { Recipe } from '../../shared/interfaces/recipe';
-import { getIndexById } from '../../shared/utility-functions/utilities';
 
 import { RecipeFormPage } from '../forms/recipe-form/recipe-form';
 import { ProcessPage } from '../process/process';
@@ -16,31 +15,32 @@ import { ToastProvider } from '../../providers/toast/toast';
   templateUrl: 'recipe-master-detail.html',
 })
 export class RecipeMasterDetailPage implements OnInit, OnDestroy {
-  title: string = '';
-  private recipeMaster: RecipeMaster = null;
-  private hasActiveBatch: boolean = false;
-  private recipeIndex: number = -1;
-  private noteIndex: number = -1;
-  private showNotes: boolean = false;
-  private showNotesIcon: string = 'arrow-down';
-  private deletionInProgress: boolean = false;
-  private _updateMaster: any;
-  private _addRecipe: any;
-  private _updateRecipe: any;
-  private _deleteRecipe: any;
+  @ViewChildren('slidingItems') slidingItems: QueryList<ItemSliding>;
+  recipeMaster: RecipeMaster = null;
+  hasActiveBatch: boolean = false;
+  recipeIndex: number = -1;
+  noteIndex: number = -1;
+  showNotes: boolean = false;
+  showNotesIcon: string = 'arrow-down';
+  deletionInProgress: boolean = false;
+  _updateMaster: any;
+  _addRecipe: any;
+  _updateRecipe: any;
+  _deleteRecipe: any;
+  _headerNavPop: any;
 
   constructor(public navCtrl: NavController,
     public navParams: NavParams,
     public events: Events,
-    private cdRef: ChangeDetectorRef,
-    private recipeService: RecipeProvider,
-    private toastService: ToastProvider) {
+    public recipeService: RecipeProvider,
+    public toastService: ToastProvider) {
       this.recipeMaster = this.navParams.get('master');
-      this.title = this.recipeMaster.name;
+      this.events.publish('nav-update', {dest: 'recipe-master', destType: 'page', destTitle: this.recipeMaster.name});
       this._updateMaster = this.updateMasterEventHandler.bind(this);
       this._addRecipe = this.addRecipeEventHandler.bind(this);
       this._updateRecipe = this.updateRecipeEventHandler.bind(this);
       this._deleteRecipe = this.deleteRecipeEventHandler.bind(this);
+      this._headerNavPop = this.headerNavPopEventHandler.bind(this);
   }
 
   /**
@@ -51,7 +51,7 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
    *
    * return: none
   **/
-  private addRecipeEventHandler(data: Recipe): void {
+  addRecipeEventHandler(data: Recipe): void {
     this.updateSetMaster(data);
     this.recipeMaster.recipes.push(data);
   }
@@ -65,7 +65,7 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
    * return: boolean
    * - true if there are at least 2 recipes present and requested recipe is not in progress
   **/
-  private canDelete(): boolean {
+  canDelete(): boolean {
     return  this.recipeMaster.recipes.length > 1
             && !this.deletionInProgress;
   }
@@ -78,11 +78,11 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
    *
    * return: none
   **/
-  private deleteNote(index: number): void {
+  deleteNote(index: number): void {
     this.recipeMaster.notes.splice(index, 1);
     this.recipeService.patchRecipeMasterById(this.recipeMaster._id, {notes: this.recipeMaster.notes})
-      .subscribe(response => {
-        console.log(response);
+      .subscribe(() => {
+        this.toastService.presentToast('Note deleted', 1000);
       });
   }
 
@@ -94,13 +94,12 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
    *
    * return: none
   **/
-  private deleteRecipe(recipe: Recipe): void {
+  deleteRecipe(recipe: Recipe): void {
     this.deletionInProgress = true;
     this.recipeService.deleteRecipeById(this.recipeMaster._id, recipe._id)
-      .subscribe(response => {
+      .subscribe(() => {
         this.toastService.presentToast('Recipe deleted!', 1500);
         this.deletionInProgress = false;
-        const index = getIndexById(recipe._id, this.recipeMaster.recipes);
       });
   }
 
@@ -112,8 +111,8 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
    *
    * return: none
   **/
-  private deleteRecipeEventHandler(data: any): void {
-    const toUpdate = this.recipeMaster.recipes.find(recipe => recipe._id == data.newMaster._id);
+  deleteRecipeEventHandler(data: any): void {
+    const toUpdate = this.recipeMaster.recipes.find(recipe => recipe._id === data.newMaster._id);
     if (toUpdate) {
       toUpdate.isMaster = true;
     }
@@ -127,8 +126,8 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
    *
    * return: none
   **/
-  private expandNote(index: number): void {
-    this.noteIndex = this.noteIndex == index ? -1: index;
+  expandNote(index: number): void {
+    this.noteIndex = this.noteIndex === index ? -1: index;
   }
 
   /**
@@ -138,7 +137,7 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
    *
    * return: none
   **/
-  private expandNoteMain(): void {
+  expandNoteMain(): void {
     this.showNotes = !this.showNotes;
     this.showNotesIcon = this.showNotes ? 'arrow-up': 'arrow-down';
   }
@@ -151,8 +150,20 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
    *
    * return: none
   **/
-  private expandRecipe(index: number): void {
-    this.recipeIndex = this.recipeIndex == index ? -1: index;
+  expandRecipe(index: number): void {
+    this.recipeIndex = this.recipeIndex === index ? -1: index;
+  }
+
+  headerNavPopEventHandler(data: any): void {
+    if (data.origin === 'RecipePage') {
+      this.navCtrl.pop();
+    } else if (data.origin === 'RecipeMasterDetailPage') {
+      this.events.publish('header-nav-update', {destTitle: this.recipeMaster.name});
+    }
+  }
+
+  ionViewDidLeave() {
+    this.slidingItems.forEach(slidingItem => slidingItem.close());
   }
 
   /**
@@ -164,8 +175,8 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
    * return: boolean
    * - true if recipe at given index is set as the master
   **/
-  private isMaster(index: number): boolean {
-    return this.recipeMaster.recipes[index]._id == this.recipeMaster.master;
+  isMaster(index: number): boolean {
+    return this.recipeMaster.recipes[index]._id === this.recipeMaster.master;
   }
 
   /**
@@ -176,8 +187,14 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
    *
    * return: none
   **/
-  private navToBrewProcess(recipe: Recipe): void {
+  navToBrewProcess(recipe: Recipe): void {
     if (this.recipeService.isRecipeProcessPresent(recipe)) {
+      this.events.publish('header-nav-update', {
+        dest: 'process',
+        destType: 'page',
+        destTitle: recipe.variantName,
+        origin: this.navCtrl.getActive().name
+      });
       this.navCtrl.push(ProcessPage, {
         master: this.recipeMaster,
         requestedUserId: this.recipeMaster.owner,
@@ -198,23 +215,33 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
    *
    * return: none
   **/
-  private navToRecipeForm(formType: string, recipe?: Recipe, other?: any): void {
+  navToRecipeForm(formType: string, recipe?: Recipe, other?: any): void {
     const options = {
       formType: formType,
       other: other
     };
-    if (formType == 'master') {
+    let title;
+    if (formType === 'master') {
       options['masterData'] = this.recipeMaster;
       options['mode'] = 'update';
-    } else if (formType == 'recipe') {
+      title = 'Update Recipe';
+    } else if (formType === 'recipe') {
       options['masterData'] = this.recipeMaster;
       if (recipe) {
         options['recipeData'] = recipe;
         options['mode'] = 'update';
+        title = 'Update Variant'
       } else {
         options['mode'] = 'create';
+        title = 'Add a Variant';
       }
     }
+    this.events.publish('header-nav-update', {
+      dest: 'recipe-form',
+      destType: 'page',
+      destTitle: title,
+      origin: this.navCtrl.getActive().name
+    });
     this.navCtrl.push(RecipeFormPage, options);
   }
 
@@ -223,6 +250,7 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
     this.events.unsubscribe('new-recipe', this._addRecipe);
     this.events.unsubscribe('update-recipe', this._updateRecipe);
     this.events.unsubscribe('delete-recipe', this._deleteRecipe);
+    this.events.unsubscribe('header-nav-pop', this._headerNavPop);
   }
 
   ngOnInit() {
@@ -230,6 +258,7 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
     this.events.subscribe('new-recipe', this._addRecipe);
     this.events.subscribe('update-recipe', this._updateRecipe);
     this.events.subscribe('delete-recipe', this._deleteRecipe);
+    this.events.subscribe('header-nav-pop', this._headerNavPop);
   }
 
   /**
@@ -239,7 +268,7 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
    *
    * return: none
   **/
-  private setPublic(): void {
+  setPublic(): void {
     this.recipeService.patchRecipeMasterById(this.recipeMaster._id,
       {isPublic: !this.recipeMaster.isPublic})
       .subscribe(response => {
@@ -256,8 +285,8 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
    * return: boolean
    * - true if given index is the selected index to show
   **/
-  private showExpandedNote(index: number): boolean {
-    return index == this.noteIndex;
+  showExpandedNote(index: number): boolean {
+    return index === this.noteIndex;
   }
 
   /**
@@ -269,8 +298,8 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
    * return: boolean
    * - true if given index should be shown
   **/
-  private showExpandedRecipe(index: number): boolean {
-    return index == this.recipeIndex;
+  showExpandedRecipe(index: number): boolean {
+    return index === this.recipeIndex;
   }
 
   /**
@@ -281,7 +310,7 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
    *
    * return: none
   **/
-  private toggleFavorite(recipe: Recipe): void {
+  toggleFavorite(recipe: Recipe): void {
     this.recipeService.patchRecipeById(
       this.recipeMaster._id,
       recipe._id,
@@ -289,7 +318,7 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
     )
     .subscribe(response => {
       if (response) {
-        console.log('set fav', response);
+        // TODO show feedback toast
       }
     })
   }
@@ -302,7 +331,7 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
    *
    * return: none
   **/
-  private updateMasterEventHandler(data: RecipeMaster): void {
+  updateMasterEventHandler(data: RecipeMaster): void {
     this.recipeMaster = data;
   }
 
@@ -314,7 +343,7 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
    *
    * return: none
   **/
-  private updateNote(index: number): void {
+  updateNote(index: number): void {
     this.navToRecipeForm('master', null, {noteIndex: index});
   }
 
@@ -326,7 +355,7 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
    *
    * return: none
   **/
-  private updateRecipeEventHandler(data: Recipe): void {
+  updateRecipeEventHandler(data: Recipe): void {
     this.updateSetMaster(data);
   }
 
@@ -338,9 +367,9 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
    *
    * return: none
   **/
-  private updateSetMaster(data: Recipe): void {
+  updateSetMaster(data: Recipe): void {
     for (let i=0; i < this.recipeMaster.recipes.length; i++) {
-      if (data._id == this.recipeMaster.recipes[i]._id) {
+      if (data._id === this.recipeMaster.recipes[i]._id) {
         this.recipeMaster.recipes[i] = data;
       } else if (data.isMaster) {
         this.recipeMaster.recipes[i].isMaster = false;

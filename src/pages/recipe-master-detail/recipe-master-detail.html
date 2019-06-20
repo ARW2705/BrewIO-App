@@ -1,10 +1,4 @@
-<ion-header>
-  <ion-navbar>
-    <ion-title>{{ title }}</ion-title>
-  </ion-navbar>
-</ion-header>
-
-<ion-content>
+<ion-content class="content">
 
   <ion-grid id="batch-grid">
 
@@ -77,7 +71,7 @@
       <ion-row>
         <ion-list id="batch-list">
           <ng-container *ngFor="let recipe of recipeMaster.recipes; index as i">
-            <ion-item-sliding>
+            <ion-item-sliding #slidingItems>
 
               <ion-item-options side="left"
                                 *ngIf="recipeMaster.recipes.length > 1">
