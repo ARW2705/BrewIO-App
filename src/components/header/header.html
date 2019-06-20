@@ -2,10 +2,21 @@
   <ion-navbar>
     <ion-grid no-padding>
       <ion-row>
+        <ion-col  col-1
+                  align-self-center
+                  *ngIf="!tabPage">
+          <button ion-button
+                  class="header-button-back"
+                  (click)="goBack()">
+            <ion-icon name="arrow-round-back"
+                      color="primary">
+            </ion-icon>
+          </button>
+        </ion-col>
         <ion-col align-self-center>
           <ion-title>{{ title }}</ion-title>
         </ion-col>
-        <ion-col>
+        <ion-col align-self-center>
           <button ion-button
                   float-right
                   class="header-button"
