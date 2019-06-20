@@ -8,7 +8,8 @@
     "start": "ionic-app-scripts serve",
     "clean": "ionic-app-scripts clean",
     "build": "ionic-app-scripts build",
-    "lint": "ionic-app-scripts lint"
+    "lint": "ionic-app-scripts lint",
+    "test": "jest"
   },
   "dependencies": {
     "@angular/animations": "5.2.11",
@@ -44,9 +45,17 @@
     "zone.js": "0.8.29"
   },
   "devDependencies": {
+    "@angular-builders/jest": "^8.0.2",
     "@ionic/app-scripts": "3.2.1",
     "@ionic/lab": "1.0.24",
-    "typescript": "~2.6.2"
+    "@types/core-js": "^0.9.36",
+    "@types/jest": "^24.0.14",
+    "core-js": "^3.1.3",
+    "jest": "^24.8.0",
+    "jest-preset-angular": "^7.1.1",
+    "reflect-metadata": "^0.1.13",
+    "ts-jest": "^24.0.2",
+    "typescript": "^2.9.2"
   },
   "description": "An Ionic project",
   "cordova": {
@@ -62,6 +71,18 @@
     "platforms": [
       "ios",
       "android"
+    ]
+  },
+  "jest": {
+    "preset": "jest-preset-angular",
+    "roots": [
+      "src"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/src/jest/setupJest.ts"
+    ],
+    "transformIgnorePatterns": [
+      "node_modules/(?!@ngrx|@ionic-native|@ionic)"
     ]
   }
 }
