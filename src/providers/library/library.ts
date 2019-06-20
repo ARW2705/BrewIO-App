@@ -12,15 +12,13 @@ import { ProcessHttpErrorProvider } from '../process-http-error/process-http-err
 
 @Injectable()
 export class LibraryProvider {
-  private grainsLibrary: Array<Grains> = null;
-  private hopsLibrary: Array<Hops> = null;
-  private yeastLibrary: Array<Yeast> = null;
-  private styleLibrary: Array<Style> = null;
+  grainsLibrary: Array<Grains> = null;
+  hopsLibrary: Array<Hops> = null;
+  yeastLibrary: Array<Yeast> = null;
+  styleLibrary: Array<Style> = null;
 
   constructor(public http: HttpClient,
-    private processHttpError: ProcessHttpErrorProvider) {
-    console.log('Hello LibraryProvider Provider');
-  }
+    public processHttpError: ProcessHttpErrorProvider) { }
 
   getAllLibraries(): Observable<any> {
     return Observable.forkJoin(
@@ -31,59 +29,59 @@ export class LibraryProvider {
     );
   }
 
-  getGrainsLibrary(): Observable<any> {
-    return this.grainsLibrary == null
+  getGrainsLibrary(): Observable<Array<Grains>> {
+    return this.grainsLibrary === null
             ? this.fetchGrainsLibrary()
             : Observable.of(this.grainsLibrary);
   }
 
   getGrainsById(grainId: string): Observable<any> {
     let grains;
-    if (this.grainsLibrary != null) {
-      grains = this.grainsLibrary.find(entry => entry._id == grainId);
+    if (this.grainsLibrary !== null) {
+      grains = this.grainsLibrary.find(entry => entry._id === grainId);
     }
-    return grains != undefined
+    return grains !== undefined
             ? Observable.of(grains)
             : this.fetchGrainsLibrary()
-              .map(library => library.find(entry => entry._id == grainId));
+              .map(library => library.find(entry => entry._id === grainId));
   }
 
   getHopsLibrary(): Observable<any> {
-    return this.hopsLibrary == null
+    return this.hopsLibrary === null
             ? this.fetchHopsLibrary()
             : Observable.of(this.hopsLibrary);
   }
 
   getHopsById(hopsId: string): Observable<any> {
     let hops;
-    if (this.hopsLibrary != null) {
-      hops = this.hopsLibrary.find(entry => entry._id == hopsId);
+    if (this.hopsLibrary !== null) {
+      hops = this.hopsLibrary.find(entry => entry._id === hopsId);
     }
-    return hops != undefined
+    return hops !== undefined
             ? Observable.of(hops)
             : this.fetchHopsLibrary()
-              .map(library => library.find(entry => entry._id == hopsId));
+              .map(library => library.find(entry => entry._id === hopsId));
   }
 
   getYeastLibrary(): Observable<any> {
-    return this.yeastLibrary == null
+    return this.yeastLibrary === null
             ? this.fetchYeastLibrary()
             : Observable.of(this.yeastLibrary);
   }
 
   getYeastById(yeastId: string): Observable<any> {
     let yeast;
-    if (this.yeastLibrary != null) {
-      yeast = this.yeastLibrary.find(entry => entry._id == yeastId);
+    if (this.yeastLibrary !== null) {
+      yeast = this.yeastLibrary.find(entry => entry._id === yeastId);
     }
-    return yeast != undefined
+    return yeast !== undefined
             ? Observable.of(yeast)
             : this.fetchYeastLibrary()
-              .map(library => library.find(entry => entry._id == yeastId));
+              .map(library => library.find(entry => entry._id === yeastId));
   }
 
   getStyleLibrary(): Observable<any> {
-    return this.styleLibrary == null
+    return this.styleLibrary === null
             ? this.fetchStyleLibrary()
             : Observable.of(this.styleLibrary);
   }
@@ -95,13 +93,13 @@ export class LibraryProvider {
     this.fetchStyleLibrary();
   }
 
-  fetchGrainsLibrary(): Observable<any> {
+  fetchGrainsLibrary(): Observable<Array<Grains>> {
     return this.http.get(baseURL + apiVersion + '/library/grains')
       .map((grains: Array<Grains>) => this.grainsLibrary = grains.sort(this.sortAlpha))
       .catch(error => this.processHttpError.handleError(error));
   }
 
-  fetchHopsLibrary(): Observable<any> {
+  fetchHopsLibrary(): Observable<Array<Hops>> {
     return this.http.get(baseURL + apiVersion + '/library/hops')
       .map((hops: Array<Hops>) => this.hopsLibrary = hops.sort(this.sortAlpha))
       .catch(error => this.processHttpError.handleError(error));
