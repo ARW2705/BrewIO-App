@@ -1,34 +1,31 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { NavController, Events } from 'ionic-angular';
+import { Component, OnInit, OnDestroy, ViewChildren, QueryList } from '@angular/core';
+import { NavController, Events, ItemSliding } from 'ionic-angular';
 
 import { RecipeMaster } from '../../shared/interfaces/recipe-master';
-import { Recipe } from '../../shared/interfaces/recipe';
 import { Batch } from '../../shared/interfaces/batch';
 import { User } from '../../shared/interfaces/user';
 
 import { ProcessPage } from '../../pages/process/process';
 
 import { UserProvider } from '../../providers/user/user';
-import { RecipeProvider } from '../../providers/recipe/recipe';
 
 @Component({
   selector: 'active-batches',
   templateUrl: 'active-batches.html'
 })
 export class ActiveBatchesComponent implements OnInit, OnDestroy {
-  private activeBatches: Array<Batch> = [];
-  private user: User = null;
-  private _userUpdate: any;
-  private _tabChange: any;
-  private _headerNav: any;
-  private _updateBatch: any;
+  @ViewChildren('slidingItems') slidingItems: QueryList<ItemSliding>;
+  activeBatches: Array<Batch> = [];
+  user: User = null;
+  _userUpdate: any;
+  _headerNavUpdate: any;
+  _updateBatch: any;
 
-  constructor(private navCtrl: NavController,
-    private events: Events,
-    private userService: UserProvider) {
+  constructor(public navCtrl: NavController,
+    public events: Events,
+    public userService: UserProvider) {
       this._userUpdate = this.userUpdateEventHandler.bind(this);
-      this._tabChange = this.tabChangeEventHandler.bind(this);
-      this._headerNav = this.headerNavEventHandler.bind(this);
+      this._headerNavUpdate = this.headerNavUpdateEventHandler.bind(this);
       this._updateBatch = this.updateBatchEventHandler.bind(this);
       this.user = this.userService.getUser();
       this.getActiveBatches();
@@ -36,19 +33,17 @@ export class ActiveBatchesComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.events.subscribe('user-update', this._userUpdate);
-    this.events.subscribe('tab-change', this._tabChange);
-    this.events.subscribe('header-nav-pop', this._headerNav);
+    this.events.subscribe('header-nav-update', this._headerNavUpdate);
     this.events.subscribe('batch-update', this._updateBatch);
   }
 
   ngOnDestroy() {
     this.events.unsubscribe('user-update', this._userUpdate);
-    this.events.unsubscribe('tab-change', this._tabChange);
-    this.events.unsubscribe('header-nav-pop', this._headerNav);
+    this.events.unsubscribe('header-nav-update', this._headerNavUpdate);
     this.events.unsubscribe('batch-update', this._updateBatch);
   }
 
-  private getActiveBatches(): void {
+  getActiveBatches(): void {
     if (this.user) {
       this.activeBatches = this.user.inProgressList;
     } else {
@@ -56,39 +51,47 @@ export class ActiveBatchesComponent implements OnInit, OnDestroy {
     }
   }
 
-  private getBatchName(batch: Batch): string {
+  getBatchName(batch: Batch): string {
     const master = this.getMasterByBatch(batch);
-    const recipe = master.recipes.find(recipe => recipe._id == batch.recipe);
+    const recipe = master.recipes.find(recipe => recipe._id === batch.recipe);
     return recipe.variantName;
   }
 
-  private getBatchNextStep(batch: Batch): string {
-    // console.log(batch);
+  getBatchNextStep(batch: Batch): string {
     return batch.schedule[batch.currentStep].name;
   }
 
-  private getBatchStartDate(batch: Batch): string {
-    // console.log(batch);
+  getBatchStartDate(batch: Batch): string {
     return batch.createdAt;
   }
 
-  private getMasterByBatch(batch: Batch): RecipeMaster {
+  getMasterByBatch(batch: Batch): RecipeMaster {
     const master = this.user.masterList.find(master => {
       return master.recipes.some(recipe => {
-        return recipe._id == batch.recipe;
+        return recipe._id === batch.recipe;
       });
     });
     return master;
   }
 
-  private getRecipeName(batch: Batch): string {
+  getRecipeName(batch: Batch): string {
     const master = this.getMasterByBatch(batch);
     return master ? master.name: 'Missing master';
   }
 
-  navToBrewProcess(batch: Batch) {
+  ionViewDidLeave() {
+    this.slidingItems.forEach(slidingItem => slidingItem.close());
+  }
+
+  navToBrewProcess(batch: Batch): void {
     const master = this.getMasterByBatch(batch);
     if (master) {
+      this.events.publish('header-nav-update', {
+        dest: 'process',
+        destType: 'page',
+        destTitle: master.recipes.find(recipe => recipe._id === batch.recipe).variantName,
+        origin: this.navCtrl.getActive().name
+      });
       this.navCtrl.push(ProcessPage, {
         master: master,
         requestedUserId: master.owner,
@@ -100,21 +103,20 @@ export class ActiveBatchesComponent implements OnInit, OnDestroy {
     }
   }
 
-  private userUpdateEventHandler(user: User): void {
+  userUpdateEventHandler(user: User): void {
+    console.log('user update', user);
     this.user = user;
     this.getActiveBatches();
   }
 
-  private tabChangeEventHandler(tab: any): void {
-    this.getActiveBatches();
+  headerNavUpdateEventHandler(data: any): void {
+    if (data.destType === 'tab') {
+      this.getActiveBatches();
+    }
   }
 
-  private headerNavEventHandler(pageName: string): void {
-
-  }
-
-  private updateBatchEventHandler(data: any): void {
-    if (data.type == 'end') {
+  updateBatchEventHandler(data: any): void {
+    if (data.type === 'end') {
       this.userService.updateUserInProgressList(data.data);
     }
   }
