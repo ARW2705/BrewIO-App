@@ -2,7 +2,6 @@ import { Component } from '@angular/core';
 import { NavController, NavParams, ViewController } from 'ionic-angular';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 
-import { AuthenticationProvider } from '../../../providers/authentication/authentication';
 import { UserProvider } from '../../../providers/user/user';
 import { ToastProvider } from '../../../providers/toast/toast';
 
@@ -16,12 +15,11 @@ export class LoginPage {
 
   constructor(public navCtrl: NavController,
     public navParams: NavParams,
-    private viewCtrl: ViewController,
-    private formBuilder: FormBuilder,
-    private userService: UserProvider,
-    private toastService: ToastProvider,
-    private authService: AuthenticationProvider) {
-    this.initForm();
+    public viewCtrl: ViewController,
+    public formBuilder: FormBuilder,
+    public userService: UserProvider,
+    public toastService: ToastProvider) {
+      this.initForm();
   }
 
   dismiss() {
