@@ -4,15 +4,15 @@ import * as Constant from '../../shared/constants/factors';
 import { GrainBill } from '../../shared/interfaces/grain-bill';
 import { HopsSchedule } from '../../shared/interfaces/hops-schedule';
 import { YeastBatch } from '../../shared/interfaces/yeast-batch';
-import { Grains, Hops, Yeast } from '../../shared/interfaces/library';
+import { Grains, Hops } from '../../shared/interfaces/library';
 import { Recipe } from '../../shared/interfaces/recipe';
+
+import { roundToDecimalPlace } from '../../shared/utility-functions/utilities';
 
 @Injectable()
 export class CalculationsProvider {
 
-  constructor() {
-    console.log('Hello CalculationsProvider Provider');
-  }
+  constructor() { }
 
   calculateRecipeValues(recipe: Recipe) {
     let og = 1;
@@ -38,34 +38,42 @@ export class CalculationsProvider {
   }
 
   calculateTotalOriginalGravity(batchVolume: number, efficiency: number, grainBill: Array<GrainBill>): number {
-    return grainBill
-      .map((grainsItem: GrainBill) => {
-        return this.getOriginalGravity(
-          grainsItem.grainType.gravity,
-          grainsItem.quantity,
-          batchVolume,
-          efficiency);
-      })
-      .reduce((arr: number, curr: number) => arr + curr - 1);
+    return roundToDecimalPlace(
+      grainBill
+        .map((grainsItem: GrainBill) => {
+          return this.getOriginalGravity(
+            grainsItem.grainType.gravity,
+            grainsItem.quantity,
+            batchVolume,
+            efficiency);
+        })
+        .reduce((arr: number, curr: number) => arr + curr - 1), 3
+    );
   }
 
   calculateTotalIBU(hopsSchedule: Array<HopsSchedule>, og: number, batchVolume: number, boilVolume: number): number {
-    return hopsSchedule
-      .map(hops => {
-        if (hops.dryHop) return 0;
-        return this.getIBU(hops.hopsType, hops, og, batchVolume, boilVolume);
-      })
-      .reduce((arr: number, curr: number) => arr + curr);
+    return roundToDecimalPlace(
+      hopsSchedule
+        .map(hops => {
+          if (hops.dryHop) return 0;
+          return this.getIBU(hops.hopsType, hops, og, batchVolume, boilVolume);
+        })
+        .reduce((arr: number, curr: number) => arr + curr),
+      1
+    );
   }
 
   calculateTotalSRM(grainBill: Array<GrainBill>, batchVolume: number): number {
-    return this.getSRM(
-      grainBill
-        .map(grains => {
-          return this.getMCU(grains.grainType, grains, batchVolume);
-        })
-        .reduce((arr: number, curr: number) => arr + curr)
-      );
+    return roundToDecimalPlace(
+      this.getSRM(
+        grainBill
+          .map(grains => {
+            return this.getMCU(grains.grainType, grains, batchVolume);
+          })
+          .reduce((arr: number, curr: number) => arr + curr)
+      ),
+      1
+    );
   }
 
   getAverageAttenuation(yeast: Array<YeastBatch>): number {
@@ -77,56 +85,63 @@ export class CalculationsProvider {
         count++;
       })
     });
-    return total / count;
+    return roundToDecimalPlace(total / count, 1);
   }
 
   getABV(og: number, fg: number): number {
-    return (og - fg) * Constant.ABVFactor;
+    return roundToDecimalPlace(
+      (Constant.ABVFactors[0] * (og - fg) / (Constant.ABVFactors[1] - og)) * (fg / Constant.ABVFactors[2])
+      ,3
+    );
   }
 
   getOriginalGravity(pps: number,
     quantity: number,
     volume: number,
     efficiency: number): number {
-      return 1 + ((pps - 1) * quantity * efficiency / volume);
+      return roundToDecimalPlace(1 + ((pps - 1) * quantity * efficiency / volume), 3);
   }
 
   getFinalGravity(og: number, attenuation: number): number {
-    return 1 + ((og - 1) * (1 - (attenuation / 100)));
+    return roundToDecimalPlace(1 + ((og - 1) * (1 - (attenuation / 100))), 3);
   }
 
   getBoilGravity(og: number, batchVolume: number, boilVolume: number): number {
-    return (batchVolume / boilVolume) * (og - 1);
+    return roundToDecimalPlace((batchVolume / boilVolume) * (og - 1), 9);
   }
 
   getBignessFactor(boilGravity: number) {
-    return Constant.BignessFactor * Math.pow(Constant.BignessBase, boilGravity);
+    return roundToDecimalPlace(Constant.BignessFactor * Math.pow(Constant.BignessBase, boilGravity), 9);
   }
 
   getBoilTimeFactor(boilTime: number): number {
-    return (1 - Math.pow(Math.E, (Constant.BoilTimeExp * boilTime))) / Constant.BoilTimeFactor;
+    return roundToDecimalPlace((1 - Math.pow(Math.E, (Constant.BoilTimeExp * boilTime))) / Constant.BoilTimeFactor, 9);
   }
 
   getUtilization(bignessFactor: number, boilTimeFactor: number): number {
-    return bignessFactor * boilTimeFactor;
+    return roundToDecimalPlace(bignessFactor * boilTimeFactor, 9);
   }
 
   getIBU(hops: Hops, hopsInstance: HopsSchedule, og: number, batchVolume: number, boilVolume: number): number {
-    return hops.alphaAcid
-           * hopsInstance.quantity
-           * this.getUtilization(
-               this.getBignessFactor(
-                 this.getBoilGravity(og, batchVolume, boilVolume)), this.getBoilTimeFactor(hopsInstance.addAt))
-           * Constant.IBUFactor
-           / batchVolume;
+    const bignessFactor = this.getBignessFactor(this.getBoilGravity(og, batchVolume, boilVolume));
+    const boilTimeFactor = this.getBoilTimeFactor(hopsInstance.addAt);
+
+    return roundToDecimalPlace(
+      hops.alphaAcid
+      * hopsInstance.quantity
+      * this.getUtilization(bignessFactor, boilTimeFactor)
+      * Constant.IBUFactor
+      / batchVolume,
+      1
+    );
   }
 
   getMCU(grains: Grains, grainsInstance: GrainBill, batchVolume: number): number {
-    return grains.lovibond * grainsInstance.quantity / batchVolume;
+    return roundToDecimalPlace(grains.lovibond * grainsInstance.quantity / batchVolume, 2);
   }
 
   getSRM(mcu: number): number {
-    return Constant.SRMFactor * (Math.pow(mcu, Constant.SRMExp));
+    return roundToDecimalPlace(Constant.SRMFactor * (Math.pow(mcu, Constant.SRMExp)), 1);
   }
 
 }
