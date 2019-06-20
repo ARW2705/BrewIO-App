@@ -7,7 +7,6 @@ import 'rxjs/add/operator/catch';
 
 import { baseURL } from '../../shared/constants/base-url';
 import { apiVersion } from '../../shared/constants/api-version';
-import { User } from '../../shared/interfaces/user';
 
 import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
 
@@ -25,18 +24,16 @@ interface JWTResponse {
 
 @Injectable()
 export class AuthenticationProvider {
-  private username: Subject<string> = new Subject<string>();
-  private publicUsername: string = '';
-  private authToken: string = undefined;
-  private tokenKey: string = 'JWT';
+  username: Subject<string> = new Subject<string>();
+  publicUsername: string = '';
+  authToken: string = undefined;
+  tokenKey: string = 'JWT';
 
   constructor(public http: HttpClient,
-    private storage: Storage,
-    private processHttpError: ProcessHttpErrorProvider) {
-    console.log('Hello AuthenticationProvider Provider');
-  }
+    public storage: Storage,
+    public processHttpError: ProcessHttpErrorProvider) { }
 
-  checkJWTtoken() {
+  checkJWTtoken(): void {
     this.http.get<JWTResponse>(baseURL + apiVersion + '/users/checkJWTtoken')
       .subscribe(
         response => {
@@ -44,16 +41,16 @@ export class AuthenticationProvider {
           this.sendUsername(response.user.username);
         },
         error => {
-          console.log('JWT token invalid');
+          console.log('JWT token invalid', error);
           this.destroyUserCredentials();
         });
   }
 
-  sendUsername(name: string) {
+  sendUsername(name: string): void {
     this.username.next(name);
   }
 
-  clearUsername() {
+  clearUsername(): void {
     this.username.next(undefined);
   }
 
@@ -69,10 +66,10 @@ export class AuthenticationProvider {
     return this.authToken;
   }
 
-  loadUserCredentials() {
-    this.storage.get(this.tokenKey)
-      .then(
-        token => {
+  loadUserCredentials(): Observable<any> {
+    return Observable.fromPromise(
+      this.storage.get(this.tokenKey)
+        .then(token => {
           if (token) {
             const credentials = JSON.parse(token);
             if (credentials && credentials.username != undefined) {
@@ -80,27 +77,30 @@ export class AuthenticationProvider {
               if (this.authToken) {
                 this.checkJWTtoken();
               }
+              return {error: null};
             } else {
-              console.log('Token not found');
+              return {error: 'Token not found'};
             }
           }
-        }
-      )
-      .catch(err => console.log('loadUserCredentials', err));
+        })
+        .catch(error => {
+          return {error: error};
+        })
+    );
   }
 
-  storeUserCredentials(credentials: any) {
+  storeUserCredentials(credentials: any): void {
     this.storage.set(this.tokenKey, JSON.stringify(credentials));
     this.useCredentials(credentials);
   }
 
-  useCredentials(credentials: any) {
+  useCredentials(credentials: any): void {
     this.publicUsername = credentials.username;
     this.sendUsername(credentials.username);
     this.authToken = credentials.token;
   }
 
-  destroyUserCredentials() {
+  destroyUserCredentials(): void {
     this.authToken = undefined;
     this.clearUsername();
     this.storage.remove(this.tokenKey)
@@ -124,7 +124,7 @@ export class AuthenticationProvider {
       .catch(error => this.processHttpError.handleError(error));
   }
 
-  logOut() {
+  logOut(): void {
     this.destroyUserCredentials();
   }
 
