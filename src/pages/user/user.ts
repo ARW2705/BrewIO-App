@@ -12,14 +12,14 @@ import { ModalProvider } from '../../providers/modal/modal';
   templateUrl: 'user.html'
 })
 export class UserPage implements OnInit, OnDestroy {
-  private user: User = null;
-  private userForm: FormGroup = null;
-  private _userUpdate: any;
-  private editing = '';
   @ViewChild('email') emailField: TextInput;
   @ViewChild('firstname') firstnameField: TextInput;
   @ViewChild('lastname') lastnameField: TextInput;
-  private originalValues = {
+  user: User = null;
+  userForm: FormGroup = null;
+  _userUpdate: any;
+  editing = '';
+  originalValues = {
     email: '',
     firstname: '',
     lastname: ''
@@ -27,16 +27,16 @@ export class UserPage implements OnInit, OnDestroy {
 
   constructor(public navCtrl: NavController,
     public navParams: NavParams,
-    private formBuilder: FormBuilder,
-    private events: Events,
-    private cdRef: ChangeDetectorRef,
-    private userService: UserProvider,
-    private modalService: ModalProvider) {
+    public formBuilder: FormBuilder,
+    public events: Events,
+    public cdRef: ChangeDetectorRef,
+    public userService: UserProvider,
+    public modalService: ModalProvider) {
       this._userUpdate = this.userUpdateEventHandler.bind(this);
       this.initUser();
   }
 
-  private clearForm(): void {
+  clearForm(): void {
     this.originalValues.email = '';
     this.originalValues.firstname = '';
     this.originalValues.lastname = '';
@@ -60,7 +60,7 @@ export class UserPage implements OnInit, OnDestroy {
     }
   }
 
-  private userUpdateEventHandler(data: any): void {
+  userUpdateEventHandler(data: any): void {
     if (data) {
       this.initUser();
       this.cdRef.detectChanges();
@@ -70,7 +70,7 @@ export class UserPage implements OnInit, OnDestroy {
     }
   }
 
-  private initForm(): void {
+  initForm(): void {
     this.userForm = this.formBuilder.group({
       email: [this.user.email, [Validators.email, Validators.required]],
       firstname: [this.user.firstname, [Validators.maxLength(25)]],
@@ -78,7 +78,7 @@ export class UserPage implements OnInit, OnDestroy {
     });
   }
 
-  private onUpdate(): void {
+  onUpdate(): void {
     console.log('update', this.userForm.value);
     this.userService.updateUserProfile(this.userForm.value)
       .subscribe(response => {
@@ -90,33 +90,33 @@ export class UserPage implements OnInit, OnDestroy {
       });
   }
 
-  private openLogin(): void {
+  openLogin(): void {
     this.modalService.openLogin();
   }
 
-  private openSignup(): void {
+  openSignup(): void {
     this.modalService.openSignup();
   }
 
-  private isEditing(field: string): boolean {
-    return field == this.editing;
+  isEditing(field: string): boolean {
+    return field === this.editing;
   }
 
-  private changeEdit(field: string, update: TextInput): void {
-    this.editing = update == undefined ? field: '';
-    if (update == undefined) {
+  changeEdit(field: string, update: TextInput): void {
+    this.editing = update === undefined ? field: '';
+    if (update === undefined) {
       this.cdRef.detectChanges();
-      if (field == 'email') {
+      if (field === 'email') {
         this.emailField.setFocus();
-      } else if (field == 'firstname') {
+      } else if (field === 'firstname') {
         this.firstnameField.setFocus();
-      } else if (field == 'lastname') {
+      } else if (field === 'lastname') {
         this.lastnameField.setFocus();
       }
     }
   }
 
-  private hasValuesToUpdate(): boolean {
+  hasValuesToUpdate(): boolean {
     for (const key in this.originalValues) {
       if (this.userForm.value[key] != this.originalValues[key]) {
         return true;
