@@ -3,17 +3,14 @@ import { Events, ModalController } from 'ionic-angular';
 
 import { LoginPage } from '../../pages/forms/login/login';
 import { SignupPage } from '../../pages/forms/signup/signup';
-import { NoteFormPage } from '../../pages/forms/note-form/note-form';
 
 @Injectable()
 export class ModalProvider {
 
-  constructor(private events: Events,
-    private modalCtrl: ModalController) {
-      console.log('Hello ModalProvider Provider');
-  }
+  constructor(public events: Events,
+    public modalCtrl: ModalController) { }
 
-  public openLogin(): void {
+  openLogin(): void {
     const modal = this.modalCtrl.create(LoginPage);
     modal.onDidDismiss(data => {
       if (data) {
@@ -23,7 +20,7 @@ export class ModalProvider {
     modal.present({keyboardClose: false});
   }
 
-  public openSignup(): void {
+  openSignup(): void {
     const modal = this.modalCtrl.create(SignupPage);
     modal.onDidDismiss(data => {
       if (data) {
