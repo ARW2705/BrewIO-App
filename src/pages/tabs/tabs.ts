@@ -9,45 +9,65 @@ import { HomePage } from '../home/home';
   templateUrl: 'tabs.html'
 })
 export class TabsPage implements OnInit, OnDestroy {
-
   @ViewChild('navTabs') navTabs: Tabs;
   @ViewChild(Slides) slides: Slides;
-  private currentIndex: number = 0;
-  private _userUpdate: any;
-  private tabs = [
+  currentIndex: number = 0;
+  _userUpdate: any;
+  _headerNavPop: any;
+  tabs = [
     { component: HomePage,   title: 'Home',    header: 'BrewIO',  icon: 'home'    },
     { component: RecipePage, title: 'Recipes', header: 'Recipes', icon: 'beer'    },
     { component: UserPage,   title: 'User',    header: 'User',    icon: 'contact' }
   ];
 
   constructor(public events: Events) {
-      this._userUpdate = this.userUpdateEventHandler.bind(this);
+    this._userUpdate = this.userUpdateEventHandler.bind(this);
+    this._headerNavPop = this.headerNavPopEventHandler.bind(this);
   }
 
-  private getCurrentTitle(): string {
+  getCurrentTitle(): string {
     return this.tabs[this.currentIndex].header;
   }
 
   ngOnInit() {
+    this.slides.lockSwipes(true);
     this.events.subscribe('user-update', this._userUpdate);
+    this.events.subscribe('header-nav-pop', this._headerNavPop);
   }
 
   ngOnDestroy() {
     this.events.unsubscribe('user-update', this._userUpdate);
+    this.events.unsubscribe('header-nav-pop', this._headerNavPop);
   }
 
-  private setIndex(index: number): void {
+  headerNavPopEventHandler(data: any): void {
+    if (this.tabs.some(tab => tab.component.name === data.origin)) {
+      this.updateHeader();
+    }
+  }
+
+  updateHeader(): void {
+    this.events.publish('header-nav-update', {
+      dest: this.tabs[this.currentIndex].title.toLowerCase(),
+      destType: 'tab',
+      destTitle: this.tabs[this.currentIndex].header
+    });
+  }
+
+  setIndex(index: number): void {
+    this.slides.lockSwipes(false);
     this.currentIndex = index;
     this.navTabs.select(index);
     this.slides.slideTo(index);
+    this.slides.lockSwipes(true);
   }
 
-  private tabNavigation(event): void {
+  tabNavigation(event): void {
     this.setIndex(event.index);
-    this.events.publish('tab-change', {dest: event.tabTitle.toLowerCase()});
+    this.updateHeader();
   }
 
-  private userUpdateEventHandler(data: any): void {
+  userUpdateEventHandler(data: any): void {
     if (!data) {
       this.setIndex(0);
     }
