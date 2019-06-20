@@ -6,8 +6,6 @@ import 'rxjs/add/operator/catch';
 
 import { baseURL } from '../../shared/constants/base-url';
 import { apiVersion } from '../../shared/constants/api-version';
-import { RecipeMaster } from '../../shared/interfaces/recipe-master';
-import { Recipe } from '../../shared/interfaces/recipe';
 import { Batch } from '../../shared/interfaces/batch';
 import { User } from '../../shared/interfaces/user';
 
@@ -17,10 +15,8 @@ import { ProcessHttpErrorProvider } from '../process-http-error/process-http-err
 export class ProcessProvider {
 
   constructor(public http: HttpClient,
-    private events: Events,
-    private processHttpError: ProcessHttpErrorProvider) {
-    console.log('Hello ProcessProvider Provider');
-  }
+    public events: Events,
+    public processHttpError: ProcessHttpErrorProvider) { }
 
   startNewBatch(userId: string, masterRecipeId: string, recipeId: string): Observable<any> {
     return this.http.get(`${baseURL}${apiVersion}/process/user/${userId}/master/${masterRecipeId}/recipe/${recipeId}`)
