@@ -1,10 +1,8 @@
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
-import { NavController, NavParams, Platform } from 'ionic-angular';
-import * as moment from 'moment';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { NavController, NavParams, Platform, Events } from 'ionic-angular';
 
 import { RecipeMaster } from '../../shared/interfaces/recipe-master';
 import { Recipe } from '../../shared/interfaces/recipe';
-import { Process } from '../../shared/interfaces/process';
 import { Batch } from '../../shared/interfaces/batch';
 import { Alert } from '../../shared/interfaces/alerts';
 import { ProgressCircleSettings } from '../../shared/interfaces/progress-circle';
@@ -23,51 +21,54 @@ import { ToastProvider } from '../../providers/toast/toast';
 @Component({
   selector: 'page-process',
   templateUrl: 'process.html',
-  animations: [slideUpDown()]
+  animations: [
+    slideUpDown()
+  ]
 })
-export class ProcessPage implements OnInit {
-  title: string = '';
+export class ProcessPage implements OnInit, OnDestroy {
   @ViewChild('calendar') calendarRef: CalendarComponent;
-  private showDescription: boolean = false;
-  private master: RecipeMaster = null;
-  private recipe: Recipe = null;
-  private batchId: string = null;
-  private requestedUserId: string = null;
-  public circumference: number = 0;
-  public timers: Array<Array<Timer>> = [];
-  private currentTimers: number = 0;
-  private viewStepIndex = 0;
-  private isConcurrent = false;
-  private selectedBatch: Batch = null;
+  showDescription: boolean = false;
+  master: RecipeMaster = null;
+  recipe: Recipe = null;
+  batchId: string = null;
+  requestedUserId: string = null;
+  circumference: number = 0;
+  timers: Array<Array<Timer>> = [];
+  currentTimers: number = 0;
+  viewStepIndex = 0;
+  isConcurrent = false;
+  selectedBatch: Batch = null;
+  _headerNavPop: any;
 
-  private timerHeight: number;
-  private timerWidth: number;
-  private timerStrokeWidth: number;
-  private timerRadius: number;
-  private timerOriginX: number;
-  private timerOriginY: number;
-  private timerFontSize: string;
-  private timerDY: string;
+  timerHeight: number;
+  timerWidth: number;
+  timerStrokeWidth: number;
+  timerRadius: number;
+  timerOriginX: number;
+  timerOriginY: number;
+  timerFontSize: string;
+  timerDY: string;
 
-  private timerStroke = '#ffffff';
-  private timerCircleFill = 'transparent';
-  private timerTextFill = 'white';
-  private timerTextXY = '50%';
-  private timerTextAnchor = 'middle';
-  private timerFontFamily = 'Arial';
+  timerStroke = '#ffffff';
+  timerCircleFill = 'transparent';
+  timerTextFill = 'white';
+  timerTextXY = '50%';
+  timerTextAnchor = 'middle';
+  timerFontFamily = 'Arial';
 
   constructor(public navCtrl: NavController,
     public navParams: NavParams,
-    private platform: Platform,
-    private recipeService: RecipeProvider,
-    private processService: ProcessProvider,
-    private userService: UserProvider,
-    private toastService: ToastProvider) {
+    public platform: Platform,
+    public events: Events,
+    public recipeService: RecipeProvider,
+    public processService: ProcessProvider,
+    public userService: UserProvider,
+    public toastService: ToastProvider) {
       this.master = navParams.get('master');
       this.requestedUserId = navParams.get('requestedUserId');
-      this.recipe = this.master.recipes.find(recipe => recipe._id == navParams.get('selectedRecipeId'));
+      this.recipe = this.master.recipes.find(recipe => recipe._id === navParams.get('selectedRecipeId'));
       this.batchId = navParams.get('selectedBatchId');
-      this.title = this.recipe.variantName;
+      this._headerNavPop = this.headerNavPopEventHandler.bind(this);
   }
 
   /**
@@ -79,8 +80,8 @@ export class ProcessPage implements OnInit {
    * return: boolean
    * - true if current view index is at the beginning or end of schedule
   **/
-  private atViewEnd(direction: string): boolean {
-    return this.getStep(false, direction) == -1;
+  atViewEnd(direction: string): boolean {
+    return this.getStep(false, direction) === -1;
   }
 
   /**
@@ -91,7 +92,7 @@ export class ProcessPage implements OnInit {
    * return: boolean
    * - true if a calendar step has been started, but not completed yet
   **/
-  private calendarInProgress(): boolean {
+  calendarInProgress(): boolean {
     return  this.selectedBatch.currentStep < this.selectedBatch.schedule.length
             && this.selectedBatch.schedule[this.selectedBatch.currentStep].hasOwnProperty('startDatetime');
   }
@@ -103,7 +104,7 @@ export class ProcessPage implements OnInit {
    *
    * return: none
   **/
-  private changeDate(): void {
+  changeDate(): void {
     this.toastService.presentToast('Select new dates', 1000, 'top');
     delete this.selectedBatch.schedule[this.selectedBatch.currentStep].startDatetime;
   }
@@ -116,9 +117,9 @@ export class ProcessPage implements OnInit {
    *
    * return: none
   **/
-  private changeStep(direction: string): void {
+  changeStep(direction: string): void {
     const nextIndex = this.getStep(false, direction);
-    if (nextIndex != -1) {
+    if (nextIndex !== -1) {
       this.getViewTimers(nextIndex);
       this.viewStepIndex = nextIndex;
     }
@@ -132,7 +133,7 @@ export class ProcessPage implements OnInit {
    *
    * return: none
   **/
-  private clearTimer(timer: Timer): void {
+  clearTimer(timer: Timer): void {
     clearInterval(timer.interval);
     timer.interval = null;
   }
@@ -146,10 +147,10 @@ export class ProcessPage implements OnInit {
    *
    * return: none
   **/
-  private completeStep(): void {
+  completeStep(): void {
     const nextIndex = this.getStep(true);
-    const isFinished = nextIndex == -1;
-    if (!isFinished && this.selectedBatch.schedule[this.selectedBatch.currentStep + 1].type == 'timer') {
+    const isFinished = nextIndex === -1;
+    if (!isFinished && this.selectedBatch.schedule[this.selectedBatch.currentStep + 1].type === 'timer') {
       this.getViewTimers(nextIndex);
     }
     this.processService.incrementCurrentStep(this.batchId)
@@ -159,11 +160,14 @@ export class ProcessPage implements OnInit {
             .subscribe(response => {
               this.updateRecipeMasterActive(false)
               this.toastService.presentToast('Enjoy!', 1000, 'bright-toast');
-              this.navCtrl.pop();
+              this.events.publish('header-nav-update', {other: 'batch-end'});
+              // this.navCtrl.pop();
             });
         } else {
+          console.log(`Finishing ${this.recipe.processSchedule[this.selectedBatch.currentStep]}`);
           this.selectedBatch.currentStep = nextIndex;
           this.viewStepIndex = nextIndex;
+          console.log(`Next step ${this.recipe.processSchedule[this.selectedBatch.currentStep]}`);
         }
       });
   }
@@ -176,22 +180,22 @@ export class ProcessPage implements OnInit {
    *
    * return: none
   **/
-  private composeTimers(): void {
+  composeTimers(): void {
     let first = null;
     let concurrent = [];
     for (let i=0; i < this.selectedBatch.schedule.length; i++) {
-      if (this.selectedBatch.schedule[i].type == 'timer') {
+      if (this.selectedBatch.schedule[i].type === 'timer') {
         const timeRemaining = this.selectedBatch.schedule[i].duration * 60; // change duration from minutes to seconds
         if (this.selectedBatch.schedule[i].concurrent) {
           concurrent.push({
-            first: first == null ? this.selectedBatch.schedule[i]._id: first,
+            first: first === null ? this.selectedBatch.schedule[i]._id: first,
             timer: clone(this.selectedBatch.schedule[i]),
             interval: null,
             timeRemaining: timeRemaining,
             show: false,
             settings: this.initTimerSettings(i, timeRemaining)
           });
-          if ((i == this.selectedBatch.schedule.length - 1
+          if ((i === this.selectedBatch.schedule.length - 1
               || !this.selectedBatch.schedule[i + 1].concurrent)
               && concurrent.length) {
             this.timers.push(concurrent);
@@ -220,7 +224,7 @@ export class ProcessPage implements OnInit {
   }
 
   /**
-   * Format the progress circle text time remaining
+   * Format the time remaining text inside progress circle
    *
    * params: number
    * timeRemaining - time remaining in seconds
@@ -228,22 +232,23 @@ export class ProcessPage implements OnInit {
    * return: string
    * - return string in hh:mm:ss format - hour/minutes removed if zero
   **/
-  private formatProgressCircleText(timeRemaining: number): string {
+  formatProgressCircleText(timeRemaining: number): string {
+    let remainder = timeRemaining;
     let result = '';
     let hours, minutes, seconds;
-    if (timeRemaining > 3599) {
-      hours = Math.floor(timeRemaining / 3600);
-      timeRemaining = timeRemaining % 3600;
+    if (remainder > 3599) {
+      hours = Math.floor(remainder / 3600);
+      remainder = remainder % 3600;
       result += hours + ':';
     }
-    if (timeRemaining > 59) {
-      minutes = Math.floor(timeRemaining / 60);
-      timeRemaining = timeRemaining % 60;
-      result += minutes < 10 ? '0': '';
+    if (remainder > 59 || timeRemaining > 3599) {
+      minutes = Math.floor(remainder / 60);
+      remainder = remainder % 60;
+      result += minutes < 10 && timeRemaining > 599 ? '0': '';
       result += minutes + ':';
     }
-    result += timeRemaining < 10 ? '0': '';
-    result += timeRemaining;
+    result += remainder < 10 ? '0': '';
+    result += remainder;
     return result;
   }
 
@@ -256,10 +261,10 @@ export class ProcessPage implements OnInit {
    * return: obj
    * - ngClass object with associated class names
   **/
-  private getAlertClass(alert: Alert): any {
+  getAlertClass(alert: Alert): any {
     const closest = this.getClosestAlertByGroup(alert);
     return {
-      'next-datetime': alert == closest,
+      'next-datetime': alert === closest,
       'past-datetime': new Date().getTime() > new Date(alert.datetime).getTime()
     };
   }
@@ -273,9 +278,9 @@ export class ProcessPage implements OnInit {
    * return: Array<Alert>
    * - array of alerts with the same title and in ascending chronological order
   **/
-  private getClosestAlertByGroup(alert: Alert): Alert {
+  getClosestAlertByGroup(alert: Alert): Alert {
     const alerts = this.selectedBatch.alerts.filter(item => {
-      return item.title == alert.title;
+      return item.title === alert.title;
     });
     return alerts.reduce((acc, curr) => {
       const accDiff = new Date(acc.datetime).getTime() - new Date().getTime();
@@ -293,9 +298,9 @@ export class ProcessPage implements OnInit {
    * return: Array<Alert>
    * - alerts sorted in chronological order for the currently started calendar step
   **/
-  private getCurrentStepCalendarAlerts(): Array<Alert> {
+  getCurrentStepCalendarAlerts(): Array<Alert> {
     const alerts = this.selectedBatch.alerts.filter(alert => {
-      return alert.title == this.selectedBatch.schedule[this.selectedBatch.currentStep].name;
+      return alert.title === this.selectedBatch.schedule[this.selectedBatch.currentStep].name;
     });
     alerts.sort((d1, d2) => {
       return new Date(d1.datetime).getTime() - new Date(d2.datetime).getTime();
@@ -311,7 +316,7 @@ export class ProcessPage implements OnInit {
    * return: obj
    * - calendar values to use in template
   **/
-  private getCurrentStepCalendarData(): any {
+  getCurrentStepCalendarData(): any {
     return {
       id: this.selectedBatch.schedule[this.viewStepIndex]._id,
       duration: this.selectedBatch.schedule[this.viewStepIndex].duration,
@@ -330,7 +335,7 @@ export class ProcessPage implements OnInit {
    * return: string
    * - css font size valu
   **/
-  private getFontSize(timeRemaining: number): string {
+  getFontSize(timeRemaining: number): string {
     if (timeRemaining > 3600) {
       return `${Math.round(this.timerWidth / 5)}px`;
     } else if (timeRemaining > 60) {
@@ -349,7 +354,7 @@ export class ProcessPage implements OnInit {
    * return: string
    * - formatted time string hh hours mm minutes
   **/
-  private getFormattedDurationString(duration: number): string {
+  getFormattedDurationString(duration: number): string {
     let result = '';
     if (duration > 59) {
       const hours = Math.floor(duration / 60);
@@ -372,9 +377,9 @@ export class ProcessPage implements OnInit {
    * return: number
    * - the next index to use or -1 if at the beginning or end of schedule
   **/
-  private getIndexAfterSkippingConcurrent(direction: string, startIndex: number): number {
+  getIndexAfterSkippingConcurrent(direction: string, startIndex: number): number {
     let nextIndex = -1;
-    if (direction == 'next') {
+    if (direction === 'next') {
       for (let i=startIndex; i < this.selectedBatch.schedule.length; i++) {
         if (!this.selectedBatch.schedule[i].concurrent) {
           nextIndex = i;
@@ -400,7 +405,7 @@ export class ProcessPage implements OnInit {
    * return: string
    * - the current step's description
   **/
-  private getNextDateSummary(): string {
+  getNextDateSummary(): string {
     return this.selectedBatch.schedule[this.selectedBatch.currentStep].description;
   }
 
@@ -414,10 +419,10 @@ export class ProcessPage implements OnInit {
    * return: number
    * - the next index to use or -1 if at the beginning or end of schedule
   **/
-  private getStep(onComplete: boolean = false, direction: string = 'next'): number {
+  getStep(onComplete: boolean = false, direction: string = 'next'): number {
     let nextIndex = -1;
     const viewIndex = onComplete ? this.selectedBatch.currentStep: this.viewStepIndex;
-    if (direction == 'next') {
+    if (direction === 'next') {
       if (viewIndex < this.selectedBatch.schedule.length - 1) {
         if (this.selectedBatch.schedule[viewIndex].concurrent) {
           nextIndex = this.getIndexAfterSkippingConcurrent(direction, viewIndex);
@@ -445,7 +450,7 @@ export class ProcessPage implements OnInit {
    * return: string
    * - step description at the current view step index
   **/
-  private getViewStepDescription(): string {
+  getViewStepDescription(): string {
     return `${this.selectedBatch.schedule[this.viewStepIndex].description}`;
   }
 
@@ -457,7 +462,7 @@ export class ProcessPage implements OnInit {
    * return: string
    * - the process step's name at current view index
   **/
-  private getViewStepName(): string {
+  getViewStepName(): string {
     return `${this.selectedBatch.schedule[this.viewStepIndex].name}`;
   }
 
@@ -469,7 +474,7 @@ export class ProcessPage implements OnInit {
    * return: string
    * - the process step's type at current view index
   **/
-  private getViewStepType(): string {
+  getViewStepType(): string {
     return `${this.selectedBatch.schedule[this.viewStepIndex].type}`;
   }
 
@@ -481,9 +486,9 @@ export class ProcessPage implements OnInit {
    *
    * return: none
   **/
-  private getViewTimers(index: number): void {
+  getViewTimers(index: number): void {
     for (let i=0; i < this.timers.length; i++) {
-      if (this.timers[i][0].first == this.selectedBatch.schedule[index]._id) {
+      if (this.timers[i][0].first === this.selectedBatch.schedule[index]._id) {
         this.isConcurrent = this.timers[i].length > 1;
         this.currentTimers = i;
         return;
@@ -499,9 +504,13 @@ export class ProcessPage implements OnInit {
    *
    * return: none
   **/
-  private goToActiveStep(): void {
+  goToActiveStep(): void {
     this.getViewTimers(this.selectedBatch.currentStep);
     this.viewStepIndex = this.selectedBatch.currentStep;
+  }
+
+  headerNavPopEventHandler(data: any): void {
+    this.navCtrl.pop();
   }
 
   /**
@@ -514,7 +523,7 @@ export class ProcessPage implements OnInit {
    * return: ProcessCircleSettings
    * - object containing formatted css values
   **/
-  private initTimerSettings(index: number, timeRemaining: number): ProgressCircleSettings {
+  initTimerSettings(index: number, timeRemaining: number): ProgressCircleSettings {
     return {
       height: this.timerHeight,
       width: this.timerWidth,
@@ -541,7 +550,12 @@ export class ProcessPage implements OnInit {
     };
   }
 
+  ngOnDestroy() {
+    this.events.unsubscribe('header-nav-pop', this._headerNavPop);
+  }
+
   ngOnInit() {
+    this.events.subscribe('header-nav-pop', this._headerNavPop);
     const timerWidth = Math.round(this.platform.width() * 2 / 3);
     this.timerWidth = timerWidth;
     this.timerHeight = timerWidth;
@@ -582,9 +596,9 @@ export class ProcessPage implements OnInit {
    *
    * return: none
   **/
-  private resetDuration(timer: Timer): void {
+  resetDuration(timer: Timer): void {
     const process = this.selectedBatch.schedule.find(process => {
-      return process._id == timer.first;
+      return process._id === timer.first;
     });
     timer.timer.duration = process.duration;
   }
@@ -597,18 +611,17 @@ export class ProcessPage implements OnInit {
    *
    * return: none
   **/
-  private setProgress(timer: Timer): void {
+  setProgress(timer: Timer): void {
     timer.settings.text.fontSize = this.getFontSize(timer.timeRemaining);
     timer.settings.circle.strokeDashoffset = `${this.circumference - timer.timeRemaining / (timer.timer.duration * 60) * this.circumference}`;
     timer.settings.text.content = this.formatProgressCircleText(timer.timeRemaining);
     if (timer.timeRemaining < 1) {
-      console.log('timer expired');
       this.clearTimer(timer);
       // TODO activate alarm
       console.log('timer expired alarm');
     } else if (timer.timer.splitInterval > 1) {
       const interval = timer.timer.duration * 60 / timer.timer.splitInterval;
-      if (timer.timeRemaining % interval == 0) {
+      if (timer.timeRemaining % interval === 0) {
         // TODO activate interval alarm
         console.log('interval alarm');
       }
@@ -624,8 +637,8 @@ export class ProcessPage implements OnInit {
    *
    * return: none
   **/
-  private setTimerFunction(mode: string, timer?: Timer): void {
-    if (mode == 'start') {
+  setTimerFunction(mode: string, timer?: Timer): void {
+    if (mode === 'start') {
       if (timer) {
         timer.interval = setInterval(() => {
           if (timer.timeRemaining > 0) {
@@ -643,7 +656,7 @@ export class ProcessPage implements OnInit {
           }, 1000);
         }
       }
-    } else if (mode == 'stop') {
+    } else if (mode === 'stop') {
       if (timer) {
         this.clearTimer(timer);
       } else {
@@ -651,7 +664,7 @@ export class ProcessPage implements OnInit {
           this.clearTimer(timer);
         }
       }
-    } else if (mode == 'add') {
+    } else if (mode === 'add') {
       if (timer) {
         timer.timer.duration++;
         timer.timeRemaining += 60;
@@ -686,7 +699,7 @@ export class ProcessPage implements OnInit {
    *
    * return: none
   **/
-  private startCalendar(): void {
+  startCalendar(): void {
     const calendarValues = this.calendarRef.getFinal();
     const update = {
       startDatetime: calendarValues.startDatetime,
@@ -705,7 +718,7 @@ export class ProcessPage implements OnInit {
    *
    * return: none
   **/
-  private toggleShowDescription(): void {
+  toggleShowDescription(): void {
     this.showDescription = !this.showDescription;
   }
 
@@ -717,7 +730,7 @@ export class ProcessPage implements OnInit {
    *
    * return: none
   **/
-  private toggleTimerControls(timer: Timer): void {
+  toggleTimerControls(timer: Timer): void {
     timer.show = !timer.show;
   }
 
@@ -729,7 +742,7 @@ export class ProcessPage implements OnInit {
    *
    * return: none
   **/
-  private updateRecipeMasterActive(start: boolean): void {
+  updateRecipeMasterActive(start: boolean): void {
     this.recipeService.patchRecipeMasterById(this.master._id, {hasActiveBatch: start})
       .subscribe(master => {
         console.log('Recipe master has active batch', master);
