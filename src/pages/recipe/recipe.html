@@ -20,7 +20,7 @@
     <ion-row *ngIf="masterList">
       <ion-list id="master-list">
         <ng-container *ngFor="let master of masterList; index as i">
-          <ion-item-sliding class="recipe-master-item">
+          <ion-item-sliding #slidingItems class="recipe-master-item">
 
             <ion-item-options side="left">
               <button ion-button
@@ -159,12 +159,6 @@
           </accordion>
         </ng-container>
       </ion-list>
-    </ion-row>
-
-    <ion-row *ngIf="errMsg">
-      <ion-col>
-        {{ errMsg }}
-      </ion-col>
     </ion-row>
 
     <ion-row *ngIf="isLoggedIn && !masterList">

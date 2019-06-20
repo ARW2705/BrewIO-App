@@ -27,6 +27,21 @@ page-recipe {
       margin: 13px 0 6px;
     }
   }
+  .item-md.activated {
+    background-color: map-get($colors, primary);
+    .master-summary-header {
+      ion-col {
+        color: map-get($colors, gray-scale-2);
+      }
+    }
+    .master-summary-subheader {
+      ion-col {
+        p {
+          color: map-get($colors, gray-scale-2);
+        }
+      }
+    }
+  }
   .recipe-card {
     margin-bottom: 1px;
     background: map-get($colors, gray-scale-4);
@@ -76,6 +91,7 @@ page-recipe {
   }
   .ingredient-row {
     font-size: 1.2em;
+    text-align: left;
     ion-col:not(:first-child) {
       text-align: right;
     }
