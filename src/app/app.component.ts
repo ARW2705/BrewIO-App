@@ -6,6 +6,7 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 import { TabsPage } from '../pages/tabs/tabs';
 
 import { LibraryProvider } from '../providers/library/library';
+import { UserProvider } from '../providers/user/user';
 
 @Component({
   templateUrl: 'app.html'
@@ -13,15 +14,20 @@ import { LibraryProvider } from '../providers/library/library';
 export class MyApp {
   rootPage:any = TabsPage;
 
-  constructor(platform: Platform,
-    statusBar: StatusBar,
-    splashScreen: SplashScreen,
-    private libraryService: LibraryProvider) {
-    platform.ready().then(() => {
+  constructor(public platform: Platform,
+    public statusBar: StatusBar,
+    public splashScreen: SplashScreen,
+    public libraryService: LibraryProvider,
+    public userService: UserProvider) {
       this.libraryService.fetchAllLibraries();
-      statusBar.styleDefault();
-      splashScreen.hide();
-      // TODO init storage once storage system has been implemented
+      this.initializeApp();
+      this.userService.loadUserFromStorage();
+  }
+
+  initializeApp(): void {
+    this.platform.ready().then(() => {
+      this.statusBar.styleDefault();
+      this.splashScreen.hide();
     });
   }
 }
