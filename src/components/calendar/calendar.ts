@@ -18,13 +18,13 @@ interface CalendarDate {
 export class CalendarComponent implements OnInit, OnChanges {
   @Input('data') stepData;
   weekdays: Array<string> = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-  private selectedDay: CalendarDate = null;
-  private month: Array<Array<CalendarDate>> = [];
-  private projectedDates: Array<CalendarDate> = [];
-  private startDate: CalendarDate = null;
-  private currentDate: moment.Moment = null;
-  private isProjectedSelection: boolean = false;
-  private editType: string = '';
+  selectedDay: CalendarDate = null;
+  month: Array<Array<CalendarDate>> = [];
+  projectedDates: Array<CalendarDate> = [];
+  startDate: CalendarDate = null;
+  currentDate: moment.Moment = null;
+  isProjectedSelection: boolean = false;
+  editType: string = '';
 
   constructor(private events: Events) {
     this.currentDate = moment();
@@ -52,7 +52,7 @@ export class CalendarComponent implements OnInit, OnChanges {
 
   changeMonthYear(direction: string, timeframe: moment.unitOfTime.DurationConstructor): void {
     this.currentDate =
-      direction == 'next'
+      direction === 'next'
       ? moment(this.currentDate).add(1, timeframe)
       : moment(this.currentDate).subtract(1, timeframe);
     this.populateCalendar();
@@ -76,8 +76,8 @@ export class CalendarComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes.stepData.previousValue == undefined
-        || changes.stepData.currentValue.id == changes.stepData.previousValue.id) return;
+    if (changes.stepData.previousValue === undefined
+        || changes.stepData.currentValue.id === changes.stepData.previousValue.id) return;
     this.stepData = changes.stepData.currentValue;
     this.initCalendar();
   }
@@ -113,7 +113,7 @@ export class CalendarComponent implements OnInit, OnChanges {
   isProjected(date: moment.Moment): boolean {
     return _.findIndex(this.isProjectedSelection, projectedDate => {
       return moment(date).isSame(projectedDate.mDate, 'day');
-    }) != -1;
+    }) !== -1;
   }
 
   isStart(date: moment.Moment): boolean {
@@ -135,7 +135,7 @@ export class CalendarComponent implements OnInit, OnChanges {
 
   removeFromProjecteDates(date: CalendarDate): void {
     date.isProjected = false;
-    const index = _.findIndex(this.projectedDates, pDate => pDate == date);
+    const index = _.findIndex(this.projectedDates, pDate => pDate === date);
     this.projectedDates.splice(index, 1);
   }
 
@@ -164,7 +164,7 @@ export class CalendarComponent implements OnInit, OnChanges {
   }
 
   toggleEdit(edit: string): void {
-    this.editType = this.editType == edit ? '': edit;
+    this.editType = this.editType === edit ? '': edit;
   }
 
   toggleProjectedDates(date: CalendarDate): void {
