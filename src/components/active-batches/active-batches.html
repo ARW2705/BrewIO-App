@@ -2,7 +2,7 @@
   <ion-row *ngIf="user && activeBatches.length">
     <ion-list id="batch-list">
       <ng-container *ngFor="let batch of activeBatches">
-        <ion-item-sliding class="sliding-item">
+        <ion-item-sliding #slidingItems class="sliding-item">
 
           <ion-item class="active-batch-summary">
             <ion-icon name="beer"
