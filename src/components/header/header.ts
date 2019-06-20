@@ -1,8 +1,5 @@
-import { Component, Input, OnInit, OnDestroy, AfterViewInit, ViewChild, ChangeDetectorRef } from '@angular/core';
-import { ModalController, NavController, Events, Navbar } from 'ionic-angular';
-
-import { LoginPage } from '../../pages/forms/login/login';
-import { SignupPage } from '../../pages/forms/signup/signup';
+import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { ModalController, NavController, Events } from 'ionic-angular';
 
 import { UserProvider } from '../../providers/user/user';
 import { ModalProvider } from '../../providers/modal/modal';
@@ -11,68 +8,80 @@ import { ModalProvider } from '../../providers/modal/modal';
   selector: 'app-header',
   templateUrl: 'header.html'
 })
-export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
+export class HeaderComponent implements OnInit, OnDestroy {
   @Input() title: string;
-  @ViewChild(Navbar) navBar: Navbar;
-  private username: string = '';
-  private userTab: boolean = false;
-  private _titleChange: any;
-  private _tabChange: any;
-  private _userUpdate: any;
+  tabPage: boolean = true;
+  username: string = '';
+  userTab: boolean = false;
+  navStack: Array<string> = [];
+  _userUpdate: any;
+  _headerNavUpdate: any;
 
-  constructor(private modalCtrl: ModalController,
-    private navCtrl: NavController,
-    private cdRef: ChangeDetectorRef,
+  constructor(public modalCtrl: ModalController,
+    public navCtrl: NavController,
     public events: Events,
-    private userService: UserProvider,
-    private modalService: ModalProvider) {
-      this._titleChange = this.titleChangeEventHandler.bind(this);
-      this._tabChange = this.tabChangeEventHandler.bind(this);
+    public userService: UserProvider,
+    public modalService: ModalProvider) {
+      this._headerNavUpdate = this.headerNavUpdateEventHandler.bind(this);
       this._userUpdate = this.userUpdateEventHandler.bind(this);
   }
 
-  ngAfterViewInit() {
-    this.navBar.backButtonClick = (e: UIEvent) => {
-      this.events.publish('header-nav-pop', this.navCtrl.getActive().name);
-      this.navCtrl.pop();
+  goBack(): void {
+    this.events.publish('header-nav-pop', {
+      origin: this.tabPage ? '': this.navStack.pop()
+    });
+    this.tabPage =  !this.navStack.length
+                    || this.navStack[this.navStack.length - 1] === 'tab';
+  }
+
+  headerNavUpdateEventHandler(data: any): void {
+    if (data.origin) {
+      this.navStack.push(data.origin);
     }
+    if (data.dest) {
+      this.userTab = data.dest === 'user';
+    }
+    if (data.destType) {
+      if (data.destType === 'tab') {
+        this.tabPage = true;
+        this.navStack = [];
+      } else {
+        this.tabPage = false;
+      }
+    }
+    if (data.destTitle) {
+      this.title = data.destTitle;
+    }
+    if (data.other === 'batch-end') {
+      this.goBack();
+    }
+    this.username = this.userService.getUsername();
   }
 
-  ngOnDestroy() {
-    this.events.unsubscribe('title-change', this._titleChange);
-    this.events.unsubscribe('tab-change', this._tabChange);
-    this.events.subscribe('user-update', this._userUpdate);
-  }
-
-  ngOnInit() {
-    this.events.subscribe('title-change', this._titleChange);
-    this.events.subscribe('tab-change', this._tabChange);
-    this.events.subscribe('user-update', this._userUpdate);
-  }
-
-  openLogin() {
-    this.modalService.openLogin();
+  isTab(): boolean {
+    return this.navStack[this.navStack.length - 1] === 'tab';
   }
 
   logout(): void {
     this.userService.logOut();
   }
 
-  tabChangeEventHandler(data: any) {
-    this.userTab = data.dest == 'user';
-    this.username = this.userService.getUsername();
+  ngOnDestroy() {
+    this.events.unsubscribe('header-nav-update', this._headerNavUpdate);
+    this.events.unsubscribe('user-update', this._userUpdate);
   }
 
-  titleChangeEventHandler(title: string) {
-    this.title = title;
+  ngOnInit() {
+    this.events.subscribe('header-nav-update', this._headerNavUpdate);
+    this.events.subscribe('user-update', this._userUpdate);
+  }
+
+  openLogin(): void {
+    this.modalService.openLogin();
   }
 
   userUpdateEventHandler(data: any) {
-    if (data) {
-      this.username = data.username;
-    } else {
-      this.username = '';
-    }
+    this.username = data ? data.username: '';
   }
 
 }
