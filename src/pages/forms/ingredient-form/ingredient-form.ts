@@ -1,12 +1,6 @@
 import { Component } from '@angular/core';
 import { ViewController, NavController, NavParams } from 'ionic-angular';
-import { FormGroup, FormControl, FormBuilder, FormArray, Validators } from '@angular/forms';
-
-import { Grains, Hops, Yeast } from '../../../shared/interfaces/library';
-import { GrainBill } from '../../../shared/interfaces/grain-bill';
-import { HopsSchedule } from '../../../shared/interfaces/hops-schedule';
-import { YeastBatch } from '../../../shared/interfaces/yeast-batch';
-import { OtherIngredients } from '../../../shared/interfaces/other-ingredients';
+import { FormGroup, FormControl, FormBuilder, Validators } from '@angular/forms';
 
 @Component({
   selector: 'page-ingredient-form',
@@ -14,23 +8,23 @@ import { OtherIngredients } from '../../../shared/interfaces/other-ingredients';
 })
 export class IngredientFormPage {
   title: string = '';
-  private ingredientForm: FormGroup;
-  private ingredientLibrary: any = null;
-  private ingredientType: string = '';
-  private selection: any = null;
-  private showTextArea: boolean = false;
-  private notes: Array<string> = [];
-  private formType: string;
+  ingredientForm: FormGroup;
+  ingredientLibrary: any = null;
+  ingredientType: string = '';
+  selection: any = null;
+  showTextArea: boolean = false;
+  notes: Array<string> = [];
+  formType: string;
 
   constructor(public navCtrl: NavController,
     public navParams: NavParams,
-    private viewCtrl: ViewController,
-    private formBuilder: FormBuilder) {
+    public viewCtrl: ViewController,
+    public formBuilder: FormBuilder) {
       const data = navParams.get('data');
       if (!data) this.dismissOnError(data);
       if (data.library) this.ingredientLibrary = data.library;
       this.ingredientType = data.ingredientType;
-      if (data.ingredientType == 'otherIngredients') {
+      if (data.ingredientType === 'otherIngredients') {
         this.title = 'Add Other';
       } else {
         this.title = `Add ${data.ingredientType}`;
@@ -56,35 +50,35 @@ export class IngredientFormPage {
 
     this.formType = data.update ? 'update': 'create';
 
-    if (data.ingredientType == 'grains') {
+    if (data.ingredientType === 'grains') {
       this.ingredientForm.addControl('mill', new FormControl(null));
-      if (data.update != undefined) {
+      if (data.update !== undefined) {
         this.ingredientForm.controls.type.setValue(data.update.grainType);
         this.ingredientForm.controls.quantity.setValue(data.update.quantity);
         this.ingredientForm.controls.mill.setValue(data.update.mill);
       }
-    } else if (data.ingredientType == 'hops') {
+    } else if (data.ingredientType === 'hops') {
       this.ingredientForm.addControl('addAt', new FormControl(null, [Validators.required]));
       this.ingredientForm.addControl('dryHop', new FormControl(false));
-      if (data.update != undefined) {
+      if (data.update !== undefined) {
         this.ingredientForm.controls.type.setValue(data.update.hopsType);
         this.ingredientForm.controls.quantity.setValue(data.update.quantity);
         this.ingredientForm.controls.addAt.setValue(data.update.addAt);
         this.ingredientForm.controls.dryHop.setValue(data.update.dryHop);
       }
-    } else if (data.ingredientType == 'yeast') {
+    } else if (data.ingredientType === 'yeast') {
       this.ingredientForm.addControl('requiresStarter', new FormControl(false));
-      if (data.update != undefined) {
+      if (data.update !== undefined) {
         this.ingredientForm.controls.type.setValue(data.update.yeastType);
         this.ingredientForm.controls.quantity.setValue(data.update.quantity);
         this.ingredientForm.controls.requiresStarter.setValue(data.update.requiresStarter);
       }
-    } else if (data.ingredientType == 'otherIngredients') {
+    } else if (data.ingredientType === 'otherIngredients') {
       this.ingredientForm.removeControl('notes');
       this.ingredientForm.addControl('name', new FormControl('', [Validators.minLength(2), Validators.maxLength(20), Validators.required]));
       this.ingredientForm.addControl('description', new FormControl('', [Validators.minLength(2), Validators.maxLength(120), Validators.required]));
       this.ingredientForm.addControl('units', new FormControl('', [Validators.minLength(1), Validators.maxLength(10), Validators.required]));
-      if (data.update != undefined) {
+      if (data.update !== undefined) {
         this.ingredientForm.controls.name.setValue(data.update.name);
         this.ingredientForm.controls.description.setValue(data.update.description);
         this.ingredientForm.controls.quantity.setValue(data.update.quantity);
@@ -95,13 +89,13 @@ export class IngredientFormPage {
 
   onSubmit() {
     const result = this.ingredientForm.value;
-    if (this.ingredientType == 'grains') {
+    if (this.ingredientType === 'grains') {
       result['grainType'] = result.type;
       delete result.type;
-    } else if (this.ingredientType == 'hops') {
+    } else if (this.ingredientType === 'hops') {
       result['hopsType'] = result.type;
       delete result.type;
-    } else if (this.ingredientType == 'yeast') {
+    } else if (this.ingredientType === 'yeast') {
       result['yeastType'] = result.type;
       delete result.type;
     }
