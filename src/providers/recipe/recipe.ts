@@ -50,8 +50,17 @@ export class RecipeProvider {
       .catch(error => this.processHttpError.handleError(error));
   }
 
-  // Get public recipe by its ID
-  getPublicRecipeById(masterId: string, recipeId: string): Observable<any> {
+  /**
+   * Get public recipe by id
+   *
+   * params: string, string
+   * masterId - recipe master id string to query
+   * recipeId - recipe id string to query
+   *
+   * return: Observable
+   * - recipe object
+  **/
+  getPublicRecipeById(masterId: string, recipeId: string): Observable<Recipe> {
     return this.http.get(baseURL + apiVersion + `/recipes/public/master/${masterId}/recipe/${recipeId}`)
       .catch(error => this.processHttpError.handleError(error));
   }
@@ -104,10 +113,8 @@ export class RecipeProvider {
 
   // Update recipe master
   patchRecipeMasterById(masterId: string, update: any): Observable<any> {
-    console.log(update);
     return this.http.patch(baseURL + apiVersion + `/recipes/private/master/${masterId}`, update)
       .map((response: RecipeMaster) => {
-        console.log('um res', response);
         this.events.publish('update-master', response);
         return response;
       })
