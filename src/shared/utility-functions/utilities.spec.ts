@@ -7,7 +7,12 @@ describe('Shared: utility functions', () => {
 
   test('should deep copy an object', () => {
     const deepCopy = utils.clone(mockNestedObject);
-    expect(deepCopy).toEqual(mockNestedObject);
+    expect(deepCopy._id).toBeUndefined();
+  });
+
+  test('should deep copy an object - keep "shared properties"', () => {
+    const deepCopyKeep = utils.clone(mockNestedObject, true);
+    expect(deepCopyKeep).toEqual(mockNestedObject);
   });
 
   test('should get index of object by id', () => {

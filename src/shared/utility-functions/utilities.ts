@@ -1,9 +1,9 @@
 import { sharedProperties } from '../constants/shared-properties';
 
-export function clone(obj: any): any {
+export function clone(obj: any, keepShared: boolean = false): any {
   const result = {};
   for (const key in obj) {
-    if (obj.hasOwnProperty(key) && sharedProperties.indexOf(key) == -1) {
+    if (obj.hasOwnProperty(key) && (keepShared || sharedProperties.indexOf(key) === -1)) {
       result[key] = obj[key];
     }
   }
