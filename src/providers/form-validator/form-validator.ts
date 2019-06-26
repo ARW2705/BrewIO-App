@@ -35,6 +35,7 @@ export class FormValidatorProvider {
 
   constructor() { }
 
+  // Compare password and confirmation - set error as necessary
   static PasswordMatch(): ValidatorFn {
     return (group: FormGroup): {[key: string]: any} | null => {
       const password = group.get('password');
@@ -48,12 +49,14 @@ export class FormValidatorProvider {
     }
   }
 
+  // Compare password with defined pattern - set error as necessary
   static PasswordPattern(): ValidatorFn {
     return (control: AbstractControl): {[key: string]: any} | null => {
       return passwordPattern.test(control.value) ? null: {passwordInvalid: true};
     }
   }
 
+  // Get custom error message by control name and error type
   static GetErrorMessage(control: string, errorType: string): string {
     return FormValidatorProvider.formErrorMessages[control][errorType].replace('{}', );
   }
