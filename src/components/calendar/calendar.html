@@ -66,12 +66,12 @@
                      'month': day.isMonth
                    }">
             <button *ngIf="editType == 'start'"
-                    (click)="selectDay(day)"
+                    (click)="selectStartDate(day)"
                     class="day day-button">
               {{ day.mDate.date() }}
             </button>
             <button *ngIf="editType == 'alerts'"
-                    (click)="toggleProjectedDates(day)"
+                    (click)="toggleProjectedDate(day)"
                     class="day day-button">
               {{ day.mDate.date() }}
             </button>
