@@ -14,7 +14,12 @@ export class CalculationsProvider {
 
   constructor() { }
 
-  calculateRecipeValues(recipe: Recipe) {
+  /**
+   * Calculate original gravity, final gravity, IBU, SRM, and ABV for a given recipe
+   *
+   * @params: recipe - recipe to base values
+  **/
+  calculateRecipeValues(recipe: Recipe): void {
     let og = 1;
     let fg = 1;
     let ibu = 0;
@@ -37,6 +42,15 @@ export class CalculationsProvider {
     recipe.ABV = abv;
   }
 
+  /**
+   * Get original gravity for all grains instances
+   *
+   * @params: batchVolume - volume in gallons to add to fermenter
+   * @params: efficiency - expected mash efficiency as decimal between 0 - 1
+   * @params: grainBill - array of grains instances
+   *
+   * @return: total original gravity
+  **/
   calculateTotalOriginalGravity(batchVolume: number, efficiency: number, grainBill: Array<GrainBill>): number {
     return roundToDecimalPlace(
       grainBill
@@ -51,6 +65,16 @@ export class CalculationsProvider {
     );
   }
 
+  /**
+   * Get IBU for all hops instances
+   *
+   * @params: hopsSchedule - array of hops instances
+   * @params: og - original gravity
+   * @params: batchVolume - volume in gallons to add to fermenter
+   * @params: boilVolume - volume in gallons at boil start
+   *
+   * @return: total IBUs
+  **/
   calculateTotalIBU(hopsSchedule: Array<HopsSchedule>, og: number, batchVolume: number, boilVolume: number): number {
     return roundToDecimalPlace(
       hopsSchedule
@@ -63,6 +87,14 @@ export class CalculationsProvider {
     );
   }
 
+  /**
+   * Get total SRM for all grains instances
+   *
+   * @params: grainBill - array of grains instances
+   * @params: batchVolume - volume in gallons to add to fermenter
+   *
+   * @return: total SRM value for batch
+  **/
   calculateTotalSRM(grainBill: Array<GrainBill>, batchVolume: number): number {
     return roundToDecimalPlace(
       this.getSRM(
@@ -76,6 +108,13 @@ export class CalculationsProvider {
     );
   }
 
+  /**
+   * Get average attenuation of yeast instances
+   *
+   * @params: yeast - array of yeast instances
+   *
+   * @return: average attenuation of yeast types in whole numbers
+  **/
   getAverageAttenuation(yeast: Array<YeastBatch>): number {
     let total = 0;
     let count = 0;
@@ -88,40 +127,122 @@ export class CalculationsProvider {
     return roundToDecimalPlace(total / count, 1);
   }
 
+  /**
+   * Get ABV value from gravities
+   *
+   * @params: og - original gravity
+   * @params: fg - final gravity
+   *
+   * @return: ABV percentage
+   *
+   * @example: (1.050, 1.010) => 5.339
+  **/
   getABV(og: number, fg: number): number {
     return roundToDecimalPlace(
       (Constant.ABVFactors[0] * (og - fg) / (Constant.ABVFactors[1] - og)) * (fg / Constant.ABVFactors[2])
-      ,3
+      , 3
     );
   }
 
+  /**
+   * Get original gravity by grains' gravity points
+   *
+   * @params: pps - gravity points from grains instance
+   * @params: quantity - amount of grains in pounds
+   * @params: batchVolume - batch volume in gallons to add to fermenter
+   * @params: efficiency - expected mash efficiency in decimal between 0 - 1
+   *
+   * @return: original gravity value
+   *
+   * @example: (1.037, 10, 5, 0.7) => 1.052
+  **/
   getOriginalGravity(pps: number,
     quantity: number,
-    volume: number,
+    batchVolume: number,
     efficiency: number): number {
-      return roundToDecimalPlace(1 + ((pps - 1) * quantity * efficiency / volume), 3);
+      return roundToDecimalPlace(1 + ((pps - 1) * quantity * efficiency / batchVolume), 3);
   }
 
+  /**
+   * Get final gravity by original gravity value and expected yeast attenuation
+   *
+   * @params: og - original gravity
+   * @params: attenuation - expected yeast attenuation as whole number
+   *
+   * @return: final gravity
+   *
+   * @example: (1.050, 70) => 1.015
+  **/
   getFinalGravity(og: number, attenuation: number): number {
     return roundToDecimalPlace(1 + ((og - 1) * (1 - (attenuation / 100))), 3);
   }
 
+  /**
+   * Get original gravity at start of boil
+   *
+   * @params: og - original gravity
+   * @params: batchVolume - volume in gallons to add to fermenter
+   * @params: boilVolume - volume in gallons at start of boil
+   *
+   * @return: original gravity at start of boil
+   *
+   * @example: (1.050, 5, 6) => 0.041666667
+  **/
   getBoilGravity(og: number, batchVolume: number, boilVolume: number): number {
     return roundToDecimalPlace((batchVolume / boilVolume) * (og - 1), 9);
   }
 
+  /**
+   * Get factor for reduced utilization from wort gravity
+   *
+   * @params: boilGravity - original gravity at start of boil
+   *
+   * @return: "bigness" factor
+   *
+   * @example: (0.041666667) => 1.134632433
+  **/
   getBignessFactor(boilGravity: number) {
     return roundToDecimalPlace(Constant.BignessFactor * Math.pow(Constant.BignessBase, boilGravity), 9);
   }
 
+  /**
+   * Get factor for change in utilization from boil time
+   *
+   * @params: boilTime - the boil time in minutes
+   *
+   * @return: boil time factor
+   *
+   * @example: (60) => 0.219104108
+  **/
   getBoilTimeFactor(boilTime: number): number {
     return roundToDecimalPlace((1 - Math.pow(Math.E, (Constant.BoilTimeExp * boilTime))) / Constant.BoilTimeFactor, 9);
   }
 
+  /**
+   * Get utilization of hops for given bigness and boil time factors
+   *
+   * @params: bignessFactor - calculated bigness factor
+   * @params: boilTimeFactor - calculated boil time factor
+   *
+   * @return: utilization factor
+   *
+   * @example: 1.134632433, 0.219104108) => 0.248602627
+  **/
   getUtilization(bignessFactor: number, boilTimeFactor: number): number {
     return roundToDecimalPlace(bignessFactor * boilTimeFactor, 9);
   }
 
+  /**
+   * Get IBU for hops instance
+   *
+   * @params: hops - hops-type information
+   * @params: hopsInstance - a hops instance
+   * @params: og - original gravity
+   * @params: batchVolume - volume in gallons to add to fermenter
+   * @params: boilVolume - volume in gallons at start of boil
+   *
+   * @return: IBUs for hops instance
+  **/
   getIBU(hops: Hops, hopsInstance: HopsSchedule, og: number, batchVolume: number, boilVolume: number): number {
     const bignessFactor = this.getBignessFactor(this.getBoilGravity(og, batchVolume, boilVolume));
     const boilTimeFactor = this.getBoilTimeFactor(hopsInstance.addAt);
@@ -136,10 +257,20 @@ export class CalculationsProvider {
     );
   }
 
+  /**
+   * Get MCU value of given grains instance
+   *
+   * @params: grains - grains-type information
+   * @params: grainsInstance - grains instance
+   * @params: batchVolume - volume in gallons to add to fermenter
+   *
+   * @return: MCU value for grains instance
+  **/
   getMCU(grains: Grains, grainsInstance: GrainBill, batchVolume: number): number {
     return roundToDecimalPlace(grains.lovibond * grainsInstance.quantity / batchVolume, 2);
   }
 
+  // Get SRM value from given MCU
   getSRM(mcu: number): number {
     return roundToDecimalPlace(Constant.SRMFactor * (Math.pow(mcu, Constant.SRMExp)), 1);
   }
