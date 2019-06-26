@@ -1,7 +1,6 @@
 import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
-import { Events } from 'ionic-angular';
-import * as moment from 'moment';
-import * as _ from 'lodash';
+import moment from 'moment';
+import _ from 'lodash';
 
 interface CalendarDate {
   mDate: moment.Moment;
@@ -26,10 +25,27 @@ export class CalendarComponent implements OnInit, OnChanges {
   isProjectedSelection: boolean = false;
   editType: string = '';
 
-  constructor(private events: Events) {
+  constructor() {
     this.currentDate = moment();
   }
 
+  addToProjectedDates(date: CalendarDate): void {
+    date.isProjected = true;
+    date.isStart = false;
+    this.projectedDates.push(date);
+  }
+
+  // Change month or year to be displayed
+  changeMonthYear(direction: string, timeframe: moment.unitOfTime.DurationConstructor): void {
+    this.currentDate =
+      direction === 'next'
+      ? moment(this.currentDate).add(1, timeframe)
+      : moment(this.currentDate).subtract(1, timeframe);
+    this.populateCalendar();
+    this.updateView();
+  }
+
+  // Called from process page to get calendar data
   getFinal() {
     return {
       _id: this.stepData.id,
@@ -44,21 +60,11 @@ export class CalendarComponent implements OnInit, OnChanges {
     };
   }
 
-  addToProjectedDates(date: CalendarDate): void {
-    date.isProjected = true;
-    date.isStart = false;
-    this.projectedDates.push(date);
-  }
-
-  changeMonthYear(direction: string, timeframe: moment.unitOfTime.DurationConstructor): void {
-    this.currentDate =
-      direction === 'next'
-      ? moment(this.currentDate).add(1, timeframe)
-      : moment(this.currentDate).subtract(1, timeframe);
-    this.populateCalendar();
-    this.updateView();
-  }
-
+  /**
+   * Generate the calendar as a 7 x 6 grid containing the days of the current month
+   * and filling out the remaining grid positions with days of the previous month
+   * on the top row and days of the next month on the bottom row
+  **/
   fillDates(currentMoment: moment.Moment): Array<CalendarDate> {
     const firstOfMonth = moment(currentMoment).startOf('month').day();
     const firstOfGrid = moment(currentMoment).startOf('month').subtract(firstOfMonth, 'days');
@@ -75,19 +81,11 @@ export class CalendarComponent implements OnInit, OnChanges {
       });
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes.stepData.previousValue === undefined
-        || changes.stepData.currentValue.id === changes.stepData.previousValue.id) return;
-    this.stepData = changes.stepData.currentValue;
-    this.initCalendar();
-  }
-
-  ngOnInit() {
-    this.initCalendar();
-  }
-
+  /**
+   * Initialize calendar with two dates preselected - today's date, and the
+   * end date per the step's duration field
+  **/
   initCalendar(): void {
-    console.log('calendar init', this.stepData);
     const today = {
       mDate: this.currentDate,
       isStart: true,
@@ -103,27 +101,43 @@ export class CalendarComponent implements OnInit, OnChanges {
     this.startDate = today;
     this.populateCalendar();
     this.addToProjectedDates(end);
-    this.selectDay(today);
+    this.selectStartDate(today);
   }
 
+  // Check if given date and current date are the same month
   isMonth(date: moment.Moment): boolean {
     return moment(this.currentDate).isSame(date, 'months');
   }
 
+  // Check if given date is the same day as a date in the projectedDates array
   isProjected(date: moment.Moment): boolean {
-    return _.findIndex(this.isProjectedSelection, projectedDate => {
+    return _.findIndex(this.projectedDates, projectedDate => {
       return moment(date).isSame(projectedDate.mDate, 'day');
     }) !== -1;
   }
 
+  // Check if given date is the same day as start date
   isStart(date: moment.Moment): boolean {
     return moment(date).isSame(this.startDate.mDate, 'day');
   }
 
+  // Check if given date is the same day as today
   isToday(date: moment.Moment): boolean {
     return moment().isSame(moment(date), 'day');
   }
 
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes.stepData.previousValue === undefined
+        || changes.stepData.currentValue.id === changes.stepData.previousValue.id) return;
+    this.stepData = changes.stepData.currentValue;
+    this.initCalendar();
+  }
+
+  ngOnInit() {
+    this.initCalendar();
+  }
+
+  // Assemble calendar to display
   populateCalendar(): void {
     const dates: Array<CalendarDate> = this.fillDates(this.currentDate);
     const month: Array<Array<CalendarDate>> = [];
@@ -139,13 +153,14 @@ export class CalendarComponent implements OnInit, OnChanges {
     this.projectedDates.splice(index, 1);
   }
 
-  selectDay(date: CalendarDate): void {
+  selectStartDate(date: CalendarDate): void {
     if (moment(date.mDate).isBefore(this.currentDate, 'day')) return;
     this.startDate = date;
     this.setProjectedDates();
     this.updateView();
   }
 
+  // Reset projectedDates array and re-populate
   setProjectedDates(): void {
     this.projectedDates = [];
     this.addToProjectedDates({
@@ -156,34 +171,35 @@ export class CalendarComponent implements OnInit, OnChanges {
     });
   }
 
-  submitStartDate(date: CalendarDate): void {
-    const schedule: Array<string> = [];
-    schedule.push(this.startDate.mDate.toISOString());
-    schedule.concat(this.projectedDates.map(date => date.mDate.toISOString()));
-    this.events.publish('calendar-schedule', schedule);
-  }
-
   toggleEdit(edit: string): void {
     this.editType = this.editType === edit ? '': edit;
   }
 
-  toggleProjectedDates(date: CalendarDate): void {
+  /**
+   * Toggle the selected state of date in projectedDates array
+   * May not be a past date
+  **/
+  toggleProjectedDate(date: CalendarDate): void {
     if (date.mDate.isSameOrBefore(this.startDate.mDate, 'day')) return;
     const index = _.findIndex(this.projectedDates, pDate => {
       return moment(pDate.mDate).isSame(date.mDate);
     });
     if (index == -1) {
-      console.log('add date');
+      // add date
       date.isProjected = true;
       date.isStart = false;
       this.projectedDates.push(date);
     } else {
-      console.log('remove date');
+      // remove date
       date.isProjected = false;
       this.projectedDates.splice(index, 1);
     }
   }
 
+  /**
+   * Update calendar view data with new date information
+   * Assign start and projected date booleans
+  **/
   updateView(): void {
     this.month.forEach(week => {
       week.forEach(day => {
