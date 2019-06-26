@@ -72,10 +72,7 @@ export class RecipeFormPage implements AfterViewInit {
   /**
    * Generate timer process step for mash or boil
    *
-   * params: object
-   * data - form data containing mash or boil duration
-   *
-   * return: none
+   * @params: data - form data containing mash or boil duration
   **/
   autoSetBoilMashDuration(data: any): void {
     const mashIndex = this.recipe.processSchedule.findIndex(process => {
@@ -120,23 +117,18 @@ export class RecipeFormPage implements AfterViewInit {
     }
   }
 
-  /**
-   * Generate timer process step for hops addition
-   *
-   * params: object
-   * data - form data containing hops addition time
-   *
-   * return: none
-  **/
-  autoSetHopsAddition(data: any): void {
-    // remove hops timers
+  // Generate timer process step for hops addition
+  autoSetHopsAddition(): void {
+    // remove existing hops timers
     this.recipe.processSchedule = this.recipe.processSchedule.filter(process => {
       return !process.name.match(/^(Add).*(hops)$/);
     });
 
-    // add hops timers for each hops instance
-    // ignore dry hop additions
-    // combine hops additions that occur at the same time
+    /**
+     * add hops timers for each hops instance
+     * ignore dry hop additions
+     * combine hops additions that occur at the same time
+    **/
     const hopsForTimers = this.recipe.hops.filter(hops => {
       return !hops.dryHop;
     });
@@ -164,15 +156,12 @@ export class RecipeFormPage implements AfterViewInit {
   /**
    * Automatically create timer processes for boil/mash and hops addition
    *
-   * params: string, object
-   * type - either 'duration' for boil/mash or 'hops-addition' for hops timers
-   * data - form data containing durations to use for timer
-   *
-   * return: none
+   * @params: type - either 'duration' for boil/mash or 'hops-addition' for hops timers
+   * @params: data - form data containing durations to use for timer
   **/
   autoSetProcess(type: string, data: any): void {
     if (type === 'hops-addition') {
-      this.autoSetHopsAddition(data);
+      this.autoSetHopsAddition();
     } else if (type === 'duration') {
       this.autoSetBoilMashDuration(data);
     }
@@ -181,10 +170,7 @@ export class RecipeFormPage implements AfterViewInit {
   /**
    * Format form data for server request
    *
-   * params: none
-   *
-   * return: object
-   * - structured form data for http request
+   * @return: structured form data for http request
   **/
   constructPayload(): any {
     let payload;
@@ -218,13 +204,11 @@ export class RecipeFormPage implements AfterViewInit {
   }
 
   /**
-   * Get grains quantity percentage of total
+   * Get grains quantity as percentage of total
    *
-   * params: number
-   * quantity - grain weight
+   * @params: quantity - grain weight
    *
-   * return: number
-   * - percentage of total quantity for given quantity
+   * @return: percentage of total quantity for given quantity
   **/
   getGristRatio(quantity: number): number {
     return quantity / this.getTotalGristWeight() * 100;
@@ -233,11 +217,9 @@ export class RecipeFormPage implements AfterViewInit {
   /**
    * Get time remaining after subtracting addAt time from boil time
    *
-   * params: number
-   * addAt - time to add hops at in minutes
+   * @params: addAt - time to add hops at in minutes
    *
-   * return: number
-   * - difference between boil time and addAt time point
+   * @return: difference between boil time and addAt time point
   **/
   getHopsTimeRemaining(addAt: number): number {
     const boilStep = this.recipe.processSchedule.find(item => item.name === 'Boil');
@@ -248,11 +230,9 @@ export class RecipeFormPage implements AfterViewInit {
   /**
    * Calculate the individual IBU contribution of a hops instances
    *
-   * params: HopsSchedule
-   * hops - an individual hops addition
+   * @params: hops - an individual hops addition
    *
-   * return: number
-   * - IBU contribution of given hops addition
+   * @return: IBU contribution of given hops addition
   **/
   getIndividualIBU(hops: HopsSchedule): number {
     return this.calculator.getIBU(
@@ -264,14 +244,7 @@ export class RecipeFormPage implements AfterViewInit {
     );
   }
 
-  /**
-   * Sum total grain weight
-   *
-   * params: none
-   *
-   * return: number
-   * - sum of all recipe grain bill quantities
-  **/
+  // Get total weight of all grains
   getTotalGristWeight(): number {
     let total = 0;
     for (let i=0; i < this.recipe.grains.length; i++) {
@@ -281,12 +254,9 @@ export class RecipeFormPage implements AfterViewInit {
   }
 
   /**
-   * Open note modal for editing
+   * Handle additional options passed to form page
    *
-   * params: object
-   * options - form options to edit existing note
-   *
-   * return: none
+   * @params: options - object with additional formatting data
   **/
   handleFormOptions(options: any): void {
     if (!options) return;
@@ -302,10 +272,7 @@ export class RecipeFormPage implements AfterViewInit {
   /**
    * Check if a recipe has been created - style must have been changed
    *
-   * params: none
-   *
-   * return: boolean
-   * - true if master style id has been changed from default
+   * @return: true if master style id has been changed from default
   **/
   isRecipeValid(): boolean {
     return this.master.style._id !== defaultStyle._id;
@@ -316,81 +283,25 @@ export class RecipeFormPage implements AfterViewInit {
   }
 
   ngOnDestroy() {
-    this.events.unsubscribe('header-nav-pop', this._headerNavPop);
+    this.events.unsubscribe('pop-header-nav', this._headerNavPop);
   }
 
   ngOnInit() {
-    this.events.subscribe('header-nav-pop', this._headerNavPop);
+    this.events.subscribe('pop-header-nav', this._headerNavPop);
   }
 
-  /**
-   * Call appropriate HTTP request with recipe form data
-   *
-   * params: none
-   *
-   * return: none
-  **/
+  // Call appropriate HTTP request with recipe form data
   onSubmit(): void {
     const payload = this.constructPayload();
     const message = toTitleCase(`${this.formType} ${this.docMethod} Successful!`);
     if (this.docMethod === 'create') {
-      if (this.formType === 'master') {
-        this.recipeService.postRecipeMaster(payload)
-          .subscribe(
-            response => {
-              this.toastService.presentToast(message);
-              this.navCtrl.pop();
-            },
-            error => {
-              this.toastService.presentToast(error.error.error.message);
-            }
-          );
-      } else if (this.formType === 'recipe') {
-        this.recipeService.postRecipeToMasterById(this.master._id, payload)
-          .subscribe(
-            response => {
-              this.toastService.presentToast(message);
-              this.navCtrl.pop();
-            },
-            error => {
-              this.toastService.presentToast(error.error.error.message);
-            }
-          );
-      }
+      this.submitCreationPost(payload, message);
     } else if (this.docMethod === 'update') {
-      if (this.formType === 'master') {
-        this.recipeService.patchRecipeMasterById(this.master._id, payload)
-          .subscribe(
-            response => {
-              this.toastService.presentToast(message);
-              this.navCtrl.pop();
-            },
-            error => {
-              this.toastService.presentToast(error.error.error.message);
-            }
-          );
-      } else if (this.formType === 'recipe') {
-        this.recipeService.patchRecipeById(this.master._id, this.recipe._id, payload)
-          .subscribe(
-            response => {
-              this.toastService.presentToast(message);
-              this.navCtrl.pop();
-            },
-            error => {
-              this.toastService.presentToast(error.error.error.message);
-            }
-          );
-      }
+      this.submitPatchUpdate(payload, message);
     }
   }
 
-  /**
-   * Open general recipe form modal - pass current data for update, if present
-   *
-   * params: none
-   *
-   * return: none
-  **/
+  // Open general recipe form modal - pass current data for update, if present
   openGeneralModal(): void {
     const data = {
       formType: this.formType,
@@ -432,13 +343,7 @@ export class RecipeFormPage implements AfterViewInit {
     modal.present({keyboardClose: false});
   }
 
-  /**
-   * Open ingredient form action sheet to select ingredient type to modify
-   *
-   * params: none
-   *
-   * return: none
-  **/
+  // Open ingredient form action sheet to select ingredient type to modify
   openIngredientActionSheet(): void {
     this.actionService.openActionSheet(
       'Select an Ingredient',
@@ -474,11 +379,8 @@ export class RecipeFormPage implements AfterViewInit {
   /**
    * Open modal to create, edit, or delete specified ingredient type
    *
-   * params: string, [object]
-   * type - the ingredient type
-   * toUpdate - current ingredient data to edit or delete
-   *
-   * return: none
+   * @params: type - the ingredient type
+   * @params: toUpdate - current ingredient data to edit or delete
   **/
   openIngredientFormModal(type: string, toUpdate?: any): void {
     const data = {
@@ -514,11 +416,8 @@ export class RecipeFormPage implements AfterViewInit {
   /**
    * Open modal to create, edit, or delete a note
    *
-   * params: string, [number]
-   * noteType - 'recipe' for a common note, 'batch' for a variant specific note
-   * index - the index to edit or delete
-   *
-   * return: none
+   * @params: noteType - 'recipe' for a common note, 'batch' for a variant specific note
+   * @params: [index] - the index to edit or delete
   **/
   openNoteModal(noteType: string, index?: number): void {
     let toUpdate;
@@ -559,13 +458,7 @@ export class RecipeFormPage implements AfterViewInit {
     modal.present({keyboardClose: false});
   }
 
-  /**
-   * Open action sheet to select the type of process step to add
-   *
-   * params: none
-   *
-   * return: none
-  **/
+  // Open action sheet to select the type of process step to add
   openProcessActionSheet(): void {
     this.actionService.openActionSheet(
       'Add a process step',
@@ -595,12 +488,9 @@ export class RecipeFormPage implements AfterViewInit {
   /**
    * Open modal to create, edit, or delete specified process step type
    *
-   * params: string, [object], [number]
-   * processType - the step type, either 'manual', 'timer', or 'calendar'
-   * toUpdate - current step data to be edited or deleted
-   * index - index of step
-   *
-   * return: none
+   * @params: processType - the step type, either 'manual', 'timer', or 'calendar'
+   * @params: [toUpdate] - current step data to be edited or deleted
+   * @params: [index] - index of step
   **/
   openProcessModal(processType: string, toUpdate?: any, index?: number): void {
     const options = {
@@ -626,12 +516,11 @@ export class RecipeFormPage implements AfterViewInit {
   /**
    * Set form configuration from nav params
    *
-   * params: string, string, RecipeMaster, Recipe, object
-   * formType - either 'master' for RecipeMaster or 'recipe' for Recipe
-   * mode - CRUD mode
-   * master - RecipeMaster instance
-   * recipe - Recipe instance
-   * options - additional configuration object
+   * @params: formType - either 'master' for RecipeMaster or 'recipe' for Recipe
+   * @params: mode - CRUD mode
+   * @params: master - RecipeMaster instance
+   * @params: recipe - Recipe instance
+   * @params: options - additional configuration object
   **/
   setFormTypeConfiguration(
     formType: string,
@@ -674,10 +563,7 @@ export class RecipeFormPage implements AfterViewInit {
    * - hops: chronological
    * - yeast: descending quantity
    *
-   * params: string
-   * ingredientType - the ingredient array to sort
-   *
-   * return: none
+   * @params: ingredientType - the ingredient array to sort
   **/
   sortIngredients(ingredientType: string): void {
     switch(ingredientType) {
@@ -720,12 +606,73 @@ export class RecipeFormPage implements AfterViewInit {
   }
 
   /**
+   * HTTP post new Recipe Master or Recipe
+   *
+   * @params: payload - formatted data object for HTTP post
+   * @params: message - feedback toast message
+  **/
+  submitCreationPost(payload: any, message: string): void {
+    if (this.formType === 'master') {
+      this.recipeService.postRecipeMaster(payload)
+        .subscribe(
+          () => {
+            this.toastService.presentToast(message);
+            this.navCtrl.pop();
+          },
+          error => {
+            this.toastService.presentToast(error.error.error.message);
+          }
+        );
+    } else if (this.formType === 'recipe') {
+      this.recipeService.postRecipeToMasterById(this.master._id, payload)
+        .subscribe(
+          () => {
+            this.toastService.presentToast(message);
+            this.navCtrl.pop();
+          },
+          error => {
+            this.toastService.presentToast(error.error.error.message);
+          }
+        );
+    }
+  }
+
+  /**
+   * HTTP patch new Recipe Master or Recipe
+   *
+   * @params: payload - formatted data object for HTTP post
+   * @params: message - feedback toast message
+  **/
+  submitPatchUpdate(payload: any, message: string): void {
+    if (this.formType === 'master') {
+      this.recipeService.patchRecipeMasterById(this.master._id, payload)
+        .subscribe(
+          () => {
+            this.toastService.presentToast(message);
+            this.navCtrl.pop();
+          },
+          error => {
+            this.toastService.presentToast(error.error.error.message);
+          }
+        );
+    } else if (this.formType === 'recipe') {
+      this.recipeService.patchRecipeById(this.master._id, this.recipe._id, payload)
+        .subscribe(
+          () => {
+            this.toastService.presentToast(message);
+            this.navCtrl.pop();
+          },
+          error => {
+            this.toastService.presentToast(error.error.error.message);
+          }
+        );
+    }
+  }
+
+  /**
    * Map data to RecipeMaster and/or Recipe
    *
-   * params: object
-   * data - contains data that may be contained in the RecipeMaster and/or Recipe
-   *
-   * return: none
+   * @params: data - data that may be contained in the RecipeMaster and/or Recipe
   **/
   updateDisplay(data: any): void {
     for (const key in data) {
@@ -741,13 +688,10 @@ export class RecipeFormPage implements AfterViewInit {
   /**
    * Update in memory ingredient arrays
    *
-   * params: object, string, [object], [boolean]
-   * ingredient - ingredient data returned from ingredient form
-   * type - the ingredient type
-   * toUpdate - current ingredient data to edit
-   * deletion - true if ingredient is to be deleted
-   *
-   * return: none
+   * @params: ingredient - ingredient data returned from ingredient form
+   * @params: type - the ingredient type
+   * @params: toUpdate - current ingredient data to edit
+   * @params: deletion - true if ingredient is to be deleted
   **/
   updateIngredientList(ingredient: any, type: string, toUpdate?: any, deletion?: boolean): void {
     switch(type) {
@@ -816,13 +760,7 @@ export class RecipeFormPage implements AfterViewInit {
     this.cdRef.detectChanges();
   }
 
-  /**
-   * Calculate recipe values
-   *
-   * params: none
-   *
-   * return: none
-  **/
+  // Calculate recipe values
   updateRecipeValues(): void {
     this.calculator.calculateRecipeValues(this.recipe);
   }
