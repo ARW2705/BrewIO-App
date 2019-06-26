@@ -1,7 +1,10 @@
 import { Recipe } from '../../src/shared/interfaces/recipe';
 
 export const mockRecipeIncomplete: Recipe = {
-  variantName: 'complete',
+  _id: 'incomplete',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  variantName: 'incomplete',
   notes: [],
   isActive: false,
   isFavorite: false,

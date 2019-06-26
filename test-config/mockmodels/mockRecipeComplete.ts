@@ -2,8 +2,12 @@ import { Recipe } from '../../src/shared/interfaces/recipe';
 import { mockGrainBill } from './mockGrainBill';
 import { mockHopsSchedule } from './mockHopsSchedule';
 import { mockYeastGroup } from './mockYeastGroup';
+import { mockProcessSchedule } from './mockProcessSchedule';
 
 export const mockRecipeComplete: Recipe = {
+  _id: 'complete',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
   variantName: 'complete',
   notes: [],
   isActive: false,
@@ -26,5 +30,5 @@ export const mockRecipeComplete: Recipe = {
   hops: mockHopsSchedule,
   yeast: mockYeastGroup,
   otherIngredients: [],
-  processSchedule: []
+  processSchedule: mockProcessSchedule
 };

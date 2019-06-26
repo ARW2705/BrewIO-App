@@ -1,4 +1,5 @@
 export const mockNestedObject: any = {
+  _id: 0,
   a: 1,
   b: {
     c: 2,
