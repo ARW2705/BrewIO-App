@@ -35,10 +35,12 @@ export class GeneralFormPage {
       this.initForm(navParams.get('data'));
   }
 
+  // ion-select comparison function - allows objects as values
   compareWithFn(o1, o2) {
     return o1 && o2 ? o1._id === o2._id: o1 === o2;
   }
 
+  // ion-input stores numbers as strings - must be submitted as numbers
   convertFormValuesToNumbers() {
     this.controlsToConvert.forEach(key => {
       this.generalForm.controls[key].setValue(parseFloat(this.generalForm.value[key]));
@@ -49,6 +51,7 @@ export class GeneralFormPage {
     this.viewCtrl.dismiss();
   }
 
+  // Initialize general form - apply current values passed to form if form is to be updated
   initForm(data?: any) {
     this.generalForm = this.formBuilder.group({
       style: ['', [Validators.required]],
@@ -63,11 +66,13 @@ export class GeneralFormPage {
       isMaster: false
     });
 
+    // Set form control name based on formType
     this.generalForm.addControl(
       this.formType === 'master' ? 'name': 'variantName',
       new FormControl('', [Validators.minLength(2), Validators.maxLength(20), Validators.required])
     );
-    
+
+    // If form data was passed to page, map that data to form
     if (data) {
       for (const key in data) {
         this.generalForm.controls[key].setValue(data[key]);
