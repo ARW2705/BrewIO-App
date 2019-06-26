@@ -12,6 +12,10 @@ import { baseURL } from '../../shared/constants/base-url';
 import { apiVersion } from '../../shared/constants/api-version';
 import { mockUser } from '../../../test-config/mockmodels/mockUser';
 import { mockBatch } from '../../../test-config/mockmodels/mockBatch';
+import { mockJWTSuccess, mockJWTFailed } from '../../../test-config/mockmodels/mockJWTResponse';
+import { mockCredentials } from '../../../test-config/mockmodels/mockCredentials';
+import { mockUserLogin } from '../../../test-config/mockmodels/mockUserLogin';
+import { mockLoginResponse } from '../../../test-config/mockmodels/mockLoginResponse';
 import { StorageMock } from '../../../test-config/mocks-ionic';
 
 import { clone } from '../../shared/utility-functions/utilities';
@@ -19,13 +23,14 @@ import { clone } from '../../shared/utility-functions/utilities';
 describe('User service', () => {
   let injector: TestBed;
   let userService: UserProvider;
+  let authService: AuthenticationProvider;
   let httpMock: HttpTestingController;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [
         HttpClientTestingModule,
-        IonicStorageModule.forRoot() 
+        IonicStorageModule.forRoot()
       ],
       providers: [
         Events,
@@ -38,113 +43,141 @@ describe('User service', () => {
     });
     injector = getTestBed();
     userService = injector.get(UserProvider);
+    authService = injector.get(AuthenticationProvider);
     httpMock = injector.get(HttpTestingController);
   });
 
   describe('User is logged out', () => {
 
-    test('should status logged out', () => {
+    test('should be logged out', () => {
       expect(userService.getLoginStatus()).toBe(false);
     });
 
-    test('should return null for user', () => {
-      expect(userService.getUser()).toBe(null);
+    test('should get null for user', () => {
+      expect(userService.getUser()).toBeNull();
     });
 
-    test('should return empty string for username', () => {
+    test('should get empty string for username', () => {
       expect(userService.getUsername()).toMatch('');
     });
 
   });
 
   describe('User is logged in', () => {
-    const _mockUser = mockUser;
 
-    test('should log in', () => {
-      userService.logIn(_mockUser).subscribe(user => {
-        expect(user).toEqual(_mockUser);
+    afterEach(() => {
+      httpMock.verify();
+    });
+
+    test('should log in', done => {
+      userService.logIn(mockUserLogin).subscribe(user => {
+        expect(user).toEqual(mockUser.username);
+        done();
       });
 
-      const req = httpMock.expectOne(`${baseURL}${apiVersion}/users/login`);
-      expect(req.request.method).toMatch('POST');
-      req.flush(_mockUser);
-    })
+      const loginReq = httpMock.expectOne(`${baseURL}${apiVersion}/users/login`);
+      loginReq.flush(mockLoginResponse);
 
-    test('should have true login status', () => {
-      const _mockUser = mockUser;
+      const profileReq = httpMock.expectOne(`${baseURL}${apiVersion}/users/profile`);
+      profileReq.flush(mockUser);
+    });
 
-      userService.logIn(_mockUser).subscribe(_ => {
+    test('should have true login status', done => {
+      userService.logIn(mockUserLogin).subscribe(_ => {
         expect(userService.getLoginStatus()).toBe(true);
+        done();
       });
 
-      const req = httpMock.expectOne(`${baseURL}${apiVersion}/users/login`);
-      expect(req.request.method).toMatch('POST');
-      req.flush(_mockUser);
+      const loginReq = httpMock.expectOne(`${baseURL}${apiVersion}/users/login`);
+      loginReq.flush(mockLoginResponse);
+
+      const profileReq = httpMock.expectOne(`${baseURL}${apiVersion}/users/profile`);
+      profileReq.flush(mockUser);
     });
 
-    test('should have a user profile', () => {
-      const _mockUser = mockUser;
-
-      userService.logIn(_mockUser).subscribe(_ => {
-        expect(userService.getUser()).toEqual(_mockUser);
+    test('should have a user profile', done => {
+      userService.logIn(mockUserLogin).subscribe(_ => {
+        expect(userService.getUser()).toEqual(mockUser);
+        done();
       });
 
-      const req = httpMock.expectOne(`${baseURL}${apiVersion}/users/login`);
-      expect(req.request.method).toMatch('POST');
-      req.flush(_mockUser);
-    })
+      const loginReq = httpMock.expectOne(`${baseURL}${apiVersion}/users/login`);
+      loginReq.flush(mockLoginResponse);
 
-    test('should have a username', () => {
-      const _mockUser = mockUser;
-
-      userService.logIn(_mockUser).subscribe(_ => {
-        expect(userService.getUsername()).toMatch('testuser');
-      });
-
-      const req = httpMock.expectOne(`${baseURL}${apiVersion}/users/login`);
-      expect(req.request.method).toMatch('POST');
-      req.flush(_mockUser);
+      const profileReq = httpMock.expectOne(`${baseURL}${apiVersion}/users/profile`);
+      profileReq.flush(mockUser);
     });
 
-    test('should return Observable<User>', () => {
-      const _mockUser = mockUser;
+    test('should clear user profile', done => {
+      const _mockUserLogin = mockUserLogin;
+      _mockUserLogin['remember'] = true;
 
-      userService.logIn({
-        'username': 'testuser',
-        'password': 'testpass'
-      }).subscribe(_ => {
-        userService.getUserProfile().subscribe(profile => {
-          expect(profile).toEqual(_mockUser);
+      userService.logIn(_mockUserLogin).subscribe(_ => {
+        userService.loadProfileFromStorage().subscribe(profile => {
+          expect(profile.error).toBeNull();
+          userService.clearProfile();
+          setTimeout(() => {
+            userService.loadProfileFromStorage().subscribe(profile => {
+              expect(profile.error).toMatch('Profile not found');
+              done();
+            });
+          }, 100);
         });
       });
 
       const loginReq = httpMock.expectOne(`${baseURL}${apiVersion}/users/login`);
-      expect(loginReq.request.method).toMatch('POST');
-      loginReq.flush(_mockUser);
+      loginReq.flush(mockLoginResponse);
 
       const profileReq = httpMock.expectOne(`${baseURL}${apiVersion}/users/profile`);
-      expect(profileReq.request.method).toMatch('GET');
-      profileReq.flush(_mockUser);
+      profileReq.flush(mockUser);
     });
 
-    test('should log out', () => {
-      const _mockUser = mockUser;
-
-      userService.logIn(_mockUser).subscribe(_ => {
-        userService.logOut();
-        expect(userService.getLoginStatus()).toBe(false);
+    test('should have a username', done => {
+      userService.logIn(mockUserLogin).subscribe(_ => {
+        expect(userService.getUsername()).toMatch('mockUser');
+        done();
       });
 
-      const req = httpMock.expectOne(`${baseURL}${apiVersion}/users/login`);
-      expect(req.request.method).toMatch('POST');
-      req.flush(_mockUser);
+      const loginReq = httpMock.expectOne(`${baseURL}${apiVersion}/users/login`);
+      loginReq.flush(mockLoginResponse);
+
+      const profileReq = httpMock.expectOne(`${baseURL}${apiVersion}/users/profile`);
+      profileReq.flush(mockUser);
     });
 
-    test('should sign up', () => {
+    test('should return Observable<User>', done => {
+      userService.logIn(mockUserLogin).subscribe(username => {
+        expect(username).toMatch(mockUser.username);
+        done();
+      });
+
+      const loginReq = httpMock.expectOne(`${baseURL}${apiVersion}/users/login`);
+      loginReq.flush(mockLoginResponse);
+
+      const profileReq = httpMock.expectOne(`${baseURL}${apiVersion}/users/profile`);
+      profileReq.flush(mockUser);
+    });
+
+    test('should log out', done => {
+      userService.logIn(mockUserLogin).subscribe(_ => {
+        userService.logOut();
+        expect(userService.getLoginStatus()).toBe(false);
+        done();
+      });
+
+      const loginReq = httpMock.expectOne(`${baseURL}${apiVersion}/users/login`);
+      loginReq.flush(mockLoginResponse);
+
+      const profileReq = httpMock.expectOne(`${baseURL}${apiVersion}/users/profile`);
+      profileReq.flush(mockUser);
+    });
+
+    test('should sign up', done => {
       const _mockUser = mockUser;
 
       userService.signUp(_mockUser).subscribe(user => {
         expect(user).toEqual(_mockUser);
+        done();
       });
 
       const req = httpMock.expectOne(`${baseURL}${apiVersion}/users/signup`);
@@ -152,7 +185,7 @@ describe('User service', () => {
       req.flush(_mockUser);
     });
 
-    test('should update user profile', () => {
+    test('should update user profile', done => {
       const _mockUser = mockUser;
       const updatedUser = clone(mockUser);
       updatedUser.firstname = 'updated';
@@ -162,6 +195,7 @@ describe('User service', () => {
         mockUser.firstname = 'updated';
         userService.updateUserProfile(_mockUser).subscribe(updated => {
           expect(updated).toEqual(updatedUser);
+          done();
         });
       });
 
@@ -176,18 +210,40 @@ describe('User service', () => {
       updateReq.flush(updatedUser);
     });
 
-    test('should update user\'s in progress list', () => {
-      const _mockUser = mockUser;
-      const mockBatchArray = [mockBatch];
+  });
 
-      userService.logIn(_mockUser).subscribe(user => {
-        expect(user.inProgressList.length).toBe(0);
-        userService.updateUserInProgressList(mockBatchArray);
-        expect(user.inProgressList.length).toBe(1);
+  describe('User is stored', () => {
+
+    test('should load user from storage', done => {
+      userService.storeUserProfile(mockUser);
+      authService.storeUserCredentials(mockCredentials);
+      userService.loadProfileFromStorage().subscribe(error => {
+        expect(error.error).toBeNull();
+        done();
       });
+    });
 
-      const req = httpMock.expectOne(`${baseURL}${apiVersion}/users/login`);
-      req.flush(_mockUser);
+    test('should login from storage', done => {
+      userService.storeUserProfile(mockUser);
+      authService.storeUserCredentials(mockCredentials);
+      userService.loadUserFromStorage();
+      setTimeout(() => {
+        expect(userService.getLoginStatus()).toBe(true);
+        done();
+      }, 100);
+      httpMock.verify();
+    });
+
+    test('should call logout()', done => {
+      const logOutSpy = jest.spyOn(userService, 'logOut');
+      authService.destroyUserCredentials();
+      setTimeout(() => {
+        userService.loadUserFromStorage();
+        setTimeout(() => {
+          expect(logOutSpy).toHaveBeenCalled();
+          done();
+        }, 100);
+      }, 100);
     });
 
   });
