@@ -36,21 +36,49 @@ export class UserPage implements OnInit, OnDestroy {
       this.initUser();
   }
 
+  // Select field to be edited
+  changeEdit(field: string, update: TextInput): void {
+    this.editing = update === undefined ? field: '';
+    if (update === undefined) {
+      this.cdRef.detectChanges();
+      if (field === 'email') {
+        this.emailField.setFocus();
+      } else if (field === 'firstname') {
+        this.firstnameField.setFocus();
+      } else if (field === 'lastname') {
+        this.lastnameField.setFocus();
+      }
+    }
+  }
+
+  // Reset form fields to their original values
   clearForm(): void {
     this.originalValues.email = '';
     this.originalValues.firstname = '';
     this.originalValues.lastname = '';
   }
 
-  ngOnInit() {
-    this.events.subscribe('user-update', this._userUpdate);
+  // Profile form has a value other than original
+  hasValuesToUpdate(): boolean {
+    for (const key in this.originalValues) {
+      if (this.userForm.value[key] != this.originalValues[key]) {
+        return true;
+      }
+    }
+    return false;
   }
 
-  ngOnDestroy() {
-    this.events.unsubscribe('user-update', this._userUpdate);
+  // Create form with profile values in form
+  initForm(): void {
+    this.userForm = this.formBuilder.group({
+      email: [this.user.email, [Validators.email, Validators.required]],
+      firstname: [this.user.firstname, [Validators.maxLength(25)]],
+      lastname: [this.user.lastname, [Validators.maxLength(25)]]
+    });
   }
 
-  initUser() {
+  // Get user and map profile values to form
+  initUser(): void {
     this.user = this.userService.getUser();
     if (this.user != null) {
       this.originalValues.email = this.user.email;
@@ -60,29 +88,23 @@ export class UserPage implements OnInit, OnDestroy {
     }
   }
 
-  userUpdateEventHandler(data: any): void {
-    if (data) {
-      this.initUser();
-      this.cdRef.detectChanges();
-    } else {
-      this.clearForm();
-      this.user = null;
-    }
+  // Check if given field is being edited
+  isEditing(field: string): boolean {
+    return field === this.editing;
   }
 
-  initForm(): void {
-    this.userForm = this.formBuilder.group({
-      email: [this.user.email, [Validators.email, Validators.required]],
-      firstname: [this.user.firstname, [Validators.maxLength(25)]],
-      lastname: [this.user.lastname, [Validators.maxLength(25)]]
-    });
+  ngOnDestroy() {
+    this.events.unsubscribe('update-user', this._userUpdate);
   }
 
+  ngOnInit() {
+    this.events.subscribe('update-user', this._userUpdate);
+  }
+
+  // Submit updated user profile
   onUpdate(): void {
-    console.log('update', this.userForm.value);
     this.userService.updateUserProfile(this.userForm.value)
       .subscribe(response => {
-        console.log('profile updated', response);
         this.userForm.reset();
         this.originalValues.email = response.email;
         this.originalValues.firstname = response.firstname;
@@ -98,31 +120,15 @@ export class UserPage implements OnInit, OnDestroy {
     this.modalService.openSignup();
   }
 
-  isEditing(field: string): boolean {
-    return field === this.editing;
-  }
-
-  changeEdit(field: string, update: TextInput): void {
-    this.editing = update === undefined ? field: '';
-    if (update === undefined) {
+  // 'update-user' event handler
+  userUpdateEventHandler(data: any): void {
+    if (data) {
+      this.initUser();
       this.cdRef.detectChanges();
-      if (field === 'email') {
-        this.emailField.setFocus();
-      } else if (field === 'firstname') {
-        this.firstnameField.setFocus();
-      } else if (field === 'lastname') {
-        this.lastnameField.setFocus();
-      }
+    } else {
+      this.clearForm();
+      this.user = null;
     }
-  }
-
-  hasValuesToUpdate(): boolean {
-    for (const key in this.originalValues) {
-      if (this.userForm.value[key] != this.originalValues[key]) {
-        return true;
-      }
-    }
-    return false;
   }
 
 }
