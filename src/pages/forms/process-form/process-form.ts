@@ -31,12 +31,17 @@ export class ProcessFormPage {
     this.viewCtrl.dismiss();
   }
 
+  /**
+   * Initialize form base on process type
+   * If data passed to form, map data to form fields
+  **/
   initForm(data) {
     this.processForm = this.formBuilder.group({
       type: this.stepType,
       name: ['', [Validators.minLength(2), Validators.maxLength(25), Validators.required]],
       description: ['']
     });
+    // Add step type specific form controls
     if (this.stepType === 'manual') {
       this.processForm.addControl('expectedDuration', new FormControl());
     } else {
@@ -47,7 +52,6 @@ export class ProcessFormPage {
       this.processForm.addControl('duration', new FormControl());
     }
     if (data) {
-      console.log(data);
       const control = this.processForm.controls;
       control.name.setValue(data.name);
       control.description.setValue(data.description);
@@ -61,12 +65,6 @@ export class ProcessFormPage {
         control.duration.setValue(data.duration);
       }
     }
-  }
-
-  getCurrentLocalISOString(): string {
-    return (new Date(Date.now() - (new Date().getTimezoneOffset() * 60000)))
-      .toISOString()
-      .slice(0, -1);
   }
 
   onSubmit() {
