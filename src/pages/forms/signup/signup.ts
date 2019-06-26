@@ -27,6 +27,35 @@ export class SignupPage {
     this.viewCtrl.dismiss();
   }
 
+  /**
+   * Get all error messages for given control
+   *
+   * @params: control - the form control to check
+  **/
+  getFormErrors(control: string): Array<string> {
+    const result = [];
+    for (const key in this.signupForm.controls[control].errors) {
+      result.push(FormValidatorProvider.GetErrorMessage(control, key));
+    }
+    return result;
+  }
+
+  /**
+   * Check if given control is touched and has at least one error
+   *
+   * @params: control - the form control to check
+  **/
+  hasFormError(control: string): boolean {
+    if (this.signupForm.controls[control].touched) {
+      for (const key in this.signupForm.controls[control].errors) {
+        if (this.signupForm.controls[control].errors.hasOwnProperty(key)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   initForm(): void {
     this.signupForm = this.formBuilder.group({
       username: ['', [Validators.minLength(6), Validators.maxLength(20), Validators.required]],
@@ -56,25 +85,6 @@ export class SignupPage {
 
   togglePasswordVisible(): void {
     this.showPassword = !this.showPassword;
-  }
-
-  hasFormError(control: string): boolean {
-    if (this.signupForm.controls[control].touched) {
-      for (const key in this.signupForm.controls[control].errors) {
-        if (this.signupForm.controls[control].errors.hasOwnProperty(key)) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  getFormErrors(control: string): Array<string> {
-    const result = [];
-    for (const key in this.signupForm.controls[control].errors) {
-      result.push(FormValidatorProvider.GetErrorMessage(control, key));
-    }
-    return result;
   }
 
 }
