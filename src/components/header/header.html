@@ -4,7 +4,7 @@
       <ion-row>
         <ion-col  col-1
                   align-self-center
-                  *ngIf="!tabPage">
+                  *ngIf="!isTabPage">
           <button ion-button
                   class="header-button-back"
                   (click)="goBack()">
@@ -30,11 +30,11 @@
           <button ion-button
                   float-right
                   class="header-button"
-                  *ngIf="username && userTab"
+                  *ngIf="username && isUserTab()"
                   (click)="logout()">
             Log out
           </button>
-          <ion-row *ngIf="username && !userTab">
+          <ion-row *ngIf="username && !isUserTab()">
             <ion-col col-12
                      class="login-header-text">
               Logged in as...

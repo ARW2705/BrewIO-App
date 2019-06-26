@@ -10,11 +10,11 @@ import { ModalProvider } from '../../providers/modal/modal';
 })
 export class HeaderComponent implements OnInit, OnDestroy {
   @Input() title: string;
-  tabPage: boolean = true;
+  isTabPage: boolean = true;
   username: string = '';
-  userTab: boolean = false;
+  currentTab: string = '';
   navStack: Array<string> = [];
-  _userUpdate: any;
+  _updateUser: any;
   _headerNavUpdate: any;
 
   constructor(public modalCtrl: ModalController,
@@ -23,43 +23,48 @@ export class HeaderComponent implements OnInit, OnDestroy {
     public userService: UserProvider,
     public modalService: ModalProvider) {
       this._headerNavUpdate = this.headerNavUpdateEventHandler.bind(this);
-      this._userUpdate = this.userUpdateEventHandler.bind(this);
+      this._updateUser = this.updateUserEventHandler.bind(this);
   }
 
+  // Header back button, publish event with nav destination
   goBack(): void {
-    this.events.publish('header-nav-pop', {
-      origin: this.tabPage ? '': this.navStack.pop()
+    this.events.publish('pop-header-nav', {
+      origin: this.isTabPage ? '': this.navStack.pop()
     });
-    this.tabPage =  !this.navStack.length
+    this.isTabPage =  !this.navStack.length
                     || this.navStack[this.navStack.length - 1] === 'tab';
   }
 
+  // Handle nav events - format header according to nav data
   headerNavUpdateEventHandler(data: any): void {
     if (data.origin) {
+      // add previous page/tab to nav stack
       this.navStack.push(data.origin);
     }
     if (data.dest) {
-      this.userTab = data.dest === 'user';
+      this.currentTab = data.dest;
     }
     if (data.destType) {
+      // tab destinations should clear stack
       if (data.destType === 'tab') {
-        this.tabPage = true;
+        this.isTabPage = true;
         this.navStack = [];
       } else {
-        this.tabPage = false;
+        this.isTabPage = false;
       }
     }
     if (data.destTitle) {
       this.title = data.destTitle;
     }
     if (data.other === 'batch-end') {
+      // if on process page and batch has been completed, automatically go back
       this.goBack();
     }
     this.username = this.userService.getUsername();
   }
 
-  isTab(): boolean {
-    return this.navStack[this.navStack.length - 1] === 'tab';
+  isUserTab(): boolean {
+    return this.currentTab === 'user';
   }
 
   logout(): void {
@@ -67,20 +72,20 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.events.unsubscribe('header-nav-update', this._headerNavUpdate);
-    this.events.unsubscribe('user-update', this._userUpdate);
+    this.events.unsubscribe('update-nav-header', this._headerNavUpdate);
+    this.events.unsubscribe('update-user', this._updateUser);
   }
 
   ngOnInit() {
-    this.events.subscribe('header-nav-update', this._headerNavUpdate);
-    this.events.subscribe('user-update', this._userUpdate);
+    this.events.subscribe('update-nav-header', this._headerNavUpdate);
+    this.events.subscribe('update-user', this._updateUser);
   }
 
   openLogin(): void {
     this.modalService.openLogin();
   }
 
-  userUpdateEventHandler(data: any) {
+  updateUserEventHandler(data: any) {
     this.username = data ? data.username: '';
   }
 
