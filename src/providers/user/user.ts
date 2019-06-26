@@ -10,7 +10,6 @@ import { apiVersion } from '../../shared/constants/api-version';
 import { User } from '../../shared/interfaces/user';
 import { RecipeMaster } from '../../shared/interfaces/recipe-master';
 import { Recipe } from '../../shared/interfaces/recipe';
-import { Batch } from '../../shared/interfaces/batch';
 
 import { AuthenticationProvider } from '../authentication/authentication';
 import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
@@ -149,6 +148,7 @@ export class UserProvider {
     this.publishUserUpdate();
   }
 
+  // 'new-master' event handler
   newMasterEventHandler(): void {
     this.recipeService.getMasterList()
       .subscribe(masterList => {
@@ -157,8 +157,9 @@ export class UserProvider {
       });
   }
 
+  // publish event on user update
   publishUserUpdate(): void {
-    this.events.publish('user-update', this.user);
+    this.events.publish('update-user', this.user);
   }
 
   signUp(user: any): Observable<User> {
@@ -179,14 +180,15 @@ export class UserProvider {
     this.storage.set(this.profileKey, JSON.stringify(user));
   }
 
+  // 'update-batch' event handler
   updateBatchEventHandler(data: any) {
     const indexToUpdate = this.user.inProgressList.findIndex(batch => {
       return batch._id === data.id;
     });
     if (data.type === 'start') {
-      this.user.inProgressList.push(data.batchList);
+      this.user.inProgressList = data.batchList;
     } else if (data.type === 'next') {
-      this.user.inProgressList[indexToUpdate].currentStep++;
+      this.user.inProgressList[indexToUpdate].currentStep = data.step;
     } else if (data.type === 'step-update') {
       this.user.inProgressList[indexToUpdate] = data.update;
     } else if (data.type === 'end') {
@@ -203,6 +205,7 @@ export class UserProvider {
     this.publishUserUpdate();
   }
 
+  // 'update-recipe' event handler
   updateRecipeEventHandler(update: Recipe): void {
     let indexToUpdate = -1;
     for (let i=0; i < this.user.masterList.length; i++) {
@@ -212,14 +215,8 @@ export class UserProvider {
       if (indexToUpdate !== -1) {
         this.user.masterList[i].recipes[indexToUpdate] = update;
         this.publishUserUpdate();
-        return;
       }
     }
-  }
-
-  updateUserInProgressList(list: Array<Batch>): void {
-    this.user.inProgressList = list;
-    this.publishUserUpdate();
   }
 
   updateUserProfile(user: any): Observable<User> {
