@@ -40,6 +40,10 @@ export class IngredientFormPage {
     this.viewCtrl.dismiss({error: error});
   }
 
+  /**
+   * Initialize form based on ingredient type
+   * If form data is passed to page, map data to form
+  **/
   initForm(data: any) {
     this.ingredientForm = this.formBuilder.group({
       type: ['', [Validators.required]],
@@ -89,6 +93,7 @@ export class IngredientFormPage {
 
   onSubmit() {
     const result = this.ingredientForm.value;
+    // convert generic ingredient type to named ingredient type
     if (this.ingredientType === 'grains') {
       result['grainType'] = result.type;
       delete result.type;
@@ -106,6 +111,7 @@ export class IngredientFormPage {
     this.viewCtrl.dismiss(result);
   }
 
+  // ion-input stores numbers as strings - must be submitted as numbers
   toNumber(controlName: string): number {
     return parseFloat(this.ingredientForm.value[controlName]);
   }
