@@ -74,11 +74,9 @@ export class ProcessPage implements OnInit, OnDestroy {
   /**
    * Check if current view is at the beginning or end of process schedule
    *
-   * params: string
-   * direction - either 'prev' or 'next'
+   * @params: direction - either 'prev' or 'next'
    *
-   * return: boolean
-   * - true if current view index is at the beginning or end of schedule
+   * @return: true if current view index is at the beginning or end of schedule
   **/
   atViewEnd(direction: string): boolean {
     return this.getStep(false, direction) === -1;
@@ -87,23 +85,14 @@ export class ProcessPage implements OnInit, OnDestroy {
   /**
    * Check if a calendar step has been started, but not finished
    *
-   * params: none
-   *
-   * return: boolean
-   * - true if a calendar step has been started, but not completed yet
+   * @return: true if a calendar step has been started, but not completed yet
   **/
   calendarInProgress(): boolean {
     return  this.selectedBatch.currentStep < this.selectedBatch.schedule.length
             && this.selectedBatch.schedule[this.selectedBatch.currentStep].hasOwnProperty('startDatetime');
   }
 
-  /**
-   * Delete the started calendar values - triggers calendar view to choose dates
-   *
-   * params: none
-   *
-   * return: none
-  **/
+  // Delete the started calendar values - triggers calendar view to choose dates
   changeDate(): void {
     this.toastService.presentToast('Select new dates', 1000, 'top');
     delete this.selectedBatch.schedule[this.selectedBatch.currentStep].startDatetime;
@@ -112,10 +101,7 @@ export class ProcessPage implements OnInit, OnDestroy {
   /**
    * Change view index only, does not trigger step completion
    *
-   * params: string
-   * direction - either 'prev' or 'next'
-   *
-   * return: none
+   * @params: direction - either 'prev' or 'next'
   **/
   changeStep(direction: string): void {
     const nextIndex = this.getStep(false, direction);
@@ -126,12 +112,9 @@ export class ProcessPage implements OnInit, OnDestroy {
   }
 
   /**
-   * Clear setInterval of a timer
+   * Clear setInterval of given timer interval
    *
-   * params: Timer
-   * timer - a timer type process step instance
-   *
-   * return: none
+   * @params: timer - a timer type process step instance
   **/
   clearTimer(timer: Timer): void {
     clearInterval(timer.interval);
@@ -142,10 +125,6 @@ export class ProcessPage implements OnInit, OnDestroy {
    * Complete the current process step and proceed to next step,
    * update the server with the next step index,
    * if on last step, end the process, update the server, then nav back
-   *
-   * params: none
-   *
-   * return: none
   **/
   completeStep(): void {
     const nextIndex = this.getStep(true);
@@ -154,20 +133,17 @@ export class ProcessPage implements OnInit, OnDestroy {
       this.getViewTimers(nextIndex);
     }
     this.processService.incrementCurrentStep(this.batchId)
-      .subscribe(response => {
+      .subscribe(() => {
         if (isFinished) {
           this.processService.endBatchById(this.batchId)
-            .subscribe(response => {
+            .subscribe(() => {
               this.updateRecipeMasterActive(false)
               this.toastService.presentToast('Enjoy!', 1000, 'bright-toast');
-              this.events.publish('header-nav-update', {other: 'batch-end'});
-              // this.navCtrl.pop();
+              this.events.publish('update-nav-header', {other: 'batch-end'});
             });
         } else {
-          console.log(`Finishing ${this.recipe.processSchedule[this.selectedBatch.currentStep]}`);
           this.selectedBatch.currentStep = nextIndex;
           this.viewStepIndex = nextIndex;
-          console.log(`Next step ${this.recipe.processSchedule[this.selectedBatch.currentStep]}`);
         }
       });
   }
@@ -175,10 +151,6 @@ export class ProcessPage implements OnInit, OnDestroy {
   /**
    * Group timers in the process schedule into arrays stored in timers array,
    * concurrent timers will be handled as a single step
-   *
-   * params: none
-   *
-   * return: none
   **/
   composeTimers(): void {
     let first = null;
@@ -226,16 +198,14 @@ export class ProcessPage implements OnInit, OnDestroy {
   /**
    * Format the time remaining text inside progress circle
    *
-   * params: number
-   * timeRemaining - time remaining in seconds
+   * @params: timeRemaining - time remaining in seconds
    *
-   * return: string
-   * - return string in hh:mm:ss format - hour/minutes removed if zero
+   * @return: datetime string in hh:mm:ss format - hour/minutes removed if zero
   **/
   formatProgressCircleText(timeRemaining: number): string {
     let remainder = timeRemaining;
     let result = '';
-    let hours, minutes, seconds;
+    let hours, minutes;
     if (remainder > 3599) {
       hours = Math.floor(remainder / 3600);
       remainder = remainder % 3600;
@@ -255,11 +225,9 @@ export class ProcessPage implements OnInit, OnDestroy {
   /**
    * Get css classes by alert values
    *
-   * params: Alert
-   * alert - calendar alert
+   * @params: alert - calendar alert
    *
-   * return: obj
-   * - ngClass object with associated class names
+   * @return: ngClass object with associated class names
   **/
   getAlertClass(alert: Alert): any {
     const closest = this.getClosestAlertByGroup(alert);
@@ -272,11 +240,9 @@ export class ProcessPage implements OnInit, OnDestroy {
   /**
    * Get alerts for a particular step and sort in chronological order
    *
-   * params: Alert
-   * alert - an alert instance, use to find all alerts with the same title
+   * @params: alert - an alert instance, use to find all alerts with the same title
    *
-   * return: Array<Alert>
-   * - array of alerts with the same title and in ascending chronological order
+   * @return: array of alerts with the same title and in ascending chronological order
   **/
   getClosestAlertByGroup(alert: Alert): Alert {
     const alerts = this.selectedBatch.alerts.filter(item => {
@@ -293,10 +259,7 @@ export class ProcessPage implements OnInit, OnDestroy {
   /**
    * Get array of alerts associated with current calendar step
    *
-   * params: none
-   *
-   * return: Array<Alert>
-   * - alerts sorted in chronological order for the currently started calendar step
+   * @return: alerts sorted in chronological order for the currently started calendar step
   **/
   getCurrentStepCalendarAlerts(): Array<Alert> {
     const alerts = this.selectedBatch.alerts.filter(alert => {
@@ -311,10 +274,7 @@ export class ProcessPage implements OnInit, OnDestroy {
   /**
    * Get values from current calendar step
    *
-   * params: none
-   *
-   * return: obj
-   * - calendar values to use in template
+   * @return: calendar values to use in template
   **/
   getCurrentStepCalendarData(): any {
     return {
@@ -329,11 +289,9 @@ export class ProcessPage implements OnInit, OnDestroy {
    * Get the appropriate font size for timer display based on the
    * number of digits to be displayed
    *
-   * params: number
-   * timeRemaining - remaining time in seconds
+   * @params: timeRemaining - remaining time in seconds
    *
-   * return: string
-   * - css font size valu
+   * @return: css font size value
   **/
   getFontSize(timeRemaining: number): string {
     if (timeRemaining > 3600) {
@@ -348,11 +306,9 @@ export class ProcessPage implements OnInit, OnDestroy {
   /**
    * Get step duration to be used in description display
    *
-   * params: number
-   * duration - stored duration in minutes
+   * @params: duration - stored duration in minutes
    *
-   * return: string
-   * - formatted time string hh hours mm minutes
+   * @return: datetime string hh:mm
   **/
   getFormattedDurationString(duration: number): string {
     let result = '';
@@ -370,12 +326,10 @@ export class ProcessPage implements OnInit, OnDestroy {
   /**
    * Get the next index, treating adjacent concurrent timers as a single step
    *
-   * params: string, number
-   * direction - either 'prev' or 'next'
-   * startIndex - the current index
+   * @params: direction - either 'prev' or 'next'
+   * @params: startIndex - the current index
    *
-   * return: number
-   * - the next index to use or -1 if at the beginning or end of schedule
+   * @return: next index to use or -1 if at the beginning or end of schedule
   **/
   getIndexAfterSkippingConcurrent(direction: string, startIndex: number): number {
     let nextIndex = -1;
@@ -400,10 +354,7 @@ export class ProcessPage implements OnInit, OnDestroy {
   /**
    * Get current step description
    *
-   * params: none
-   *
-   * return: string
-   * - the current step's description
+   * @return: current step's description
   **/
   getNextDateSummary(): string {
     return this.selectedBatch.schedule[this.selectedBatch.currentStep].description;
@@ -412,12 +363,10 @@ export class ProcessPage implements OnInit, OnDestroy {
   /**
    * Get the next or previous schedule step
    *
-   * params: boolean, direction
-   * onComplete - true if step is being completed
-   * direction - either 'prev' or 'next'
+   * @params: onComplete - true if step is being completed
+   * @params: direction - either 'prev' or 'next'
    *
-   * return: number
-   * - the next index to use or -1 if at the beginning or end of schedule
+   * @return: next index to use or -1 if at the beginning or end of schedule
   **/
   getStep(onComplete: boolean = false, direction: string = 'next'): number {
     let nextIndex = -1;
@@ -445,10 +394,7 @@ export class ProcessPage implements OnInit, OnDestroy {
   /**
    * Get the currently viewed step description
    *
-   * params: none
-   *
-   * return: string
-   * - step description at the current view step index
+   * @return: step description at the current view step index
   **/
   getViewStepDescription(): string {
     return `${this.selectedBatch.schedule[this.viewStepIndex].description}`;
@@ -457,10 +403,7 @@ export class ProcessPage implements OnInit, OnDestroy {
   /**
    * Get the currently viewed step's name
    *
-   * params: none
-   *
-   * return: string
-   * - the process step's name at current view index
+   * @return: process step's name at current view index
   **/
   getViewStepName(): string {
     return `${this.selectedBatch.schedule[this.viewStepIndex].name}`;
@@ -469,10 +412,7 @@ export class ProcessPage implements OnInit, OnDestroy {
   /**
    * Get the currently viewed step type
    *
-   * params: none
-   *
-   * return: string
-   * - the process step's type at current view index
+   * @return: process step's type at current view index
   **/
   getViewStepType(): string {
     return `${this.selectedBatch.schedule[this.viewStepIndex].type}`;
@@ -481,10 +421,7 @@ export class ProcessPage implements OnInit, OnDestroy {
   /**
    * Get index in array of timers to use from step index
    *
-   * params: number
-   * index - step index
-   *
-   * return: none
+   * @params: index - step index
   **/
   getViewTimers(index: number): void {
     for (let i=0; i < this.timers.length; i++) {
@@ -497,31 +434,23 @@ export class ProcessPage implements OnInit, OnDestroy {
     this.currentTimers = 0;
   }
 
-  /**
-   * Change view index to the currently active step
-   *
-   * params: none
-   *
-   * return: none
-  **/
+  // Change view index to the currently active step
   goToActiveStep(): void {
     this.getViewTimers(this.selectedBatch.currentStep);
     this.viewStepIndex = this.selectedBatch.currentStep;
   }
 
-  headerNavPopEventHandler(data: any): void {
+  headerNavPopEventHandler(): void {
     this.navCtrl.pop();
   }
 
   /**
    * Compose process circle css values
    *
-   * params: number, number
-   * index - process schedule index of the timer
-   * timeRemaining - time remaining in seconds
+   * @params: index - process schedule index of the timer
+   * @params: timeRemaining - time remaining in seconds
    *
-   * return: ProcessCircleSettings
-   * - object containing formatted css values
+   * @return: object containing formatted css values
   **/
   initTimerSettings(index: number, timeRemaining: number): ProgressCircleSettings {
     return {
@@ -551,11 +480,11 @@ export class ProcessPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.events.unsubscribe('header-nav-pop', this._headerNavPop);
+    this.events.unsubscribe('pop-header-nav', this._headerNavPop);
   }
 
   ngOnInit() {
-    this.events.subscribe('header-nav-pop', this._headerNavPop);
+    this.events.subscribe('pop-header-nav', this._headerNavPop);
     const timerWidth = Math.round(this.platform.width() * 2 / 3);
     this.timerWidth = timerWidth;
     this.timerHeight = timerWidth;
@@ -570,7 +499,6 @@ export class ProcessPage implements OnInit, OnDestroy {
       // Start a new batch
       this.processService.startNewBatch(this.requestedUserId, this.master._id, this.recipe._id)
         .subscribe(response => {
-          this.userService.updateUserInProgressList(response);
           this.selectedBatch = response[response.length - 1];
           this.batchId = this.selectedBatch._id;
           this.updateRecipeMasterActive(true);
@@ -589,12 +517,9 @@ export class ProcessPage implements OnInit, OnDestroy {
   }
 
   /**
-   * Reset a timer
+   * Reset a timer interval
    *
-   * params: Timer
-   * timer - a timer type process step instance
-   *
-   * return: none
+   * @params: timer - a timer type process step instance
   **/
   resetDuration(timer: Timer): void {
     const process = this.selectedBatch.schedule.find(process => {
@@ -606,14 +531,13 @@ export class ProcessPage implements OnInit, OnDestroy {
   /**
    * Update css values as timer progresses
    *
-   * params: Timer
-   * timer - a timer type process step instance
-   *
-   * return: none
+   * @params: timer - a timer type process step instance
   **/
   setProgress(timer: Timer): void {
     timer.settings.text.fontSize = this.getFontSize(timer.timeRemaining);
-    timer.settings.circle.strokeDashoffset = `${this.circumference - timer.timeRemaining / (timer.timer.duration * 60) * this.circumference}`;
+    timer.settings.circle.strokeDashoffset = `
+      ${this.circumference - timer.timeRemaining / (timer.timer.duration * 60) * this.circumference}
+    `;
     timer.settings.text.content = this.formatProgressCircleText(timer.timeRemaining);
     if (timer.timeRemaining < 1) {
       this.clearTimer(timer);
@@ -631,11 +555,8 @@ export class ProcessPage implements OnInit, OnDestroy {
   /**
    * User interface timer functions
    *
-   * params: string, obj
-   * mode - timer function 'start', 'stop', 'add', 'reset'
-   * timer - a timer type process step instance
-   *
-   * return: none
+   * @params: mode - timer function 'start', 'stop', 'add', 'reset'
+   * @params: timer - a timer type process step instance
   **/
   setTimerFunction(mode: string, timer?: Timer): void {
     if (mode === 'start') {
@@ -692,13 +613,7 @@ export class ProcessPage implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Set the start of a calendar step and update server
-   *
-   * params: none
-   *
-   * return: none
-  **/
+  // Set the start of a calendar step and update server
   startCalendar(): void {
     const calendarValues = this.calendarRef.getFinal();
     const update = {
@@ -711,13 +626,7 @@ export class ProcessPage implements OnInit, OnDestroy {
       });
   }
 
-  /**
-   * Show or hide the current step description
-   *
-   * params: none
-   *
-   * return: none
-  **/
+  // Show or hide the current step description
   toggleShowDescription(): void {
     this.showDescription = !this.showDescription;
   }
@@ -725,10 +634,7 @@ export class ProcessPage implements OnInit, OnDestroy {
   /**
    * Show or hide individual timer controls
    *
-   * params: Timer
-   * timer - a timer type process step instance
-   *
-   * return: none
+   * @params: timer - a timer type process step instance
   **/
   toggleTimerControls(timer: Timer): void {
     timer.show = !timer.show;
@@ -737,10 +643,7 @@ export class ProcessPage implements OnInit, OnDestroy {
   /**
    * Update recipe master active batch property on server
    *
-   * params: boolean
-   * start - true if recipe master has an active batch
-   *
-   * return: none
+   * @params: start - true if recipe master has an active batch
   **/
   updateRecipeMasterActive(start: boolean): void {
     this.recipeService.patchRecipeMasterById(this.master._id, {hasActiveBatch: start})
