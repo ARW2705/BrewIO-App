@@ -8,9 +8,7 @@ import { AuthenticationProvider } from '../authentication/authentication';
 @Injectable()
 export class AuthorizedInterceptor implements HttpInterceptor {
 
-  constructor(private injector: Injector) {
-    console.log('Hello AuthorizedInterceptor Provider');
-  }
+  constructor(private injector: Injector) { }
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const authProvider = this.injector.get(AuthenticationProvider);
@@ -24,9 +22,7 @@ export class AuthorizedInterceptor implements HttpInterceptor {
 @Injectable()
 export class UnauthorizedInterceptor implements HttpInterceptor {
 
-  constructor(private injector: Injector) {
-    console.log('Hello UnauthorizedInterceptor Provider');
-  }
+  constructor(private injector: Injector) { }
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const authProvider = this.injector.get(AuthenticationProvider);
@@ -40,7 +36,7 @@ export class UnauthorizedInterceptor implements HttpInterceptor {
         if (error instanceof HttpErrorResponse) {
           if (error.status == 401 && authToken) {
             console.log('UnauthorizedInterceptor: ', error);
-            authProvider.checkJWTtoken();
+            authProvider.checkJWToken();
           }
         }
       });
