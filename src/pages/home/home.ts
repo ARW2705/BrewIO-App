@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { NavController, Events } from 'ionic-angular';
 
 import { Recipe } from '../../shared/interfaces/recipe';
@@ -14,14 +14,12 @@ import { ModalProvider } from '../../providers/modal/modal';
 })
 export class HomePage implements OnInit, OnDestroy {
   user = null;
-  activeBatches = [];
   notifications = [];
   _userUpdate: any;
   _updateMaster: any;
   _navUpdate: any;
 
   constructor(public navCtrl: NavController,
-    public cdRef: ChangeDetectorRef,
     public events: Events,
     public userService: UserProvider,
     public modalService: ModalProvider) {
@@ -30,31 +28,11 @@ export class HomePage implements OnInit, OnDestroy {
       this._updateMaster = this.updateMasterEventHandler.bind(this);
   }
 
-  dismissBatch(batch: Recipe): void {
-    const toRemove = this.activeBatches.findIndex(_batch => _batch._id === batch._id);
-    this.activeBatches.splice(toRemove, 1);
-    this.cdRef.detectChanges();
-  }
-
-  getBatchCurrentStep(batch: Recipe): string {
-    return `${batch.processSchedule[batch.currentStep].name}`;
-  }
-
-  getBatchName(batch: Recipe): string {
-    return `${batch.variantName}`;
-  }
-
-  getBatchNextStep(batch: Recipe): string {
-    return batch.currentStep < batch.processSchedule.length - 1
-           ? `${batch.processSchedule[batch.currentStep + 1].name}`
-           : 'Finished';
-  }
-
-  userUpdateEventHandler(data: any): void {
-    console.log('incoming user update', data);
-    this.user = data ? data: null;
-  }
-
+  /**
+   * Navigate to Process Page with required data
+   *
+   * @params: batch - Recipe to use as template for brew process
+  **/
   navToBrewProcess(batch: Recipe): void {
     const master = this.user.masterList.find(master => {
       return master.recipes.find(recipe => {
@@ -76,18 +54,6 @@ export class HomePage implements OnInit, OnDestroy {
     this.modalService.openSignup();
   }
 
-  ngOnDestroy() {
-    this.events.unsubscribe('user-update', this._userUpdate);
-    this.events.unsubscribe('nav-update', this._navUpdate);
-    this.events.unsubscribe('update-master', this._updateMaster);
-  }
-
-  ngOnInit() {
-    this.events.subscribe('user-update', this._userUpdate);
-    this.events.subscribe('nav-update', this._navUpdate);
-    this.events.subscribe('update-master', this._updateMaster);
-  }
-
   navUpdateEventHandler(data: any): void {
     if (this.user && data.dest === 'home') {
       this.userService.getUserProfile()
@@ -99,9 +65,25 @@ export class HomePage implements OnInit, OnDestroy {
     }
   }
 
+  ngOnDestroy() {
+    this.events.unsubscribe('update-user', this._userUpdate);
+    this.events.unsubscribe('nav-update', this._navUpdate);
+    this.events.unsubscribe('update-master', this._updateMaster);
+  }
+
+  ngOnInit() {
+    this.events.subscribe('update-user', this._userUpdate);
+    this.events.subscribe('nav-update', this._navUpdate);
+    this.events.subscribe('update-master', this._updateMaster);
+  }
+
   updateMasterEventHandler(update: any): void {
     const indexToUpdate = this.user.masterList.findIndex(master => master._id == update._id);
     this.user.masterList[indexToUpdate] = update;
+  }
+
+  userUpdateEventHandler(data: any): void {
+    this.user = data ? data: null;
   }
 
 }
