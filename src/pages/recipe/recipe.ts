@@ -3,7 +3,6 @@ import { NavController, NavParams, Events, ItemSliding } from 'ionic-angular';
 
 import { RecipeMaster } from '../../shared/interfaces/recipe-master';
 import { Recipe } from '../../shared/interfaces/recipe';
-import { User } from '../../shared/interfaces/user';
 import { getIndexById } from '../../shared/utility-functions/utilities';
 
 import { RecipeMasterDetailPage } from '../recipe-master-detail/recipe-master-detail';
@@ -41,14 +40,17 @@ export class RecipePage implements OnInit, OnDestroy {
       this._updateRecipe = this.updateRecipeEventHandler.bind(this);
   }
 
-  deleteMaster(master: RecipeMaster) {
-    console.log('delete master', master);
+  /**
+   * Delete a Recipe Master from server
+   *
+   * @params: master - recipe master to delete
+  **/
+  deleteMaster(master: RecipeMaster): void {
     if (master.hasActiveBatch) {
-      console.log('cannot delete');
-      // TODO toast cannot delete a master with active batch
+      this.toastService.presentToast('Cannot delete a recipe master with a batch in progress', 3000);
     } else {
       this.recipeService.deleteRecipeMasterById(master._id)
-        .subscribe(response => {
+        .subscribe(() => {
           const index = getIndexById(master._id, this.masterList);
           if (index !== -1) {
             this.masterList.splice(index, 1);
@@ -58,15 +60,17 @@ export class RecipePage implements OnInit, OnDestroy {
     }
   }
 
-  expandMaster(index: number) {
+  /**
+   * Expand the accordion for recipe master ingredient table
+   *
+   * @params: index - index in masterIndex array to expand
+  **/
+  expandMaster(index: number): void {
     this.masterIndex = this.masterIndex === index ? -1: index;
   }
 
-  ionViewDidLeave() {
-    this.slidingItems.forEach(slidingItem => slidingItem.close());
-  }
-
-  getMasterList() {
+  // Get list of recipe masters
+  getMasterList(): void {
     this.recipeService.getMasterList()
       .subscribe(list => {
         this.masterList = list;
@@ -74,20 +78,33 @@ export class RecipePage implements OnInit, OnDestroy {
       });
   }
 
-  mapMasterRecipes() {
+  // Close all sliding items on view exit
+  ionViewDidLeave() {
+    this.slidingItems.forEach(slidingItem => slidingItem.close());
+  }
+
+  // Populate recipe master list with each master's designated selected recipe
+  mapMasterRecipes(): void {
     this.masterRecipeList = this.masterList.map(master => {
-      const selected =  master.recipes.find(recipe => {
+      const selected = master.recipes.find(recipe => {
         return recipe._id === master.master;
       });
       return selected === undefined ? master.recipes[0]: selected;
     });
   }
 
-  navToBrewProcess(master: RecipeMaster) {
+  /**
+   * Navigate to Process Page
+   * Update header of navigation event
+   * Pass the recipe master, the owner's id, selected recipe's id
+   *
+   * @params: master - recipe master to use in brew process
+  **/
+  navToBrewProcess(master: RecipeMaster): void {
     if (this.recipeService.isRecipeProcessPresent(
       master.recipes.find(recipe => recipe._id === master.master)
     )) {
-      this.events.publish('header-nav-update', {
+      this.events.publish('update-nav-header', {
         dest: 'process',
         destType: 'page',
         destTitle: master.recipes.find(recipe => recipe._id === master.master).variantName,
@@ -103,8 +120,13 @@ export class RecipePage implements OnInit, OnDestroy {
     }
   }
 
-  navToDetails(index: number) {
-    this.events.publish('header-nav-update', {
+  /**
+   * Navigate to Recipe Master details page
+   *
+   * @params: index - masterList index to send to page
+  **/
+  navToDetails(index: number): void {
+    this.events.publish('update-nav-header', {
       dest: 'process',
       destType: 'page',
       destTitle: this.masterList[index].name,
@@ -113,14 +135,26 @@ export class RecipePage implements OnInit, OnDestroy {
     this.navCtrl.push(RecipeMasterDetailPage, {master: this.masterList[index]});
   }
 
+  // Navigate to recipe form and publish nav update for header
   navToRecipeForm() {
-    this.events.publish('header-nav-update', {
+    this.events.publish('update-nav-header', {
       dest: 'recipe-form',
       destType: 'page',
       destTitle: 'Create Recipe',
       origin: this.navCtrl.getActive().name
     });
     this.navCtrl.push(RecipeFormPage, {formType: 'master', mode: 'create'});
+  }
+
+  // 'new-master' event handler
+  newMasterEventHandler() {
+    this.getMasterList();
+  }
+
+  ngOnDestroy() {
+    this.events.unsubscribe('update-user', this._userUpdate);
+    this.events.unsubscribe('new-master', this._newMaster);
+    this.events.unsubscribe('update-recipe', this._updateRecipe);
   }
 
   ngOnInit() {
@@ -131,17 +165,16 @@ export class RecipePage implements OnInit, OnDestroy {
     } else {
       // TODO check and pull from storage
     }
-    this.events.subscribe('user-update', this._userUpdate);
+    this.events.subscribe('update-user', this._userUpdate);
     this.events.subscribe('new-master', this._newMaster);
     this.events.subscribe('update-recipe', this._updateRecipe);
   }
 
-  ngOnDestroy() {
-    this.events.unsubscribe('user-update', this._userUpdate);
-    this.events.unsubscribe('new-master', this._newMaster);
-    this.events.unsubscribe('update-recipe', this._updateRecipe);
-  }
-
+  /**
+   * Expand ingredient table accordion of recipe master at given index
+   *
+   * @params: index - masterList index to expand
+  **/
   showExpandedMaster(index: number): boolean {
     return index === this.masterIndex && this.masterList[index].recipes.some(
       recipe => recipe.processSchedule.length > 0
@@ -152,17 +185,12 @@ export class RecipePage implements OnInit, OnDestroy {
     this.creationMode = !this.creationMode;
   }
 
-  userUpdateEventHandler(data: any) {
-    if (data) {
-      this.getMasterList();
-    }
-  }
-
-  newMasterEventHandler() {
-    this.getMasterList();
-  }
-
-  updateRecipeEventHandler(recipe: Recipe) {
+  /**
+   * 'update-recipe' event handler
+   *
+   * @params: recipe - updated recipe
+  **/
+  updateRecipeEventHandler(recipe: Recipe): void {
     const recipeMaster = this.masterList.find(master => {
       return master.recipes.some(_recipe => {
         return _recipe._id === recipe._id;
@@ -172,6 +200,16 @@ export class RecipePage implements OnInit, OnDestroy {
     recipeMaster.recipes[indexToUpdate] = recipe;
     recipeMaster.master = recipe._id;
     this.mapMasterRecipes();
+  }
+
+  // 'update-user' event hanlder
+  userUpdateEventHandler(data: any) {
+    if (data) {
+      this.getMasterList();
+    } else {
+      this.isLoggedIn = false;
+      this.masterList = [];
+    }
   }
 
 }
