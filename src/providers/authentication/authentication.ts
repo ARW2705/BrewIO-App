@@ -12,13 +12,13 @@ import { ProcessHttpErrorProvider } from '../process-http-error/process-http-err
 
 interface AuthResponse {
   status: string;
-  success: string;
+  success: boolean;
   token: string;
 };
 
 interface JWTResponse {
   status: string;
-  success: string;
+  success: boolean;
   user: any
 };
 
@@ -33,19 +33,21 @@ export class AuthenticationProvider {
     public storage: Storage,
     public processHttpError: ProcessHttpErrorProvider) { }
 
-  checkJWTtoken(): void {
-    this.http.get<JWTResponse>(baseURL + apiVersion + '/users/checkJWTtoken')
+  // Verify JWT is valid and hasn't expired
+  checkJWToken(): void {
+    this.http.get<JWTResponse>(baseURL + apiVersion + '/users/checkJWToken')
       .subscribe(
         response => {
-          console.log('JWT token valid');
+          console.log('JWT valid', response.user.username);
           this.sendUsername(response.user.username);
         },
         error => {
-          console.log('JWT token invalid', error);
+          console.log('JWT invalid', error);
           this.destroyUserCredentials();
         });
   }
 
+  // Assign name to username subject
   sendUsername(name: string): void {
     this.username.next(name);
   }
@@ -75,12 +77,14 @@ export class AuthenticationProvider {
             if (credentials && credentials.username != undefined) {
               this.useCredentials(credentials);
               if (this.authToken) {
-                this.checkJWTtoken();
+                this.checkJWToken();
               }
               return {error: null};
             } else {
-              return {error: 'Token not found'};
+              return {error: 'Credentials not found'};
             }
+          } else {
+            return {error: 'Token not found'};
           }
         })
         .catch(error => {
