@@ -12,8 +12,8 @@ export class TabsPage implements OnInit, OnDestroy {
   @ViewChild('navTabs') navTabs: Tabs;
   @ViewChild(Slides) slides: Slides;
   currentIndex: number = 0;
-  _userUpdate: any;
-  _headerNavPop: any;
+  _updateUser: any;
+  _popHeaderNav: any;
   tabs = [
     { component: HomePage,   title: 'Home',    header: 'BrewIO',  icon: 'home'    },
     { component: RecipePage, title: 'Recipes', header: 'Recipes', icon: 'beer'    },
@@ -21,39 +21,46 @@ export class TabsPage implements OnInit, OnDestroy {
   ];
 
   constructor(public events: Events) {
-    this._userUpdate = this.userUpdateEventHandler.bind(this);
-    this._headerNavPop = this.headerNavPopEventHandler.bind(this);
+    this._updateUser = this.updateUserEventHandler.bind(this);
+    this._popHeaderNav = this.popHeaderNavEventHandler.bind(this);
   }
 
+  /**
+   * Get tab title for header
+   *
+   * @return: tab title at current tab index
+  **/
   getCurrentTitle(): string {
     return this.tabs[this.currentIndex].header;
   }
 
-  ngOnInit() {
-    this.slides.lockSwipes(true);
-    this.events.subscribe('user-update', this._userUpdate);
-    this.events.subscribe('header-nav-pop', this._headerNavPop);
-  }
-
-  ngOnDestroy() {
-    this.events.unsubscribe('user-update', this._userUpdate);
-    this.events.unsubscribe('header-nav-pop', this._headerNavPop);
-  }
-
-  headerNavPopEventHandler(data: any): void {
+  /**
+   * 'pop-header-nav' event handler
+   *
+   * @params: data - if origin was a tab, update header with new tab
+  **/
+  popHeaderNavEventHandler(data: any): void {
     if (this.tabs.some(tab => tab.component.name === data.origin)) {
       this.updateHeader();
     }
   }
 
-  updateHeader(): void {
-    this.events.publish('header-nav-update', {
-      dest: this.tabs[this.currentIndex].title.toLowerCase(),
-      destType: 'tab',
-      destTitle: this.tabs[this.currentIndex].header
-    });
+  ngOnDestroy() {
+    this.events.unsubscribe('update-user', this._updateUser);
+    this.events.unsubscribe('pop-header-nav', this._popHeaderNav);
   }
 
+  ngOnInit() {
+    this.slides.lockSwipes(true);
+    this.events.subscribe('update-user', this._updateUser);
+    this.events.subscribe('pop-header-nav', this._popHeaderNav);
+  }
+
+  /**
+   * Set tab index to slide to
+   *
+   * @params: index - tab index destination
+  **/
   setIndex(index: number): void {
     this.slides.lockSwipes(false);
     this.currentIndex = index;
@@ -62,12 +69,31 @@ export class TabsPage implements OnInit, OnDestroy {
     this.slides.lockSwipes(true);
   }
 
-  tabNavigation(event): void {
+  /**
+   * Set tab navigation
+   *
+   * @params: event - ionChange event
+  **/
+  tabNavigation(event: any): void {
     this.setIndex(event.index);
     this.updateHeader();
   }
 
-  userUpdateEventHandler(data: any): void {
+  // Publish nav event to header
+  updateHeader(): void {
+    this.events.publish('update-nav-header', {
+      dest: this.tabs[this.currentIndex].title.toLowerCase(),
+      destType: 'tab',
+      destTitle: this.tabs[this.currentIndex].header
+    });
+  }
+
+  /**
+   * 'update-user' event handler
+   *
+   * @params: data - set tab to home
+  **/
+  updateUserEventHandler(data: any): void {
     if (!data) {
       this.setIndex(0);
     }
