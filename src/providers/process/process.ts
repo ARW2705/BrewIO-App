@@ -18,39 +18,43 @@ export class ProcessProvider {
     public events: Events,
     public processHttpError: ProcessHttpErrorProvider) { }
 
-  startNewBatch(userId: string, masterRecipeId: string, recipeId: string): Observable<any> {
+  startNewBatch(userId: string, masterRecipeId: string, recipeId: string): Observable<Array<Batch>> {
     return this.http.get(`${baseURL}${apiVersion}/process/user/${userId}/master/${masterRecipeId}/recipe/${recipeId}`)
-      .map((response: Array<Batch>) => {
-        if (response) {
+      .map((batches: Array<Batch>) => {
+        if (batches) {
           console.log('emitting batch update');
-          this.events.publish('batch-update', {type: 'start', batchList: response[0], id: recipeId});
+          this.events.publish('update-batch', {type: 'start', batchList: batches, id: recipeId});
         }
-        return response;
+        return batches;
       })
       .catch(error => this.processHttpError.handleError(error));
   }
 
-  getBatchById(batchId: string): Observable<any> {
+  getBatchById(batchId: string): Observable<Batch> {
     return this.http.get(`${baseURL}${apiVersion}/process/in-progress/${batchId}`)
       .catch(error => this.processHttpError.handleError(error));
   }
 
-  incrementCurrentStep(batchId: string): Observable<any> {
+  incrementCurrentStep(batchId: string): Observable<User> {
     return this.http.get(`${baseURL}${apiVersion}/process/in-progress/${batchId}/next`)
-      .map((response: User) => {
-        if (response) {
-          this.events.publish('batch-update', {type: 'next', id: batchId});
+      .map((updatedUser: User) => {
+        if (updatedUser) {
+          this.events.publish('update-batch', {
+            type: 'next',
+            step: updatedUser.inProgressList.find(batch => batch._id === batchId).currentStep,
+            id: batchId
+          });
         }
-        return response;
+        return updatedUser;
       })
       .catch(error => this.processHttpError.handleError(error));
   }
 
-  patchBatchById(batchId: string, stepId: string, update: any): Observable<any> {
+  patchBatchById(batchId: string, stepId: string, update: any): Observable<Batch> {
     return this.http.patch(`${baseURL}${apiVersion}/process/in-progress/${batchId}/step/${stepId}`, update)
-      .map((response: any) => {
+      .map((response: Batch) => {
         if (response) {
-          this.events.publish('batch-update', {type: 'step-update', update: response, id: response._id});
+          this.events.publish('update-batch', {type: 'step-update', update: response, id: response._id});
         }
         return response;
       })
@@ -61,7 +65,7 @@ export class ProcessProvider {
     return this.http.delete(`${baseURL}${apiVersion}/process/in-progress/${batchId}`)
       .map((response: any) => {
         if (response) {
-          this.events.publish('batch-update', {type: 'end', id: batchId, data: response.updatedList});
+          this.events.publish('update-batch', {type: 'end', id: batchId, data: response.updatedList});
         }
         return response;
       })
