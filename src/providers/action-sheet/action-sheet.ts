@@ -8,6 +8,13 @@ export class ActionSheetProvider {
 
   constructor(public actionCtrl: ActionSheetController) { }
 
+  /**
+   * Create action sheet
+   *
+   * @params: buttons - action button to add to sheet
+   *
+   * @return: array of action sheet buttons
+  **/
   generateActionSheetButtons(buttons: Array<ActionSheetButton>): Array<any> {
     const actions: Array<ActionSheetButton> = buttons.map(button => {
       const action = {
@@ -29,6 +36,13 @@ export class ActionSheetProvider {
     return actions;
   }
 
+  /**
+   * Open an action sheet
+   *
+   * @params: title - action sheet title
+   * @params: buttons - array of action sheet buttons
+   * @params: [customClass] - css class to apply to action sheet
+  **/
   openActionSheet(title: string, buttons: Array<ActionSheetButton>, customClass?: string): void {
     const actionSheet = this.actionCtrl.create({
       title: title,
