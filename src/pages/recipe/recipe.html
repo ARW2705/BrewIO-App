@@ -2,13 +2,15 @@
 
   <ion-grid>
 
-    <ng-container *ngIf="isLoggedIn">
+    <!-- Display all active batches -->
+    <ng-container *ngIf="isLoggedIn()">
       <ion-row class="messages-header">
         <h3>Active Batches</h3>
       </ion-row>
       <active-batches></active-batches>
     </ng-container>
 
+    <!-- Create new recipe master button -->
     <ion-row justify-content-center>
       <button ion-button
               (click)="navToRecipeForm()"
@@ -17,11 +19,16 @@
       </button>
     </ion-row>
 
-    <ion-row *ngIf="masterList">
+    <ion-row *ngIf="isLoggedIn() && masterList">
+
+      <!-- Recipe masters list -->
       <ion-list id="master-list">
-        <ng-container *ngFor="let master of masterList; index as i">
+        <ng-container *ngFor="let master of getArrayFromObservables(masterList); index as i">
+
+          <!-- Slide left or right for actions, click to toggle ingredient list -->
           <ion-item-sliding #slidingItems class="recipe-master-item">
 
+            <!-- Delete the recipe master button -->
             <ion-item-options side="left">
               <button ion-button
                       color="danger"
@@ -31,20 +38,29 @@
               </button>
             </ion-item-options>
 
+            <!-- Toggle ingredient list button -->
             <button detail-none
                     class="expand-button"
                     (click)="expandMaster(i)"
                     ion-item
                     lines="none">
+
+              <!-- Recipe master quick info -->
               <ion-grid no-padding>
                 <ion-row class="master-summary-header">
+
+                  <!-- Recipe master name -->
                   <ion-col>
                     {{ master.name }}
                   </ion-col>
+
+                  <!-- Recipe master style name -->
                   <ion-col>
                     • {{ master.style.name }}
                   </ion-col>
                 </ion-row>
+
+                <!-- Recipe master volume, type, ABV, IBU, and SRM -->
                 <ion-row class="master-summary-subheader">
                   <ion-col>
                     <p>
@@ -56,16 +72,21 @@
                     </p>
                   </ion-col>
                 </ion-row>
+
               </ion-grid>
             </button>
 
             <ion-item-options side="right">
+
+              <!-- Start a new brew process button -->
               <button ion-button
                       color="primary"
                       (click)="navToBrewProcess(master)">
                 <ion-icon name="beer"></ion-icon>
                 Brew
               </button>
+
+              <!-- Go to recipe master details page button -->
               <button ion-button
                       color="secondary"
                       (click)="navToDetails(i)">
@@ -75,10 +96,14 @@
             </ion-item-options>
 
           </ion-item-sliding>
+
+          <!-- Recipe ingredient list -->
           <accordion [expanded]="showExpandedMaster(i)">
             <ion-card class="recipe-card">
               <ion-card-content>
                 <ion-list *ngIf="masterRecipeList[i]">
+
+                  <!-- Grain Bill -->
                   <ion-item-group *ngIf="masterRecipeList[i].grains.length">
                     <ion-item-divider color="primary" class="card-divider">
                       Grains
@@ -97,6 +122,8 @@
                       </ion-row>
                     </ion-grid>
                   </ion-item-group>
+
+                  <!-- Hops Schedule -->
                   <ion-item-group *ngIf="masterRecipeList[i].hops.length">
                     <ion-item-divider color="primary" class="card-divider">
                       Hops
@@ -115,6 +142,8 @@
                       </ion-row>
                     </ion-grid>
                   </ion-item-group>
+
+                  <!-- Yeast Batch -->
                   <ion-item-group *ngIf="masterRecipeList[i].yeast.length">
                     <ion-item-divider color="primary" class="card-divider">
                       Yeast
@@ -133,6 +162,8 @@
                       </ion-row>
                     </ion-grid>
                   </ion-item-group>
+
+                  <!-- Other ingredients -->
                   <ion-item-group *ngIf="masterRecipeList[i].otherIngredients.length">
                     <ion-item-divider color="primary" class="card-divider">
                       Other Ingredients
@@ -153,6 +184,7 @@
                       </ion-row>
                     </ion-grid>
                   </ion-item-group>
+
                 </ion-list>
               </ion-card-content>
             </ion-card>
@@ -161,6 +193,7 @@
       </ion-list>
     </ion-row>
 
+    <!-- Loading spinner -->
     <ion-row *ngIf="isLoggedIn && !masterList">
       <ion-spinner color="primary"></ion-spinner>
     </ion-row>
