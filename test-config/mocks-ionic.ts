@@ -144,7 +144,7 @@ export class StorageMock {
 
 @Injectable()
 export class HttpMock {
-  ROOT_URL: string = `${baseURL}${apiVersion}`;
+  ROOT_URL: string = `${baseURL}/${apiVersion}`;
 
   constructor(public http: HttpClient) { }
 
