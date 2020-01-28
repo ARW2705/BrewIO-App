@@ -1,6 +1,8 @@
+/* Module imports */
 import { Injectable } from '@angular/core';
 import { Events, ModalController } from 'ionic-angular';
 
+/* Page imports */
 import { LoginPage } from '../../pages/forms/login/login';
 import { SignupPage } from '../../pages/forms/signup/signup';
 
@@ -10,24 +12,25 @@ export class ModalProvider {
   constructor(public events: Events,
     public modalCtrl: ModalController) { }
 
+  /**
+   * Open the login modal
+   *
+   * @params: none
+   * @return: none
+  **/
   openLogin(): void {
     const modal = this.modalCtrl.create(LoginPage);
-    modal.onDidDismiss(data => {
-      if (data) {
-        this.events.publish('on-login', data);
-      }
-    });
     modal.present({keyboardClose: false});
   }
 
+  /**
+   * Open the signup modal
+   *
+   * @params: none
+   * @return: none
+  **/
   openSignup(): void {
     const modal = this.modalCtrl.create(SignupPage);
-    modal.onDidDismiss(data => {
-      if (data) {
-        console.log('signup', data);
-        this.events.publish('on-signup', data);
-      }
-    });
     modal.present({keyboardClose: false});
   }
 
