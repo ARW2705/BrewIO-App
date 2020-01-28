@@ -1,12 +1,17 @@
+/* Module imports */
 import { Injectable } from '@angular/core';
 
+/* Constants imports */
 import * as Constant from '../../shared/constants/factors';
+
+/* Interface imports */
 import { GrainBill } from '../../shared/interfaces/grain-bill';
 import { HopsSchedule } from '../../shared/interfaces/hops-schedule';
 import { YeastBatch } from '../../shared/interfaces/yeast-batch';
 import { Grains, Hops } from '../../shared/interfaces/library';
 import { Recipe } from '../../shared/interfaces/recipe';
 
+/* Utility function imports */
 import { roundToDecimalPlace } from '../../shared/utility-functions/utilities';
 
 @Injectable()
@@ -18,6 +23,8 @@ export class CalculationsProvider {
    * Calculate original gravity, final gravity, IBU, SRM, and ABV for a given recipe
    *
    * @params: recipe - recipe to base values
+   *
+   * @return: none
   **/
   calculateRecipeValues(recipe: Recipe): void {
     let og = 1;
@@ -270,7 +277,13 @@ export class CalculationsProvider {
     return roundToDecimalPlace(grains.lovibond * grainsInstance.quantity / batchVolume, 2);
   }
 
-  // Get SRM value from given MCU
+  /**
+   * Calculate SRM value from MCU
+   *
+   * @params: mcu - batch mcu value
+   *
+   * @return: SRM value rounded to whole number
+  **/
   getSRM(mcu: number): number {
     return roundToDecimalPlace(Constant.SRMFactor * (Math.pow(mcu, Constant.SRMExp)), 1);
   }
