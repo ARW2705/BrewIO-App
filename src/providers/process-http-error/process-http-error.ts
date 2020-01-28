@@ -1,3 +1,4 @@
+/* Module imports */
 import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
@@ -8,8 +9,15 @@ export class ProcessHttpErrorProvider {
 
   constructor() { }
 
-  //TODO format error messages
-  handleError(error: HttpErrorResponse | any) {
+  // TODO format error messages
+  /**
+   * Parse HTTP error message
+   *
+   * @params: error - HTTP error response
+   *
+   * @return: observable of error message
+  **/
+  handleError(error: HttpErrorResponse | any): Observable<any> {
     let errMsg: string;
     if (error instanceof HttpErrorResponse) {
       if (error.status == 401) {
