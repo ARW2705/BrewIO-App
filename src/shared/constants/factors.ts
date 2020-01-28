@@ -1,4 +1,4 @@
-export const ABVFactors = [76.08, 1.775, 0.794];
+export const ABVFactors = [76.08, 1.775, 0.794]; // advanced ABV calculation
 export const BignessFactor = 1.65;
 export const BignessBase = 0.000125;
 export const BoilTimeFactor = 4.15;
