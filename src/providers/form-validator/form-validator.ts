@@ -1,6 +1,8 @@
+/* Module imports */
 import { Injectable } from '@angular/core';
 import { AbstractControl, FormGroup, ValidatorFn } from '@angular/forms';
 
+/* Constants import */
 import { passwordPattern } from '../../shared/constants/password-pattern';
 
 @Injectable()
@@ -35,7 +37,14 @@ export class FormValidatorProvider {
 
   constructor() { }
 
-  // Compare password and confirmation - set error as necessary
+  /**
+   * Password and password confirmation matching validator
+   *
+   * @params: none
+   *
+   * @return: ValidatorFn - @params FormGroup to pull password and confirmation
+   * strings
+  **/
   static PasswordMatch(): ValidatorFn {
     return (group: FormGroup): {[key: string]: any} | null => {
       const password = group.get('password');
@@ -49,14 +58,27 @@ export class FormValidatorProvider {
     }
   }
 
-  // Compare password with defined pattern - set error as necessary
+  /**
+   * Password pattern checking
+   *
+   * @params: none
+   *
+   * @return: ValidatorFn - @params FormControl to pull password string
+  **/
   static PasswordPattern(): ValidatorFn {
     return (control: AbstractControl): {[key: string]: any} | null => {
       return passwordPattern.test(control.value) ? null: {passwordInvalid: true};
     }
   }
 
-  // Get custom error message by control name and error type
+  /**
+   * Get the corresponding validator error message
+   *
+   * @params: control - form control name
+   * @params: errorType - error type in the control
+   *
+   * @return: error message
+  **/
   static GetErrorMessage(control: string, errorType: string): string {
     return FormValidatorProvider.formErrorMessages[control][errorType].replace('{}', );
   }
