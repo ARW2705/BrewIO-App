@@ -1,174 +1,194 @@
+/* Module imports */
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Events } from 'ionic-angular';
 import { Storage } from '@ionic/storage';
-import { Observable } from 'rxjs';
+import { Observable } from 'rxjs/Observable';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import 'rxjs/add/operator/catch';
 
+/* Constants imports */
 import { baseURL } from '../../shared/constants/base-url';
 import { apiVersion } from '../../shared/constants/api-version';
-import { User } from '../../shared/interfaces/user';
-import { RecipeMaster } from '../../shared/interfaces/recipe-master';
-import { Recipe } from '../../shared/interfaces/recipe';
 
-import { AuthenticationProvider } from '../authentication/authentication';
-import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
+/* Interface imports */
+import { User } from '../../shared/interfaces/user';
+
+/* Provider imports */
+import { ProcessProvider } from '../process/process';
 import { RecipeProvider } from '../recipe/recipe';
+import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
+
+/* Local Interfaces */
+interface JWTResponse {
+  status: string;
+  success: boolean;
+  user: any
+};
 
 @Injectable()
 export class UserProvider {
-  loggedIn: boolean = false;
-  user: User = null;
-  profileKey: string = 'userProfile';
-  _newMaster: any;
-  _updateMaster: any;
-  _updateRecipe: any;
-  _updateBatch: any;
+  user$: BehaviorSubject<User> = new BehaviorSubject<User>({
+    _id: undefined,
+    createdAt: undefined,
+    updatedAt: undefined,
+    username: undefined,
+    firstname: undefined,
+    lastname: undefined,
+    email: undefined,
+    friendList: [],
+    token: undefined
+  });
+  userStorageKey: string = 'user';
 
-  constructor(public http: HttpClient,
-    public events: Events,
+  constructor(
+    public http: HttpClient,
     public storage: Storage,
-    public authService: AuthenticationProvider,
-    public processHttpError: ProcessHttpErrorProvider,
-    public recipeService: RecipeProvider) {
-      this._newMaster = this.newMasterEventHandler.bind(this);
-      this._updateMaster = this.updateMasterEventHandler.bind(this);
-      this._updateRecipe = this.updateRecipeEventHandler.bind(this);
-      this._updateBatch = this.updateBatchEventHandler.bind(this);
-      this.events.subscribe('new-master', this._newMaster);
-      this.events.subscribe('update-master', this._updateMaster);
-      this.events.subscribe('update-recipe', this._updateRecipe);
-      this.events.subscribe('update-batch', this._updateBatch);
+    public processService: ProcessProvider,
+    public recipeService: RecipeProvider,
+    public processHttpError: ProcessHttpErrorProvider
+  ) {}
+
+  /**
+   * Request server check json web token validity
+   *
+   * @params: none
+   *
+   * @return: none
+  **/
+  checkJWToken(): void {
+    this.http.get<JWTResponse>(`${baseURL}/${apiVersion}/users/checkJWToken`)
+      .subscribe(
+        response => {
+          console.log(response.status);
+        },
+        error => {
+          console.log(error.status);
+          this.clearUserData();
+        });
   }
 
-  clearProfile(): void {
-    this.storage.remove(this.profileKey)
-      .then(() => console.log('Removed profile'));
+  /**
+   * Set user subject data to undefined values and clear ionic storage
+   *
+   * @params: none
+   *
+   * @return: none
+  **/
+  clearUserData(): void {
+    this.user$.next({
+      _id: undefined,
+      createdAt: undefined,
+      updatedAt: undefined,
+      username: undefined,
+      firstname: undefined,
+      lastname: undefined,
+      email: undefined,
+      friendList: [],
+      token: undefined
+    });
+    this.storage.remove(this.userStorageKey)
+      .then(() => console.log('Cleared storage'));
+    this.recipeService.clearRecipes();
+    this.processService.clearProcesses();
   }
 
-  getLoginStatus(): boolean {
-    return this.loggedIn;
+  /**
+   * Retrieve user authentication json web token
+   *
+   * @params: none
+   *
+   * @return: none
+  **/
+  getToken(): string {
+    return this.user$.value.token;
   }
 
-  getUser() {
-    return this.getLoginStatus() ? this.user: null;
+  /**
+   * Get the user subject
+   *
+   * @params: none
+   *
+   * @return: user subject
+  **/
+  getUser(): BehaviorSubject<User> {
+    return this.user$;
   }
 
-  getUsername(): string {
-    return this.user ? this.user.username: '';
+  /**
+   * Check if user is logged in
+   *
+   * @params: none
+   *
+   * @return: true if an auth token is present in user subject
+  **/
+  isLoggedIn(): boolean {
+    return this.user$.value.token !== undefined;
   }
 
-  getUserProfile(): Observable<User> {
-    return this.http.get(baseURL + apiVersion + '/users/profile')
-      .map((profile: User) => {
-        this.user = profile;
-        this.storeUserProfile(this.user);
-        this.publishUserUpdate();
-        return profile;
+  /**
+   * Load user data from ionic storage
+   *
+   * @params: none
+   *
+   * @return: none
+  **/
+  loadUserFromStorage(): void {
+    this.storage.get(this.userStorageKey)
+      .then(profile => {
+        this.user$.next(JSON.parse(profile));
+        this.checkJWToken();
+      });
+  }
+
+  /**
+   * Log user in with username and password. Update user subject with response.
+   * If user selected to remember login, store user data in ionic storage
+   *
+   * @params: user - contains username string, password string, and remember boolean
+   *
+   * @return: observable with login response data
+  **/
+  logIn(user: any): Observable<any> {
+    return this.http.post(`${baseURL}/${apiVersion}/users/login`, user)
+      .map((response: any) => {
+        if (response.success) {
+          this.user$.next(response.user);
+          this.processService.initializeActiveBatchList();
+          this.recipeService.initializeRecipeMasterList();
+          if (user.remember) {
+            this.storage.set(this.userStorageKey, JSON.stringify(response.user));
+          }
+        }
+        return response;
       })
       .catch(error => this.processHttpError.handleError(error));
   }
 
-  loadProfileFromStorage(): Observable<any> {
-    return Observable.fromPromise(
-      this.storage.get(this.profileKey)
-        .then(profile => {
-          if (profile) {
-            this.user = JSON.parse(profile);
-            this.publishUserUpdate();
-            return {error: null};
-          } else {
-            return {error: 'Profile not found'}
-          }
-        })
-        .catch(error => {
-          return {error: error};
-        })
-    );
-  }
-
-  loadUserFromStorage(): void {
-    const credentials = this.authService.loadUserCredentials();
-    const profile = this.loadProfileFromStorage();
-    Observable.forkJoin(
-      credentials,
-      profile
-    ).subscribe(([credentials, profile]) => {
-      const hasCredentials = credentials ? true: false;
-      const hasCredentialsError = credentials && credentials.error;
-      const hasProfile = profile ? true: false;
-      const hasProfileError = profile && profile.error;
-
-      if (!hasCredentials || hasCredentialsError) {
-        console.log('Credentials error', credentials);
-        this.logOut();
-      }
-
-      if (!hasProfile || hasProfileError) {
-        console.log('Cannot find user profile, requesting from server', profile.error);
-        if (hasCredentials && !hasCredentialsError) {
-          this.getUserProfile()
-            .subscribe(profile => {
-              if (!profile) {
-                // TODO throw error getting profile
-                console.log('Could not find stored profile');
-              }
-            });
-        } else {
-          console.log('Must be logged in');
-        }
-      }
-
-      if (hasCredentials && !hasCredentialsError && hasProfile && !hasProfileError) {
-        this.loggedIn = true;
-      }
-    });
-  }
-
-  logIn(user: any): Observable<any> {
-    return this.authService.logIn(user)
-      .flatMap(response => {
-        if (response.success) {
-          this.loggedIn = true;
-          return this.getUserProfile()
-            .map(profile => {
-              return profile.username;
-            });
-        } else {
-          return response;
-        }
-      });
-  }
-
+  /**
+   * Clear stored user data on logout
+   *
+   * @params: none
+   *
+   * @return: none
+  **/
   logOut(): void {
-    this.authService.logOut();
-    this.loggedIn = false;
-    this.user = null;
-    this.clearProfile();
-    this.publishUserUpdate();
+    this.clearUserData();
   }
 
-  // 'new-master' event handler
-  newMasterEventHandler(): void {
-    this.recipeService.getMasterList()
-      .subscribe(masterList => {
-        this.user.masterList = masterList;
-        this.publishUserUpdate();
-      });
-  }
-
-  // publish event on user update
-  publishUserUpdate(): void {
-    this.events.publish('update-user', this.user);
-  }
-
-  signUp(user: any): Observable<User> {
-    return this.http.post(baseURL + apiVersion + '/users/signup', user)
+  /**
+   * Sign up a new user and login if successful
+   *
+   * @params: user - user must contain at least a username, password, and email
+   *
+   * @return: if signup successful, return observable of login response, else signup response
+  **/
+  signUp(user: any): Observable<any> {
+    return this.http.post(`${baseURL}/${apiVersion}/users/signup`, user)
       .map((response: any) => {
         if (response.success) {
           this.logIn({username: user.username, password: user.password})
-            .subscribe(loginResponse => {
-              console.log(loginResponse);
+            .subscribe(user => {
+              console.log('Signup successful, logging in', user.username);
             });
         }
         return response;
@@ -176,51 +196,25 @@ export class UserProvider {
       .catch(error => this.processHttpError.handleError(error));
   }
 
-  storeUserProfile(user: User): void {
-    this.storage.set(this.profileKey, JSON.stringify(user));
-  }
-
-  // 'update-batch' event handler
-  updateBatchEventHandler(data: any) {
-    const indexToUpdate = this.user.inProgressList.findIndex(batch => {
-      return batch._id === data.id;
-    });
-    if (data.type === 'start') {
-      this.user.inProgressList = data.batchList;
-    } else if (data.type === 'next') {
-      this.user.inProgressList[indexToUpdate].currentStep = data.step;
-    } else if (data.type === 'step-update') {
-      this.user.inProgressList[indexToUpdate] = data.update;
-    } else if (data.type === 'end') {
-      this.user.inProgressList.splice(indexToUpdate, 1);
-    }
-    this.publishUserUpdate();
-  }
-
-  updateMasterEventHandler(update: RecipeMaster) {
-    const indexToUpdate = this.user.masterList.findIndex(master => {
-      return master._id === update._id;
-    });
-    this.user.masterList[indexToUpdate] = update;
-    this.publishUserUpdate();
-  }
-
-  // 'update-recipe' event handler
-  updateRecipeEventHandler(update: Recipe): void {
-    let indexToUpdate = -1;
-    for (let i=0; i < this.user.masterList.length; i++) {
-      indexToUpdate = this.user.masterList[i].recipes.findIndex(recipe => {
-        return recipe._id === update._id;
-      });
-      if (indexToUpdate !== -1) {
-        this.user.masterList[i].recipes[indexToUpdate] = update;
-        this.publishUserUpdate();
-      }
-    }
-  }
-
+  /**
+   * HTTP PATCH user profile
+   *
+   * @params: user - object with user profile data
+   *
+   * @return: Observable of user data from server
+  **/
   updateUserProfile(user: any): Observable<User> {
-    return this.http.patch(baseURL + apiVersion + '/users/profile', user)
+    return this.http.patch(`${baseURL}/${apiVersion}/users/profile`, user)
+      .map((updatedUser: User) => {
+        const userData = this.user$.value;
+        for (const key in updatedUser) {
+          if (userData.hasOwnProperty(key)) {
+            userData[key] = updatedUser[key];
+          }
+        }
+        this.user$.next(userData);
+        return updatedUser;
+      })
       .catch(error => this.processHttpError.handleError(error));
   }
 
