@@ -1,32 +1,54 @@
 page-user {
-  .content {
-    margin-top: 56px;
-  }
-  #user-router-nav {
-    text-align: center;
-    margin: 15px 0;
-  }
   #form {
+    /* Display */
     width: 100%;
     padding: 5px 0;
   }
+
+  #user-router-nav {
+    /* Display */
+    margin: 15px 0;
+
+    /* Text */
+    text-align: center;
+  }
+
+  .content {
+    /* Display */
+    margin-top: 56px;
+  }
+
+  .item-md {
+    /* Display */
+    padding-right: 16px;
+  }
+
   .profile-field-button {
-    font-size: 0.8em;
+    /* Display */
     width: 100%;
-    text-align: left;
+
+    /* Color */
     background: transparent;
     color: map-get($colors, gray-scale-8);
 
+    /* Text */
+    font-size: 0.8em;
+    text-align: left;
+
+    /* Children */
     span {
-      font-size: 1.2em;
+      /* Display */
       padding-left: 4px;
+
+      /* Text */
+      font-size: 1.2em;
     }
   }
-  .item-md {
-    padding-right: 16px;
-  }
+
   .user-button-container {
+    /* Children */
     button {
+      /* Display */
       display: block;
       margin: 5px auto;
     }

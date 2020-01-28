@@ -1,6 +1,8 @@
+/* Module imports */
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { Events, Tabs, Slides } from 'ionic-angular';
 
+/* Page imports */
 import { RecipePage } from '../recipe/recipe';
 import { UserPage } from '../user/user';
 import { HomePage } from '../home/home';
@@ -12,7 +14,6 @@ export class TabsPage implements OnInit, OnDestroy {
   @ViewChild('navTabs') navTabs: Tabs;
   @ViewChild(Slides) slides: Slides;
   currentIndex: number = 0;
-  _updateUser: any;
   _popHeaderNav: any;
   tabs = [
     { component: HomePage,   title: 'Home',    header: 'BrewIO',  icon: 'home'    },
@@ -21,9 +22,21 @@ export class TabsPage implements OnInit, OnDestroy {
   ];
 
   constructor(public events: Events) {
-    this._updateUser = this.updateUserEventHandler.bind(this);
     this._popHeaderNav = this.popHeaderNavEventHandler.bind(this);
   }
+
+  /***** Lifecycle hooks *****/
+
+  ngOnDestroy() {
+    this.events.unsubscribe('pop-header-nav', this._popHeaderNav);
+  }
+
+  ngOnInit() {
+    this.slides.lockSwipes(true);
+    this.events.subscribe('pop-header-nav', this._popHeaderNav);
+  }
+
+  /***** End lifecycle hooks *****/
 
   /**
    * Get tab title for header
@@ -38,6 +51,8 @@ export class TabsPage implements OnInit, OnDestroy {
    * 'pop-header-nav' event handler
    *
    * @params: data - if origin was a tab, update header with new tab
+   *
+   * @return: none
   **/
   popHeaderNavEventHandler(data: any): void {
     if (this.tabs.some(tab => tab.component.name === data.origin)) {
@@ -45,21 +60,12 @@ export class TabsPage implements OnInit, OnDestroy {
     }
   }
 
-  ngOnDestroy() {
-    this.events.unsubscribe('update-user', this._updateUser);
-    this.events.unsubscribe('pop-header-nav', this._popHeaderNav);
-  }
-
-  ngOnInit() {
-    this.slides.lockSwipes(true);
-    this.events.subscribe('update-user', this._updateUser);
-    this.events.subscribe('pop-header-nav', this._popHeaderNav);
-  }
-
   /**
    * Set tab index to slide to
    *
    * @params: index - tab index destination
+   *
+   * @return: none
   **/
   setIndex(index: number): void {
     this.slides.lockSwipes(false);
@@ -73,30 +79,26 @@ export class TabsPage implements OnInit, OnDestroy {
    * Set tab navigation
    *
    * @params: event - ionChange event
+   *
+   * @return: none
   **/
   tabNavigation(event: any): void {
     this.setIndex(event.index);
     this.updateHeader();
   }
 
-  // Publish nav event to header
+  /**
+   * Publish nav event to header
+   *
+   * @params: none
+   * @return: none
+  **/
   updateHeader(): void {
     this.events.publish('update-nav-header', {
       dest: this.tabs[this.currentIndex].title.toLowerCase(),
       destType: 'tab',
       destTitle: this.tabs[this.currentIndex].header
     });
-  }
-
-  /**
-   * 'update-user' event handler
-   *
-   * @params: data - set tab to home
-  **/
-  updateUserEventHandler(data: any): void {
-    if (!data) {
-      this.setIndex(0);
-    }
   }
 
 }
