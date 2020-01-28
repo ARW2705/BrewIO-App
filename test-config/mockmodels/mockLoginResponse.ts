@@ -1,5 +1,9 @@
-export const mockLoginResponse = {
-  success: true,
-  token: 'mockToken',
-  status: 'Successfully logged in'
+import { mockUser } from './mockUser';
+
+export const mockLoginResponse = () => {
+  const mock = {
+    success: true,
+    user: mockUser()
+  };
+  return mock;
 };
