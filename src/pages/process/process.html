@@ -4,22 +4,31 @@
 
     <ng-container *ngIf="recipe && selectedBatch">
 
+      <!-- MANUAL step -->
       <ion-row *ngIf="getViewStepType() == 'manual'">
+
+        <!-- Step name -->
         <ion-col col-12>
           <h2>{{ getViewStepName() }}</h2>
         </ion-col>
+
+        <!-- Step description -->
         <ion-col col-12>
           <p>{{ getViewStepDescription() }}<p>
         </ion-col>
       </ion-row>
 
+      <!-- TIMER step -->
       <ion-row *ngIf="getViewStepType() == 'timer'">
 
-      <ion-row  *ngIf="viewStepIndex == selectedBatch.currentStep"
-                id="timer-master-controls">
+        <!-- Central control for concurrent timers -->
+        <ion-row  *ngIf="viewStepIndex == selectedBatch.currentStep"
+                  id="timer-master-controls">
           <ion-col col-12>
             <h2>All Timer Controls</h2>
           </ion-col>
+
+          <!-- Start all timers in step -->
           <ion-col col-6>
             <button ion-button
                     color="primary"
@@ -28,6 +37,8 @@
               Start All
             </button>
           </ion-col>
+
+          <!-- Stop all timers in step -->
           <ion-col col-6>
             <button ion-button
                     color="primary"
@@ -36,6 +47,8 @@
               Stop All
             </button>
           </ion-col>
+
+          <!-- Add 1 minute to all timers in step -->
           <ion-col col-6>
             <button ion-button
                     color="primary"
@@ -44,6 +57,8 @@
               +1min All
             </button>
           </ion-col>
+
+          <!-- Reset all timers in step -->
           <ion-col col-6>
             <button ion-button
                     color="secondary"
@@ -52,6 +67,8 @@
               Reset All
             </button>
           </ion-col>
+
+          <!-- Toggle all timer descriptions in step -->
           <ion-col col-12>
             <button ion-button
                     class="button timer-button"
@@ -59,47 +76,70 @@
               {{ showDescription ? 'Hide Descriptions': 'Show Descriptions' }}
             </button>
           </ion-col>
+
         </ion-row>
 
+        <!-- Individual timers -->
         <ng-container *ngFor="let timer of timers[currentTimers]">
 
+          <!-- Timers that are not the current step -->
           <ion-row *ngIf="viewStepIndex != selectedBatch.currentStep" class="timer-summary-container">
+
+            <!-- Timer name -->
             <ion-col col-12>
               <h2>{{ timer.timer.name }}</h2>
             </ion-col>
+
+            <!-- Time duration -->
             <ion-col col-6>
               <span>Duration: {{ getFormattedDurationString(timer.timer.duration) }}</span>
             </ion-col>
+
+            <!-- Number of intervals -->
             <ion-col col-6>
               <span>Intervals: {{ timer.timer.splitInterval }}</span>
             </ion-col>
+
+            <!-- Timer description -->
             <ion-col col-12>
               <p>{{ timer.timer.description }}<p>
             </ion-col>
           </ion-row>
 
+          <!-- Timers that are on the current step -->
           <ng-container *ngIf="viewStepIndex == selectedBatch.currentStep">
 
             <ion-row class="timer-row">
+
+              <!-- Timer name -->
               <ion-col col-12>
                 <h2>{{ timer.timer.name }}</h2>
               </ion-col>
+
+              <!-- Timer description -->
               <ion-col col-12
                        *ngIf="showDescription"
                        class="description">
                 <p>{{ timer.timer.description }}</p>
               </ion-col>
+
             </ion-row>
 
             <ion-row align-items-center class="timer-row">
+
+              <!-- Timer progress circle -->
               <ion-col>
                 <progress-circle [settings]="timer.settings"
                                  (click)="toggleTimerControls(timer)">
                 </progress-circle>
               </ion-col>
+
+              <!-- Individual timer controls -->
               <ion-col *ngIf="isConcurrent && timer.show"
                        [@slideUpDown]
                        class="timer-individual-controls">
+
+                <!-- Start the individual timer -->
                 <ion-row>
                   <button ion-button
                           color="primary"
@@ -108,6 +148,8 @@
                     Start
                   </button>
                 </ion-row>
+
+                <!-- Stop the individual timer -->
                 <ion-row>
                   <button ion-button
                           color="primary"
@@ -116,6 +158,8 @@
                     Stop
                   </button>
                 </ion-row>
+
+                <!-- Add one minute to the individual timer -->
                 <ion-row>
                   <button ion-button
                           color="primary"
@@ -124,6 +168,8 @@
                     +1min
                   </button>
                 </ion-row>
+
+                <!-- Reset the individual timer -->
                 <ion-row>
                   <button ion-button
                           color="secondary"
@@ -132,6 +178,7 @@
                     Reset
                   </button>
                 </ion-row>
+
               </ion-col>
             </ion-row>
 
@@ -141,30 +188,47 @@
 
       </ion-row>
 
+      <!-- CALENDAR steps -->
       <ion-row *ngIf="getViewStepType() == 'calendar'">
+
+        <!-- Calendar step name -->
         <ion-col col-12>
+
+          <!-- Toggle step description visibility -->
           <button class="button expand-button"
                   (click)="toggleShowDescription()">
             <h2>{{ getViewStepName() }}</h2>
           </button>
         </ion-col>
+
+        <!-- Step description -->
         <ion-col  col-12
                   class="description"
                   *ngIf="viewStepIndex != selectedBatch.currentStep || showDescription">
           <p>{{ getViewStepDescription() }}</p>
         </ion-col>
 
+        <!-- If the calendar step has been started, show information about next part of step -->
         <ion-col  col-12
                   *ngIf="getViewStepType() == 'calendar' && calendarInProgress()">
+
+          <!-- Description of task to do at end date -->
           <p class="calendar-description">{{ getNextDateSummary() }}</p>
+
+          <!-- List of next dates in calendar for a particular step -->
           <ion-list class="alert-list">
             <h3>Next Checks</h3>
             <ion-item *ngFor="let alert of getCurrentStepCalendarAlerts()"
                        [ngClass]="getAlertClass(alert)">
+              <!-- Alert description -->
               <p class="alert-description">{{ alert.description || '' }}</p>
+
+              <!-- Alert date -->
               <p class="alert-datetime">{{ alert.datetime | date:'mediumDate' }}</p>
             </ion-item>
           </ion-list>
+
+          <!-- Edit the calendar step -->
           <button class="change-button"
                   ion-button
                   (click)="changeDate()">
@@ -172,11 +236,15 @@
           </button>
         </ion-col>
 
+        <!-- Show calendar if step has not been started -->
         <calendar #calendar *ngIf="viewStepIndex == selectedBatch.currentStep && !calendarInProgress()" [data]="getCurrentStepCalendarData()"></calendar>
       </ion-row>
 
+      <!-- Step view navigation controls -->
       <ion-row justify-content-between
                id="step-control-buttons">
+
+        <!-- View previous step if not at start -->
         <ion-col>
           <button ion-button
                   color="primary"
@@ -186,6 +254,8 @@
                       name="arrow-dropleft"></ion-icon>
           </button>
         </ion-col>
+
+        <!-- Complete the step button - only if on current step -->
         <ion-col *ngIf="viewStepIndex == selectedBatch.currentStep
                         && (getViewStepType() != 'calendar' || calendarInProgress())">
           <button ion-button
@@ -195,6 +265,8 @@
             Done
           </button>
         </ion-col>
+
+        <!-- Jump to current step - only if not on current step -->
         <ion-col *ngIf="viewStepIndex != selectedBatch.currentStep">
           <button ion-button
                   class="nav-process-button"
@@ -203,6 +275,8 @@
             Go To Active
           </button>
         </ion-col>
+
+        <!-- If on calendar step and has not already been started -->
         <ion-col *ngIf="viewStepIndex == selectedBatch.currentStep
                         && getViewStepType() == 'calendar'
                         && !calendarInProgress()">
@@ -213,6 +287,8 @@
             Start
           </button>
         </ion-col>
+
+        <!-- View next step if not at end -->
         <ion-col>
           <button ion-button
                   color="primary"

@@ -1,110 +1,189 @@
 page-process {
   #process-grid {
+    /* Display */
     padding-top: 56px;
   }
+
   #timer-master-controls {
-    text-align: center;
+    /* Display */
     background: map-get($colors, gray-scale-4);
     -webkit-box-shadow: inset 0 0 40px 20px map-get($colors, gray-scale-3);
     box-shadow: inset 0 0 40px 20px map-get($colors, gray-scale-3);
+
+    /* Text */
+    text-align: center;
+
+    /* Children */
     .timer-button {
       font-size: 1.3em;
     }
   }
+
   #step-control-buttons {
+    /* Children */
     ion-col {
+      /* Display */
       flex-grow: 0;
     }
+
     ion-icon {
+      /* Text */
       font-size: 2em;
     }
   }
-  .calendar-description {
+
+  .alert-datetime {
+    /* Display */
+    border-bottom: 1px solid map-get($colors, gray-scale-6);
+
+    /* Color */
+    color: map-get($colors, gray-scale-8);
+
+    /* Text */
+    font-size: 1.1em;
     text-align: center;
   }
-  .alert-list {
-    h3 {
-      text-align: center;
-    }
-    .item-inner {
-      border: none !important;
-    }
-  }
+
   .alert-description {
+    /* Color */
+    color: map-get($colors, gray-scale-8);
+
+    /* Text */
     white-space: normal;
     text-align: center;
-    color: map-get($colors, gray-scale-8);
   }
-  .alert-datetime {
-    font-size: 1.1em;
-    color: map-get($colors, gray-scale-8);
-    border-bottom: 1px solid map-get($colors, gray-scale-6);
+
+  .alert-list {
+    /* Children */
+    .item-inner {
+      /* Display */
+      border: none !important;
+    }
+
+    h3 {
+      /* Text */
+      text-align: center;
+    }
+  }
+
+  .calendar-description {
+    /* Text */
     text-align: center;
   }
+
+  .change-button {
+    /* Display */
+    display: block;
+    margin: 0.6rem auto;
+  }
+
+  .description {
+    /* Children */
+    p {
+      /* Display */
+      margin: 0 !important;
+
+      /* Text */
+      font-size: 1.5em;
+      text-align: center;
+    }
+  }
+
+  .expand-button {
+    /* Display */
+    width: 100%;
+    background: transparent;
+    /* Color */
+    color: map-get($colors, gray-scale-10);
+
+    /* Text */
+    font-size: 2em;
+
+    /* Children */
+    h2 {
+      /* Display */
+      margin: 0.5rem 0 0;
+    }
+  }
+
+  .nav-process-button {
+    /* Color */
+    color: map-get($colors, gray-scale-2);
+  }
+
   .next-datetime {
+    /* Children */
     ion-label {
+      /* Children */
       p:not(:first-child) {
+        /* Color */
         color: map-get($colors, secondary) !important;
       }
     }
   }
+
   .past-datetime {
+    /* Children */
     ion-label {
+      /* Children */
       p {
+        /* Color */
         color: map-get($colors, gray-scale-5);
       }
     }
   }
+
   .past-datetime:hover {
+    /* Children */
     ion-label {
+      /* Children */
       p {
+        /* Color */
         color: map-get($colors, gray-scale-8);
       }
     }
   }
-  .change-button {
-    display: block;
-    margin: 0.6rem auto;
-  }
+
   .row {
+    /* Display */
     justify-content: center;
   }
-  .timer-row {
+
+  .timer-button {
+    /* Display */
     width: 100%;
+
+    /* Color */
+    color: map-get($colors, gray-scale-2);
+
+    /* Text */
+    font-size: 1.1em;
+  }
+
+  .timer-individual-controls {
+    /* Display */
+    z-index: 1 !important;
+  }
+
+  .timer-row {
+    /* Display */
+    width: 100%;
+
+    /* Children */
     ion-col {
+      /* Display */
       z-index: 2;
+
+      /* Color */
       background-color: map-get($colors, gray-scale-2);
+
+      /* Children */
       h2 {
+        /* Text */
         font-size: 2em;
         text-align: center;
       }
     }
   }
-  .timer-button {
-    font-size: 1.1em;
-    width: 100%;
-    color: map-get($colors, gray-scale-2);
-  }
-  .expand-button {
-    width: 100%;
-    background: transparent;
-    font-size: 2em;
-    color: map-get($colors, gray-scale-10);
-    h2 {
-      margin: 0.5rem 0 0;
-    }
-  }
-  .description {
-    p {
-      font-size: 1.5em;
-      margin: 0 !important;
-      text-align: center;
-    }
-  }
-  .nav-process-button {
-    color: map-get($colors, gray-scale-2);
-  }
-  .timer-individual-controls {
-    z-index: 1 !important;
-  }
+
 }
