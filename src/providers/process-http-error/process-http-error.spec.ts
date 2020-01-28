@@ -1,13 +1,22 @@
+/* Module imports */
+import { TestBed, getTestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 
+/* Provider imports */
 import { ProcessHttpErrorProvider } from './process-http-error';
 
-let processHttpService: ProcessHttpErrorProvider;
+describe('Process HTTP Error Service', () => {
+  let injector: TestBed;
+  let processHttpService: ProcessHttpErrorProvider;
 
-describe('Process Http Error Service', () => {
-
-  beforeAll(() => {
-    processHttpService = new ProcessHttpErrorProvider();
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [
+        ProcessHttpErrorProvider
+      ]
+    });
+    injector = getTestBed();
+    processHttpService = injector.get(ProcessHttpErrorProvider);
   });
 
   test('should get 401 HttpErrorResponse', () => {
@@ -21,11 +30,12 @@ describe('Process Http Error Service', () => {
       }
     });
 
-    processHttpService.handleError(errorResponse).subscribe(
-      _ => { },
-      error => expect(error).toMatch('Not authorized')
-    );
-  });
+    processHttpService.handleError(errorResponse)
+      .subscribe(
+        _ => { },
+        error => expect(error).toMatch('Not authorized')
+      );
+  }); // end 'should get 401 HttpErrorResponse' test
 
   test('should get 500 HttpErrorResponse', () => {
     const errorResponse: HttpErrorResponse = new HttpErrorResponse({
@@ -36,11 +46,12 @@ describe('Process Http Error Service', () => {
       }
     });
 
-    processHttpService.handleError(errorResponse).subscribe(
-      _ => { },
-      error => expect(error).toMatch('<500> test 500 error: ')
-    );
-  });
+    processHttpService.handleError(errorResponse)
+      .subscribe(
+        _ => { },
+        error => expect(error).toMatch('<500> test 500 error')
+      );
+  }) // end 'should get 500 HttpErrorResponse' test
 
   test('should get ValidationError', () => {
     const errorResponse: HttpErrorResponse = new HttpErrorResponse({
@@ -52,11 +63,12 @@ describe('Process Http Error Service', () => {
       }
     });
 
-    processHttpService.handleError(errorResponse).subscribe(
-      _ => { },
-      error => expect(error).toMatch('<500> test validation error: a database validation error occurred')
-    );
-  });
+    processHttpService.handleError(errorResponse)
+      .subscribe(
+        _ => { },
+        error => expect(error).toMatch('<500> test validation error')
+      );
+  }); // end 'should get ValidationError' test
 
   test('should get 503 generic error with message', () => {
     const error = {
@@ -68,15 +80,16 @@ describe('Process Http Error Service', () => {
       _ => { },
       error => expect(error).toMatch('generic error message')
     );
-  });
+  }); // end 'should get 503 generic error with message' test
 
   test('should get 500 generic error', () => {
     const genericError = '500 Internal Server Error';
 
-    processHttpService.handleError(genericError).subscribe(
-      _ => { },
-      error => expect(error).toMatch(genericError)
-    );
-  });
+    processHttpService.handleError(genericError)
+      .subscribe(
+        _ => { },
+        error => expect(error).toMatch(genericError)
+      );
+  }); // end 'should get 500 generic error' test
 
-})
+});
