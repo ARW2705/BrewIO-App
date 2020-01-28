@@ -1,6 +1,8 @@
+/* Module imports */
 import { Injectable } from '@angular/core';
 import { ActionSheetController } from 'ionic-angular';
 
+/* Interface imports */
 import { ActionSheetButton } from '../../shared/interfaces/action-sheet-buttons';
 
 @Injectable()
@@ -42,6 +44,8 @@ export class ActionSheetProvider {
    * @params: title - action sheet title
    * @params: buttons - array of action sheet buttons
    * @params: [customClass] - css class to apply to action sheet
+   *
+   * @return: none
   **/
   openActionSheet(title: string, buttons: Array<ActionSheetButton>, customClass?: string): void {
     const actionSheet = this.actionCtrl.create({
