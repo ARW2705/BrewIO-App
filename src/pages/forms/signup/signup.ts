@@ -1,7 +1,9 @@
+/* Module imports */
 import { Component } from '@angular/core';
 import { NavController, NavParams, ViewController } from 'ionic-angular';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 
+/* Provider imports */
 import { FormValidatorProvider } from '../../../providers/form-validator/form-validator';
 import { UserProvider } from '../../../providers/user/user';
 import { ToastProvider } from '../../../providers/toast/toast';
@@ -23,6 +25,13 @@ export class SignupPage {
       this.initForm();
   }
 
+  /**
+   * Call ViewController dismiss method with no data
+   *
+   * @params: none
+   *
+   * @return: none
+  **/
   dismiss(): void {
     this.viewCtrl.dismiss();
   }
@@ -31,6 +40,8 @@ export class SignupPage {
    * Get all error messages for given control
    *
    * @params: control - the form control to check
+   *
+   * @return: array of error messages
   **/
   getFormErrors(control: string): Array<string> {
     const result = [];
@@ -44,6 +55,8 @@ export class SignupPage {
    * Check if given control is touched and has at least one error
    *
    * @params: control - the form control to check
+   *
+   * @return: true if a control is dirty and has at least one error present
   **/
   hasFormError(control: string): boolean {
     if (this.signupForm.controls[control].touched) {
@@ -56,6 +69,13 @@ export class SignupPage {
     return false;
   }
 
+  /**
+   * Create the form
+   *
+   * @params: none
+   *
+   * @return: none
+  **/
   initForm(): void {
     this.signupForm = this.formBuilder.group({
       username: ['', [Validators.minLength(6), Validators.maxLength(20), Validators.required]],
@@ -69,6 +89,12 @@ export class SignupPage {
     });
   }
 
+  /**
+   * Submit user signup form to user service, provide feedback on response
+   *
+   * @params: none
+   * @return: none
+  **/
   onSubmit(): void {
     this.userService.signUp(this.signupForm.value)
       .subscribe(
@@ -83,6 +109,12 @@ export class SignupPage {
       );
   }
 
+  /**
+   * Toggle whether password is in plain text or hidden
+   *
+   * @params: none
+   * @return: none
+  **/
   togglePasswordVisible(): void {
     this.showPassword = !this.showPassword;
   }

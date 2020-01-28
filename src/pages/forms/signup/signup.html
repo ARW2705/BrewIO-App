@@ -7,6 +7,7 @@
 <ion-content padding>
   <form [formGroup]="signupForm">
 
+    <!-- Username input -->
     <ion-item>
       <ion-label floating>Username</ion-label>
       <ion-input  type="text"
@@ -15,6 +16,8 @@
                   autocapitalize="off">
       </ion-input>
     </ion-item>
+
+    <!-- Username error message -->
     <ng-container *ngIf="hasFormError('username')">
       <div  *ngFor="let error of getFormErrors('username')"
             class="form-error"
@@ -22,6 +25,7 @@
       </div>
     </ng-container>
 
+    <!-- Password input -->
     <ion-item>
       <ion-label floating>Password</ion-label>
       <ion-input  type="{{ showPassword ? 'text': 'password' }}"
@@ -29,6 +33,8 @@
                   autocapitalize="off">
       </ion-input>
     </ion-item>
+
+    <!-- Password error message -->
     <ng-container *ngIf="hasFormError('password')">
       <div  *ngFor="let error of getFormErrors('password')"
             class="form-error"
@@ -36,6 +42,7 @@
       </div>
     </ng-container>
 
+    <!-- Password confirmation input -->
     <ion-item>
       <ion-label floating>Confirm Password</ion-label>
       <ion-input  type="{{ showPassword ? 'text': 'password' }}"
@@ -43,6 +50,8 @@
                   autocapitalize="off">
       </ion-input>
     </ion-item>
+
+    <!-- Password confirmation error message -->
     <ng-container *ngIf="hasFormError('passwordConfirmation')">
       <div  *ngFor="let error of getFormErrors('passwordConfirmation')"
             class="form-error"
@@ -50,11 +59,13 @@
       </div>
     </ng-container>
 
+    <!-- Checkbox to toggle showing password as plain text or hidden -->
     <ion-item class="item-checkbox">
       <ion-label>Show Password</ion-label>
       <ion-checkbox (ionChange)="togglePasswordVisible()"></ion-checkbox>
     </ion-item>
 
+    <!-- Email input -->
     <ion-item>
       <ion-label>Email</ion-label>
       <ion-input  type="text"
@@ -62,6 +73,8 @@
                   autocapitalize="off">
       </ion-input>
     </ion-item>
+
+    <!-- Email error message -->
     <ng-container *ngIf="hasFormError('email')">
       <div  *ngFor="let error of getFormErrors('email')"
             class="form-error"
@@ -69,12 +82,15 @@
       </div>
     </ng-container>
 
+    <!-- First name input -->
     <ion-item>
       <ion-label>First Name</ion-label>
       <ion-input  type="text"
                   formControlName="firstname">
       </ion-input>
     </ion-item>
+
+    <!-- First name error message -->
     <ng-container *ngIf="hasFormError('firstname')">
       <div  *ngFor="let error of getFormErrors('firstname')"
             class="form-error"
@@ -82,12 +98,15 @@
       </div>
     </ng-container>
 
+    <!-- Last name input -->
     <ion-item>
       <ion-label>Last Name</ion-label>
       <ion-input  type="text"
                   formControlName="lastname">
       </ion-input>
     </ion-item>
+
+    <!-- Last name error message -->
     <ng-container *ngIf="hasFormError('lastname')">
       <div  *ngFor="let error of getFormErrors('lastname')"
             class="form-error"
@@ -99,6 +118,8 @@
 
   <ion-grid>
     <ion-row>
+
+      <!-- Form cancel button -->
       <ion-col>
         <button ion-button
                 color="primary"
@@ -107,6 +128,8 @@
           Cancel
         </button>
       </ion-col>
+
+      <!-- Form submit button -->
       <ion-col>
         <button ion-button
                 color="primary"
@@ -116,6 +139,7 @@
           Sign Up
         </button>
       </ion-col>
+      
     </ion-row>
   </ion-grid>
 
