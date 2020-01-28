@@ -4,12 +4,14 @@
 
     <ng-container *ngIf="recipeMaster">
 
+      <!-- Recipe master style name -->
       <ion-row>
         <ion-col id="style-name">
           {{ recipeMaster.style.name }}
         </ion-col>
       </ion-row>
 
+      <!-- Open form to update recipe master button -->
       <ion-row>
         <button ion-button
                 class="form-button"
@@ -19,6 +21,7 @@
         </button>
       </ion-row>
 
+      <!-- Open form to create new recipe for master -->
       <ion-row>
         <button ion-button
                 class="form-button"
@@ -28,9 +31,12 @@
         </button>
       </ion-row>
 
+      <!-- Recipe master notes -->
       <ion-row *ngIf="recipeMaster.notes.length">
         <ion-col col-12
                  id="note-name">
+
+          <!-- Toggle recipe master notes visible button -->
           <button ion-button
                   class="form-button"
                   color="primary"
@@ -39,22 +45,33 @@
             <ion-icon [name]="showNotesIcon"></ion-icon>
           </button>
         </ion-col>
+
         <ion-col col-12>
           <accordion [expanded]="showNotes">
+
+            <!-- Recipe master notes list -->
             <ion-list id="note-list">
               <ng-container *ngFor="let note of recipeMaster.notes; index as i">
+
+                <!-- Toggle note full text visibility -->
                 <button class="expand-button note-button"
                         (click)="expandNote(i)">
                   • {{ note }}
                 </button>
+
+                <!-- Full note text -->
                 <accordion [expanded]="showExpandedNote(i)">
                   <p>{{ note }}</p>
+
                   <div class="note-buttons-container">
+                    <!-- Delete note button -->
                     <button ion-button
                             color="secondary"
                             (click)="deleteNote(i)">
                       Delete
                     </button>
+
+                    <!-- Open form to edit note button -->
                     <button ion-button
                             color="primary"
                             (click)="updateNote(i)">
@@ -62,8 +79,10 @@
                     </button>
                   </div>
                 </accordion>
+
               </ng-container>
             </ion-list>
+
           </accordion>
         </ion-col>
       </ion-row>
@@ -71,8 +90,11 @@
       <ion-row>
         <ion-list id="batch-list">
           <ng-container *ngFor="let recipe of recipeMaster.recipes; index as i">
+
+            <!-- Recipe variant list -->
             <ion-item-sliding #slidingItems>
 
+              <!-- Delete recipe variant button -->
               <ion-item-options side="left"
                                 *ngIf="recipeMaster.recipes.length > 1">
                 <button ion-button
@@ -84,26 +106,37 @@
                 </button>
               </ion-item-options>
 
+              <!-- Toggle recipe ingredient list button -->
               <button detail-none
                       class="expand-button"
                       (click)="expandRecipe(i)"
                       ion-item
                       lines="none">
+
+                <!-- Recipe variant quick info -->
                 <ion-grid no-padding>
                   <ion-row class="recipe-summary-header">
                     <ion-col>
                       {{ recipe.variantName | titlecase }}
+
+                      <!-- Star icon if variant is the master -->
                       <ion-icon *ngIf="recipe.isMaster"
                                 name="star"
                                 color="primary" ></ion-icon>
+
+                      <!-- Filled heart icon if variant is not the master, but is a favorite -->
                       <ion-icon *ngIf="!recipe.isMaster && recipe.isFavorite"
                                 name="heart"
                                 color="danger"></ion-icon>
+
+                      <!-- Outlined heart icon if variant is not the master or a favorite -->
                       <ion-icon *ngIf="!recipe.isMaster && !recipe.isFavorite"
                                 name="heart-outline"
                                 color="danger"></ion-icon>
                     </ion-col>
                   </ion-row>
+
+                  <!-- Recipe variant quick info -->
                   <ion-row class="recipe-summary-subheader">
                     <ion-col>
                       <p>
@@ -119,6 +152,8 @@
               </button>
 
               <ion-item-options side="right">
+
+                <!-- Toggle favorite if not the master -->
                 <button ion-button
                         color="heart"
                         *ngIf="!recipe.isMaster"
@@ -126,12 +161,16 @@
                   <ion-icon name="heart"></ion-icon>
                   Fav
                 </button>
+
+                <!-- Start a new brew session with this variant -->
                 <button ion-button
                         color="primary"
                         (click)="navToBrewProcess(recipe)">
                   <ion-icon name="beer"></ion-icon>
                   Brew
                 </button>
+
+                <!-- Open recipe form to edit -->
                 <button ion-button
                         color="secondary"
                         (click)="navToRecipeForm('recipe', recipe)">
@@ -141,10 +180,16 @@
               </ion-item-options>
 
             </ion-item-sliding>
+
             <accordion [expanded]="showExpandedRecipe(i)">
+
               <ion-card class="variant-card">
                 <ion-card-content>
+
+                  <!-- Recipe variant ingredients list -->
                   <ion-list>
+
+                    <!-- Grain bill -->
                     <ion-item-group *ngIf="recipe.grains">
                       <ion-item-divider color="primary" class="card-divider">
                         Grains
@@ -154,6 +199,8 @@
                         <span item-end>{{ grains.quantity }} lbs</span>
                       </ion-item>
                     </ion-item-group>
+
+                    <!-- Hops schedule -->
                     <ion-item-group *ngIf="recipe.hops.length">
                       <ion-item-divider color="primary" class="card-divider">
                         Hops
@@ -163,6 +210,8 @@
                         <span item-end>{{ hops.quantity }} oz</span>
                       </ion-item>
                     </ion-item-group>
+
+                    <!-- Yeast batch -->
                     <ion-item-group *ngIf="recipe.yeast.length">
                       <ion-item-divider color="primary" class="card-divider">
                         Yeast
@@ -172,6 +221,8 @@
                         <span item-end>{{ yeast.quantity }} pack</span>
                       </ion-item>
                     </ion-item-group>
+
+                    <!-- Other ingredients -->
                     <ion-item-group *ngIf="recipe.otherIngredients.length">
                       <ion-item-divider color="primary" class="card-divider">
                         Other Ingredients
@@ -182,10 +233,13 @@
                         <span>{{ other.description }}</span>
                       </ion-item>
                     </ion-item-group>
+
                   </ion-list>
                 </ion-card-content>
               </ion-card>
+
             </accordion>
+
           </ng-container>
         </ion-list>
       </ion-row>
