@@ -2,6 +2,9 @@
   <ion-navbar>
     <ion-grid no-padding>
       <ion-row>
+
+        <!-- Back button -->
+
         <ion-col  col-1
                   align-self-center
                   *ngIf="!isTabPage">
@@ -13,38 +16,51 @@
             </ion-icon>
           </button>
         </ion-col>
+
+        <!-- Header title -->
+
         <ion-col align-self-center>
           <ion-title>{{ title }}</ion-title>
         </ion-col>
+
+        <!-- Log In/Out -->
+
         <ion-col align-self-center>
+
           <button ion-button
                   float-right
                   class="header-button"
-                  *ngIf="!username"
+                  *ngIf="!user || !user.username"
                   (click)="openLogin()">
             <!-- Log In -->
             <ion-icon id="log-in-icon"
                       name="log-in">
             </ion-icon>
           </button>
+
           <button ion-button
                   float-right
                   class="header-button"
-                  *ngIf="username && isUserTab()"
+                  *ngIf="user && user.username && isUserTab()"
                   (click)="logout()">
             Log out
           </button>
-          <ion-row *ngIf="username && !isUserTab()">
+
+          <!-- Show username when logged in -->
+
+          <ion-row *ngIf="user && user.username && !isUserTab()">
             <ion-col col-12
                      class="login-header-text">
               Logged in as...
             </ion-col>
             <ion-col col-12
                      class="login-header-text">
-              {{ username }}
+              {{ user.username }}
             </ion-col>
           </ion-row>
+
         </ion-col>
+
       </ion-row>
     </ion-grid>
   </ion-navbar>
