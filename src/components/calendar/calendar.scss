@@ -1,71 +1,113 @@
 calendar {
   #calendar-card {
+    /* Display */
     background: map-get($colors, gray-scale-4) !important;
     -webkit-box-shadow: inset 0 0 40px 20px map-get($colors, gray-scale-3) !important;
     box-shadow: inset 0 0 40px 20px map-get($colors, gray-scale-3) !important;
   }
-  .day-header {
-    text-align: center;
-    border-bottom: 1px solid gray;
+
+  .active {
+    /* Display */
+    background-color: map-get($colors, secondary);
   }
-  .day {
+
+  .change-month-button {
+    /* Display */
+    background: none;
+    display: block;
+    margin: auto;
+    min-width: 40px;
+    min-height: 40px;
+
+    /* Text */
     text-align: center;
+    font-size: 1em;
+  }
+
+  .day {
+    /* Display */
     border-radius: 50%;
     width: 30px;
     height: 30px;
     min-height: 30px !important;
-    font-size: 1em;
+    margin: 0 auto;
+
+    /* Color */
     color: map-get($colors, gray-scale-10);
     background-color: map-get($colors, gray-scale-7);
-    margin: 0 auto;
+
+    /* Text */
+    text-align: center;
+    font-size: 1em;
   }
+
+  .day-header {
+    /* Display */
+    border-bottom: 1px solid gray;
+
+    /* Text */
+    text-align: center;
+  }
+
   .day-span,
   .day-button {
-    display: flex;
+    /* Position */
     justify-content: center;
     align-items: center;
+
+    /* Display */
+    display: flex;
   }
-  .change-month-button {
-    background: none;
-    text-align: center;
-    display: block;
-    margin: auto;
-    font-size: 1em;
-    min-width: 40px;
-    min-height: 40px;
-  }
+
   .header-month {
+    /* Color */
+    color: map-get($colors, gray-scale-9);
+
+    /* Text */
     text-align: center;
     font-size: 1.5em;
-    color: map-get($colors, gray-scale-9);
   }
-  .select-button {
-    color: map-get($colors, gray-scale-2);
-    width: 100%;
-    height: 100%;
-  }
-  .active {
-    background-color: map-get($colors, secondary);
-  }
-  .start {
-    button,
-    span {
-      color: map-get($colors, gray-scale-2);
-      background-color: map-get($colors, primary) !important;
-    }
-  }
-  .projected {
-    button,
-    span {
-      color: map-get($colors, gray-scale-2);
-      background-color: map-get($colors, secondary) !important;
-    }
-  }
+
   .month {
+    /* Children */
     button,
     span {
+      /* Color */
       color: map-get($colors, gray-scale-2);
       background-color: map-get($colors, gray-scale-9);
     }
+
   }
+
+  .projected {
+    /* Children */
+    button,
+    span {
+      /* Color */
+      color: map-get($colors, gray-scale-2);
+      background-color: map-get($colors, secondary) !important;
+    }
+
+  }
+
+  .select-button {
+    /* Display */
+    width: 100%;
+    height: 100%;
+
+    /* Color */
+    color: map-get($colors, gray-scale-2);
+  }
+
+  .start {
+    /* Children */
+    button,
+    span {
+      /* Color */
+      color: map-get($colors, gray-scale-2);
+      background-color: map-get($colors, primary) !important;
+    }
+
+  }
+
 }
