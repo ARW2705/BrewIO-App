@@ -6,6 +6,8 @@
 
 <ion-content padding>
   <ion-grid>
+
+    <!-- Form text area -->
     <ion-row id="form-container">
       <form>
         <ion-textarea id="textarea"
@@ -15,8 +17,11 @@
         </ion-textarea>
       </form>
     </ion-row>
+
     <div id="button-container">
       <ion-row>
+
+        <!-- Form cancel button -->
         <ion-col>
           <button ion-button
                   class="note-button"
@@ -25,6 +30,8 @@
             Cancel
           </button>
         </ion-col>
+
+        <!-- Form delete note button -->
         <ion-col *ngIf="formMethod == 'update'">
           <button ion-button
                   class="note-button"
@@ -34,6 +41,8 @@
           </button>
         </ion-col>
       </ion-row>
+
+      <!-- Form Submit button -->
       <ion-row>
         <ion-col>
           <button ion-button
@@ -44,6 +53,7 @@
           </button>
         </ion-col>
       </ion-row>
+      
     </div>
   </ion-grid>
 </ion-content>
