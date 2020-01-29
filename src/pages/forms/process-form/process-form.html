@@ -7,6 +7,8 @@
 <ion-content padding>
 
   <form [formGroup]="processForm">
+
+    <!-- Step name input -->
     <ion-item>
       <ion-label floating>Name</ion-label>
       <ion-input  type="text"
@@ -14,18 +16,24 @@
                   formControlName="name">
       </ion-input>
     </ion-item>
+
+    <!-- Step description text input -->
     <ion-item>
       <ion-label floating>Description</ion-label>
       <ion-textarea rows="3"
                     formControlName="description">
       </ion-textarea>
     </ion-item>
+
+    <!-- Expected duration input for manual steps -->
     <ion-item *ngIf="stepType == 'manual'">
       <ion-label floating>Expected Duration</ion-label>
       <ion-input  type="number"
                   formControlName="expectedDuration">
       </ion-input>
     </ion-item>
+
+    <!-- Duration input in minutes for timer steps and days for calendar steps -->
     <ng-container *ngIf="stepType != 'manual'">
       <ion-item>
         <ion-label floating>Duration {{ stepType == 'timer' ? '(Minutes)': '(Days)' }}</ion-label>
@@ -33,13 +41,18 @@
                     formControlName="duration">
         </ion-input>
       </ion-item>
+
       <ng-container *ngIf="stepType == 'timer'">
+
+        <!-- Toggle if timer should be split into n intervals -->
         <ion-item>
           <ion-label floating>Split Interval</ion-label>
           <ion-input  type="number"
                       formControlName="splitInterval">
           </ion-input>
         </ion-item>
+
+        <!-- Toggle if timer is concurrent with neighboring timers -->
         <ion-item>
           <ion-label position="floating">Concurrent</ion-label>
           <ion-toggle formControlName="concurrent"
@@ -51,6 +64,8 @@
 
     <ion-grid>
       <ion-row>
+
+        <!-- Form cancel button -->
         <ion-col>
           <button ion-button
                   color="primary"
@@ -59,6 +74,8 @@
             Cancel
           </button>
         </ion-col>
+
+        <!-- Form submit button -->
         <ion-col>
           <button ion-button
                   color="primary"
@@ -69,6 +86,8 @@
           </button>
         </ion-col>
       </ion-row>
+
+      <!-- Delete step button -->
       <ion-row *ngIf="formMode == 'update'">
         <ion-col>
           <button ion-button

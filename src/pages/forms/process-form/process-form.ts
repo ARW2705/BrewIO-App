@@ -1,3 +1,4 @@
+/* Module imports */
 import { Component } from '@angular/core';
 import { NavController, NavParams, ViewController } from 'ionic-angular';
 import { FormGroup, FormBuilder, FormControl, Validators } from '@angular/forms';
@@ -9,33 +10,49 @@ import { FormGroup, FormBuilder, FormControl, Validators } from '@angular/forms'
 export class ProcessFormPage {
   title: string = '';
   myDate = (new Date()).toISOString();
-  private stepType: string;
-  private processForm: FormGroup;
-  private formMode: string;
+  public stepType: string;
+  public processForm: FormGroup;
+  public formMode: string;
 
   constructor(public navCtrl: NavController,
     public navParams: NavParams,
-    private formBuilder: FormBuilder,
-    private viewCtrl: ViewController) {
+    public formBuilder: FormBuilder,
+    public viewCtrl: ViewController) {
       this.stepType = navParams.get('processType');
       this.formMode = navParams.get('formMode');
       this.title = `${this.formMode} ${this.stepType}`;
       this.initForm(navParams.get('update'));
   }
 
-  deleteStep() {
+  /**
+   * Call ViewController dismiss method with deletion flag
+   *
+   * @params: none
+   * @return: none
+  **/
+  deleteStep(): void {
     this.viewCtrl.dismiss({delete: true});
   }
 
-  dismiss() {
+  /**
+   * Call ViewController dismiss method with no data
+   *
+   * @params: none
+   * @return: none
+  **/
+  dismiss(): void {
     this.viewCtrl.dismiss();
   }
 
   /**
    * Initialize form base on process type
    * If data passed to form, map data to form fields
+   *
+   * @params: [data] - provided form field values to start with
+   *
+   * @return: none
   **/
-  initForm(data) {
+  initForm(data: any): void {
     this.processForm = this.formBuilder.group({
       type: this.stepType,
       name: ['', [Validators.minLength(2), Validators.maxLength(25), Validators.required]],
@@ -51,6 +68,7 @@ export class ProcessFormPage {
       }
       this.processForm.addControl('duration', new FormControl());
     }
+    // Populate form fields with provided data, if available
     if (data) {
       const control = this.processForm.controls;
       control.name.setValue(data.name);
@@ -67,7 +85,13 @@ export class ProcessFormPage {
     }
   }
 
-  onSubmit() {
+  /**
+   * Call ViewController dismiss with form data
+   *
+   * @params: none
+   * @return: none
+  **/
+  onSubmit(): void {
     if (this.formMode === 'create') {
       this.viewCtrl.dismiss(this.processForm.value);
     } else {
