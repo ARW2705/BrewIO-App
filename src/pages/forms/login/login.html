@@ -6,6 +6,8 @@
 
 <ion-content padding>
   <form [formGroup]="loginForm">
+
+    <!-- Username Input -->
     <ion-item>
       <ion-label floating>Username</ion-label>
       <ion-input  type="text"
@@ -15,6 +17,8 @@
                   autofocus>
       </ion-input>
     </ion-item>
+
+    <!-- Password Input -->
     <ion-item>
       <ion-label floating>Password</ion-label>
       <ion-input  type="{{ showPassword ? 'text': 'password' }}"
@@ -23,17 +27,24 @@
                   spellcheck="false">
       </ion-input>
     </ion-item>
+
+    <!-- Toggle display password in plain text -->
     <ion-item>
       <ion-label>Show Password</ion-label>
       <ion-checkbox (ionChange)="togglePasswordVisible()"></ion-checkbox>
     </ion-item>
+
+    <!-- Set to remember user in storage -->
     <ion-item>
       <ion-label>Remember Me</ion-label>
       <ion-checkbox formControlName="remember"></ion-checkbox>
     </ion-item>
   </form>
+
   <ion-grid>
     <ion-row>
+
+      <!-- Form cancel button -->
       <ion-col>
         <button ion-button
                 color="primary"
@@ -42,6 +53,8 @@
           Cancel
         </button>
       </ion-col>
+
+      <!-- Log in submit button -->
       <ion-col>
         <button ion-button
                 color="primary"
