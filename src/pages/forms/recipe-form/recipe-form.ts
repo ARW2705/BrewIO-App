@@ -617,8 +617,8 @@ export class RecipeFormPage implements AfterViewInit {
       if (formType === 'master') {
         if (mode === 'create') {
           this.title = 'Create Recipe';
-          this.master = clone(defaultRecipeMaster);
-          this.recipe = clone(defaultRecipeMaster.recipes[0]);
+          this.master = defaultRecipeMaster();
+          this.recipe = defaultRecipeMaster().recipes[0];
         } else {
           this.title = `Update ${master.name}`;
           this.master = master;
