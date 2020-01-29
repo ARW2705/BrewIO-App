@@ -1,5 +1,7 @@
+/* Module imports */
 import { Component, Input, ViewChild, OnChanges, SimpleChanges, ElementRef } from '@angular/core';
 
+/* Animation imports */
 import { slideUpDown } from '../../animations/slide';
 
 @Component({
@@ -19,7 +21,9 @@ export class AccordionComponent implements OnChanges {
     }
   };
 
-  constructor() { }
+  constructor() {}
+
+  /***** Lifecycle Hooks *****/
 
   ngOnChanges(changes: SimpleChanges) {
     const expansion = changes.expanded.currentValue;
@@ -30,5 +34,7 @@ export class AccordionComponent implements OnChanges {
       }
     };
   }
+
+  /***** End Lifecycle Hooks *****/
 
 }
