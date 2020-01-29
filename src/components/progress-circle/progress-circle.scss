@@ -1,13 +1,17 @@
 progress-circle {
-  .progress-circle-container {
-    svg {
-      display: block;
-      margin: 0 auto;
-    }
-  }
   .progress-circle {
+    /* Animation */
     transition: 0.35s stroke-dashoffset;
     transform: rotate(-90deg);
     transform-origin: 50% 50%;
+  }
+
+  .progress-circle-container {
+    /* Children */
+    svg {
+      /* Display */
+      display: block;
+      margin: 0 auto;
+    }
   }
 }

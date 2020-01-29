@@ -1,3 +1,4 @@
+/* Module Imports */
 import { Component, Input, ViewEncapsulation } from '@angular/core';
 
 @Component({
