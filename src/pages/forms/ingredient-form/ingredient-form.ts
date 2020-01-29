@@ -1,3 +1,4 @@
+/* Module imports */
 import { Component } from '@angular/core';
 import { ViewController, NavController, NavParams } from 'ionic-angular';
 import { FormGroup, FormControl, FormBuilder, Validators } from '@angular/forms';
@@ -32,19 +33,36 @@ export class IngredientFormPage {
       this.initForm(data);
   }
 
-  dismiss() {
+  /**
+   * Call ViewController dismiss method
+   *
+   * @params: none
+   * @return: none
+  **/
+  dismiss(): void {
     this.viewCtrl.dismiss();
   }
 
-  dismissOnError(error: any) {
+  /**
+   * Dismiss form with error message
+   *
+   * @params: error - error message
+   *
+   * @return: none
+  **/
+  dismissOnError(error: any): void {
     this.viewCtrl.dismiss({error: error});
   }
 
   /**
    * Initialize form based on ingredient type
    * If form data is passed to page, map data to form
+   *
+   * @params: data - ingredient context data
+   *
+   * @return: none
   **/
-  initForm(data: any) {
+  initForm(data: any): void {
     this.ingredientForm = this.formBuilder.group({
       type: ['', [Validators.required]],
       quantity: [null, [Validators.required]],
@@ -91,7 +109,23 @@ export class IngredientFormPage {
     }
   }
 
-  onSubmit() {
+  /**
+   * Dismiss with flag to delete the ingredient
+   *
+   * @params: none
+   * @return: none
+  **/
+  onDeletion(): void {
+    this.viewCtrl.dismiss({delete: true});
+  }
+
+  /**
+   * Format form data for result and dismiss with data
+   *
+   * @params: none
+   * @return: none
+  **/
+  onSubmit(): void {
     const result = this.ingredientForm.value;
     // convert generic ingredient type to named ingredient type
     if (this.ingredientType === 'grains') {
@@ -105,19 +139,22 @@ export class IngredientFormPage {
       delete result.type;
     }
     delete result.noteTextArea;
+    // TODO - share conversion with other forms
     if (result.quantity) result.quantity = this.toNumber('quantity');
     if (result.mill) result.mill = this.toNumber('mill');
     if (result.addAt) result.addAt = this.toNumber('addAt');
     this.viewCtrl.dismiss(result);
   }
 
-  // ion-input stores numbers as strings - must be submitted as numbers
+  /**
+   * ion-input stores numbers as strings - must be submitted as numbers
+   *
+   * @params: controlName - string of form control's name
+   *
+   * @return: the form's value as a number
+  **/
   toNumber(controlName: string): number {
     return parseFloat(this.ingredientForm.value[controlName]);
-  }
-
-  onDeletion() {
-    this.viewCtrl.dismiss({delete: true});
   }
 
 }

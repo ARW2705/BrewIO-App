@@ -10,6 +10,8 @@
 
     <form [formGroup]="ingredientForm">
 
+      <!-- Ingredient Type Choice Select -->
+
       <ion-row *ngIf="ingredientLibrary">
         <ion-col>
           <ion-item>
@@ -119,6 +121,7 @@
       </ion-row>
 
       <ion-row>
+        <!-- Form cancel button -->
         <ion-col>
           <button ion-button
                   class="form-button"
@@ -127,6 +130,8 @@
             Cancel
           </button>
         </ion-col>
+
+        <!-- Form submit button -->
         <ion-col>
           <button ion-button
                   class="form-button"
@@ -137,7 +142,8 @@
           </button>
         </ion-col>
       </ion-row>
-      
+
+      <!-- Form remove button -->
       <ion-row *ngIf="formType == 'update'">
         <ion-col>
           <button ion-button
