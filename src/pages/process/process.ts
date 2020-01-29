@@ -420,7 +420,7 @@ export class ProcessPage implements OnInit, OnDestroy {
     };
     this.processService.patchStepById(this.batchId, calendarValues._id, update)
       .subscribe(response => {
-        this.selectedBatch = response;
+        console.log(`Started calendar on ${(new Date(response.startDatetime)).toString()}`);
       });
   }
 
