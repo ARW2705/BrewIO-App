@@ -861,7 +861,7 @@ export class RecipeFormPage implements AfterViewInit {
    * @return: true if master style id has been changed from default
   **/
   isRecipeValid(): boolean {
-    return this.master.style._id !== defaultStyle._id;
+    return this.master.style._id !== defaultStyle()._id;
   }
 
   /**
