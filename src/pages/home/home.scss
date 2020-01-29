@@ -1,47 +1,78 @@
 page-home {
-  #home-img {
-    width: 100%;
-    max-height: 200px;
-  }
   #batch-list {
+    /* Display */
     width: 100%;
     margin: 0;
   }
-  #no-notifications {
-    text-align: center;
-  }
+
   #home-container {
+    /* Display */
     padding: 0;
     margin-bottom: 74px;
   }
+
+  #home-img {
+    /* Display */
+    width: 100%;
+    max-height: 200px;
+  }
+
+  #no-notifications {
+    /* Text */
+    text-align: center;
+  }
+
+  .active-batch-summary {
+    /* Text */
+    text-align: center;
+
+    /* Children */
+    ion-icon {
+      margin-right: 5px;
+    }
+  }
+
   .content {
+    /* Display */
     margin-top: 56px;
   }
+
   .messages-header {
+    /* Children */
     h3 {
+      /* Display */
       width: 100%;
+
+      /* Text */
       text-align: center;
     }
   }
-  .sliding-item {
-    border-bottom: 1px solid map-get($colors, gray-scale-6);
-  }
+
   .sliding-button {
+    /* Display */
     margin-top: 1px !important;
   }
+
+  .sliding-item {
+    /* Display */
+    border-bottom: 1px solid map-get($colors, gray-scale-6);
+  }
+
   .user-button-container {
+    /* Display */
     display: flex;
     justify-content: center;
+
+    /* Children */
     button {
+      /* Display */
       width: 100%;
-      font-size: 1.2em;
+
+      /* Color */
       color: map-get($colors, gray-scale-2);
-    }
-  }
-  .active-batch-summary {
-    text-align: center;
-    ion-icon {
-      margin-right: 5px;
+
+      /* Text */
+      font-size: 1.2em;
     }
   }
 }

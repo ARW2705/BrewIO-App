@@ -2,23 +2,28 @@
 
   <ion-grid id="home-container">
 
+    <!-- Main decoration image -->
     <ion-row>
       <img id="home-img"
            src="assets/imgs/beer-glass.jpg"
            alt="A glass of beer">
     </ion-row>
 
+    <!-- Welcome header -->
     <ion-row justify-content-center>
       <h2>Welcome {{ user == null ? 'to BrewIO': user.firstname ? user.firstname: user.username }}!</h2>
     </ion-row>
 
+    <!-- If user logged in -->
     <ng-container *ngIf="user">
+
+      <!-- List of active batches -->
       <ion-row class="messages-header">
         <h3>Active Batches</h3>
       </ion-row>
-
       <active-batches></active-batches>
 
+      <!-- TODO: implement notifications -->
       <ion-row class="messages-header">
         <h3>Notifications</h3>
       </ion-row>
@@ -31,8 +36,11 @@
       </ion-row>
     </ng-container>
 
+    <!-- If user not logged in -->
     <ng-container *ngIf="!user">
       <ion-row justify-content-around>
+
+        <!-- Open login modal button -->
         <ion-col col-4 class="user-button-container">
           <button ion-button
                   color="primary"
@@ -40,6 +48,8 @@
             Log In
           </button>
         </ion-col>
+
+        <!-- Open signup modal button -->
         <ion-col col-4 class="user-button-container">
           <button ion-button
                   color="primary"
