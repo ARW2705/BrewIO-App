@@ -1,26 +1,39 @@
 <ion-grid no-padding>
-  <ion-row *ngIf="user && activeBatches.length">
+
+  <ion-row *ngIf="user && isLoggedIn() && activeBatchesList.length">
+
     <ion-list id="batch-list">
-      <ng-container *ngFor="let batch of activeBatches">
+      <ng-container *ngFor="let batch of getArrayFromObservables(activeBatchesList)">
+
+        <!-- Active batches as sliding items -->
+
         <ion-item-sliding #slidingItems class="sliding-item">
 
           <ion-item class="active-batch-summary">
+
+            <!-- Left icon -->
+
             <ion-icon name="beer"
                       color="primary">
             </ion-icon>
+
+            <!-- Text information -->
+
             <div  fxFlex="grow"
                   fxLayout="column">
               <p>
-                {{ getRecipeName(batch) | titlecase }} • {{ getBatchName(batch) | titlecase }}
+                {{ getRecipeMasterName(batch) | titlecase }} • {{ getRecipeName(batch) | titlecase }}
               </p>
               <p>
-                Next Step: {{ getBatchNextStep(batch) | titlecase }}
+                Next Step: {{ getBatchCurrentStep(batch) | titlecase }}
               </p>
               <p>
                 Started on {{ getBatchStartDate(batch) | date:'EEEE, MMMM d' }}
               </p>
             </div>
           </ion-item>
+
+          <!-- slide out button to navigate to brew process -->
 
           <ion-item-options side="right">
             <button ion-button
@@ -33,13 +46,22 @@
           </ion-item-options>
 
         </ion-item-sliding>
+
       </ng-container>
     </ion-list>
+
   </ion-row>
-  <ion-row class="no-active-message" *ngIf="!user">
+
+  <!-- Not logged in warning -->
+
+  <ion-row class="no-active-message" *ngIf="!user || !isLoggedIn()">
     Must be logged in to view active batches
   </ion-row>
-  <ion-row class="no-active-message" *ngIf="user && !activeBatches.length">
+
+  <!-- Logged in, but no active batches present message -->
+
+  <ion-row class="no-active-message" *ngIf="isLoggedIn() && !activeBatchesList.length">
     No Active Batches
   </ion-row>
+
 </ion-grid>

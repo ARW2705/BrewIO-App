@@ -1,40 +1,64 @@
 active-batches {
   #batch-list {
+    /* Display */
     width: 100%;
     margin: 0;
   }
-  .no-active-message {
-    align-self: center;
-  }
+
   .active-batch-summary {
-    ion-label {
-      display: flex;
-      align-items: center;
-
-      div {
-        width: 100%;
-      }
-
-      ion-icon {
-        margin-right: 10px;
-        font-size: 1.5em;
-      }
-
-      p {
-        color: map-get($colors, gray-scale-8);
-        text-align: left;
-      }
-    }
+    /* Children */
     .item-inner {
+      /* Display */
       padding: 0 !important;
       margin-right: 16px !important;
       border-bottom: 2px solid map-get($colors, primary) !important;
     }
+
+    ion-label {
+      /* Position */
+      align-items: center;
+
+      /* Display */
+      display: flex;
+
+      /* Children */
+      div {
+        /* Display */
+        width: 100%;
+      }
+
+      ion-icon {
+        /* Display */
+        margin-right: 10px;
+
+        /* Text */
+        font-size: 1.5em;
+      }
+
+      p {
+        /* Color */
+        color: map-get($colors, gray-scale-8);
+
+        /* Text */
+        text-align: left;
+      }
+
+    }
+
   }
-  .sliding-item {
-    border-bottom: none !important;
+
+  .no-active-message {
+    /* Position */
+    align-self: center;
   }
+
   .sliding-button {
+    /* Display */
     margin-top: 1px !important;
+  }
+
+  .sliding-item {
+    /* Display */
+    border-bottom: none !important;
   }
 }
