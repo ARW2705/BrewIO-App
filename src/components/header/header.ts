@@ -1,6 +1,14 @@
+/* Module Imports */
 import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { ModalController, NavController, Events } from 'ionic-angular';
+import { Observable } from 'rxjs/Observable';
+import { Subject } from 'rxjs/Subject';
+import 'rxjs/add/operator/takeUntil';
 
+/* Interface Imports */
+import { User } from '../../shared/interfaces/user';
+
+/* Provider Imports */
 import { UserProvider } from '../../providers/user/user';
 import { ModalProvider } from '../../providers/modal/modal';
 
@@ -10,11 +18,12 @@ import { ModalProvider } from '../../providers/modal/modal';
 })
 export class HeaderComponent implements OnInit, OnDestroy {
   @Input() title: string;
+  destroy$: Subject<boolean> = new Subject<boolean>();
+  user$: Observable<User> = null;
+  user: User = null;
   isTabPage: boolean = true;
-  username: string = '';
   currentTab: string = '';
   navStack: Array<string> = [];
-  _updateUser: any;
   _headerNavUpdate: any;
 
   constructor(public modalCtrl: ModalController,
@@ -22,20 +31,52 @@ export class HeaderComponent implements OnInit, OnDestroy {
     public events: Events,
     public userService: UserProvider,
     public modalService: ModalProvider) {
+      this.user$ = this.userService.getUser();
       this._headerNavUpdate = this.headerNavUpdateEventHandler.bind(this);
-      this._updateUser = this.updateUserEventHandler.bind(this);
   }
 
-  // Header back button, publish event with nav destination
+  /***** Lifecycle Hooks *****/
+
+  ngOnDestroy() {
+    this.destroy$.next(true);
+    this.destroy$.unsubscribe();
+    this.events.unsubscribe('update-nav-header', this._headerNavUpdate);
+  }
+
+  ngOnInit() {
+    this.user$
+      .takeUntil(this.destroy$)
+      .subscribe(_user => {
+        console.log(_user);
+        this.user = _user;
+      });
+    this.events.subscribe('update-nav-header', this._headerNavUpdate);
+  }
+
+  /***** End lifecycle hooks *****/
+
+  /**
+   * Header back button, publish event with nav destination
+   *
+   * @params: none
+   * @return: none
+  **/
   goBack(): void {
+    console.log('calling header go back');
     this.events.publish('pop-header-nav', {
       origin: this.isTabPage ? '': this.navStack.pop()
     });
     this.isTabPage =  !this.navStack.length
-                    || this.navStack[this.navStack.length - 1] === 'tab';
+                      || this.navStack[this.navStack.length - 1] === 'tab';
   }
 
-  // Handle nav events - format header according to nav data
+  /**
+   * Handle nav events - format header according to nav data
+   *
+   * @params: data - additional context for header on nav events
+   *
+   * @return: none
+  **/
   headerNavUpdateEventHandler(data: any): void {
     if (data.origin) {
       // add previous page/tab to nav stack
@@ -60,33 +101,37 @@ export class HeaderComponent implements OnInit, OnDestroy {
       // if on process page and batch has been completed, automatically go back
       this.goBack();
     }
-    this.username = this.userService.getUsername();
   }
 
+  /**
+   * Check if on user tab
+   *
+   * @params: none
+   *
+   * @return: true if currently on user tab
+  **/
   isUserTab(): boolean {
     return this.currentTab === 'user';
   }
 
+  /**
+   * Call user log out
+   *
+   * @params: none
+   * @return: none
+  **/
   logout(): void {
     this.userService.logOut();
   }
 
-  ngOnDestroy() {
-    this.events.unsubscribe('update-nav-header', this._headerNavUpdate);
-    this.events.unsubscribe('update-user', this._updateUser);
-  }
-
-  ngOnInit() {
-    this.events.subscribe('update-nav-header', this._headerNavUpdate);
-    this.events.subscribe('update-user', this._updateUser);
-  }
-
+  /**
+   * Open login modal
+   *
+   * @params: none
+   * @return: none
+  **/
   openLogin(): void {
     this.modalService.openLogin();
-  }
-
-  updateUserEventHandler(data: any) {
-    this.username = data ? data.username: '';
   }
 
 }
