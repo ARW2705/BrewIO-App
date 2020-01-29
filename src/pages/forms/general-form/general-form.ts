@@ -1,7 +1,9 @@
+/* Module imports */
 import { Component } from '@angular/core';
 import { NavController, NavParams, ViewController } from 'ionic-angular';
 import { FormGroup, FormBuilder, FormControl, Validators } from '@angular/forms';
 
+/* Interface imports */
 import { Style } from '../../../shared/interfaces/library';
 
 @Component({
@@ -35,24 +37,49 @@ export class GeneralFormPage {
       this.initForm(navParams.get('data'));
   }
 
-  // ion-select comparison function - allows objects as values
-  compareWithFn(o1, o2) {
+  /**
+   * ion-select comparison function - allows objects as values
+   *
+   * @params: o1 - comparison object
+   * @params: o2 - comparison object
+   *
+   * @return: true if object ids match
+  **/
+  compareWithFn(o1: any, o2: any): boolean {
     return o1 && o2 ? o1._id === o2._id: o1 === o2;
   }
 
-  // ion-input stores numbers as strings - must be submitted as numbers
-  convertFormValuesToNumbers() {
+  /**
+   * ion-input stores numbers as strings - must be submitted as numbers
+   *
+   * @params: none
+   * @return: none
+  **/
+  convertFormValuesToNumbers(): void {
     this.controlsToConvert.forEach(key => {
       this.generalForm.controls[key].setValue(parseFloat(this.generalForm.value[key]));
     });
   }
 
+  /**
+   * Call ViewController dismiss method
+   *
+   * @params: none
+   * @return: none
+  **/
   dismiss() {
     this.viewCtrl.dismiss();
   }
 
-  // Initialize general form - apply current values passed to form if form is to be updated
-  initForm(data?: any) {
+  /**
+   * Initialize general form - apply current values passed to
+   * form if form is to be updated
+   *
+   * @params: [data] - initial values to populate form
+   *
+   * @return: none
+  **/
+  initForm(data?: any): void {
     this.generalForm = this.formBuilder.group({
       style: ['', [Validators.required]],
       brewingType: ['', [Validators.required]],
@@ -81,10 +108,24 @@ export class GeneralFormPage {
     }
   }
 
+  /**
+   * Update style selection on form selection
+   *
+   * @params: style - form select result event
+   *
+   * @return: none
+  **/
   onStyleSelection(style): void {
     this.styleSelection = style;
   }
 
+  /**
+   * Convert any numbers that are strings to their number types
+   * then call ViewController dimiss and pass the form values
+   *
+   * @params: none
+   * @return: none
+  **/
   onSubmit(): void {
     this.convertFormValuesToNumbers();
     this.viewCtrl.dismiss(this.generalForm.value);
