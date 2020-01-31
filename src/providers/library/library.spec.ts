@@ -1,15 +1,20 @@
+/* Module imports */
 import { TestBed, getTestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 
-import { LibraryProvider } from './library';
-import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
-
+/* Constant imports */
 import { baseURL } from '../../shared/constants/base-url';
 import { apiVersion } from '../../shared/constants/api-version';
+
+/* Mock imports */
 import { mockGrains } from '../../../test-config/mockmodels/mockGrains';
 import { mockHops } from '../../../test-config/mockmodels/mockHops';
 import { mockYeast } from '../../../test-config/mockmodels/mockYeast';
 import { mockStyles } from '../../../test-config/mockmodels/mockStyles';
+
+/* Provider imports */
+import { LibraryProvider } from './library';
+import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
 
 describe('Library service', () => {
   let injector: TestBed;
@@ -34,98 +39,108 @@ describe('Library service', () => {
   });
 
   describe('fetch Library entries', () => {
+    const _mockGrains = mockGrains();
 
     test('should return an Observable<Array<Grains>>', done => {
       libraryService.getGrainsLibrary().subscribe(grains => {
         expect(grains.length).toBe(3);
-        expect(grains).toEqual(mockGrains);
+        expect(grains).toEqual(_mockGrains);
         done();
       });
 
-      const req = httpMock.expectOne(`${baseURL}${apiVersion}/library/grains`);
+      const req = httpMock.expectOne(`${baseURL}/${apiVersion}/library/grains`);
       expect(req.request.method).toBe('GET');
-      req.flush(mockGrains);
-    });
+      req.flush(_mockGrains);
+    }); // end 'should return an Observable<Array<Grains>>' test
 
     test('should return an Observable<Array<Hops>>', done => {
+      const _mockHops = mockHops();
+
       libraryService.fetchHopsLibrary().subscribe(hops => {
         expect(hops.length).toBe(3);
-        expect(hops).toEqual(mockHops);
+        expect(hops).toEqual(_mockHops);
         done();
-      });
+      }); // end 'should return an Observable<Array<Hops>>' test
 
-      const req = httpMock.expectOne(`${baseURL}${apiVersion}/library/hops`);
+      const req = httpMock.expectOne(`${baseURL}/${apiVersion}/library/hops`);
       expect(req.request.method).toBe('GET');
-      req.flush(mockHops);
+      req.flush(_mockHops);
     });
 
     test('should return an Observable<Array<Yeast>>', done => {
+      const _mockYeast = mockYeast();
+
       libraryService.fetchYeastLibrary().subscribe(yeast => {
         expect(yeast.length).toBe(2);
-        expect(yeast).toEqual(mockYeast);
+        expect(yeast).toEqual(_mockYeast);
         done();
       });
 
-      const req = httpMock.expectOne(`${baseURL}${apiVersion}/library/yeast`);
+      const req = httpMock.expectOne(`${baseURL}/${apiVersion}/library/yeast`);
       expect(req.request.method).toBe('GET');
-      req.flush(mockYeast);
-    });
+      req.flush(_mockYeast);
+    }); // end 'should return an Observable<Array<Yeast>>' test
 
     test('should return an Observable<Array<Style>>', done => {
+      const _mockStyles = mockStyles();
+
       libraryService.fetchStyleLibrary().subscribe(styles => {
         expect(styles.length).toBe(4);
-        expect(styles).toEqual(mockStyles);
+        expect(styles).toEqual(_mockStyles);
         done();
       });
 
-      const req = httpMock.expectOne(`${baseURL}${apiVersion}/library/style`);
+      const req = httpMock.expectOne(`${baseURL}/${apiVersion}/library/style`);
       expect(req.request.method).toBe('GET');
-      req.flush(mockStyles);
-    });
+      req.flush(_mockStyles);
+    }); // end 'should return an Observable<Array<Style>>' test
 
-  });
+  }); // end 'fetch Library entries' section
 
   describe('fetch Library entries by id', () => {
 
     test('should return an Observable<Grains>', done => {
-      const _mockSelected = mockGrains[0];
+      const _mockGrains = mockGrains();
+      const _mockSelected = _mockGrains[0];
 
-      libraryService.getGrainsById('5ca285e8f7e5f91a1f31d775').subscribe(grains => {
+      libraryService.getGrainsById(_mockSelected._id).subscribe(grains => {
         expect(grains).toEqual(_mockSelected);
         done();
       });
 
-      const req = httpMock.expectOne(`${baseURL}${apiVersion}/library/grains`);
+      const req = httpMock.expectOne(`${baseURL}/${apiVersion}/library/grains`);
       expect(req.request.method).toBe('GET');
-      req.flush(mockGrains);
-    });
+      req.flush(_mockGrains);
+    }); // end 'should return an Observable<Grains>' test
 
     test('should return an Observable<Hops>', done => {
-      const _mockSelected = mockHops[0];
+      const _mockHops = mockHops();
+      const _mockSelected = _mockHops[0];
 
-      libraryService.getHopsById('5ca28662f7e5f91a1f31d835').subscribe(hops => {
+      libraryService.getHopsById(_mockSelected._id).subscribe(hops => {
         expect(hops).toEqual(_mockSelected);
         done();
       });
 
-      const req = httpMock.expectOne(`${baseURL}${apiVersion}/library/hops`);
+      const req = httpMock.expectOne(`${baseURL}/${apiVersion}/library/hops`);
       expect(req.request.method).toBe('GET');
-      req.flush(mockHops);
-    });
+      req.flush(_mockHops);
+    }); // end 'should return an Observable<Hops>' test
 
     test('should return an Observable<Yeast>', done => {
-      const _mockSelected = mockYeast[0];
+      const _mockYeast = mockYeast();
+      const _mockSelected = _mockYeast[0];
 
-      libraryService.getYeastById('5ca286b7f7e5f91a1f31d8af').subscribe(yeast => {
+      libraryService.getYeastById(_mockSelected._id).subscribe(yeast => {
         expect(yeast).toEqual(_mockSelected);
         done();
       });
 
-      const req = httpMock.expectOne(`${baseURL}${apiVersion}/library/yeast`);
+      const req = httpMock.expectOne(`${baseURL}/${apiVersion}/library/yeast`);
       expect(req.request.method).toBe('GET');
-      req.flush(mockYeast);
-    });
+      req.flush(_mockYeast);
+    }); // end 'should return an Observable<Yeast>' test
 
-  });
+  }); // end 'fetch Library entries by id' section
 
 });
