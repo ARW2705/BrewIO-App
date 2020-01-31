@@ -1,5 +1,7 @@
+/* Module imports */
 import { FormControl, FormGroup, ValidatorFn } from '@angular/forms';
 
+/* Provider imports */
 import { FormValidatorProvider } from './form-validator';
 
 let matchValidator: ValidatorFn;
@@ -20,7 +22,7 @@ describe('Custom form validator service', () => {
         'passwordConfirmation': new FormControl('abcDEF123!@#')
       });
       expect(matchValidator(formGroup)).toBe(null);
-    });
+    }); // end 'should match password and confirmation' test
 
     test('should fail matching: missing confirmation', () => {
       const formGroup = new FormGroup({
@@ -29,7 +31,7 @@ describe('Custom form validator service', () => {
       });
       matchValidator(formGroup);
       expect(formGroup.controls.passwordConfirmation.getError('required')).toBe(true);
-    });
+    }); // end 'should fail matching: missing confirmation' test
 
     test('should fail matching: mismatch', () => {
       const formGroup = new FormGroup({
@@ -38,9 +40,9 @@ describe('Custom form validator service', () => {
       });
       matchValidator(formGroup);
       expect(formGroup.controls.passwordConfirmation.getError('mismatch')).toBe(true);
-    });
+    }); // end 'should fail matching: mismatch' test
 
-  });
+  }); // end 'Validates password confimration' section
 
   describe('Validates password pattern', () => {
 
@@ -68,7 +70,7 @@ describe('Custom form validator service', () => {
       expect(patternValidator(new FormControl('abcDEF123456')).passwordInvalid).toBe(true);
     });
 
-  });
+  }); // end 'Validates password pattern' section
 
   describe('Gets validator error messages', () => {
 
@@ -128,6 +130,6 @@ describe('Custom form validator service', () => {
       expect(errorGetter('lastname', 'maxlength')).toMatch('Last name is limited to 25 characters');
     });
 
-  });
+  }); // end 'Gets validator error messages' section
 
 });
