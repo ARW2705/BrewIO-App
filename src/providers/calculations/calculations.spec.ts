@@ -1,180 +1,184 @@
-import { CalculationsProvider } from './calculations';
-import { Recipe } from '../../shared/interfaces/recipe';
-import { GrainBill } from '../../shared/interfaces/grain-bill';
-import { HopsSchedule } from '../../shared/interfaces/hops-schedule';
-import { YeastBatch } from '../../shared/interfaces/yeast-batch';
-import { clone } from '../../shared/utility-functions/utilities';
+/* Module imports */
+import { TestBed, getTestBed } from '@angular/core/testing';
+
+/* Mock imports */
 import { mockGrainBill } from '../../../test-config/mockmodels/mockGrainBill';
 import { mockHopsSchedule } from '../../../test-config/mockmodels/mockHopsSchedule';
 import { mockYeastGroup } from '../../../test-config/mockmodels/mockYeastGroup';
 import { mockRecipeComplete } from '../../../test-config/mockmodels/mockRecipeComplete';
 
-let calcService = null;
-let grainBill: Array<GrainBill> = mockGrainBill;
-let hopsSchedule: Array<HopsSchedule> = mockHopsSchedule;
-let yeastBatch: Array<YeastBatch> = mockYeastGroup;
-let completeRecipe: Recipe = clone(mockRecipeComplete);
-let incompleteRecipe: Recipe = clone(mockRecipeComplete);
+/* Provider imports */
+import { CalculationsProvider } from './calculations';
 
-beforeEach(() => {
-    calcService = new CalculationsProvider();
-});
 
 describe('Calculations service', () => {
+  let injector: TestBed;
+  let calculationService: CalculationsProvider;
 
-  describe('\nCalculates with provided values...', () => {
-
-    test('calcs ABV from og: 1.050 and fg: 1.010', () => {
-      expect(calcService.getABV(1.050, 1.010)).toEqual(5.339);
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [
+        CalculationsProvider
+      ]
     });
-
-    test('calcs SRM from MCU: 64.3', () => {
-      expect(calcService.getSRM(64.3)).toEqual(25.9);
-    });
-
-    test('calcs Boil Time Factor from boil time: 60 minutes', () => {
-      expect(calcService.getBoilTimeFactor(60)).toEqual(0.219104108);
-    });
-
-    test('calcs Boil Gravity from og: 1.050, batch volume: 5 gal, boil volue: 6 gal', () => {
-      expect(calcService.getBoilGravity(1.050, 5, 6)).toEqual(0.041666667);
-    });
-
-    test('calcs Bigness Factor from boil gravity: 0.041666667', () => {
-      expect(calcService.getBignessFactor(0.041666667)).toEqual(1.134632433);
-    });
-
-    test('calcs Utilization from bigness factor: 1.134632433 and boil time factor: 0.219104108', () => {
-      expect(calcService.getUtilization(1.134632433, 0.219104108)).toEqual(0.248602627);
-    });
-
-    test('calcs Original Gravity from gravity: 37 pps, quantity: 10 lbs, volume: 5 gal, efficiency: 70%', () => {
-      expect(calcService.getOriginalGravity(1.037, 10, 5, 0.7)).toEqual(1.052);
-    });
-
-    test('calcs Final Gravity from og: 1.050 and attenuation: 70%', () => {
-      expect(calcService.getFinalGravity(1.050, 70)).toEqual(1.015);
-    });
-
+    injector = getTestBed();
+    calculationService = injector.get(CalculationsProvider);
   });
+
+  describe('\nCalculates with provided values', () => {
+
+    test('calculates ABV from og: 1.050 and fg: 1.010', () => {
+      expect(calculationService.getABV(1.050, 1.010)).toEqual(5.339);
+    });
+
+    test('calculates SRM from MCU: 64.3', () => {
+      expect(calculationService.getSRM(64.3)).toEqual(25.9);
+    });
+
+    test('calculates Boil Time Factor from boil time: 60 minutes', () => {
+      expect(calculationService.getBoilTimeFactor(60)).toEqual(0.219104108);
+    });
+
+    test('calculates Boil Gravity from og: 1.050, batch volume: 5 gal, boil volue: 6 gal', () => {
+      expect(calculationService.getBoilGravity(1.050, 5, 6)).toEqual(0.041666667);
+    });
+
+    test('calculates Bigness Factor from boil gravity: 0.041666667', () => {
+      expect(calculationService.getBignessFactor(0.041666667)).toEqual(1.134632433);
+    });
+
+    test('calculates Utilization from bigness factor: 1.134632433 and boil time factor: 0.219104108', () => {
+      expect(calculationService.getUtilization(1.134632433, 0.219104108)).toEqual(0.248602627);
+    });
+
+    test('calculates Original Gravity from gravity: 37 pps, quantity: 10 lbs, volume: 5 gal, efficiency: 70%', () => {
+      expect(calculationService.getOriginalGravity(1.037, 10, 5, 0.7)).toEqual(1.052);
+    });
+
+    test('calculates Final Gravity from og: 1.050 and attenuation: 70%', () => {
+      expect(calculationService.getFinalGravity(1.050, 70)).toEqual(1.015);
+    });
+
+  }); // end 'Calculates with provided values' section
 
 
   describe('\nCalculates with provided ingredients', () => {
+    const _mockGrainBill = mockGrainBill();
+    const _mockHopsSchedule = mockHopsSchedule();
+    const _mockYeastGroup = mockYeastGroup();
 
-    test('calcs MCU from volume: 5 gal and provided GrainBill item', () => {
-      expect(calcService.getMCU(grainBill[0].grainType, grainBill[0], 5)).toEqual(3.6);
+    test('calculates MCU from volume: 5 gal and provided GrainBill item', () => {
+      expect(calculationService.getMCU(_mockGrainBill[0].grainType, _mockGrainBill[0], 5)).toEqual(3.6);
     });
 
-    test('calcs Original Gravity from batch volume: 5 gal, efficiency: 70, and provided Grain Bill', () => {
-      expect(calcService.calculateTotalOriginalGravity(5, 0.7, grainBill)).toEqual(1.065);
+    test('calculates Original Gravity from batch volume: 5 gal, efficiency: 70, and provided Grain Bill', () => {
+      expect(calculationService.calculateTotalOriginalGravity(5, 0.7, _mockGrainBill)).toEqual(1.065);
     })
 
-    test('calcs Total SRM from volume: 5 gal and provided Grain Bill', () => {
-      expect(calcService.calculateTotalSRM(grainBill, 5)).toEqual(19.6);
+    test('calculates Total SRM from volume: 5 gal and provided Grain Bill', () => {
+      expect(calculationService.calculateTotalSRM(_mockGrainBill, 5)).toEqual(19.6);
     });
 
-    test('calcs IBU from provided Hops Type, provided Hops Schedule item, og: 1.050, batch volume: 5 gal, boil volume: 6 gal', () => {
-      expect(calcService.getIBU(hopsSchedule[0].hopsType, hopsSchedule[0], 1.050, 5, 6)).toEqual(35.4);
+    test('calculates IBU from provided Hops Type, provided Hops Schedule item, og: 1.050, batch volume: 5 gal, boil volume: 6 gal', () => {
+      expect(calculationService.getIBU(_mockHopsSchedule[0].hopsType, _mockHopsSchedule[0], 1.050, 5, 6)).toEqual(35.4);
     });
 
-    test('calcs Total IBU from provided Hops Schedule, og: 1.050, batch volume: 5 gal, boil volume: 6 gal', () => {
-      expect(calcService.calculateTotalIBU(hopsSchedule, 1.050, 5, 6)).toEqual(43.4);
+    test('calculates Total IBU from provided Hops Schedule, og: 1.050, batch volume: 5 gal, boil volume: 6 gal', () => {
+      expect(calculationService.calculateTotalIBU(_mockHopsSchedule, 1.050, 5, 6)).toEqual(43.4);
     });
 
-    test('calcs Avg Attenutation from provided yeast group', () => {
-      expect(calcService.getAverageAttenuation(yeastBatch)).toEqual(74);
+    test('calculates Avg Attenutation from provided yeast group', () => {
+      expect(calculationService.getAverageAttenuation(_mockYeastGroup)).toEqual(74);
     });
 
-  });
+  }); // end 'Calculates with provided ingredients' section
 
 
   describe('\nCalculates with complete recipe', () => {
+    const _mockRecipeComplete = mockRecipeComplete();
 
     beforeAll(() => {
-      calcService.calculateRecipeValues(completeRecipe);
+      calculationService.calculateRecipeValues(_mockRecipeComplete);
     });
 
-    test('calcs Original Gravity from complete recipe', () => {
-      expect(completeRecipe.originalGravity).toEqual(1.065);
+    test('calculates Original Gravity from complete recipe', () => {
+      expect(_mockRecipeComplete.originalGravity).toEqual(1.065);
     });
 
-    test('calcs Final Gravity from complete recipe', () => {
-      expect(completeRecipe.finalGravity).toEqual(1.017);
+    test('calculates Final Gravity from complete recipe', () => {
+      expect(_mockRecipeComplete.finalGravity).toEqual(1.017);
     });
 
-    test('calcs Total IBU from complete recipe', () => {
-      expect(completeRecipe.IBU).toEqual(38.8);
+    test('calculates Total IBU from complete recipe', () => {
+      expect(_mockRecipeComplete.IBU).toEqual(38.8);
     });
 
-    test('calcs Total SRM from complete recipe', () => {
-      expect(completeRecipe.SRM).toEqual(19.6);
+    test('calculates Total SRM from complete recipe', () => {
+      expect(_mockRecipeComplete.SRM).toEqual(19.6);
     });
 
-    test('calcs ABV from complete recipe', () => {
-      expect(completeRecipe.ABV).toEqual(6.588);
+    test('calculates ABV from complete recipe', () => {
+      expect(_mockRecipeComplete.ABV).toEqual(6.588);
     });
 
-  });
+  }); // end 'Calculates with complete recipe' section
 
   describe('\nCalculates with incomplete recipe: no grains', () => {
-
-    const recipeWithoutGrains = clone(incompleteRecipe);
+    const _mockRecipeWithoutGrains = mockRecipeComplete();
 
     beforeAll(() => {
-      recipeWithoutGrains.grains = [];
-      calcService.calculateRecipeValues(recipeWithoutGrains);
+      _mockRecipeWithoutGrains.grains = [];
+      calculationService.calculateRecipeValues(_mockRecipeWithoutGrains);
     });
 
-    test('calcs ABV from recipe without grains', () => {
-      expect(recipeWithoutGrains.ABV).toEqual(0);
+    test('calculates ABV from recipe without grains', () => {
+      expect(_mockRecipeWithoutGrains.ABV).toEqual(0);
     });
 
-    test('calcs Original Gravity from recipe without grains', () => {
-      expect(recipeWithoutGrains.originalGravity).toEqual(1.000);
+    test('calculates Original Gravity from recipe without grains', () => {
+      expect(_mockRecipeWithoutGrains.originalGravity).toEqual(1.000);
     });
 
-    test('calcs Final Gravity from recipe without grains', () => {
-      expect(recipeWithoutGrains.originalGravity).toEqual(1.000);
+    test('calculates Final Gravity from recipe without grains', () => {
+      expect(_mockRecipeWithoutGrains.originalGravity).toEqual(1.000);
     });
 
-    test('calcs Total IBU from recipe without grains', () => {
-      expect(recipeWithoutGrains.IBU).toEqual(63.1);
+    test('calculates Total IBU from recipe without grains', () => {
+      expect(_mockRecipeWithoutGrains.IBU).toEqual(63.1);
     });
 
-    test('calcs Total SRM from recipe without grains', () => {
-      expect(recipeWithoutGrains.SRM).toEqual(0);
+    test('calculates Total SRM from recipe without grains', () => {
+      expect(_mockRecipeWithoutGrains.SRM).toEqual(0);
     });
 
-  });
+  }); // end 'Calculates with incomplete recipe: no grains' section
 
   describe('\nCalculates with incomplete recipe: no hops', () => {
-
-    const recipeWithoutHops = clone(incompleteRecipe);
+    const _mockRecipeWithoutHops = mockRecipeComplete();
 
     beforeAll(() => {
-      recipeWithoutHops.hops = [];
-      calcService.calculateRecipeValues(recipeWithoutHops);
+      _mockRecipeWithoutHops.hops = [];
+      calculationService.calculateRecipeValues(_mockRecipeWithoutHops);
     });
 
-    test('calcs Total IBU from recipe without hops', () => {
-      expect(recipeWithoutHops.IBU).toEqual(0);
+    test('calculates Total IBU from recipe without hops', () => {
+      expect(_mockRecipeWithoutHops.IBU).toEqual(0);
     });
 
-  });
+  }); // end 'Calculates with incomplete recipe: no hops' section
 
   describe('\nCalculates with incomplete recipe: no yeast', () => {
-
-    const recipeWithoutYeast = clone(incompleteRecipe);
+    const _mockRecipeWithoutYeast = mockRecipeComplete();
 
     beforeAll(() => {
-      recipeWithoutYeast.yeast = [];
-      calcService.calculateRecipeValues(recipeWithoutYeast);
+      _mockRecipeWithoutYeast.yeast = [];
+      calculationService.calculateRecipeValues(_mockRecipeWithoutYeast);
     });
 
-    test('calcs ABV from recipe without yeast - default attenuation 75', () => {
-      expect(recipeWithoutYeast.ABV).toEqual(6.719);
+    test('calculates ABV from recipe without yeast - default attenuation 75', () => {
+      expect(_mockRecipeWithoutYeast.ABV).toEqual(6.719);
     });
 
-  });
+  }); // end 'Calculates with incomplete recipe: no yeast' section
 
 });
