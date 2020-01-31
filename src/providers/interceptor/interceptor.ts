@@ -7,6 +7,7 @@ import 'rxjs/add/operator/do';
 /* Provider imports */
 import { UserProvider } from '../user/user';
 
+
 @Injectable()
 export class AuthorizedInterceptor implements HttpInterceptor {
 
