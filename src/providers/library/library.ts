@@ -28,17 +28,22 @@ export class LibraryProvider {
   /***** API access methods *****/
 
   /**
-   * Call server API get methods for each library type
+   * Call server API get methods for each library type to pre-load into
+   * memory, not to be used to return the observables
    *
    * @params: none
    *
    * @return: combined observable of all library requests
   **/
   fetchAllLibraries() {
-    this.fetchGrainsLibrary();
-    this.fetchHopsLibrary();
-    this.fetchYeastLibrary();
-    this.fetchStyleLibrary();
+    this.fetchGrainsLibrary()
+      .subscribe(() => {});
+    this.fetchHopsLibrary()
+      .subscribe(() => {});
+    this.fetchYeastLibrary()
+      .subscribe(() => {});
+    this.fetchStyleLibrary()
+      .subscribe(() => {});
   }
 
   /**
@@ -74,7 +79,7 @@ export class LibraryProvider {
    *
    * @return: observable of array of yeast
   **/
-  fetchYeastLibrary(): Observable<any> {
+  fetchYeastLibrary(): Observable<Array<Yeast>> {
     return this.http.get(`${baseURL}/${apiVersion}/library/yeast`)
       .map((yeast: Array<Yeast>) => this.yeastLibrary = yeast.sort(this.sortAlpha))
       .catch(error => this.processHttpError.handleError(error));
@@ -87,7 +92,7 @@ export class LibraryProvider {
    *
    * @return: observable of array of style
   **/
-  fetchStyleLibrary(): Observable<any> {
+  fetchStyleLibrary(): Observable<Array<Style>> {
     return this.http.get(`${baseURL}/${apiVersion}/library/style`)
       .map((style: Array<Style>) => this.styleLibrary = style.sort(this.sortAlpha))
       .catch(error => this.processHttpError.handleError(error));
@@ -221,9 +226,14 @@ export class LibraryProvider {
   }
 
   /**
-   * Comparator to sort alphabetically
+   * Comparator to sort object alphabetically
+   *
+   * @params: a - lefthand object
+   * @params: b - righthand object
+   *
+   * @return: -1 if lefthand should be first, 1 if righthand should be first, 0 if equal
   **/
-  private sortAlpha(a: any, b: any) {
+  sortAlpha(a: any, b: any): number {
     if (a.name < b.name) return -1;
     if (a.name > b.name) return 1;
     return 0;
