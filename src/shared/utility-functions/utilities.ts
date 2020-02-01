@@ -5,21 +5,52 @@ import { Observable } from 'rxjs';
 import { sharedProperties } from '../constants/shared-properties';
 
 /**
- * Deep copy an object
+ * Deep copy an object - use with objects whose values follow the types
+ *  Object, Array, string, number, boolean, or Date
  *
  * @params: obj - object to copy
- * @params: keepShared - true if sharedProperties should also be copied
  *
- * @return: copy of object
+ * @return: deep copied object
 **/
-export function clone(obj: any, keepShared: boolean = false): any {
-  const result = {};
-  for (const key in obj) {
-    if (obj.hasOwnProperty(key) && (keepShared || sharedProperties.indexOf(key) === -1)) {
-      result[key] = obj[key];
+export function clone(obj: any): any {
+  let newObj;
+
+  if (Array.isArray(obj)) {
+    newObj = [];
+    for (let item of obj) {
+      if (typeof item === 'object' && item !== null) {
+        newObj.push(clone(item));
+      } else {
+        newObj.push(item);
+      }
+    }
+  } else if (typeof obj === 'object' && obj !== null) {
+    newObj = {};
+    for (const key in obj) {
+      if (typeof obj[key] === 'object' && obj[key] !== null) {
+        newObj[key] = clone(obj[key]);
+      } else {
+        newObj[key] = obj[key];
+      }
     }
   }
-  return result;
+
+  return newObj;
+}
+
+/**
+ * Remove database specific shared properties from object
+ *
+ * @params: obj - object to modify
+ *
+ * @return: none
+**/
+export function stripSharedProperties(obj: any): void {
+  for (const key in obj) {
+    if (sharedProperties.includes(key)) {
+      delete obj[key];
+    }
+  }
 }
 
 /**
