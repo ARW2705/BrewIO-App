@@ -52,6 +52,23 @@ export const mockHopsSchedule = () => {
       addAt: 5,
       dryHop: false,
       notes: []
+    },
+    {
+      hopsType: {
+        "usedFor": [],
+        "alternatives": [],
+        "_id": "5ca28662f7e5f91a1f31d812",
+        "name": "Amarillo",
+        "alphaAcid": 9.5,
+        "type": "dual-purpose",
+        "description": "Popular American mid-range alpha acid variety with a unique and distinct aroma. It has a flowery, citrus like aroma; more orange than grapefruit. Specific aroma descriptors include grapefruit, orange, lemon, melon, apricot and peach.",
+        "createdAt": "2019-04-01T21:45:06.336Z",
+        "updatedAt": "2019-04-01T21:45:06.336Z"
+      },
+      quantity: 1,
+      addAt: 0,
+      dryHop: true,
+      notes: []
     }
   ];
   return mock;
