@@ -347,20 +347,14 @@ export class ProcessPage implements OnInit, OnDestroy {
   }
 
   /**
-   * Get array of alerts associated with current calendar step
+   * Only display alerts for the given step
    *
-   * @params: none
+   * @params: alert - Alert object to check
    *
-   * @return: alerts sorted in chronological order for the currently started calendar step
+   * @return: true if alert title equals the current step's name
   **/
-  getCurrentStepCalendarAlerts(): Array<Alert> {
-    const alerts = this.selectedBatch.alerts.filter(alert => {
-      return alert.title === this.selectedBatch.schedule[this.selectedBatch.currentStep].name;
-    });
-    alerts.sort((d1, d2) => {
-      return new Date(d1.datetime).getTime() - new Date(d2.datetime).getTime();
-    });
-    return alerts;
+  shouldShowAlert(alert: Alert): boolean {
+    return alert.title === this.selectedBatch.schedule[this.selectedBatch.currentStep].name;
   }
 
   /***** End Alerts *****/
@@ -419,8 +413,8 @@ export class ProcessPage implements OnInit, OnDestroy {
       alerts: calendarValues.alerts
     };
     this.processService.patchStepById(this.batchId, calendarValues._id, update)
-      .subscribe(response => {
-        console.log(`Started calendar on ${(new Date(response.startDatetime)).toString()}`);
+      .subscribe(() => {
+        console.log('Started calendar');
       });
   }
 

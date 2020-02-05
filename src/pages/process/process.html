@@ -218,14 +218,18 @@
           <!-- List of next dates in calendar for a particular step -->
           <ion-list class="alert-list">
             <h3>Next Checks</h3>
-            <ion-item *ngFor="let alert of getCurrentStepCalendarAlerts()"
-                       [ngClass]="getAlertClass(alert)">
-              <!-- Alert description -->
-              <p class="alert-description">{{ alert.description || '' }}</p>
+            <ng-container *ngFor="let alert of selectedBatch.alerts">
+              <ion-item *ngIf="shouldShowAlert(alert)"
+                        [ngClass]="getAlertClass(alert)">
 
-              <!-- Alert date -->
-              <p class="alert-datetime">{{ alert.datetime | date:'mediumDate' }}</p>
-            </ion-item>
+                <!-- Alert description -->
+                <p class="alert-description">{{ alert.description || '' }}</p>
+
+                <!-- Alert date -->
+                <p class="alert-datetime">{{ alert.datetime | date:'mediumDate' }}</p>
+
+              </ion-item>
+            </ng-container>
           </ion-list>
 
           <!-- Edit the calendar step -->
@@ -237,7 +241,10 @@
         </ion-col>
 
         <!-- Show calendar if step has not been started -->
-        <calendar #calendar *ngIf="viewStepIndex == selectedBatch.currentStep && !calendarInProgress()" [data]="getCurrentStepCalendarData()"></calendar>
+        <calendar #calendar
+                  *ngIf="viewStepIndex == selectedBatch.currentStep && !calendarInProgress()"
+                  [data]="getCurrentStepCalendarData()">
+        </calendar>
       </ion-row>
 
       <!-- Step view navigation controls -->
