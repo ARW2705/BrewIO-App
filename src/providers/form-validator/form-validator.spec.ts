@@ -4,11 +4,11 @@ import { FormControl, FormGroup, ValidatorFn } from '@angular/forms';
 /* Provider imports */
 import { FormValidatorProvider } from './form-validator';
 
-let matchValidator: ValidatorFn;
-let patternValidator: ValidatorFn;
-let errorGetter: any;
-
 describe('Custom form validator service', () => {
+
+  let matchValidator: ValidatorFn;
+  let patternValidator: ValidatorFn;
+  let errorGetter: any;
 
   describe('Validates password confimration', () => {
 

@@ -38,7 +38,7 @@ describe('HTTP Interceptor service', () => {
         RecipeProvider,
         ProcessHttpErrorProvider,
         HttpMock,
-        { provide: Storage, useValue: StorageMock },
+        { provide: Storage, useClass: StorageMock },
         { provide: HTTP_INTERCEPTORS, useClass: AuthorizedInterceptor, multi: true },
         { provide: HTTP_INTERCEPTORS, useClass: UnauthorizedInterceptor, multi: true}
       ]

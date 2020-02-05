@@ -348,7 +348,7 @@ describe('Recipe Service', () => {
 
       recipeService.recipeMasterList$.value[1]
         .skip(1)
-        .subscribe(recipeMaster => {
+        .subscribe(() => {
           expect(recipeService.recipeMasterList$.value[1].value.recipes.find(recipe => recipe._id === _mockRecipeComplete._id)).toBeUndefined();
           done();
         });

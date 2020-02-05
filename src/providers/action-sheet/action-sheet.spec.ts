@@ -1,9 +1,14 @@
+/* Module imports */
 import { TestBed, getTestBed } from '@angular/core/testing';
 import { ActionSheetController, App, Config, Platform } from 'ionic-angular';
 
-import { ActionSheetButton } from '../../shared/interfaces/action-sheet-buttons';
+/* Mock imports */
 import { mockActionSheetButtons } from '../../../test-config/mockmodels/mockActionSheetButtons';
 
+/* Interface imports */
+import { ActionSheetButton } from '../../shared/interfaces/action-sheet-buttons';
+
+/* Provider imports */
 import { ActionSheetProvider } from './action-sheet';
 
 describe('Action sheet provider', () => {
@@ -27,7 +32,7 @@ describe('Action sheet provider', () => {
   });
 
   test('should create action buttons', () => {
-    const buttons: Array<ActionSheetButton> = actionService.generateActionSheetButtons(mockActionSheetButtons);
+    const buttons: Array<ActionSheetButton> = actionService.generateActionSheetButtons(mockActionSheetButtons());
     expect(buttons[0].text).toMatch('Choice 1');
     expect(buttons[3].role).toMatch('cancel');
   });

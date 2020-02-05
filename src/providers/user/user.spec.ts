@@ -34,7 +34,7 @@ describe('User Service', () => {
       ],
       providers: [
         Events,
-        { provide: Storage, useValue: StorageMock },
+        { provide: Storage, useClass: StorageMock },
         UserProvider,
         ProcessProvider,
         RecipeProvider,
@@ -70,7 +70,7 @@ describe('User Service', () => {
     test('should log out', done => {
       userService.getUser()
         .skip(2)
-        .subscribe(user => {
+        .subscribe(() => {
           expect(userService.getToken()).toBeUndefined();
           done();
         });
