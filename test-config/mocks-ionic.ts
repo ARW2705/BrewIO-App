@@ -1,7 +1,6 @@
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { baseURL } from '../src/shared/constants/base-url';
@@ -120,7 +119,6 @@ export class DeepLinkerMock {
 
 }
 
-@Injectable()
 export class StorageMock {
   storage: any = {};
 
@@ -142,7 +140,6 @@ export class StorageMock {
   }
 }
 
-@Injectable()
 export class HttpMock {
   ROOT_URL: string = `${baseURL}/${apiVersion}`;
 
@@ -152,4 +149,30 @@ export class HttpMock {
     return this.http.get<any>(this.ROOT_URL + '/mock');
   }
 
+}
+
+export class ToastControllerMock {
+  _getPortal(): any { return {} };
+  create(options?: any) {
+    return new ToastMock();
+  }
+}
+
+class ToastMock {
+  present() { };
+  dismiss() { };
+  dismissAll() { };
+}
+
+export class ModalControllerMock {
+  _getPortal(): any { return {} };
+  create(options?: any) {
+    return new ModalMock();
+  }
+}
+
+class ModalMock {
+  present() { };
+  dismiss() { };
+  dismissAll() { };
 }
