@@ -13,9 +13,6 @@ import { apiVersion } from '../../shared/constants/api-version';
 import { Batch } from '../../shared/interfaces/batch';
 import { Process } from '../../shared/interfaces/process';
 
-/* Utility function imports */
-import { getIndexById } from '../../shared/utility-functions/utilities';
-
 /* Provider imports */
 import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
 
@@ -106,11 +103,11 @@ export class ProcessProvider {
    *
    * @return: observable of updated batch
   **/
-  patchStepById(batchId: string, stepId: string, stepUpdate: any): Observable<Process> {
+  patchStepById(batchId: string, stepId: string, stepUpdate: object): Observable<Process> {
     return this.http.patch(`${baseURL}/${apiVersion}/process/in-progress/${batchId}/step/${stepId}`, stepUpdate)
-      .map((updatedStepResponse: Process) => {
-        this.updateStepOfBatchInList(batchId, stepId, updatedStepResponse);
-        return updatedStepResponse;
+      .map((updatedBatchResponse: Batch) => {
+        this.updateBatchInList(updatedBatchResponse);
+        return updatedBatchResponse.schedule[updatedBatchResponse.currentStep];
       })
       .catch(error => this.processHttpError.handleError(error));
   }
@@ -208,7 +205,6 @@ export class ProcessProvider {
     const list = this.activeBatchList$.value;
     const toRemoveIndex = list.findIndex(batch$ => batch$.value._id === toRemove._id);
     if (toRemoveIndex !== -1) {
-      console.log('completed process');
       list[toRemoveIndex].complete();
       list.splice(toRemoveIndex, 1);
       this.activeBatchList$.next(list);
@@ -237,24 +233,6 @@ export class ProcessProvider {
     }
   }
 
-  /**
-   * Update a specific step in a batch, then update the batch subject
-   *
-   * @params: batchId - id of parent batch
-   * @params: stepId - step id to update
-   * @params: updatedProcess - updated process step
-   *
-   * @return: none
-  **/
-  updateStepOfBatchInList(batchId: string, stepId: string, updatedProcess: Process): void {
-    const list = this.activeBatchList$.value;
-    const batch$ = list.find(_batch$ => _batch$.value._id === batchId);
-    const batch = batch$.value;
-    const stepIndex = getIndexById(stepId, batch.schedule);
-    batch.schedule[stepIndex] = updatedProcess;
-    batch$.next(batch);
-  }
-
-    /***** End utility methods *****/
+  /***** End utility methods *****/
 
 }
