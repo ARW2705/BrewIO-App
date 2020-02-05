@@ -1,6 +1,6 @@
 <ion-content class="content">
 
-  <ion-grid id="batch-grid">
+  <ion-grid id="variant-grid">
 
     <ng-container *ngIf="recipeMaster">
 
@@ -27,7 +27,7 @@
                 class="form-button"
                 color="primary"
                 (click)="navToRecipeForm('recipe')">
-          Create New Batch
+          Create New Variant
         </button>
       </ion-row>
 
@@ -88,7 +88,7 @@
       </ion-row>
 
       <ion-row>
-        <ion-list id="batch-list">
+        <ion-list id="variant-list">
           <ng-container *ngFor="let recipe of recipeMaster.recipes; index as i">
 
             <!-- Recipe variant list -->
