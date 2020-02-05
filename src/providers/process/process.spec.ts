@@ -133,9 +133,9 @@ describe('Process Service', () => {
     test('should update a step of a batch', done => {
       const _mockBatch = mockBatch();
       const _updatedMockBatch = mockBatch();
-      const _updatedStep = mockProcessSchedule()[0];
+      const _updatedStep = mockProcessSchedule()[_mockBatch.currentStep];
       _updatedStep.name = 'new name';
-      _updatedMockBatch.schedule[0] = _updatedStep;
+      _updatedMockBatch.schedule[_mockBatch.currentStep] = _updatedStep;
 
       processService.activeBatchList$.next([
         new BehaviorSubject<Batch>(_mockBatch)
@@ -145,14 +145,14 @@ describe('Process Service', () => {
         processService.activeBatchList$.value[0],
         processService.patchStepById(_mockBatch._id, _updatedStep._id, _updatedStep)
       ).subscribe(([fromSubject, fromResponse]) => {
-        expect(fromSubject.schedule[0].name).toMatch(_updatedStep.name);
+        expect(fromSubject.schedule[_mockBatch.currentStep].name).toMatch(_updatedStep.name);
         expect(fromResponse.name).toMatch(_updatedStep.name);
         done();
       });
 
       const patchReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress/${_mockBatch._id}/step/${_updatedStep._id}`);
       expect(patchReq.request.method).toMatch('PATCH');
-      patchReq.flush(_updatedStep);
+      patchReq.flush(_updatedMockBatch);
     }); // end 'should update step of a batch' test
 
     test('should start a new batch', done => {
@@ -285,27 +285,6 @@ describe('Process Service', () => {
 
       processService.updateBatchInList(_updatedMockBatch);
     }); // end 'should update a batch in the list' test
-
-    test('should update a step of a batch in the list', done => {
-      const _mockBatch = mockBatch();
-      const _updatedStep = mockProcessSchedule()[0];
-      _updatedStep.name = 'new name';
-
-      processService.activeBatchList$.next([
-        new BehaviorSubject<Batch>(_mockBatch)
-      ]);
-
-      processService.activeBatchList$.value[0]
-        .skip(1)
-        .subscribe(batch => {
-          const step = batch.schedule.find(step => step._id === _updatedStep._id);
-          expect(step).not.toBeUndefined();
-          expect(step.name).toMatch(_updatedStep.name);
-          done();
-        });
-
-      processService.updateStepOfBatchInList(_mockBatch._id, _updatedStep._id, _updatedStep)
-    }); // end 'should update step of a batch in list' test
 
   }); // end 'Utility methods' section
 
