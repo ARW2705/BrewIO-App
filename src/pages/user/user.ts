@@ -1,6 +1,6 @@
 /* Module imports */
 import { Component, ViewChild, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
-import { NavController, TextInput, NavParams } from 'ionic-angular';
+import { NavController, TextInput } from 'ionic-angular';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
@@ -34,7 +34,6 @@ export class UserPage implements OnInit, OnDestroy {
   };
 
   constructor(public navCtrl: NavController,
-    public navParams: NavParams,
     public formBuilder: FormBuilder,
     public cdRef: ChangeDetectorRef,
     public userService: UserProvider,
@@ -54,7 +53,6 @@ export class UserPage implements OnInit, OnDestroy {
     this.user$
       .takeUntil(this.destroy$)
       .subscribe(user => {
-        console.log('user update in user', user);
         this.user = user;
         this.initForm(user);
       });
