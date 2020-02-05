@@ -25,7 +25,7 @@
         <form id="form" [formGroup]="userForm">
 
           <!-- Email field (not form) -->
-          <ion-item *ngIf="!isEditing('email')">
+          <ion-item *ngIf="!isEditing('email', undefined)">
 
             <!-- Toggle editing mode for email -->
             <button class="profile-field-button"
@@ -51,7 +51,7 @@
 
             <!-- Toggle editing mode for first name -->
             <button class="profile-field-button"
-                    (click)="changeEdit('firstname')">
+                    (click)="changeEdit('firstname', undefined)">
               First name: <span>{{ userForm.value.firstname }}</span>
             </button>
           </ion-item>
@@ -73,7 +73,7 @@
 
             <!-- Toggle editing mode for last name -->
             <button class="profile-field-button"
-                    (click)="changeEdit('lastname')">
+                    (click)="changeEdit('lastname', undefined)">
               Last name: <span>{{ userForm.value.lastname }}</span>
             </button>
           </ion-item>
