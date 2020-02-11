@@ -8,7 +8,6 @@ import 'rxjs/add/operator/takeUntil';
 /* Interface imports */
 import { RecipeMaster } from '../../shared/interfaces/recipe-master';
 import { Recipe } from '../../shared/interfaces/recipe';
-import { User } from '../../shared/interfaces/user';
 
 /* Utility function imports */
 import { getArrayFromObservables } from '../../shared/utility-functions/utilities';
@@ -29,8 +28,6 @@ import { ToastProvider } from '../../providers/toast/toast';
 })
 export class RecipePage implements OnInit, OnDestroy {
   @ViewChildren('slidingItems') slidingItems: QueryList<ItemSliding>;
-  user$: Observable<User> = null;
-  user: User = null;
   destroy$: Subject<boolean> = new Subject<boolean>();
   masterList$: Observable<Array<Observable<RecipeMaster>>> = null;
   masterList: Array<Observable<RecipeMaster>> = null;
@@ -46,7 +43,6 @@ export class RecipePage implements OnInit, OnDestroy {
     public userService: UserProvider,
     public recipeService: RecipeProvider,
     public toastService: ToastProvider) {
-      this.user$ = this.userService.getUser();
       this.masterList$ = this.recipeService.getMasterList();
   }
 
@@ -63,16 +59,9 @@ export class RecipePage implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.user$
-      .takeUntil(this.destroy$)
-        .subscribe(_user => {
-          this.user = _user;
-        });
-
     this.masterList$
       .takeUntil(this.destroy$)
       .subscribe(_masterList => {
-        console.log('got master list for recipe page');
         this.masterList = _masterList;
         this.mapMasterRecipes();
       });
@@ -120,13 +109,17 @@ export class RecipePage implements OnInit, OnDestroy {
    * @return: none
   **/
   navToDetails(index: number): void {
-    const recipeMaster = getArrayFromObservables(this.masterList)[index];
-    this.events.publish('update-nav-header', {
-      destType: 'page',
-      destTitle: recipeMaster.name,
-      origin: this.navCtrl.getActive().name
-    });
-    this.navCtrl.push(RecipeMasterDetailPage, { masterId: recipeMaster._id });
+    if (-1 < index && index < this.masterList.length) {
+      const recipeMaster = getArrayFromObservables(this.masterList)[index];
+      this.events.publish('update-nav-header', {
+        destType: 'page',
+        destTitle: recipeMaster.name,
+        origin: this.navCtrl.getActive().name
+      });
+      this.navCtrl.push(RecipeMasterDetailPage, { masterId: recipeMaster._id });
+    } else {
+      this.toastService.presentToast('Error: invalid Recipe Master list index', 2000);
+    }
   }
 
   /**
@@ -195,12 +188,13 @@ export class RecipePage implements OnInit, OnDestroy {
    * @return: none
   **/
   mapMasterRecipes(): void {
-    this.masterRecipeList = this.getArrayFromObservables(this.masterList).map(master => {
-      const selected = master.recipes.find(recipe => {
-        return recipe._id === master.master;
+    this.masterRecipeList = this.getArrayFromObservables(this.masterList)
+      .map(master => {
+        const selected = master.recipes.find(recipe => {
+          return recipe._id === master.master;
+        });
+        return selected === undefined ? master.recipes[0]: selected;
       });
-      return selected === undefined ? master.recipes[0]: selected;
-    });
   }
 
   /**
@@ -211,19 +205,14 @@ export class RecipePage implements OnInit, OnDestroy {
    * @return: none
   **/
   showExpandedMaster(index: number): boolean {
-    return index === this.masterIndex && getArrayFromObservables(this.masterList)[index].recipes.some(
-      recipe => recipe.processSchedule.length > 0
-    );
-  }
-
-  /**
-   * Toggle create mode flag
-   *
-   * @params: none
-   * @return: none
-  **/
-  toggleCreationMode() {
-    this.creationMode = !this.creationMode;
+    if (index > -1 && index < this.masterList.length) {
+      return index === this.masterIndex && getArrayFromObservables(this.masterList)[index].recipes
+        .some(
+          recipe => recipe.processSchedule.length > 0
+        );
+    } else {
+      return false;
+    }
   }
 
   /***** End other *****/
