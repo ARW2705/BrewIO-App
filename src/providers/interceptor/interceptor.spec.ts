@@ -21,10 +21,10 @@ import { ProcessHttpErrorProvider } from '../process-http-error/process-http-err
 
 
 describe('HTTP Interceptor service', () => {
-  let injector;
-  let httpMock;
-  let userService;
-  let mockHttpService;
+  let injector: TestBed;
+  let httpMock: HttpTestingController;
+  let userService: UserProvider;
+  let mockHttpService: HttpMock;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
