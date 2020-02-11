@@ -1,11 +1,11 @@
 <app-header [title]="getCurrentTitle()"></app-header>
 
-<ion-tabs #navTabs (ionChange)="tabNavigation($event)">
+<ion-tabs #navTabs (ionChange)="onTabNavigation($event)">
   <ion-slides>
     <ion-slide *ngFor="let tab of tabs">
-      <ion-tab  [root]=tab.component
-                [tabTitle]=tab.title
-                [tabIcon]=tab.icon>
+      <ion-tab  [root]     = tab.component
+                [tabTitle] = tab.title
+                [tabIcon]  = tab.icon>
       </ion-tab>
     </ion-slide>
   </ion-slides>

@@ -48,6 +48,18 @@ export class TabsPage implements OnInit, OnDestroy {
   }
 
   /**
+   * Set tab navigation
+   *
+   * @params: event - ionChange event
+   *
+   * @return: none
+  **/
+  onTabNavigation(event: any): void {
+    this.setIndex(event.index);
+    this.updateHeader();
+  }
+
+  /**
    * 'pop-header-nav' event handler
    *
    * @params: data - if origin was a tab, update header with new tab
@@ -73,18 +85,6 @@ export class TabsPage implements OnInit, OnDestroy {
     this.navTabs.select(index);
     this.slides.slideTo(index);
     this.slides.lockSwipes(true);
-  }
-
-  /**
-   * Set tab navigation
-   *
-   * @params: event - ionChange event
-   *
-   * @return: none
-  **/
-  tabNavigation(event: any): void {
-    this.setIndex(event.index);
-    this.updateHeader();
   }
 
   /**
