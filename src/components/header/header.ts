@@ -97,8 +97,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
     if (data.destTitle) {
       this.title = data.destTitle;
     }
-    if (data.other === 'batch-end') {
-      // if on process page and batch has been completed, automatically go back
+    if (data.other === 'batch-end' || data.other === 'form-submit-complete') {
+      // if on process page and batch has been completed,
+      // or a form submission has completed,
+      // automatically go back
       this.goBack();
     }
   }

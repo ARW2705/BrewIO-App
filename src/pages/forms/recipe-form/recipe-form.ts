@@ -13,7 +13,7 @@ import { defaultRecipeMaster } from '../../../shared/defaults/default-recipe-mas
 import { defaultStyle } from '../../../shared/defaults/default-style';
 
 /* Utility function imports */
-import { clone, toTitleCase } from '../../../shared/utility-functions/utilities';
+import { clone, toTitleCase, stripSharedProperties } from '../../../shared/utility-functions/utilities';
 
 /* Page imports */
 import { GeneralFormPage } from '../general-form/general-form';
@@ -65,7 +65,7 @@ export class RecipeFormPage implements AfterViewInit {
         navParams.get('mode'),
         navParams.get('masterData'),
         navParams.get('recipeData'),
-        navParams.get('other')
+        navParams.get('additionalData')
       );
       this.libraryService.getAllLibraries()
         .subscribe(([grainsLibrary, hopsLibrary, yeastLibrary, styleLibrary]) => {
@@ -599,7 +599,7 @@ export class RecipeFormPage implements AfterViewInit {
    * @params: mode - CRUD mode
    * @params: master - RecipeMaster instance
    * @params: recipe - Recipe instance
-   * @params: options - additional configuration object
+   * @params: additionalData - additional configuration object
    *
    * @return: none
   **/
@@ -608,10 +608,10 @@ export class RecipeFormPage implements AfterViewInit {
     mode: string,
     master: RecipeMaster,
     recipe: Recipe,
-    options: any
+    additionalData: any
   ): void {
       this.formType = formType;
-      this.formOptions = options;
+      this.formOptions = additionalData;
       this.mode = mode;
       this.docMethod = mode;
       if (formType === 'master') {
@@ -629,6 +629,7 @@ export class RecipeFormPage implements AfterViewInit {
           this.title = `Add Variant to ${master.name}`;
           this.master = master;
           this.recipe = clone(master.recipes.find(elem => elem.isMaster));
+          stripSharedProperties(this.recipe);
           this.recipe.variantName = '< Add Variant Name >';
         } else {
           this.title = `Update ${recipe.variantName}`;
@@ -652,18 +653,19 @@ export class RecipeFormPage implements AfterViewInit {
         .subscribe(
           () => {
             this.toastService.presentToast(message);
-            this.navCtrl.pop();
+            this.events.publish('update-nav-header', {other: 'form-submit-complete'});
           },
           error => {
             this.toastService.presentToast(error.error.error.message);
           }
         );
     } else if (this.formType === 'recipe') {
+      console.log(payload);
       this.recipeService.postRecipeToMasterById(this.master._id, payload)
         .subscribe(
           () => {
             this.toastService.presentToast(message);
-            this.navCtrl.pop();
+            this.events.publish('update-nav-header', {other: 'form-submit-complete'});
           },
           error => {
             this.toastService.presentToast(error.error.error.message);
@@ -686,7 +688,7 @@ export class RecipeFormPage implements AfterViewInit {
         .subscribe(
           () => {
             this.toastService.presentToast(message);
-            this.navCtrl.pop();
+            this.events.publish('update-nav-header', {other: 'form-submit-complete'});
           },
           error => {
             this.toastService.presentToast(error.error.error.message);
@@ -697,7 +699,7 @@ export class RecipeFormPage implements AfterViewInit {
         .subscribe(
           () => {
             this.toastService.presentToast(message);
-            this.navCtrl.pop();
+            this.events.publish('update-nav-header', {other: 'form-submit-complete'});
           },
           error => {
             this.toastService.presentToast(error.error.error.message);
