@@ -283,7 +283,9 @@ export class RecipeProvider {
    * @return: true if at least one process is in the schedule
   **/
   isRecipeProcessPresent(recipe: Recipe): boolean {
-    return recipe.processSchedule.length > 0;
+    return  recipe
+            ? recipe.processSchedule.length > 0
+            : false;
   }
 
   /**
