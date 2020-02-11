@@ -8,9 +8,6 @@ import { Subject } from 'rxjs/Subject';
 import { RecipeMaster } from '../../shared/interfaces/recipe-master';
 import { Recipe } from '../../shared/interfaces/recipe';
 
-/* Utility function imports */
-import { getArrayFromObservables } from '../../shared/utility-functions/utilities';
-
 /* Page imports */
 import { RecipeFormPage } from '../forms/recipe-form/recipe-form';
 import { ProcessPage } from '../process/process';
@@ -18,6 +15,7 @@ import { ProcessPage } from '../process/process';
 /* Provider imports */
 import { RecipeProvider } from '../../providers/recipe/recipe';
 import { ToastProvider } from '../../providers/toast/toast';
+
 
 @Component({
   selector: 'page-recipe-master-detail',
@@ -27,8 +25,8 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
   @ViewChildren('slidingItems') slidingItems: QueryList<ItemSliding>;
   recipeMasterId: string = null;
   recipeMaster: RecipeMaster = null;
+  recipeMaster$: Observable<RecipeMaster> = null;
   destroy$: Subject<boolean> = new Subject<boolean>();
-  masterList$: Observable<Array<Observable<RecipeMaster>>> = null;
   hasActiveBatch: boolean = false;
   recipeIndex: number = -1;
   noteIndex: number = -1;
@@ -43,7 +41,7 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
     public recipeService: RecipeProvider,
     public toastService: ToastProvider) {
       this.recipeMasterId = this.navParams.get('masterId');
-      this.masterList$ = this.recipeService.getMasterList();
+      this.recipeMaster$ = this.recipeService.getMasterById(this.recipeMasterId);
       this._headerNavPop = this.headerNavPopEventHandler.bind(this);
   }
 
@@ -61,12 +59,10 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.masterList$
+    this.recipeMaster$
       .takeUntil(this.destroy$)
-      .subscribe(_masterList => {
-        this.recipeMaster = getArrayFromObservables(_masterList).find(_master => {
-          return _master._id == this.recipeMasterId;
-        });
+      .subscribe(recipeMaster => {
+        this.recipeMaster = recipeMaster;
       });
     this.events.subscribe('pop-header-nav', this._headerNavPop);
   }
@@ -87,6 +83,7 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
     if (data.origin === 'RecipePage') {
       this.navCtrl.pop();
     } else if (data.origin === 'RecipeMasterDetailPage') {
+      // update header title with current recipeMaster name
       this.events.publish('update-nav-header', {destTitle: this.recipeMaster.name});
     }
   }
@@ -121,14 +118,14 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
    *
    * @params: formType - either 'master' for RecipeMaster or 'recipe' for Recipe
    * @params: recipe - recipe to update
-   * @params: other - additional form configuration data
+   * @params: additionalData - additional form configuration data
    *
    * @return: none
   **/
-  navToRecipeForm(formType: string, recipe?: Recipe, other?: any): void {
+  navToRecipeForm(formType: string, recipe?: Recipe, additionalData?: any): void {
     const options = {
       formType: formType,
-      other: other
+      additionalData: additionalData
     };
     let title;
     if (formType === 'master') {
@@ -261,7 +258,8 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
   /**
    * Select recipe variant to expand
    *
-   * @params: index - index for variant to expand
+   * @params: index - index for variant to expand, if index matches recipeIndex,
+   *  set recipeIndex to -1 instead
    *
    * @return: none
   **/
