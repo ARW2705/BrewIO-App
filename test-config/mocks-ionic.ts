@@ -1,3 +1,4 @@
+import { Injectable } from '@angular/core';
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 import { HttpClient } from '@angular/common/http';
@@ -99,9 +100,10 @@ export class NavMock {
 
   public getActive(): any {
     return {
-      'instance': {
-        'model': 'something',
+      instance: {
+        model: 'something',
       },
+      name: 'mock-active-name'
     };
   }
 
@@ -115,9 +117,20 @@ export class NavMock {
 
 }
 
-export class DeepLinkerMock {
-
+export class NavParamsMock {
+  static returnParam = {};
+  public get(key): any {
+    if (Object.keys(NavParamsMock.returnParam).length > 0) {
+      return NavParamsMock.returnParam[key];
+    }
+    return 'default';
+  }
+  static setParams(key, val){
+    NavParamsMock.returnParam[key] = val;
+  }
 }
+
+export class DeepLinkerMock { }
 
 export class StorageMock {
   storage: any = {};
@@ -140,6 +153,7 @@ export class StorageMock {
   }
 }
 
+@Injectable()
 export class HttpMock {
   ROOT_URL: string = `${baseURL}/${apiVersion}`;
 
@@ -152,8 +166,11 @@ export class HttpMock {
 }
 
 export class ToastControllerMock {
-  _getPortal(): any { return {} };
-  create(options?: any) {
+  public _getPortal(): any {
+    return {}
+  };
+
+  public create(options?: any) {
     return new ToastMock();
   }
 }
@@ -165,14 +182,41 @@ class ToastMock {
 }
 
 export class ModalControllerMock {
-  _getPortal(): any { return {} };
-  create(options?: any) {
+  public _getPortal(): any {
+    return {}
+  };
+
+  public create(options?: any) {
     return new ModalMock();
   }
 }
 
 class ModalMock {
-  present() { };
+  present(options?: any) { };
   dismiss() { };
   dismissAll() { };
 }
+
+export class ActionSheetControllerMock {
+  public _getPortal(): any {
+    return {}
+  };
+
+  public create(options?: any) {
+    return new ActionSheetMock();
+  }
+}
+
+class ActionSheetMock {
+  public present() { };
+  public dismiss() { };
+  public dismissAll() { };
+}
+
+export class RecipeMock { }
+
+export class UserMock { }
+
+export class ProcessMock { }
+
+export class ProcessHttpErrorMock { }
