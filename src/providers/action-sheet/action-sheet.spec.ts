@@ -1,9 +1,10 @@
 /* Module imports */
 import { TestBed, getTestBed } from '@angular/core/testing';
-import { ActionSheetController, App, Config, Platform } from 'ionic-angular';
+import { ActionSheetController } from 'ionic-angular';
 
 /* Mock imports */
 import { mockActionSheetButtons } from '../../../test-config/mockmodels/mockActionSheetButtons';
+import { ActionSheetControllerMock } from '../../../test-config/mocks-ionic';
 
 /* Interface imports */
 import { ActionSheetButton } from '../../shared/interfaces/action-sheet-buttons';
@@ -19,11 +20,8 @@ describe('Action sheet provider', () => {
     TestBed.configureTestingModule({
       imports: [],
       providers: [
-        App,
-        Config,
-        Platform,
-        ActionSheetController,
-        ActionSheetProvider
+        ActionSheetProvider,
+        { provide: ActionSheetController, useClass: ActionSheetControllerMock }
       ]
     });
 
