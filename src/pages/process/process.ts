@@ -159,7 +159,7 @@ export class ProcessPage implements OnInit, OnDestroy {
   changeStep(direction: string): void {
     const nextIndex = this.getStep(false, direction);
     if (nextIndex !== -1) {
-      this.getViewTimers(nextIndex);
+      this.setViewTimers(nextIndex);
       this.viewStepIndex = nextIndex;
     }
   }
@@ -177,7 +177,7 @@ export class ProcessPage implements OnInit, OnDestroy {
     const nextIndex = this.getStep(true);
     const isFinished = nextIndex === -1;
     if (!isFinished && this.selectedBatch.schedule[this.selectedBatch.currentStep + 1].type === 'timer') {
-      this.getViewTimers(nextIndex);
+      this.setViewTimers(nextIndex);
     }
     this.processService.incrementCurrentStep(this.batchId)
       .subscribe(() => {
@@ -208,9 +208,10 @@ export class ProcessPage implements OnInit, OnDestroy {
       const hours = Math.floor(duration / 60);
       result += `${hours} hour${hours > 1 ? 's': ''}`;
       duration = duration % 60;
+      result += (duration) ? ' ': '';
     }
     if (duration) {
-      result += ` ${duration} minutes`;
+      result += `${duration} minute${duration > 1 ? 's': ''}`;
     }
     return result;
   }
@@ -301,9 +302,14 @@ export class ProcessPage implements OnInit, OnDestroy {
     return `${this.selectedBatch.schedule[this.viewStepIndex].type}`;
   }
 
-  // Change view index to the currently active step
+  /**
+   * Change view index to the currently active step
+   *
+   * @params: none
+   * @return: none
+  **/
   goToActiveStep(): void {
-    this.getViewTimers(this.selectedBatch.currentStep);
+    this.setViewTimers(this.selectedBatch.currentStep);
     this.viewStepIndex = this.selectedBatch.currentStep;
   }
 
@@ -328,11 +334,11 @@ export class ProcessPage implements OnInit, OnDestroy {
   }
 
   /**
-   * Get alerts for a particular step and sort in chronological order
+   * Get alert for a particular step that is closest to the present datetime
    *
    * @params: alert - an alert instance, use to find all alerts with the same title
    *
-   * @return: array of alerts with the same title and in ascending chronological order
+   * @return: alert that is closest to the current datetime
   **/
   getClosestAlertByGroup(alert: Alert): Alert {
     const alerts = this.selectedBatch.alerts.filter(item => {
@@ -374,9 +380,14 @@ export class ProcessPage implements OnInit, OnDestroy {
             && this.selectedBatch.schedule[this.selectedBatch.currentStep].hasOwnProperty('startDatetime');
   }
 
-  // Delete the started calendar values - triggers calendar view to choose dates
+  /**
+   * Delete the started calendar values - triggers calendar view to choose dates
+   *
+   * @params: none
+   * @return: none
+  **/
   changeDate(): void {
-    this.toastService.presentToast('Select new dates', 1000, 'top');
+    this.toastService.presentToast('Select new dates', 2000, 'top');
     delete this.selectedBatch.schedule[this.selectedBatch.currentStep].startDatetime;
   }
 
@@ -475,12 +486,10 @@ export class ProcessPage implements OnInit, OnDestroy {
             settings: this.initTimerSettings(i, timeRemaining)
           }]);
         }
-      } else {
-        if (concurrent.length) {
-          this.timers.push(concurrent);
-          concurrent = [];
-          first = null;
-        }
+      } else if (concurrent.length) {
+        this.timers.push(concurrent);
+        concurrent = [];
+        first = null;
       }
     }
   }
@@ -528,22 +537,6 @@ export class ProcessPage implements OnInit, OnDestroy {
     } else {
       return `${Math.round(this.timerWidth / 3)}px`;
     }
-  }
-
-  /**
-   * Get index in array of timers to use from step index
-   *
-   * @params: index - step index
-  **/
-  getViewTimers(index: number): void {
-    for (let i=0; i < this.timers.length; i++) {
-      if (this.timers[i][0].first === this.selectedBatch.schedule[index]._id) {
-        this.isConcurrent = this.timers[i].length > 1;
-        this.currentTimers = i;
-        return;
-      }
-    }
-    this.currentTimers = 0;
   }
 
   /**
@@ -622,66 +615,131 @@ export class ProcessPage implements OnInit, OnDestroy {
   }
 
   /**
-   * User interface timer functions
+   * Start a single timer instance
    *
-   * @params: mode - timer function 'start', 'stop', 'add', 'reset'
-   * @params: timer - a timer type process step instance
+   * @params: timer - the timer to start
    *
    * @return: none
   **/
-  setTimerFunction(mode: string, timer?: Timer): void {
-    if (mode === 'start') {
-      if (timer) {
-        timer.interval = setInterval(() => {
-          if (timer.timeRemaining > 0) {
-            timer.timeRemaining--;
-          }
-          this.setProgress(timer);
-        }, 1000);
-      } else {
-        for (let timer of this.timers[this.currentTimers]) {
-          timer.interval = setInterval(() => {
-            if (timer.timeRemaining > 0) {
-              timer.timeRemaining--;
-            }
-            this.setProgress(timer);
-          }, 1000);
-        }
+  startSingleTimer(timer: Timer): void {
+    timer.interval = setInterval(() => {
+      if (timer.timeRemaining > 0) {
+        timer.timeRemaining--;
       }
-    } else if (mode === 'stop') {
-      if (timer) {
-        this.clearTimer(timer);
-      } else {
-        for (let timer of this.timers[this.currentTimers]) {
-          this.clearTimer(timer);
+      this.setProgress(timer);
+    }, 1000);
+  }
+
+  /**
+   * Stop a single timer instance
+   *
+   * @params: timer - the timer to stop
+   *
+   * @return: none
+  **/
+  stopSingleTimer(timer: Timer): void {
+    this.clearTimer(timer);
+  }
+
+  /**
+   * Add a minute to a single timer instance
+   *
+   * @params: timer - the timer to add time to
+   *
+   * @return: none
+  **/
+  addToSingleTimer(timer: Timer): void {
+    timer.timer.duration++;
+    timer.timeRemaining += 60;
+    this.setProgress(timer);
+  }
+
+  /**
+   * Reset a single timer instance
+   *
+   * @params: timer - the timer to reset
+   *
+   * @return: none
+  **/
+  resetSingleTimer(timer: Timer): void {
+    this.clearTimer(timer);
+    this.resetDuration(timer);
+    timer.timeRemaining = timer.timer.duration * 60;
+    this.setProgress(timer);
+  }
+
+  /**
+   * Start all timers for the current step
+   *
+   * @params: none
+   * @return: none
+  **/
+  startAllTimers(): void {
+    for (let timer of this.timers[this.currentTimers]) {
+      timer.interval = setInterval(() => {
+        if (timer.timeRemaining > 0) {
+          timer.timeRemaining--;
         }
-      }
-    } else if (mode === 'add') {
-      if (timer) {
-        timer.timer.duration++;
-        timer.timeRemaining += 60;
         this.setProgress(timer);
-      } else {
-        for (let timer of this.timers[this.currentTimers]) {
-          timer.timer.duration++;
-          timer.timeRemaining += 60;
-          this.setProgress(timer);
-        }
-      }
-    } else {
-      if (timer) {
-        this.clearTimer(timer);
-        timer.timeRemaining = timer.timer.duration * 60;
-        this.setProgress(timer);
-      } else {
-        for (let timer of this.timers[this.currentTimers]) {
-          this.clearTimer(timer);
-          this.resetDuration(timer);
-          timer.timeRemaining = timer.timer.duration * 60;
-          this.setProgress(timer);
-        }
+      }, 1000);
+    }
+  }
+
+  /**
+   * Stop all timers for the current step
+   *
+   * @params: none
+   * @return: none
+  **/
+  stopAllTimers(): void {
+    for (let timer of this.timers[this.currentTimers]) {
+      this.clearTimer(timer);
+    }
+  }
+
+  /**
+   * Add a minute to all timers for the current step
+   *
+   * @params: none
+   * @return: none
+  **/
+  addToAllTimers(): void {
+    for (let timer of this.timers[this.currentTimers]) {
+      timer.timer.duration++;
+      timer.timeRemaining += 60;
+      this.setProgress(timer);
+    }
+  }
+
+  /**
+   * Reset all timers for the current Step
+   *
+   * @params: none
+   * @return: none
+  **/
+  resetAllTimers(): void {
+    for (let timer of this.timers[this.currentTimers]) {
+      this.clearTimer(timer);
+      this.resetDuration(timer);
+      timer.timeRemaining = timer.timer.duration * 60;
+      this.setProgress(timer);
+    }
+  }
+
+  /**
+   * Get index in array of timers to use from step index
+   *
+   * @params: index - step index
+  **/
+  setViewTimers(index: number): void {
+    for (let i=0; i < this.timers.length; i++) {
+      if (this.timers[i][0].first === this.selectedBatch.schedule[index]._id) {
+        this.isConcurrent = this.timers[i].length > 1;
+        this.currentTimers = i;
+        return;
       }
     }
+    this.currentTimers = 0;
   }
 
   /**
@@ -723,7 +781,7 @@ export class ProcessPage implements OnInit, OnDestroy {
   updateRecipeMasterActive(start: boolean): void {
     this.recipeService.patchRecipeMasterById(this.master._id, {hasActiveBatch: start})
       .subscribe(master => {
-        console.log('Recipe master has active batch', master);
+        console.log('Recipe master has active batch: ', master.hasActiveBatch);
       });
   }
 
