@@ -3,11 +3,16 @@ import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { Pipe, PipeTransform } from '@angular/core';
 
 import { baseURL } from '../src/shared/constants/base-url';
 import { apiVersion } from '../src/shared/constants/api-version';
 
 export class PlatformMock {
+  public width(): number {
+    return 360;
+  }
+
   public ready(): Promise<string> {
     return new Promise((resolve) => {
       resolve('READY');
@@ -213,10 +218,9 @@ class ActionSheetMock {
   public dismissAll() { };
 }
 
-export class RecipeMock { }
-
-export class UserMock { }
-
-export class ProcessMock { }
-
-export class ProcessHttpErrorMock { }
+@Pipe({name: 'sort'})
+export class SortPipeMock implements PipeTransform {
+  transform(arr: Array<any>, sortBy: string): Array<any> {
+    return arr;
+  }
+}
