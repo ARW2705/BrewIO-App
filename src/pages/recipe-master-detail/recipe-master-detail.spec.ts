@@ -13,9 +13,7 @@ import { mockRecipeMasterActive } from '../../../test-config/mockmodels/mockReci
 import { mockRecipeMasterInactive } from '../../../test-config/mockmodels/mockRecipeMasterInactive';
 import { mockRecipeComplete } from '../../../test-config/mockmodels/mockRecipeComplete';
 import { mockRecipeIncomplete } from '../../../test-config/mockmodels/mockRecipeIncomplete';
-import { NavMock } from '../../../test-config/mocks-ionic';
-import { NavParamsMock } from '../../../test-config/mocks-ionic';
-import { ToastControllerMock } from '../../../test-config/mocks-ionic';
+import { NavMock, NavParamsMock, ToastControllerMock, SortPipeMock } from '../../../test-config/mocks-ionic';
 
 /* Page imports */
 import { RecipeMasterDetailPage } from './recipe-master-detail';
@@ -82,17 +80,21 @@ describe('Recipe Master Details Page', () => {
       rmdPage = fixture.componentInstance;
     });
 
+    afterEach(() => {
+      httpMock.verify();
+    });
+
     test('should create the component', () => {
       fixture.detectChanges();
       expect(rmdPage).toBeDefined();
-    });
+    }); // end 'should create the component' test
 
     test('should have a stored master id', () => {
       fixture.detectChanges();
       expect(rmdPage.recipeMasterId).toMatch('active');
-    })
+    }); // end 'should have a stored master id' test
 
-  });
+  }); // end 'Component creation' section
 
   describe('Navigation actions', () => {
     let fixture: ComponentFixture<RecipeMasterDetailPage>;
@@ -111,7 +113,8 @@ describe('Recipe Master Details Page', () => {
         declarations: [
           RecipeMasterDetailPage,
           ProcessPage,
-          RecipeFormPage
+          RecipeFormPage,
+          SortPipeMock
         ],
         imports: [
           IonicModule.forRoot(RecipeMasterDetailPage),
@@ -151,11 +154,15 @@ describe('Recipe Master Details Page', () => {
       fixture.detectChanges();
     });
 
+    afterEach(() => {
+      httpMock.verify();
+    });
+
     test('should handle nav pop event by calling nav controller pop', () => {
       const navCtrlSpy = jest.spyOn(rmdPage.navCtrl, 'pop');
       rmdPage.headerNavPopEventHandler({origin: 'RecipePage'});
       expect(navCtrlSpy).toHaveBeenCalled();
-    });
+    }); // end 'should handle nav pop event by calling nav controller pop' test
 
     test('should handle nav pop event by emitting update header', done => {
       eventService.subscribe('update-nav-header', data => {
@@ -163,7 +170,7 @@ describe('Recipe Master Details Page', () => {
         done();
       });
       rmdPage.headerNavPopEventHandler({origin: 'RecipeMasterDetailPage'});
-    });
+    }); // end 'should handle nav pop event by emitting update header' test
 
     test('should update header when navigating to process page with a recipe', done => {
       const _mockRecipe = mockRecipeComplete();
@@ -175,7 +182,7 @@ describe('Recipe Master Details Page', () => {
         done();
       });
       rmdPage.navToBrewProcess(_mockRecipe);
-    });
+    }); // end 'should update header when navigating to process page with a recipe' test
 
     test('should navigate to process page with a recipe', () => {
       const _mockRecipe = mockRecipeComplete();
@@ -189,14 +196,14 @@ describe('Recipe Master Details Page', () => {
           selectedRecipeId: _mockRecipe._id
         }
       );
-    })
+    }); // end 'should navigate to process page with a recipe' test
 
     test('should present toast stating the recipe is missing its process', () => {
       const _mockRecipe = mockRecipeIncomplete();
       const toastSpy = jest.spyOn(rmdPage.toastService, 'presentToast');
       rmdPage.navToBrewProcess(_mockRecipe);
       expect(toastSpy).toHaveBeenCalled();
-    });
+    }); // end 'should present toast stating the recipe is missing its process' test
 
     test('should navigate to recipe form to update the recipe master', () => {
       const navCtrlSpy = jest.spyOn(rmdPage.navCtrl, 'push');
@@ -209,7 +216,7 @@ describe('Recipe Master Details Page', () => {
           mode: 'update'
         }
       );
-    });
+    }); // end 'should navigate to recipe form to update the recipe master' test
 
     test('should navigate to recipe form to update a recipe variant', () => {
       const _mockRecipe = mockRecipeComplete();
@@ -225,7 +232,7 @@ describe('Recipe Master Details Page', () => {
           mode: 'update'
         }
       );
-    });
+    }); // end 'should navigate to recipe form to update a recipe variant' test
 
     test('should navigate to recipe form to add a recipe variant', () => {
       const navCtrlSpy = jest.spyOn(rmdPage.navCtrl, 'push');
@@ -238,7 +245,7 @@ describe('Recipe Master Details Page', () => {
           mode: 'create'
         }
       );
-    });
+    }); // end 'should navigate to recipe form to add a recipe variant' test
 
     test('should emit update header event on navigation to recipe form', done => {
       eventService.subscribe('update-nav-header', data => {
@@ -249,9 +256,9 @@ describe('Recipe Master Details Page', () => {
         done();
       });
       rmdPage.navToRecipeForm('master');
-    });
+    }); // end 'should emit update header event on navigation to recipe form' test
 
-  });
+  }); // end 'Navigation actions' section
 
   describe('Deletion handling', () => {
     let fixture: ComponentFixture<RecipeMasterDetailPage>;
@@ -269,7 +276,8 @@ describe('Recipe Master Details Page', () => {
         declarations: [
           RecipeMasterDetailPage,
           ProcessPage,
-          RecipeFormPage
+          RecipeFormPage,
+          SortPipeMock
         ],
         imports: [
           IonicModule.forRoot(RecipeMasterDetailPage),
@@ -308,9 +316,13 @@ describe('Recipe Master Details Page', () => {
       fixture.detectChanges();
     });
 
+    afterEach(() => {
+      httpMock.verify();
+    });
+
     test('should check if recipe is able to be deleted', () => {
       expect(rmdPage.canDelete()).toBe(true);
-    });
+    }); // end 'should check if recipe is able to be deleted' test
 
     test('should delete a recipe master note', done => {
       rmdPage.recipeMaster.notes.push('a test note');
@@ -321,7 +333,10 @@ describe('Recipe Master Details Page', () => {
         expect(patchSpy).toHaveBeenCalled();
         done();
       }, 100);
-    });
+
+      const recipeMasterReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${rmdPage.recipeMaster._id}`);
+      recipeMasterReq.flush(mockRecipeMasterActive());
+    }); // end 'should delete a recipe master note' test
 
     test('should delete a recipe', done => {
       const _mockRecipeMaster = mockRecipeMasterActive();
@@ -338,7 +353,7 @@ describe('Recipe Master Details Page', () => {
 
       const deleteReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${rmdPage.recipeMaster._id}/recipe/${_mockRecipe._id}`);
       deleteReq.flush(_mockRecipe);
-    });
+    }); // end 'should delete a recipe' test
 
   }); // end 'Deletion handling' section
 
@@ -358,7 +373,8 @@ describe('Recipe Master Details Page', () => {
         declarations: [
           RecipeMasterDetailPage,
           ProcessPage,
-          RecipeFormPage
+          RecipeFormPage,
+          SortPipeMock
         ],
         imports: [
           IonicModule.forRoot(RecipeMasterDetailPage),
@@ -403,7 +419,7 @@ describe('Recipe Master Details Page', () => {
       expect(rmdPage.noteIndex).toBe(0);
       rmdPage.expandNote(0);
       expect(rmdPage.noteIndex).toBe(-1);
-    });
+    }); // end 'should mark a note to be expanded' test
 
     test('should toggle notes display', () => {
       expect(rmdPage.showNotes).toBe(false);
@@ -411,13 +427,13 @@ describe('Recipe Master Details Page', () => {
       rmdPage.expandNoteMain();
       expect(rmdPage.showNotes).toBe(true);
       expect(rmdPage.showNotesIcon).toMatch('arrow-up');
-    });
+    }); // end 'should toggle notes display test
 
     test('should check if a note at a given index should be shown', () => {
       rmdPage.noteIndex = 2;
       expect(rmdPage.showExpandedNote(2)).toBe(true);
       expect(rmdPage.showExpandedNote(1)).toBe(false);
-    });
+    }); // end 'should check if a note at a given index should be shown' test
 
     test('should navigate to note form with the note at given index', () => {
       const noteSpy = jest.spyOn(rmdPage, 'navToRecipeForm');
@@ -427,15 +443,14 @@ describe('Recipe Master Details Page', () => {
         null,
         { noteIndex: 1 }
       );
-    });
+    }); // end 'should navigate to note form with the note at given index' test
 
-  });
+  }); // end 'Notes handling' section
 
   describe('Recipe handling', () => {
     let fixture: ComponentFixture<RecipeMasterDetailPage>;
     let rmdPage: RecipeMasterDetailPage;
     let injector: TestBed;
-    let eventService: Events;
     let recipeService: RecipeProvider;
     let httpMock: HttpTestingController;
 
@@ -448,7 +463,8 @@ describe('Recipe Master Details Page', () => {
         declarations: [
           RecipeMasterDetailPage,
           ProcessPage,
-          RecipeFormPage
+          RecipeFormPage,
+          SortPipeMock
         ],
         imports: [
           IonicModule.forRoot(RecipeMasterDetailPage),
@@ -487,18 +503,22 @@ describe('Recipe Master Details Page', () => {
       fixture.detectChanges();
     });
 
+    afterEach(() => {
+      httpMock.verify();
+    });
+
     test('should mark recipe at index to be expanded', () => {
       expect(rmdPage.recipeIndex).toBe(-1);
       rmdPage.expandRecipe(2);
       expect(rmdPage.recipeIndex).toBe(2);
       rmdPage.expandRecipe(2);
       expect(rmdPage.recipeIndex).toBe(-1);
-    });
+    }); // end 'should mark recipe at index to be expanded' test
 
     test('should return recipe at given index is the master', () => {
       expect(rmdPage.isMaster(0)).toBe(true);
       expect(rmdPage.isMaster(1)).toBe(false);
-    });
+    }); // end 'should return recipe at given index is the master' test
 
     test('should toggle the recipe master isPublic property', done => {
       const _mockRecipeMaster = mockRecipeMasterActive();
@@ -515,13 +535,13 @@ describe('Recipe Master Details Page', () => {
 
       const patchReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${rmdPage.recipeMaster._id}`);
       patchReq.flush(_mockRecipeMaster);
-    });
+    }); // end 'should toggle the recipe master isPublic property' test
 
     test('should check if recipe is selected for display', () => {
       rmdPage.recipeIndex = 2;
       expect(rmdPage.showExpandedRecipe(2)).toBe(true);
       expect(rmdPage.showExpandedRecipe(1)).toBe(false);
-    });
+    }); // end 'should check if recipe is selected for display'
 
     test('should toggle a recipe\'s isFavorite property', done => {
       const _mockRecipe = mockRecipeIncomplete();
@@ -546,8 +566,8 @@ describe('Recipe Master Details Page', () => {
 
       const patchReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${rmdPage.recipeMaster._id}/recipe/${_mockRecipe._id}`);
       patchReq.flush(_mockRecipe);
-    });
+    }); // end 'should toggle a recipe\'s isFavorite property' test
 
-  });
+  }); // end 'Recipe handling' section
 
 });
