@@ -13,10 +13,7 @@ import { apiVersion } from '../../shared/constants/api-version';
 import { mockRecipeMasterActive } from '../../../test-config/mockmodels/mockRecipeMasterActive';
 import { mockRecipeMasterInactive } from '../../../test-config/mockmodels/mockRecipeMasterInactive';
 import { mockUser } from '../../../test-config/mockmodels/mockUser';
-import { NavMock } from '../../../test-config/mocks-ionic';
-import { NavParamsMock } from '../../../test-config/mocks-ionic';
-import { ToastControllerMock } from '../../../test-config/mocks-ionic';
-import { StorageMock } from '../../../test-config/mocks-ionic';
+import { NavMock, NavParamsMock, ToastControllerMock, StorageMock, SortPipeMock } from '../../../test-config/mocks-ionic';
 
 /* Page imports */
 import { RecipePage } from './recipe';
@@ -47,7 +44,8 @@ describe('Recipe Page', () => {
           RecipePage,
           RecipeMasterDetailPage,
           ProcessPage,
-          RecipeFormPage
+          RecipeFormPage,
+          SortPipeMock
         ],
         imports: [
           IonicModule.forRoot(RecipePage),
@@ -87,6 +85,10 @@ describe('Recipe Page', () => {
       fixture.detectChanges();
     });
 
+    afterEach(() => {
+      httpMock.verify();
+    });
+
     test('should create the component', () => {
       expect(recipePage).toBeDefined();
     }); // end 'should create the component' test
@@ -111,7 +113,8 @@ describe('Recipe Page', () => {
           RecipePage,
           RecipeMasterDetailPage,
           ProcessPage,
-          RecipeFormPage
+          RecipeFormPage,
+          SortPipeMock
         ],
         imports: [
           IonicModule.forRoot(RecipePage),
@@ -151,6 +154,10 @@ describe('Recipe Page', () => {
       fixture = TestBed.createComponent(RecipePage);
       recipePage = fixture.componentInstance;
       fixture.detectChanges();
+    });
+
+    afterEach(() => {
+      httpMock.verify();
     });
 
     test('should navigate to brewing process page with a recipe', done => {
@@ -247,7 +254,8 @@ describe('Recipe Page', () => {
           RecipePage,
           RecipeMasterDetailPage,
           ProcessPage,
-          RecipeFormPage
+          RecipeFormPage,
+          SortPipeMock
         ],
         imports: [
           IonicModule.forRoot(RecipePage),
@@ -287,6 +295,10 @@ describe('Recipe Page', () => {
       fixture = TestBed.createComponent(RecipePage);
       recipePage = fixture.componentInstance;
       fixture.detectChanges();
+    });
+
+    afterEach(() => {
+      httpMock.verify();
     });
 
     test('should delete a recipe master', done => {
