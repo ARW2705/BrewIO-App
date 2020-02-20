@@ -12,9 +12,7 @@ import { apiVersion } from '../../shared/constants/api-version';
 /* Mock imports */
 import { mockUser } from '../../../test-config/mockmodels/mockUser';
 import { NavMock } from '../../../test-config/mocks-ionic';
-import { StorageMock } from '../../../test-config/mocks-ionic';
-import { ToastControllerMock } from '../../../test-config/mocks-ionic';
-import { ModalControllerMock } from '../../../test-config/mocks-ionic';
+import { StorageMock, ModalControllerMock, ToastControllerMock } from '../../../test-config/mocks-ionic';
 
 /* Page imports */
 import { UserPage } from './user';
