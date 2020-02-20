@@ -11,7 +11,7 @@ export const mockRecipeComplete = () => {
     updatedAt: 'updatedAt',
     variantName: 'complete',
     notes: [],
-    isActive: false,
+    isActive: true,
     isFavorite: false,
     isMaster: false,
     efficiency: 70,
