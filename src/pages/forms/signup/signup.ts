@@ -14,7 +14,7 @@ import { ToastProvider } from '../../../providers/toast/toast';
 })
 export class SignupPage {
   signupForm: FormGroup;
-  showPassword: boolean = true;
+  showPassword: boolean = false;
 
   constructor(public navCtrl: NavController,
     public navParams: NavParams,
@@ -99,12 +99,11 @@ export class SignupPage {
     this.userService.signUp(this.signupForm.value)
       .subscribe(
         response => {
-          console.log(response);
           this.toastService.presentToast('Sign up complete!', 1500, 'bright-toast');
           this.viewCtrl.dismiss(response);
         },
         error => {
-          this.toastService.presentToast(error.error.error.message, 2000);
+          this.toastService.presentToast(error, 2000);
         }
       );
   }
