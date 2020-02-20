@@ -122,6 +122,20 @@ export class NavMock {
 
 }
 
+export class ViewControllerMock {
+  public readReady = {
+    subscribe(){ }
+  };
+  public writeReady = {
+    subscribe(){ }
+  };
+  public dismiss() { }
+  public _setHeader() { }
+  public _setNavbar() { }
+  public _setIONContent() { }
+  public _setIONContentRef() { }
+}
+
 export class NavParamsMock {
   static returnParam = {};
   public get(key): any {
