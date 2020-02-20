@@ -87,19 +87,41 @@ describe('Process Page', () => {
       processPage = fixture.componentInstance;
     });
 
+    afterEach(() => {
+      httpMock.verify();
+    });
+
     test('should create the component', () => {
       fixture.detectChanges();
       expect(processPage).toBeDefined();
+
+      const recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/user/${processPage.requestedUserId}/master/${processPage.master._id}/recipe/${processPage.recipe._id}`);
+      recipeReq.flush(mockBatch());
+
+      const recipeMasterReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${processPage.master._id}`);
+      recipeMasterReq.flush(mockRecipeMasterActive());
     }); // end 'should create the component' test
 
     test('should have a recipe master passed as a NavParam', () => {
       fixture.detectChanges();
       expect(processPage.master._id).toMatch(mockRecipeMasterActive()._id);
+
+      const recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/user/${processPage.requestedUserId}/master/${processPage.master._id}/recipe/${processPage.recipe._id}`);
+      recipeReq.flush(mockBatch());
+
+      const recipeMasterReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${processPage.master._id}`);
+      recipeMasterReq.flush(mockRecipeMasterActive());
     }); // end 'should have a recipe master passed as a NavParam' test
 
     test('should have found the selected recipe from the master\'s recipe list', () => {
       fixture.detectChanges();
       expect(processPage.recipe).toBeDefined();
+
+      const recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/user/${processPage.requestedUserId}/master/${processPage.master._id}/recipe/${processPage.recipe._id}`);
+      recipeReq.flush(mockBatch());
+
+      const recipeMasterReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${processPage.master._id}`);
+      recipeMasterReq.flush(mockRecipeMasterActive());
     }); // end 'should have found the selected recipe from the master\'s recipe list' test
 
     test('should start a new batch', done => {
@@ -124,6 +146,9 @@ describe('Process Page', () => {
 
       const processRequest = httpMock.expectOne(`${baseURL}/${apiVersion}/process/user/${mockUser()._id}/master/${mockRecipeMasterActive()._id}/recipe/${mockRecipeComplete()._id}`);
       processRequest.flush(mockBatch());
+
+      const recipeMasterReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${processPage.master._id}`);
+      recipeMasterReq.flush(mockRecipeMasterActive());
     }); // end 'should start a new batch' test
 
     test('should configure timer values for 360px wide screen', () => {
@@ -131,6 +156,12 @@ describe('Process Page', () => {
       expect(processPage.timerWidth).toBe(240);
       expect(processPage.timerRadius).toBe(104);
       expect(processPage.timerDY).toMatch('0.3em');
+
+      const recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/user/${processPage.requestedUserId}/master/${processPage.master._id}/recipe/${processPage.recipe._id}`);
+      recipeReq.flush(mockBatch());
+
+      const recipeMasterReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${processPage.master._id}`);
+      recipeMasterReq.flush(mockRecipeMasterActive());
     }); // end 'should configure timer values for 360px wide screen' test
 
   }); // end 'Component creation' section
@@ -191,6 +222,10 @@ describe('Process Page', () => {
     beforeEach(() => {
       fixture = TestBed.createComponent(ProcessPage);
       processPage = fixture.componentInstance;
+    });
+
+    afterEach(() => {
+      httpMock.verify();
     });
 
     test('should continue a batch', done => {
@@ -299,6 +334,9 @@ describe('Process Page', () => {
 
       const endReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress/${mockBatch()._id}`);
       endReq.flush(mockBatch());
+
+      const recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${processPage.master._id}`);
+      recipeReq.flush(mockRecipeMasterActive());
     }); // 'should complete the current step and end the batch' test
 
     test('should format a duration (in minutes) to hours:minutes', () => {
@@ -899,6 +937,10 @@ describe('Process Page', () => {
     beforeEach(() => {
       fixture = TestBed.createComponent(ProcessPage);
       processPage = fixture.componentInstance;
+    });
+
+    afterEach(() => {
+      httpMock.verify();
     });
 
     test('should handle a nav header pop event', () => {
