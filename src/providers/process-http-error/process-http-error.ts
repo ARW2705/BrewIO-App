@@ -20,7 +20,7 @@ export class ProcessHttpErrorProvider {
   handleError(error: HttpErrorResponse | any): Observable<any> {
     let errMsg: string;
     if (error instanceof HttpErrorResponse) {
-      if (error.status == 401) {
+      if (error.status == 401 && error.error.error) {
         errMsg = error.error.error.message;
       } else {
         const errStatus = error.status ? error.status: 503;
