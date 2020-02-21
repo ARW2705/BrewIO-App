@@ -3,7 +3,6 @@ import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/test
 import { HttpTestingController, HttpClientTestingModule } from '@angular/common/http/testing';
 import { IonicModule, NavController, NavParams, ViewController, ToastController } from 'ionic-angular';
 import { Storage } from '@ionic/storage';
-import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 /* Constants imports */
 import { baseURL } from '../../../shared/constants/base-url';
@@ -36,8 +35,6 @@ describe('Signup Form', () => {
       ],
       imports: [
         IonicModule.forRoot(SignupPage),
-        ReactiveFormsModule,
-        FormsModule,
         HttpClientTestingModule
       ],
       providers: [

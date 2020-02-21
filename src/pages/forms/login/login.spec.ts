@@ -3,7 +3,6 @@ import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/test
 import { HttpTestingController, HttpClientTestingModule } from '@angular/common/http/testing';
 import { IonicModule, NavController, NavParams, ViewController, ToastController } from 'ionic-angular';
 import { Storage } from '@ionic/storage';
-import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 /* Constants imports */
 import { baseURL } from '../../../shared/constants/base-url';
@@ -37,8 +36,6 @@ describe('Login Form', () => {
       ],
       imports: [
         IonicModule.forRoot(LoginPage),
-        ReactiveFormsModule,
-        FormsModule,
         HttpClientTestingModule
       ],
       providers: [
@@ -159,5 +156,5 @@ describe('Login Form', () => {
     loginPage.togglePasswordVisible();
     expect(loginPage.showPassword).toBe(false);
   }); // end 'should toggle password visibility' test
-  
+
 });

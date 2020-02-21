@@ -1,7 +1,6 @@
 /* Module imports */
 import { ComponentFixture, TestBed, async } from '@angular/core/testing';
 import { IonicModule, NavController, NavParams, ViewController } from 'ionic-angular';
-import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 /* Mock imports */
 import { NavMock, NavParamsMock, ViewControllerMock } from '../../../../test-config/mocks-ionic';
@@ -27,9 +26,7 @@ describe('Note Form', () => {
           NoteFormPage
         ],
         imports: [
-          IonicModule.forRoot(NoteFormPage),
-          ReactiveFormsModule,
-          FormsModule
+          IonicModule.forRoot(NoteFormPage)
         ],
         providers: [
           { provide: NavController, useClass: NavMock },
@@ -88,9 +85,7 @@ describe('Note Form', () => {
           NoteFormPage
         ],
         imports: [
-          IonicModule.forRoot(NoteFormPage),
-          ReactiveFormsModule,
-          FormsModule
+          IonicModule.forRoot(NoteFormPage)
         ],
         providers: [
           { provide: NavController, useClass: NavMock },
