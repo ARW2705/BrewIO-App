@@ -13,7 +13,6 @@ import { Style } from '../../../shared/interfaces/library';
 export class GeneralFormPage {
   generalForm: FormGroup = null;
   formType: string = '';
-  mode: string = '';
   docMethod: string = '';
   styles: Array<Style> = null;
   styleSelection;
@@ -31,7 +30,6 @@ export class GeneralFormPage {
     public viewCtrl: ViewController,
     public formBuilder: FormBuilder) {
       this.formType = navParams.get('formType');
-      this.mode = navParams.get('mode');
       this.docMethod = navParams.get('docMethod');
       this.styles = navParams.get('styles');
       this.initForm(navParams.get('data'));

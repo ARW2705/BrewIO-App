@@ -105,7 +105,6 @@ export class RecipeFormPage implements AfterViewInit {
   openGeneralModal(): void {
     const data = {
       formType: this.formType,
-      mode: this.mode,
       docMethod: this.docMethod,
       data: {
         style: this.master.style,
