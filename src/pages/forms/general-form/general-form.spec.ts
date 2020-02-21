@@ -16,7 +16,7 @@ describe('General Form', () => {
     let fixture: ComponentFixture<GeneralFormPage>;
     let generalPage: GeneralFormPage;
 
-    beforeEach(async(() => {
+    beforeAll(async(() => {
       NavParamsMock.setParams('formType', 'master');
       NavParamsMock.setParams('docMethod', 'create');
       NavParamsMock.setParams('styles', mockStyles());
@@ -36,6 +36,7 @@ describe('General Form', () => {
           { provide: ViewController, useClass: ViewControllerMock }
         ]
       })
+      .compileComponents();
     }));
 
     beforeEach(() => {
@@ -131,7 +132,7 @@ describe('General Form', () => {
     let fixture: ComponentFixture<GeneralFormPage>;
     let generalPage: GeneralFormPage;
 
-    beforeEach(async(() => {
+    beforeAll(async(() => {
       NavParamsMock.setParams('formType', 'recipe');
       NavParamsMock.setParams('docMethod', 'update');
       NavParamsMock.setParams('styles', mockStyles());
@@ -163,6 +164,7 @@ describe('General Form', () => {
           { provide: ViewController, useClass: ViewControllerMock }
         ]
       })
+      .compileComponents();
     }));
 
     beforeEach(() => {

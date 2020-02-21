@@ -36,7 +36,7 @@ describe('Recipe Master Details Page', () => {
     let fixture: ComponentFixture<RecipeMasterDetailPage>;
     let rmdPage: RecipeMasterDetailPage;
 
-    beforeEach(async(() => {
+    beforeAll(async(() => {
       NavParamsMock.setParams('masterId', 'active');
     }));
 
@@ -104,7 +104,7 @@ describe('Recipe Master Details Page', () => {
     let recipeService: RecipeProvider;
     let httpMock: HttpTestingController;
 
-    beforeEach(async(() => {
+    beforeAll(async(() => {
       NavParamsMock.setParams('masterId', 'active');
     }));
 
@@ -267,7 +267,7 @@ describe('Recipe Master Details Page', () => {
     let recipeService: RecipeProvider;
     let httpMock: HttpTestingController;
 
-    beforeEach(async(() => {
+    beforeAll(async(() => {
       NavParamsMock.setParams('masterId', 'active');
     }));
 
@@ -364,7 +364,7 @@ describe('Recipe Master Details Page', () => {
     let recipeService: RecipeProvider;
     let httpMock: HttpTestingController;
 
-    beforeEach(async(() => {
+    beforeAll(async(() => {
       NavParamsMock.setParams('masterId', 'active');
     }));
 
@@ -454,7 +454,7 @@ describe('Recipe Master Details Page', () => {
     let recipeService: RecipeProvider;
     let httpMock: HttpTestingController;
 
-    beforeEach(async(() => {
+    beforeAll(async(() => {
       NavParamsMock.setParams('masterId', 'active');
     }));
 

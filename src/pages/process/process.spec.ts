@@ -41,7 +41,7 @@ describe('Process Page', () => {
     let processPage: ProcessPage;
     let httpMock: HttpTestingController;
 
-    beforeEach(async(() => {
+    beforeAll(async(() => {
       NavParamsMock.setParams('master', mockRecipeMasterActive());
       NavParamsMock.setParams('selectedRecipeId', mockRecipeComplete()._id);
       NavParamsMock.setParams('requestedUserId', mockUser()._id);
@@ -175,7 +175,7 @@ describe('Process Page', () => {
     let httpMock: HttpTestingController;
     let eventService: Events;
 
-    beforeEach(async(() => {
+    beforeAll(async(() => {
       NavParamsMock.setParams('master', mockRecipeMasterActive());
       NavParamsMock.setParams('selectedRecipeId', mockRecipeComplete()._id);
       NavParamsMock.setParams('requestedUserId', mockUser()._id);
@@ -477,7 +477,7 @@ describe('Process Page', () => {
     let injector: TestBed;
     let processService: ProcessProvider;
 
-    beforeEach(async(() => {
+    beforeAll(async(() => {
       NavParamsMock.setParams('master', mockRecipeMasterActive());
       NavParamsMock.setParams('selectedRecipeId', mockRecipeComplete()._id);
       NavParamsMock.setParams('requestedUserId', mockUser()._id);
@@ -571,7 +571,7 @@ describe('Process Page', () => {
     let injector: TestBed;
     let processService: ProcessProvider;
 
-    beforeEach(async(() => {
+    beforeAll(async(() => {
       NavParamsMock.setParams('master', mockRecipeMasterActive());
       NavParamsMock.setParams('selectedRecipeId', mockRecipeComplete()._id);
       NavParamsMock.setParams('requestedUserId', mockUser()._id);
@@ -664,7 +664,7 @@ describe('Process Page', () => {
     let injector: TestBed;
     let processService: ProcessProvider;
 
-    beforeEach(async(() => {
+    beforeAll(async(() => {
       NavParamsMock.setParams('master', mockRecipeMasterActive());
       NavParamsMock.setParams('selectedRecipeId', mockRecipeComplete()._id);
       NavParamsMock.setParams('requestedUserId', mockUser()._id);
@@ -891,7 +891,7 @@ describe('Process Page', () => {
     let processService: ProcessProvider;
     let httpMock: HttpTestingController;
 
-    beforeEach(async(() => {
+    beforeAll(async(() => {
       NavParamsMock.setParams('master', mockRecipeMasterActive());
       NavParamsMock.setParams('selectedRecipeId', mockRecipeComplete()._id);
       NavParamsMock.setParams('requestedUserId', mockUser()._id);

@@ -15,7 +15,7 @@ describe('Note Form', () => {
     let fixture: ComponentFixture<NoteFormPage>;
     let notePage: NoteFormPage;
 
-    beforeEach(async(() => {
+    beforeAll(async(() => {
       NavParamsMock.setParams('formMethod', 'create');
       NavParamsMock.setParams('noteType', 'recipe');
     }));
@@ -73,7 +73,7 @@ describe('Note Form', () => {
     let fixture: ComponentFixture<NoteFormPage>;
     let notePage: NoteFormPage;
 
-    beforeEach(async(() => {
+    beforeAll(async(() => {
       NavParamsMock.setParams('formMethod', 'update');
       NavParamsMock.setParams('noteType', 'recipe');
       NavParamsMock.setParams('toUpdate', 'note to update');
