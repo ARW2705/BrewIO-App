@@ -17,7 +17,7 @@ import { ToastProvider } from '../../../providers/toast/toast';
 })
 export class LoginPage {
   public loginForm: FormGroup;
-  public showPassword: boolean = true;
+  public showPassword: boolean = false;
   public user$: Observable<User> = null;
 
   constructor(public navCtrl: NavController,
