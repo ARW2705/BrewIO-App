@@ -33,13 +33,15 @@ export class UserPage implements OnInit, OnDestroy {
     lastname: ''
   };
 
-  constructor(public navCtrl: NavController,
+  constructor(
+    public navCtrl: NavController,
     public formBuilder: FormBuilder,
     public cdRef: ChangeDetectorRef,
     public userService: UserProvider,
     public modalService: ModalProvider,
-    public toastService: ToastProvider) {
-      this.user$ = this.userService.getUser();
+    public toastService: ToastProvider
+  ) {
+    this.user$ = this.userService.getUser();
   }
 
   /***** Lifecycle hooks *****/

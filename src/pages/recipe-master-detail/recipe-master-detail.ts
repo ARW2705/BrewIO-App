@@ -35,14 +35,16 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
   deletionInProgress: boolean = false;
   _headerNavPop: any;
 
-  constructor(public navCtrl: NavController,
+  constructor(
+    public navCtrl: NavController,
     public navParams: NavParams,
     public events: Events,
     public recipeService: RecipeProvider,
-    public toastService: ToastProvider) {
-      this.recipeMasterId = this.navParams.get('masterId');
-      this.recipeMaster$ = this.recipeService.getMasterById(this.recipeMasterId);
-      this._headerNavPop = this.headerNavPopEventHandler.bind(this);
+    public toastService: ToastProvider
+  ) {
+    this.recipeMasterId = this.navParams.get('masterId');
+    this.recipeMaster$ = this.recipeService.getMasterById(this.recipeMasterId);
+    this._headerNavPop = this.headerNavPopEventHandler.bind(this);
   }
 
   /***** Lifecycle Hooks *****/

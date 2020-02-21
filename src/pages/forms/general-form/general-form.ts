@@ -25,14 +25,16 @@ export class GeneralFormPage {
     'mashDuration'
   ];
 
-  constructor(public navCtrl: NavController,
+  constructor(
+    public navCtrl: NavController,
     public navParams: NavParams,
     public viewCtrl: ViewController,
-    public formBuilder: FormBuilder) {
-      this.formType = navParams.get('formType');
-      this.docMethod = navParams.get('docMethod');
-      this.styles = navParams.get('styles');
-      this.initForm(navParams.get('data'));
+    public formBuilder: FormBuilder
+  ) {
+    this.formType = navParams.get('formType');
+    this.docMethod = navParams.get('docMethod');
+    this.styles = navParams.get('styles');
+    this.initForm(navParams.get('data'));
   }
 
   /**

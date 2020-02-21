@@ -16,13 +16,15 @@ export class SignupPage {
   signupForm: FormGroup;
   showPassword: boolean = false;
 
-  constructor(public navCtrl: NavController,
+  constructor(
+    public navCtrl: NavController,
     public navParams: NavParams,
     public viewCtrl: ViewController,
     public formBuilder: FormBuilder,
     public userService: UserProvider,
-    public toastService: ToastProvider) {
-      this.initForm();
+    public toastService: ToastProvider
+  ) {
+    this.initForm();
   }
 
   /**

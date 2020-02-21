@@ -68,19 +68,21 @@ export class ProcessPage implements OnInit, OnDestroy {
   timerTextAnchor = 'middle';
   timerFontFamily = 'Arial';
 
-  constructor(public navCtrl: NavController,
+  constructor(
+    public navCtrl: NavController,
     public navParams: NavParams,
     public platform: Platform,
     public events: Events,
     public recipeService: RecipeProvider,
     public processService: ProcessProvider,
     public userService: UserProvider,
-    public toastService: ToastProvider) {
-      this.master = navParams.get('master');
-      this.requestedUserId = navParams.get('requestedUserId');
-      this.recipe = this.master.recipes.find(recipe => recipe._id === navParams.get('selectedRecipeId'));
-      this.batchId = navParams.get('selectedBatchId');
-      this._headerNavPop = this.headerNavPopEventHandler.bind(this);
+    public toastService: ToastProvider
+  ) {
+    this.master = navParams.get('master');
+    this.requestedUserId = navParams.get('requestedUserId');
+    this.recipe = this.master.recipes.find(recipe => recipe._id === navParams.get('selectedRecipeId'));
+    this.batchId = navParams.get('selectedBatchId');
+    this._headerNavPop = this.headerNavPopEventHandler.bind(this);
   }
 
   /***** Lifecycle Hooks *****/
