@@ -2,7 +2,7 @@
 import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/testing';
 import { HttpTestingController, HttpClientTestingModule } from '@angular/common/http/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { IonicModule, NavController, NavParams, Events, ToastController } from 'ionic-angular';
+import { IonicModule, NavController, Events, ToastController } from 'ionic-angular';
 import { Storage } from '@ionic/storage';
 
 /* Constants imports */
@@ -13,7 +13,7 @@ import { apiVersion } from '../../shared/constants/api-version';
 import { mockRecipeMasterActive } from '../../../test-config/mockmodels/mockRecipeMasterActive';
 import { mockRecipeMasterInactive } from '../../../test-config/mockmodels/mockRecipeMasterInactive';
 import { mockUser } from '../../../test-config/mockmodels/mockUser';
-import { NavMock, NavParamsMock, ToastControllerMock, StorageMock, SortPipeMock } from '../../../test-config/mocks-ionic';
+import { NavMock, ToastControllerMock, StorageMock, SortPipeMock } from '../../../test-config/mocks-ionic';
 
 /* Page imports */
 import { RecipePage } from './recipe';
@@ -57,7 +57,6 @@ describe('Recipe Page', () => {
           ProcessProvider,
           ToastProvider,
           { provide: NavController, useClass: NavMock },
-          { provide: NavParams, useClass: NavParamsMock },
           { provide: ToastController, useClass: ToastControllerMock },
           { provide: ProcessHttpErrorProvider, useValue: {} },
           { provide: Storage, useClass: StorageMock }
@@ -126,7 +125,6 @@ describe('Recipe Page', () => {
           ToastProvider,
           Events,
           { provide: NavController, useClass: NavMock },
-          { provide: NavParams, useClass: NavParamsMock },
           { provide: ToastController, useClass: ToastControllerMock },
           { provide: ProcessHttpErrorProvider, useValue: {} },
           { provide: ProcessProvider, useValue: {} },
@@ -268,7 +266,6 @@ describe('Recipe Page', () => {
           ToastProvider,
           Events,
           { provide: NavController, useClass: NavMock },
-          { provide: NavParams, useClass: NavParamsMock },
           { provide: ToastController, useClass: ToastControllerMock },
           { provide: ProcessHttpErrorProvider, useValue: {} },
           { provide: Storage, useClass: StorageMock }
