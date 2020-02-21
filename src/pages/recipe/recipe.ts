@@ -1,6 +1,6 @@
 /* Module imports */
 import { Component, OnInit, OnDestroy, ViewChildren, QueryList } from '@angular/core';
-import { NavController, NavParams, Events, ItemSliding } from 'ionic-angular';
+import { NavController, Events, ItemSliding } from 'ionic-angular';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import 'rxjs/add/operator/takeUntil';
@@ -37,13 +37,14 @@ export class RecipePage implements OnInit, OnDestroy {
   masterIndex: number = -1;
   creationMode: boolean = false;
 
-  constructor(public navCtrl: NavController,
-    public navParams: NavParams,
+  constructor(
+    public navCtrl: NavController,
     public events: Events,
     public userService: UserProvider,
     public recipeService: RecipeProvider,
-    public toastService: ToastProvider) {
-      this.masterList$ = this.recipeService.getMasterList();
+    public toastService: ToastProvider
+  ) {
+    this.masterList$ = this.recipeService.getMasterList();
   }
 
   /***** Lifecycle Hooks *****/
