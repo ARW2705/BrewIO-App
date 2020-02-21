@@ -17,20 +17,22 @@ export class IngredientFormPage {
   notes: Array<string> = [];
   formType: string;
 
-  constructor(public navCtrl: NavController,
+  constructor(
+    public navCtrl: NavController,
     public navParams: NavParams,
     public viewCtrl: ViewController,
-    public formBuilder: FormBuilder) {
-      const data = navParams.get('data');
-      if (!data) this.dismissOnError(data);
-      if (data.library) this.ingredientLibrary = data.library;
-      this.ingredientType = data.ingredientType;
-      if (data.ingredientType === 'otherIngredients') {
-        this.title = 'Add Other';
-      } else {
-        this.title = `Add ${data.ingredientType}`;
-      }
-      this.initForm(data);
+    public formBuilder: FormBuilder
+  ) {
+    const data = navParams.get('data');
+    if (!data) this.dismissOnError(data);
+    if (data.library) this.ingredientLibrary = data.library;
+    this.ingredientType = data.ingredientType;
+    if (data.ingredientType === 'otherIngredients') {
+      this.title = 'Add Other';
+    } else {
+      this.title = `Add ${data.ingredientType}`;
+    }
+    this.initForm(data);
   }
 
   /**
@@ -70,7 +72,7 @@ export class IngredientFormPage {
       noteTextArea: ['']
     });
 
-    this.formType = data.update ? 'update': 'create';
+    this.formType = data.update === undefined ? 'create': 'update';
 
     if (data.ingredientType === 'grains') {
       this.ingredientForm.addControl('mill', new FormControl(null));
@@ -101,6 +103,7 @@ export class IngredientFormPage {
       this.ingredientForm.addControl('description', new FormControl('', [Validators.minLength(2), Validators.maxLength(120), Validators.required]));
       this.ingredientForm.addControl('units', new FormControl('', [Validators.minLength(1), Validators.maxLength(10), Validators.required]));
       if (data.update !== undefined) {
+        this.ingredientForm.controls.type.setValue(data.update.type);
         this.ingredientForm.controls.name.setValue(data.update.name);
         this.ingredientForm.controls.description.setValue(data.update.description);
         this.ingredientForm.controls.quantity.setValue(data.update.quantity);
@@ -140,21 +143,21 @@ export class IngredientFormPage {
     }
     delete result.noteTextArea;
     // TODO - share conversion with other forms
-    if (result.quantity) result.quantity = this.toNumber('quantity');
-    if (result.mill) result.mill = this.toNumber('mill');
-    if (result.addAt) result.addAt = this.toNumber('addAt');
+    if (result.quantity) result.quantity = this.toNumber(this.ingredientForm.value.quantity);
+    if (result.mill) result.mill = this.toNumber(this.ingredientForm.value.mill);
+    if (result.addAt) result.addAt = this.toNumber(this.ingredientForm.value.addAt);
     this.viewCtrl.dismiss(result);
   }
 
   /**
    * ion-input stores numbers as strings - must be submitted as numbers
    *
-   * @params: controlName - string of form control's name
+   * @params: controlValue - string of form control's value
    *
    * @return: the form's value as a number
   **/
-  toNumber(controlName: string): number {
-    return parseFloat(this.ingredientForm.value[controlName]);
+  toNumber(controlValue: string): number {
+    return parseFloat(controlValue);
   }
 
 }
