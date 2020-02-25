@@ -13,7 +13,7 @@ export const mockRecipeComplete = () => {
     notes: [],
     isActive: true,
     isFavorite: false,
-    isMaster: false,
+    isMaster: true,
     efficiency: 70,
     brewingType: 'None Selected',
     mashDuration: 60,
