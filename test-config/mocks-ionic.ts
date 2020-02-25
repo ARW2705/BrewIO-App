@@ -120,6 +120,10 @@ export class NavMock {
     return ;
   }
 
+  public unregisterChildNav(nav: any): void {
+    return ;
+  }
+
 }
 
 export class ViewControllerMock {
@@ -172,6 +176,16 @@ export class StorageMock {
   }
 }
 
+export class EventsMock {
+  public emit(...args): any {
+
+  }
+
+  public subscribe(...args): any {
+
+  }
+}
+
 @Injectable()
 export class HttpMock {
   ROOT_URL: string = `${baseURL}/${apiVersion}`;
@@ -214,6 +228,7 @@ class ModalMock {
   present(options?: any) { };
   dismiss() { };
   dismissAll() { };
+  onDidDismiss() { };
 }
 
 export class ActionSheetControllerMock {
