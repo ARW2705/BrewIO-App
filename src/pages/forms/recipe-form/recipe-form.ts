@@ -49,7 +49,8 @@ export class RecipeFormPage implements AfterViewInit {
   textarea = '';
   _headerNavPop: any;
 
-  constructor(public navCtrl: NavController,
+  constructor(
+    public navCtrl: NavController,
     public navParams: NavParams,
     public modalCtrl: ModalController,
     public cdRef: ChangeDetectorRef,
@@ -58,23 +59,24 @@ export class RecipeFormPage implements AfterViewInit {
     public recipeService: RecipeProvider,
     public calculator: CalculationsProvider,
     public toastService: ToastProvider,
-    public actionService: ActionSheetProvider) {
-      this._headerNavPop = this.headerNavPopEventHandler.bind(this);
-      this.setFormTypeConfiguration(
-        navParams.get('formType'),
-        navParams.get('mode'),
-        navParams.get('masterData'),
-        navParams.get('recipeData'),
-        navParams.get('additionalData')
-      );
-      this.libraryService.getAllLibraries()
-        .subscribe(([grainsLibrary, hopsLibrary, yeastLibrary, styleLibrary]) => {
-          this.grainsLibrary = grainsLibrary;
-          this.hopsLibrary = hopsLibrary;
-          this.yeastLibrary = yeastLibrary;
-          this.styleLibrary = styleLibrary;
-          this.isLoaded = true;
-        });
+    public actionService: ActionSheetProvider
+  ) {
+    this._headerNavPop = this.headerNavPopEventHandler.bind(this);
+    this.setFormTypeConfiguration(
+      navParams.get('formType'),
+      navParams.get('mode'),
+      navParams.get('masterData'),
+      navParams.get('recipeData'),
+      navParams.get('additionalData')
+    );
+    this.libraryService.getAllLibraries()
+      .subscribe(([grainsLibrary, hopsLibrary, yeastLibrary, styleLibrary]) => {
+        this.grainsLibrary = grainsLibrary;
+        this.hopsLibrary = hopsLibrary;
+        this.yeastLibrary = yeastLibrary;
+        this.styleLibrary = styleLibrary;
+        this.isLoaded = true;
+      });
   }
 
   /***** Lifecycle Hooks *****/
@@ -136,7 +138,8 @@ export class RecipeFormPage implements AfterViewInit {
         this.mode = 'update';
         this.updateDisplay(data);
         this.calculator.calculateRecipeValues(this.recipe);
-        this.autoSetProcess('duration', data);
+        // this.autoSetProcess('duration', data);
+        this.autoSetBoilMashDuration(data);
       }
     });
     modal.present({keyboardClose: false});
@@ -174,7 +177,8 @@ export class RecipeFormPage implements AfterViewInit {
         this.updateIngredientList(data, type, toUpdate, data.delete);
         this.calculator.calculateRecipeValues(this.recipe);
         if (data.hopsType !== undefined) {
-          this.autoSetProcess('hops-addition', data);
+          // this.autoSetProcess('hops-addition', data);
+          this.autoSetHopsAddition();
         }
       }
     });
@@ -341,9 +345,9 @@ export class RecipeFormPage implements AfterViewInit {
   /***** Form value auto-generation *****/
 
   /**
-   * Generate timer process step for mash or boil step
+   * Generate timer process step for mash and boil step if they haven't been added yet
    *
-   * @params: data - form data containing mash or boil duration
+   * @params: data - form data containing mash and boil duration
    *
    * @return: none
   **/
@@ -352,41 +356,30 @@ export class RecipeFormPage implements AfterViewInit {
       return process.name === 'Mash';
     });
     if (mashIndex === -1) {
-      // add mash timer
+      // add mash timer if one does not already exist
       this.recipe.processSchedule.push({
         type: 'timer',
         name: 'Mash',
         description: 'Mash grains',
-        duration: data.mashDuration
+        duration: data.mashDuration,
+        concurrent: false,
+        splitInterval: 1
       });
-    } else {
-      // update mash timer
-      for (const key in this.recipe.processSchedule[mashIndex]) {
-        if (data.hasOwnProperty(key)) {
-          this.recipe.processSchedule[mashIndex][key] === data[key];
-        }
-      }
     }
 
     const boilIndex = this.recipe.processSchedule.findIndex(process => {
       return process.name === 'Boil';
     });
     if (boilIndex === -1) {
-      // add boil timer
+      // add boil timer if one does not already exist
       this.recipe.processSchedule.push({
         type: 'timer',
         name: 'Boil',
         description: 'Boil wort',
         duration: data.boilDuration,
-        concurrent: true
+        concurrent: true,
+        splitInterval: 1
       });
-    } else {
-      // update boil timer
-      for (const key in this.recipe.processSchedule[boilIndex]) {
-        if (data.hasOwnProperty(key)) {
-          this.recipe.processSchedule[boilIndex][key] === data[key];
-        }
-      }
     }
   }
 
@@ -428,22 +421,6 @@ export class RecipeFormPage implements AfterViewInit {
         duration: this.getHopsTimeRemaining(hopsAddition.addAt)
       })
     });
-  }
-
-  /**
-   * Automatically create timer processes for boil/mash and hops addition
-   *
-   * @params: type - either 'duration' for boil/mash or 'hops-addition' for hops timers
-   * @params: data - form data containing durations to use for timer
-   *
-   * @return: none
-  **/
-  autoSetProcess(type: string, data: any): void {
-    if (type === 'hops-addition') {
-      this.autoSetHopsAddition();
-    } else if (type === 'duration') {
-      this.autoSetBoilMashDuration(data);
-    }
   }
 
   /***** End form value auto-generation *****/
@@ -551,11 +528,7 @@ export class RecipeFormPage implements AfterViewInit {
         };
       }
     } else if (this.formType === 'recipe') {
-      if (this.docMethod === 'create') {
-        payload = this.recipe;
-      } else if (this.docMethod === 'update') {
-        payload = this.recipe;
-      }
+      payload = this.recipe;
     }
     return payload;
   }
@@ -609,33 +582,33 @@ export class RecipeFormPage implements AfterViewInit {
     recipe: Recipe,
     additionalData: any
   ): void {
-      this.formType = formType;
-      this.formOptions = additionalData;
-      this.mode = mode;
-      this.docMethod = mode;
-      if (formType === 'master') {
-        if (mode === 'create') {
-          this.title = 'Create Recipe';
-          this.master = defaultRecipeMaster();
-          this.recipe = defaultRecipeMaster().recipes[0];
-        } else {
-          this.title = `Update ${master.name}`;
-          this.master = master;
-          this.recipe = master.recipes.find(elem => elem.isMaster);
-        }
+    this.formType = formType;
+    this.formOptions = additionalData;
+    this.mode = mode;
+    this.docMethod = mode;
+    if (formType === 'master') {
+      if (mode === 'create') {
+        this.title = 'Create Recipe';
+        this.master = defaultRecipeMaster();
+        this.recipe = defaultRecipeMaster().recipes[0];
       } else {
-        if (mode === 'create') {
-          this.title = `Add Variant to ${master.name}`;
-          this.master = master;
-          this.recipe = clone(master.recipes.find(elem => elem.isMaster));
-          stripSharedProperties(this.recipe);
-          this.recipe.variantName = '< Add Variant Name >';
-        } else {
-          this.title = `Update ${recipe.variantName}`;
-          this.master = master;
-          this.recipe = recipe;
-        }
+        this.title = `Update ${master.name}`;
+        this.master = master;
+        this.recipe = master.recipes.find(elem => elem.isMaster);
       }
+    } else {
+      if (mode === 'create') {
+        this.title = `Add Variant to ${master.name}`;
+        this.master = master;
+        this.recipe = clone(master.recipes.find(elem => elem.isMaster));
+        stripSharedProperties(this.recipe);
+        this.recipe.variantName = '< Add Variant Name >';
+      } else {
+        this.title = `Update ${recipe.variantName}`;
+        this.master = master;
+        this.recipe = recipe;
+      }
+    }
   }
 
   /**
@@ -655,11 +628,10 @@ export class RecipeFormPage implements AfterViewInit {
             this.events.publish('update-nav-header', {other: 'form-submit-complete'});
           },
           error => {
-            this.toastService.presentToast(error.error.error.message);
+            this.toastService.presentToast(error);
           }
         );
     } else if (this.formType === 'recipe') {
-      console.log(payload);
       this.recipeService.postRecipeToMasterById(this.master._id, payload)
         .subscribe(
           () => {
@@ -667,7 +639,7 @@ export class RecipeFormPage implements AfterViewInit {
             this.events.publish('update-nav-header', {other: 'form-submit-complete'});
           },
           error => {
-            this.toastService.presentToast(error.error.error.message);
+            this.toastService.presentToast(error);
           }
         );
     }
@@ -690,7 +662,7 @@ export class RecipeFormPage implements AfterViewInit {
             this.events.publish('update-nav-header', {other: 'form-submit-complete'});
           },
           error => {
-            this.toastService.presentToast(error.error.error.message);
+            this.toastService.presentToast(error);
           }
         );
     } else if (this.formType === 'recipe') {
@@ -701,7 +673,7 @@ export class RecipeFormPage implements AfterViewInit {
             this.events.publish('update-nav-header', {other: 'form-submit-complete'});
           },
           error => {
-            this.toastService.presentToast(error.error.error.message);
+            this.toastService.presentToast(error);
           }
         );
     }
