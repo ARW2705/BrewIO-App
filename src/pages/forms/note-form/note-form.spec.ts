@@ -2,6 +2,9 @@
 import { ComponentFixture, TestBed, async } from '@angular/core/testing';
 import { IonicModule, NavController, NavParams, ViewController } from 'ionic-angular';
 
+/* Test configuration imports */
+import { configureTestBed } from '../../../../test-config/configureTestBed';
+
 /* Mock imports */
 import { NavMock, NavParamsMock, ViewControllerMock } from '../../../../test-config/mocks-ionic';
 
@@ -14,13 +17,14 @@ describe('Note Form', () => {
   describe('Note creation', () => {
     let fixture: ComponentFixture<NoteFormPage>;
     let notePage: NoteFormPage;
+    configureTestBed();
 
     beforeAll(async(() => {
       NavParamsMock.setParams('formMethod', 'create');
       NavParamsMock.setParams('noteType', 'recipe');
     }));
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           NoteFormPage
@@ -33,9 +37,11 @@ describe('Note Form', () => {
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ViewController, useClass: ViewControllerMock }
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(() => {
       fixture = TestBed.createComponent(NoteFormPage);
@@ -72,6 +78,7 @@ describe('Note Form', () => {
   describe('Note update', () => {
     let fixture: ComponentFixture<NoteFormPage>;
     let notePage: NoteFormPage;
+    configureTestBed();
 
     beforeAll(async(() => {
       NavParamsMock.setParams('formMethod', 'update');
@@ -79,7 +86,7 @@ describe('Note Form', () => {
       NavParamsMock.setParams('toUpdate', 'note to update');
     }));
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           NoteFormPage
@@ -92,9 +99,11 @@ describe('Note Form', () => {
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ViewController, useClass: ViewControllerMock }
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(() => {
       fixture = TestBed.createComponent(NoteFormPage);

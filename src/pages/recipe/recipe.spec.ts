@@ -9,6 +9,9 @@ import { Storage } from '@ionic/storage';
 import { baseURL } from '../../shared/constants/base-url';
 import { apiVersion } from '../../shared/constants/api-version';
 
+/* Test configuration imports */
+import { configureTestBed } from '../../../test-config/configureTestBed';
+
 /* Mock imports */
 import { mockRecipeMasterActive } from '../../../test-config/mockmodels/mockRecipeMasterActive';
 import { mockRecipeMasterInactive } from '../../../test-config/mockmodels/mockRecipeMasterInactive';
@@ -37,8 +40,9 @@ describe('Recipe Page', () => {
     let injector: TestBed;
     let httpMock: HttpTestingController;
     let recipeService: RecipeProvider;
+    configureTestBed();
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           RecipePage,
@@ -64,9 +68,11 @@ describe('Recipe Page', () => {
         schemas: [
           NO_ERRORS_SCHEMA
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(async(() => {
       injector = getTestBed();
@@ -81,7 +87,6 @@ describe('Recipe Page', () => {
     beforeEach(() => {
       fixture = TestBed.createComponent(RecipePage);
       recipePage = fixture.componentInstance;
-      fixture.detectChanges();
     });
 
     afterEach(() => {
@@ -89,10 +94,12 @@ describe('Recipe Page', () => {
     });
 
     test('should create the component', () => {
+      fixture.detectChanges();
       expect(recipePage).toBeDefined();
     }); // end 'should create the component' test
 
     test('should have a list of recipe masters', () => {
+      fixture.detectChanges();
       expect(recipePage.masterRecipeList.length).toBe(2);
     }); // end 'should have a list of recipe masters' test
 
@@ -105,8 +112,9 @@ describe('Recipe Page', () => {
     let httpMock: HttpTestingController;
     let recipeService: RecipeProvider;
     let eventService: Events;
+    configureTestBed();
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           RecipePage,
@@ -133,9 +141,11 @@ describe('Recipe Page', () => {
         schemas: [
           NO_ERRORS_SCHEMA
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(async(() => {
       injector = getTestBed();
@@ -151,7 +161,6 @@ describe('Recipe Page', () => {
     beforeEach(() => {
       fixture = TestBed.createComponent(RecipePage);
       recipePage = fixture.componentInstance;
-      fixture.detectChanges();
     });
 
     afterEach(() => {
@@ -159,6 +168,7 @@ describe('Recipe Page', () => {
     });
 
     test('should navigate to brewing process page with a recipe', done => {
+      fixture.detectChanges();
       const _mockRecipeMaster = mockRecipeMasterActive();
       const navSpy = jest.spyOn(recipePage.navCtrl, 'push');
       eventService.subscribe('update-nav-header', data => {
@@ -180,6 +190,7 @@ describe('Recipe Page', () => {
     }); // end 'should navigate to brewing process page with a recipe' test
 
     test('should fail to navigate to brewing process page when missing a recipe', () => {
+      fixture.detectChanges();
       const _mockRecipeMaster = mockRecipeMasterActive();
       _mockRecipeMaster.master = 'expect-none';
       const toastSpy = jest.spyOn(recipePage.toastService, 'presentToast');
@@ -191,6 +202,7 @@ describe('Recipe Page', () => {
     }); // end 'should fail to navigate to brewing process page when missing a recipe' test
 
     test('should navigate to recipe master details page for master at given index', done => {
+      fixture.detectChanges();
       const _mockRecipeMaster = mockRecipeMasterInactive();
       const navSpy = jest.spyOn(recipePage.navCtrl, 'push');
       eventService.subscribe('update-nav-header', data => {
@@ -209,6 +221,7 @@ describe('Recipe Page', () => {
     }); // end 'should navigate to recipe master details page for master at given index' test
 
     test('should fail to navigate to the recipe master details page with an invalid index', () => {
+      fixture.detectChanges();
       const toastSpy = jest.spyOn(recipePage.toastService, 'presentToast');
       recipePage.navToDetails(2);
       expect(toastSpy).toHaveBeenCalledWith(
@@ -218,6 +231,7 @@ describe('Recipe Page', () => {
     }); // end 'should fail to navigate to the recipe master details page with an invalid index' test
 
     test('should navigate to the recipe form in creation mode', done => {
+      fixture.detectChanges();
       const navSpy = jest.spyOn(recipePage.navCtrl, 'push');
       eventService.subscribe('update-nav-header', data => {
         expect(data.dest).toMatch('recipe-form');
@@ -245,8 +259,9 @@ describe('Recipe Page', () => {
     let httpMock: HttpTestingController;
     let recipeService: RecipeProvider;
     let userService: UserProvider;
+    configureTestBed();
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           RecipePage,
@@ -273,9 +288,11 @@ describe('Recipe Page', () => {
         schemas: [
           NO_ERRORS_SCHEMA
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(async(() => {
       injector = getTestBed();
@@ -291,7 +308,6 @@ describe('Recipe Page', () => {
     beforeEach(() => {
       fixture = TestBed.createComponent(RecipePage);
       recipePage = fixture.componentInstance;
-      fixture.detectChanges();
     });
 
     afterEach(() => {
@@ -299,6 +315,7 @@ describe('Recipe Page', () => {
     });
 
     test('should delete a recipe master', done => {
+      fixture.detectChanges();
       const recipeSpy = jest.spyOn(recipePage.recipeService, 'deleteRecipeMasterById');
       expect(recipePage.masterList.length).toBe(2);
       const _mockRecipeMaster = mockRecipeMasterInactive();
@@ -316,6 +333,7 @@ describe('Recipe Page', () => {
     }); // end 'should delete a recipe master' test
 
     test('should fail to delete a recipe master if a batch is active', () => {
+      fixture.detectChanges();
       const toastSpy = jest.spyOn(recipePage.toastService, 'presentToast');
       recipePage.deleteMaster(mockRecipeMasterActive());
       expect(toastSpy).toHaveBeenCalledWith(
@@ -325,6 +343,7 @@ describe('Recipe Page', () => {
     }); // end 'should fail to delete a recipe master if a batch is active' test
 
     test('should toggle a recipe master at index to be expanded', () => {
+      fixture.detectChanges();
       expect(recipePage.masterIndex).toBe(-1);
       recipePage.expandMaster(1);
       expect(recipePage.masterIndex).toBe(1);
@@ -333,6 +352,7 @@ describe('Recipe Page', () => {
     }); // end 'should toggle a recipe master at index to be expanded' test
 
     test('should check if user is logged in', () => {
+      fixture.detectChanges();
       expect(recipePage.isLoggedIn()).toBe(false);
       const _mockUser = mockUser();
       userService.user$.next(_mockUser);
@@ -340,12 +360,14 @@ describe('Recipe Page', () => {
     }); // end 'should check if user is logged in' test
 
     test('should compose the recipe master list with values from recipe set as the master', () => {
+      fixture.detectChanges();
       recipePage.masterRecipeList = [];
       recipePage.mapMasterRecipes();
       expect(recipePage.masterRecipeList.length).toBe(2);
     }); // end 'should compose the recipe master list with values from recipe set as the master' test
 
     test('should mark given recipe master index as being expanded', () => {
+      fixture.detectChanges();
       recipePage.masterIndex = 0;
       expect(recipePage.showExpandedMaster(0)).toBe(true);
       expect(recipePage.showExpandedMaster(1)).toBe(false);

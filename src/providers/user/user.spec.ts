@@ -1,5 +1,5 @@
 /* Module imports */
-import { TestBed, getTestBed } from '@angular/core/testing';
+import { TestBed, getTestBed, async } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { Events } from 'ionic-angular';
 import { IonicStorageModule } from '@ionic/storage';
@@ -7,6 +7,9 @@ import { IonicStorageModule } from '@ionic/storage';
 /* Constants imports */
 import { baseURL } from '../../shared/constants/base-url';
 import { apiVersion } from '../../shared/constants/api-version';
+
+/* Test configuration imports */
+import { configureTestBed } from '../../../test-config/configureTestBed';
 
 /* Mock imports */
 import { mockUser } from '../../../test-config/mockmodels/mockUser';
@@ -25,8 +28,9 @@ describe('User Service', () => {
   let injector: TestBed;
   let userService: UserProvider;
   let httpMock: HttpTestingController;
+  configureTestBed();
 
-  beforeEach(() => {
+  beforeAll(done => (async() => {
     TestBed.configureTestingModule({
       imports: [
         HttpClientTestingModule,
@@ -41,6 +45,11 @@ describe('User Service', () => {
         ProcessHttpErrorProvider,
       ]
     });
+  })()
+  .then(done)
+  .catch(done.fail));
+
+  beforeEach(() => {
     injector = getTestBed();
     userService = injector.get(UserProvider);
     httpMock = injector.get(HttpTestingController);

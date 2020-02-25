@@ -1,5 +1,5 @@
 /* Module imports */
-import { TestBed, getTestBed } from '@angular/core/testing';
+import { TestBed, getTestBed, async } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { combineLatest } from 'rxjs/observable/combineLatest';
@@ -7,6 +7,9 @@ import { combineLatest } from 'rxjs/observable/combineLatest';
 /* Constants imports */
 import { baseURL } from '../../shared/constants/base-url';
 import { apiVersion } from '../../shared/constants/api-version';
+
+/* Test configuration imports */
+import { configureTestBed } from '../../../test-config/configureTestBed';
 
 /* Mock imports */
 import { mockRecipeMasterActive } from '../../../test-config/mockmodels/mockRecipeMasterActive';
@@ -25,8 +28,9 @@ describe('Recipe Service', () => {
   let injector: TestBed;
   let recipeService: RecipeProvider;
   let httpMock: HttpTestingController;
+  configureTestBed();
 
-  beforeEach(() => {
+  beforeAll(done => (async() => {
     TestBed.configureTestingModule({
       imports: [
         HttpClientTestingModule
@@ -36,6 +40,11 @@ describe('Recipe Service', () => {
         ProcessHttpErrorProvider
       ]
     });
+  })()
+  .then(done)
+  .catch(done.fail));
+
+  beforeEach(() => {
     injector = getTestBed();
     recipeService = injector.get(RecipeProvider);
     httpMock = injector.get(HttpTestingController);

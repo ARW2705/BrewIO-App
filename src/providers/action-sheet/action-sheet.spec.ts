@@ -1,6 +1,9 @@
 /* Module imports */
-import { TestBed, getTestBed } from '@angular/core/testing';
+import { TestBed, getTestBed, async } from '@angular/core/testing';
 import { ActionSheetController } from 'ionic-angular';
+
+/* Test configuration imports */
+import { configureTestBed } from '../../../test-config/configureTestBed';
 
 /* Mock imports */
 import { mockActionSheetButtons } from '../../../test-config/mockmodels/mockActionSheetButtons';
@@ -15,8 +18,9 @@ import { ActionSheetProvider } from './action-sheet';
 describe('Action sheet provider', () => {
   let injector;
   let actionService;
+  configureTestBed();
 
-  beforeEach(() => {
+  beforeAll(done => (async() => {
     TestBed.configureTestingModule({
       imports: [],
       providers: [
@@ -27,7 +31,9 @@ describe('Action sheet provider', () => {
 
     injector = getTestBed();
     actionService = injector.get(ActionSheetProvider);
-  });
+  })()
+  .then(done)
+  .catch(done.fail));
 
   test('should create action buttons', () => {
     const buttons: Array<ActionSheetButton> = actionService.generateActionSheetButtons(mockActionSheetButtons());

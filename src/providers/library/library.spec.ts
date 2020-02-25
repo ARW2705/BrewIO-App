@@ -1,10 +1,13 @@
 /* Module imports */
-import { TestBed, getTestBed } from '@angular/core/testing';
+import { TestBed, getTestBed, async } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 
 /* Constant imports */
 import { baseURL } from '../../shared/constants/base-url';
 import { apiVersion } from '../../shared/constants/api-version';
+
+/* Test configuration imports */
+import { configureTestBed } from '../../../test-config/configureTestBed';
 
 /* Mock imports */
 import { mockGrains } from '../../../test-config/mockmodels/mockGrains';
@@ -20,8 +23,9 @@ describe('Library service', () => {
   let injector: TestBed;
   let libraryService: LibraryProvider;
   let httpMock: HttpTestingController;
+  configureTestBed();
 
-  beforeEach(() => {
+  beforeAll(done => (async() => {
     TestBed.configureTestingModule({
       imports: [ HttpClientTestingModule ],
       providers: [
@@ -29,6 +33,11 @@ describe('Library service', () => {
         ProcessHttpErrorProvider
       ]
     });
+  })()
+  .then(done)
+  .catch(done.fail));
+
+  beforeEach(() => {
     injector = getTestBed();
     libraryService = injector.get(LibraryProvider);
     httpMock = injector.get(HttpTestingController);

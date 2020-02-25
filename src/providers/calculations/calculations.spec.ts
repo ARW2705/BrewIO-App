@@ -1,5 +1,8 @@
 /* Module imports */
-import { TestBed, getTestBed } from '@angular/core/testing';
+import { TestBed, getTestBed, async } from '@angular/core/testing';
+
+/* Test configuration imports */
+import { configureTestBed } from '../../../test-config/configureTestBed';
 
 /* Mock imports */
 import { mockGrainBill } from '../../../test-config/mockmodels/mockGrainBill';
@@ -14,8 +17,9 @@ import { CalculationsProvider } from './calculations';
 describe('Calculations service', () => {
   let injector: TestBed;
   let calculationService: CalculationsProvider;
+  configureTestBed();
 
-  beforeEach(() => {
+  beforeAll(done => (async() => {
     TestBed.configureTestingModule({
       providers: [
         CalculationsProvider
@@ -23,7 +27,9 @@ describe('Calculations service', () => {
     });
     injector = getTestBed();
     calculationService = injector.get(CalculationsProvider);
-  });
+  })()
+  .then(done)
+  .catch(done.fail));
 
   describe('\nCalculates with provided values', () => {
 

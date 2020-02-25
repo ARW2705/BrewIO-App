@@ -2,6 +2,9 @@
 import { ComponentFixture, TestBed, async } from '@angular/core/testing';
 import { IonicModule, NavController, NavParams, ViewController } from 'ionic-angular';
 
+/* Test configuration imports */
+import { configureTestBed } from '../../../../test-config/configureTestBed';
+
 /* Mock imports */
 import { mockGrains } from '../../../../test-config/mockmodels/mockGrains';
 import { mockHops } from '../../../../test-config/mockmodels/mockHops';
@@ -18,6 +21,7 @@ describe('Ingredient Form', () => {
   describe('New instance', () => {
     let fixture: ComponentFixture<IngredientFormPage>;
     let ingredientPage: IngredientFormPage;
+    configureTestBed();
 
     beforeAll(async(() => {
       NavParamsMock.setParams('data', {
@@ -27,7 +31,7 @@ describe('Ingredient Form', () => {
       });
     }));
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           IngredientFormPage
@@ -40,9 +44,11 @@ describe('Ingredient Form', () => {
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ViewController, useClass: ViewControllerMock }
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(() => {
       fixture = TestBed.createComponent(IngredientFormPage);
@@ -89,6 +95,7 @@ describe('Ingredient Form', () => {
   describe('Update grains', () => {
     let fixture: ComponentFixture<IngredientFormPage>;
     let ingredientPage: IngredientFormPage;
+    configureTestBed();
 
     beforeAll(async(() => {
       NavParamsMock.setParams('data', {
@@ -102,7 +109,7 @@ describe('Ingredient Form', () => {
       });
     }));
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           IngredientFormPage
@@ -115,9 +122,11 @@ describe('Ingredient Form', () => {
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ViewController, useClass: ViewControllerMock }
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(() => {
       fixture = TestBed.createComponent(IngredientFormPage);
@@ -158,6 +167,7 @@ describe('Ingredient Form', () => {
   describe('Update hops', () => {
     let fixture: ComponentFixture<IngredientFormPage>;
     let ingredientPage: IngredientFormPage;
+    configureTestBed();
 
     beforeAll(async(() => {
       NavParamsMock.setParams('data', {
@@ -172,7 +182,7 @@ describe('Ingredient Form', () => {
       });
     }));
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           IngredientFormPage
@@ -185,9 +195,11 @@ describe('Ingredient Form', () => {
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ViewController, useClass: ViewControllerMock }
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(() => {
       fixture = TestBed.createComponent(IngredientFormPage);
@@ -222,6 +234,7 @@ describe('Ingredient Form', () => {
   describe('Update yeast', () => {
     let fixture: ComponentFixture<IngredientFormPage>;
     let ingredientPage: IngredientFormPage;
+    configureTestBed();
 
     beforeAll(async(() => {
       NavParamsMock.setParams('data', {
@@ -235,7 +248,7 @@ describe('Ingredient Form', () => {
       });
     }));
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           IngredientFormPage
@@ -248,9 +261,11 @@ describe('Ingredient Form', () => {
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ViewController, useClass: ViewControllerMock }
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(() => {
       fixture = TestBed.createComponent(IngredientFormPage);
@@ -283,6 +298,7 @@ describe('Ingredient Form', () => {
   describe('Update other ingredient', () => {
     let fixture: ComponentFixture<IngredientFormPage>;
     let ingredientPage: IngredientFormPage;
+    configureTestBed();
 
     beforeAll(async(() => {
       const _mockOtherIngredient = mockOtherIngredient()[0];
@@ -298,7 +314,7 @@ describe('Ingredient Form', () => {
       });
     }));
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           IngredientFormPage
@@ -311,9 +327,11 @@ describe('Ingredient Form', () => {
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ViewController, useClass: ViewControllerMock }
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(() => {
       fixture = TestBed.createComponent(IngredientFormPage);

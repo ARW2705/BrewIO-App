@@ -3,6 +3,9 @@ import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/test
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { IonicModule, NavController, Events } from 'ionic-angular';
 
+/* Test configuration imports */
+import { configureTestBed } from '../../../test-config/configureTestBed';
+
 /* Mock imports */
 import { NavMock } from '../../../test-config/mocks-ionic';
 
@@ -15,8 +18,9 @@ describe('Tabs page', () => {
   describe('Component creation', () => {
     let tabsPage: TabsPage;
     let fixture: ComponentFixture<TabsPage>;
+    configureTestBed();
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           TabsPage
@@ -28,21 +32,24 @@ describe('Tabs page', () => {
         schemas: [
           NO_ERRORS_SCHEMA
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(() => {
       fixture = TestBed.createComponent(TabsPage);
       tabsPage = fixture.componentInstance;
-      fixture.detectChanges();
     });
 
     test('should create component', () => {
+      fixture.detectChanges();
       expect(tabsPage).toBeDefined();
     }); // end 'should create component' test
 
     test('should get the tab header', () => {
+      fixture.detectChanges();
       expect(tabsPage.getCurrentTitle()).toMatch('BrewIO');
       tabsPage.currentIndex = 1;
       expect(tabsPage.getCurrentTitle()).toMatch('Recipes');
@@ -53,8 +60,9 @@ describe('Tabs page', () => {
   describe('Tab navigation', () => {
     let tabsPage: TabsPage;
     let fixture: ComponentFixture<TabsPage>;
+    configureTestBed();
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           TabsPage
@@ -68,17 +76,19 @@ describe('Tabs page', () => {
         schemas: [
           NO_ERRORS_SCHEMA
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(() => {
       fixture = TestBed.createComponent(TabsPage);
       tabsPage = fixture.componentInstance;
-      fixture.detectChanges();
     });
 
     test('should change the tab index', () => {
+      fixture.detectChanges();
       const tabSpy = jest.spyOn(tabsPage.navTabs, 'select');
       setTimeout(() => {
         tabsPage.setIndex(1);
@@ -88,6 +98,7 @@ describe('Tabs page', () => {
     }); // end 'should change the tab index' test
 
     test('should change tab navigation index', () => {
+      fixture.detectChanges();
       const tabSpy = jest.spyOn(tabsPage, 'setIndex');
       const updateSpy = jest.spyOn(tabsPage, 'updateHeader');
       setTimeout(() => {
@@ -105,8 +116,9 @@ describe('Tabs page', () => {
     let fixture: ComponentFixture<TabsPage>;
     let injector: TestBed;
     let eventService: Events;
+    configureTestBed();
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           TabsPage
@@ -121,31 +133,35 @@ describe('Tabs page', () => {
         schemas: [
           NO_ERRORS_SCHEMA
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(() => {
       fixture = TestBed.createComponent(TabsPage);
       tabsPage = fixture.componentInstance;
       injector = getTestBed();
       eventService = injector.get(Events);
-      fixture.detectChanges();
     });
 
     test('should update header after event', () => {
+      fixture.detectChanges();
       const updateHeaderSpy = jest.spyOn(tabsPage, 'updateHeader');
       tabsPage.popHeaderNavEventHandler({origin: 'HomePage'});
       expect(updateHeaderSpy).toHaveBeenCalled();
     }); // end 'should update header after event' test
 
     test('should not update header after event', () => {
+      fixture.detectChanges();
       const updateHeaderSpy = jest.spyOn(tabsPage, 'updateHeader');
       tabsPage.popHeaderNavEventHandler({origin: 'SomeOtherPage'});
       expect(updateHeaderSpy).not.toHaveBeenCalled();
     }); // end 'should not update header after event' test
 
     test('should emit a header update event', done => {
+      fixture.detectChanges();
       eventService.subscribe('update-nav-header', data => {
         expect(data.dest).toMatch(tabsPage.tabs[tabsPage.currentIndex].title.toLowerCase());
         expect(data.destType).toMatch('tab');

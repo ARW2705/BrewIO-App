@@ -8,6 +8,9 @@ import { Storage } from '@ionic/storage';
 import { baseURL } from '../../../shared/constants/base-url';
 import { apiVersion } from '../../../shared/constants/api-version';
 
+/* Test configuration imports */
+import { configureTestBed } from '../../../../test-config/configureTestBed';
+
 /* Mock imports */
 import { NavMock, NavParamsMock, StorageMock, ViewControllerMock, ToastControllerMock } from '../../../../test-config/mocks-ionic';
 
@@ -27,8 +30,9 @@ describe('Signup Form', () => {
   let signupPage: SignupPage;
   let httpMock: HttpTestingController;
   let injector: TestBed;
+  configureTestBed();
 
-  beforeEach(async(() => {
+  beforeAll(done => (async() => {
     TestBed.configureTestingModule({
       declarations: [
         SignupPage
@@ -50,9 +54,11 @@ describe('Signup Form', () => {
         { provide: ToastController, useClass: ToastControllerMock },
         { provide: Storage, useClass: StorageMock }
       ]
-    })
-    .compileComponents();
-  }));
+    });
+    await TestBed.compileComponents();
+  })()
+  .then(done)
+  .catch(done.fail));
 
   beforeEach(async(() => {
     injector = getTestBed();

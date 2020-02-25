@@ -9,6 +9,9 @@ import { IonicStorageModule } from '@ionic/storage';
 import { baseURL } from '../../shared/constants/base-url';
 import { apiVersion } from '../../shared/constants/api-version';
 
+/* Test configuration imports */
+import { configureTestBed } from '../../../test-config/configureTestBed';
+
 /* Mock imports */
 import { mockUser } from '../../../test-config/mockmodels/mockUser';
 import { NavMock } from '../../../test-config/mocks-ionic';
@@ -31,8 +34,9 @@ describe('User Page', () => {
   describe('Page component creation', () => {
     let userPage: UserPage;
     let fixture: ComponentFixture<UserPage>;
+    configureTestBed();
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           UserPage
@@ -54,21 +58,24 @@ describe('User Page', () => {
           { provide: ToastProvider, useValue: {} },
           { provide: Storage, useClass: StorageMock }
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(() => {
       fixture = TestBed.createComponent(UserPage);
       userPage = fixture.componentInstance;
-      fixture.detectChanges();
     });
 
     test('should create the component', () => {
+      fixture.detectChanges();
       expect(userPage).toBeDefined();
     }); // end 'should create the component' test
 
     test('should have an empty user', () => {
+      fixture.detectChanges();
       expect(userPage.user$).not.toBeNull();
     }); // end 'should have an empty user' test
 
@@ -81,8 +88,9 @@ describe('User Page', () => {
     let injector: TestBed;
     let httpMock: HttpTestingController;
     let userService: UserProvider;
+    configureTestBed();
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           UserPage
@@ -93,7 +101,6 @@ describe('User Page', () => {
           HttpClientTestingModule
         ],
         providers: [
-          // NavController,
           UserProvider,
           ToastProvider,
           { provide: NavController, useValue: {} },
@@ -104,9 +111,11 @@ describe('User Page', () => {
           { provide: Storage, useClass: StorageMock },
           { provide: ToastController, useClass: ToastControllerMock }
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     afterEach(() => {
       httpMock.verify();
@@ -122,20 +131,22 @@ describe('User Page', () => {
     beforeEach(() => {
       fixture = TestBed.createComponent(UserPage);
       userPage = fixture.componentInstance;
-      fixture.detectChanges();
     });
 
     test('should have new updated values', () => {
+      fixture.detectChanges();
       userPage.originalValues.email = 'new-email';
       expect(userPage.hasValuesToUpdate()).toBe(true);
     }); // end 'should have new updated values' test
 
     test('should stop editing', () => {
+      fixture.detectChanges();
       userPage.changeEdit('email', null);
       expect(userPage.editing).toMatch('');
     }); // end 'should stop editing' test
 
     test('should init form with user', () => {
+      fixture.detectChanges();
       const _mockUser = mockUser();
       expect(userPage.userForm.controls.email.value).toMatch(_mockUser.email);
       expect(userPage.userForm.controls.firstname.value).toMatch(_mockUser.firstname);
@@ -143,30 +154,36 @@ describe('User Page', () => {
     }); // end 'should init form with user' test
 
     test('should be logged in', () => {
+      fixture.detectChanges();
       expect(userPage.isLoggedIn()).toBe(true);
     }); // end 'should be logged in' test
 
     test('should change editing to \'email\'', () => {
+      fixture.detectChanges();
       userPage.changeEdit('email', undefined);
       expect(userPage.editing).toMatch('email');
     }); // end 'should change editing to \'email\'' test
 
     test('should change editing to \'firstname\'', () => {
+      fixture.detectChanges();
       userPage.changeEdit('firstname', undefined);
       expect(userPage.editing).toMatch('firstname');
     }); // end 'should change editing to \'firstname\'' test
 
     test('should change editing to \'lastname\'', () => {
+      fixture.detectChanges();
       userPage.changeEdit('lastname', undefined);
       expect(userPage.editing).toMatch('lastname');
     }); // end 'should change editing to \'lastname\'' test
 
     test('should stop editing', () => {
+      fixture.detectChanges();
       userPage.changeEdit('email', null);
       expect(userPage.editing).toMatch('');
     }); // end 'should stop editing' test
 
     test('should submit an update', () => {
+      fixture.detectChanges();
       const _mockUser = mockUser();
       const onUpdateSpy = jest.spyOn(userPage, 'updateForm');
       userPage.onUpdate();
@@ -179,7 +196,6 @@ describe('User Page', () => {
         lastname: _mockUser.lastname
       });
 
-      fixture.detectChanges();
       expect(onUpdateSpy).toHaveBeenCalled();
     }); // end 'should submit an update' test
 
@@ -189,8 +205,9 @@ describe('User Page', () => {
   describe('Page without user', () => {
     let userPage: UserPage;
     let fixture: ComponentFixture<UserPage>;
+    configureTestBed();
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           UserPage
@@ -210,25 +227,29 @@ describe('User Page', () => {
           { provide: ToastProvider, useValue: {} },
           { provide: Storage, useClass: StorageMock }
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(() => {
       fixture = TestBed.createComponent(UserPage);
       userPage = fixture.componentInstance;
-      fixture.detectChanges();
     });
 
     test('should init default form', () => {
+      fixture.detectChanges();
       expect(userPage.userForm.controls.email.value).toMatch('');
     }); // end 'should init default form' test
 
     test('should have no new updated values', () => {
+      fixture.detectChanges();
       expect(userPage.hasValuesToUpdate()).toBe(false);
     }); // end 'should have no new updated values' test
 
     test('should be logged out', () => {
+      fixture.detectChanges();
       expect(userPage.isLoggedIn()).toBe(false);
     }); // end 'should be logged out' test
 
@@ -240,8 +261,9 @@ describe('User Page', () => {
     let fixture: ComponentFixture<UserPage>;
     let injector: TestBed;
     let modalService: ModalProvider;
+    configureTestBed();
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           UserPage
@@ -264,9 +286,11 @@ describe('User Page', () => {
           { provide: Storage, useClass: StorageMock },
           { provide: ModalController, useClass: ModalControllerMock }
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(async(() => {
       injector = getTestBed();
@@ -279,27 +303,27 @@ describe('User Page', () => {
     });
 
     test('should be in editing for field', () => {
+      fixture.detectChanges();
       const field = 'firstname';
       userPage.editing = field;
-      fixture.detectChanges();
       expect(userPage.isEditing(field)).toBe(true);
     }); // end 'should be in editing for field' test
 
     test('should not be in editing for field', () => {
+      fixture.detectChanges();
       const field = 'email';
       userPage.editing = '';
-      fixture.detectChanges();
       expect(userPage.isEditing(field)).toBe(false);
     }); // end 'should not be in editing for field' test
 
     test('should map new values to original values', () => {
+      fixture.detectChanges();
       const newValues = {
         email: 'new-email',
         firstname: 'new-firstname',
         lastname: 'new-lastname'
       };
       userPage.mapOriginalValues(newValues);
-      fixture.detectChanges();
       expect(userPage.originalValues.email).toMatch(newValues.email);
       expect(userPage.originalValues.firstname).toMatch(newValues.firstname);
       expect(userPage.originalValues.lastname).toMatch(newValues.lastname);

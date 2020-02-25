@@ -1,5 +1,5 @@
 /* Module Imports */
-import { TestBed, getTestBed } from '@angular/core/testing';
+import { TestBed, getTestBed, async } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { IonicStorageModule } from '@ionic/storage';
@@ -7,6 +7,9 @@ import { IonicStorageModule } from '@ionic/storage';
 /* Constant imports */
 import { baseURL } from '../../shared/constants/base-url';
 import { apiVersion } from '../../shared/constants/api-version';
+
+/* Test configuration imports */
+import { configureTestBed } from '../../../test-config/configureTestBed';
 
 /* Mock imports */
 import { StorageMock, HttpMock } from '../../../test-config/mocks-ionic';
@@ -25,8 +28,9 @@ describe('HTTP Interceptor service', () => {
   let httpMock: HttpTestingController;
   let userService: UserProvider;
   let mockHttpService: HttpMock;
+  configureTestBed();
 
-  beforeEach(() => {
+  beforeAll(done => (async() => {
     TestBed.configureTestingModule({
       imports: [
         HttpClientTestingModule,
@@ -43,7 +47,11 @@ describe('HTTP Interceptor service', () => {
         { provide: HTTP_INTERCEPTORS, useClass: UnauthorizedInterceptor, multi: true}
       ]
     });
+  })()
+  .then(done)
+  .catch(done.fail));
 
+  beforeEach(() => {
     injector = getTestBed();
     httpMock = injector.get(HttpTestingController);
     userService = injector.get(UserProvider);

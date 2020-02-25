@@ -1,6 +1,9 @@
 /* Module imports */
-import { TestBed, getTestBed } from '@angular/core/testing';
+import { TestBed, getTestBed, async } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
+
+/* Test configuration imports */
+import { configureTestBed } from '../../../test-config/configureTestBed';
 
 /* Provider imports */
 import { ProcessHttpErrorProvider } from './process-http-error';
@@ -8,13 +11,19 @@ import { ProcessHttpErrorProvider } from './process-http-error';
 describe('Process HTTP Error Service', () => {
   let injector: TestBed;
   let processHttpService: ProcessHttpErrorProvider;
+  configureTestBed();
 
-  beforeEach(() => {
+  beforeAll(done => (async() => {
     TestBed.configureTestingModule({
       providers: [
         ProcessHttpErrorProvider
       ]
     });
+  })()
+  .then(done)
+  .catch(done.fail));
+
+  beforeEach(() => {
     injector = getTestBed();
     processHttpService = injector.get(ProcessHttpErrorProvider);
   });

@@ -6,6 +6,9 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { Storage } from '@ionic/storage';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
+/* Test configuration imports */
+import { configureTestBed } from '../../../test-config/configureTestBed';
+
 /* Mock imports */
 import { mockUser } from '../../../test-config/mockmodels/mockUser';
 import { mockRecipeMasterActive } from '../../../test-config/mockmodels/mockRecipeMasterActive';
@@ -32,8 +35,9 @@ describe('Home Page', () => {
   describe('User not logged in', () => {
     let fixture: ComponentFixture<HomePage>;
     let homePage: HomePage;
+    configureTestBed();
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           HomePage
@@ -55,9 +59,11 @@ describe('Home Page', () => {
         schemas: [
           NO_ERRORS_SCHEMA
         ]
-      })
-      .compileComponents()
-    }));
+      });
+      await TestBed.compileComponents()
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(() => {
       fixture = TestBed.createComponent(HomePage);
@@ -92,8 +98,9 @@ describe('Home Page', () => {
     let userService: UserProvider;
     let recipeService: RecipeProvider;
     let injector: TestBed;
+    configureTestBed();
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           HomePage
@@ -114,9 +121,11 @@ describe('Home Page', () => {
         schemas: [
           NO_ERRORS_SCHEMA
         ]
-      })
-      .compileComponents()
-    }));
+      });
+      await TestBed.compileComponents()
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(async(() => {
       injector = getTestBed();

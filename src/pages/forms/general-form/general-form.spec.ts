@@ -2,6 +2,9 @@
 import { ComponentFixture, TestBed, async } from '@angular/core/testing';
 import { IonicModule, NavController, NavParams, ViewController } from 'ionic-angular';
 
+/* Test configuration imports */
+import { configureTestBed } from '../../../../test-config/configureTestBed';
+
 /* Mock imports */
 import { mockStyles } from '../../../../test-config/mockmodels/mockStyles';
 import { NavMock, NavParamsMock, ViewControllerMock } from '../../../../test-config/mocks-ionic';
@@ -15,6 +18,7 @@ describe('General Form', () => {
   describe('Form create', () => {
     let fixture: ComponentFixture<GeneralFormPage>;
     let generalPage: GeneralFormPage;
+    configureTestBed();
 
     beforeAll(async(() => {
       NavParamsMock.setParams('formType', 'master');
@@ -22,7 +26,7 @@ describe('General Form', () => {
       NavParamsMock.setParams('styles', mockStyles());
     }));
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           GeneralFormPage
@@ -35,9 +39,11 @@ describe('General Form', () => {
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ViewController, useClass: ViewControllerMock }
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(() => {
       fixture = TestBed.createComponent(GeneralFormPage);
@@ -131,6 +137,7 @@ describe('General Form', () => {
   describe('Form update', () => {
     let fixture: ComponentFixture<GeneralFormPage>;
     let generalPage: GeneralFormPage;
+    configureTestBed();
 
     beforeAll(async(() => {
       NavParamsMock.setParams('formType', 'recipe');
@@ -150,7 +157,7 @@ describe('General Form', () => {
       });
     }));
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           GeneralFormPage
@@ -163,9 +170,11 @@ describe('General Form', () => {
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ViewController, useClass: ViewControllerMock }
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(() => {
       fixture = TestBed.createComponent(GeneralFormPage);

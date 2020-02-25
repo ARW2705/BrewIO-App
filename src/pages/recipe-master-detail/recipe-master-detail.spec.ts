@@ -8,6 +8,9 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { baseURL } from '../../shared/constants/base-url';
 import { apiVersion } from '../../shared/constants/api-version';
 
+/* Test configuration imports */
+import { configureTestBed } from '../../../test-config/configureTestBed';
+
 /* Mock imports */
 import { mockRecipeMasterActive } from '../../../test-config/mockmodels/mockRecipeMasterActive';
 import { mockRecipeMasterInactive } from '../../../test-config/mockmodels/mockRecipeMasterInactive';
@@ -35,12 +38,13 @@ describe('Recipe Master Details Page', () => {
     let recipeService: RecipeProvider;
     let fixture: ComponentFixture<RecipeMasterDetailPage>;
     let rmdPage: RecipeMasterDetailPage;
+    configureTestBed();
 
     beforeAll(async(() => {
       NavParamsMock.setParams('masterId', 'active');
     }));
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           RecipeMasterDetailPage
@@ -61,9 +65,11 @@ describe('Recipe Master Details Page', () => {
         schemas: [
           NO_ERRORS_SCHEMA
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(async(() => {
       injector = getTestBed();
@@ -103,12 +109,13 @@ describe('Recipe Master Details Page', () => {
     let eventService: Events;
     let recipeService: RecipeProvider;
     let httpMock: HttpTestingController;
+    configureTestBed();
 
     beforeAll(async(() => {
       NavParamsMock.setParams('masterId', 'active');
     }));
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           RecipeMasterDetailPage,
@@ -133,9 +140,11 @@ describe('Recipe Master Details Page', () => {
         schemas: [
           NO_ERRORS_SCHEMA
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(async(() => {
       injector = getTestBed();
@@ -151,7 +160,6 @@ describe('Recipe Master Details Page', () => {
     beforeEach(() => {
       fixture = TestBed.createComponent(RecipeMasterDetailPage);
       rmdPage = fixture.componentInstance;
-      fixture.detectChanges();
     });
 
     afterEach(() => {
@@ -159,12 +167,14 @@ describe('Recipe Master Details Page', () => {
     });
 
     test('should handle nav pop event by calling nav controller pop', () => {
+      fixture.detectChanges();
       const navCtrlSpy = jest.spyOn(rmdPage.navCtrl, 'pop');
       rmdPage.headerNavPopEventHandler({origin: 'RecipePage'});
       expect(navCtrlSpy).toHaveBeenCalled();
     }); // end 'should handle nav pop event by calling nav controller pop' test
 
     test('should handle nav pop event by emitting update header', done => {
+      fixture.detectChanges();
       eventService.subscribe('update-nav-header', data => {
         expect(data.destTitle).toMatch(rmdPage.recipeMaster.name);
         done();
@@ -173,6 +183,7 @@ describe('Recipe Master Details Page', () => {
     }); // end 'should handle nav pop event by emitting update header' test
 
     test('should update header when navigating to process page with a recipe', done => {
+      fixture.detectChanges();
       const _mockRecipe = mockRecipeComplete();
       eventService.subscribe('update-nav-header', data => {
         expect(data.dest).toMatch('process');
@@ -185,6 +196,7 @@ describe('Recipe Master Details Page', () => {
     }); // end 'should update header when navigating to process page with a recipe' test
 
     test('should navigate to process page with a recipe', () => {
+      fixture.detectChanges();
       const _mockRecipe = mockRecipeComplete();
       const navCtrlSpy = jest.spyOn(rmdPage.navCtrl, 'push');
       rmdPage.navToBrewProcess(_mockRecipe);
@@ -199,6 +211,7 @@ describe('Recipe Master Details Page', () => {
     }); // end 'should navigate to process page with a recipe' test
 
     test('should present toast stating the recipe is missing its process', () => {
+      fixture.detectChanges();
       const _mockRecipe = mockRecipeIncomplete();
       const toastSpy = jest.spyOn(rmdPage.toastService, 'presentToast');
       rmdPage.navToBrewProcess(_mockRecipe);
@@ -206,6 +219,7 @@ describe('Recipe Master Details Page', () => {
     }); // end 'should present toast stating the recipe is missing its process' test
 
     test('should navigate to recipe form to update the recipe master', () => {
+      fixture.detectChanges();
       const navCtrlSpy = jest.spyOn(rmdPage.navCtrl, 'push');
       rmdPage.navToRecipeForm('master');
       expect(navCtrlSpy).toHaveBeenCalledWith(
@@ -219,6 +233,7 @@ describe('Recipe Master Details Page', () => {
     }); // end 'should navigate to recipe form to update the recipe master' test
 
     test('should navigate to recipe form to update a recipe variant', () => {
+      fixture.detectChanges();
       const _mockRecipe = mockRecipeComplete();
       const navCtrlSpy = jest.spyOn(rmdPage.navCtrl, 'push');
       rmdPage.navToRecipeForm('recipe', _mockRecipe, {data: 'some-extra-data'});
@@ -235,6 +250,7 @@ describe('Recipe Master Details Page', () => {
     }); // end 'should navigate to recipe form to update a recipe variant' test
 
     test('should navigate to recipe form to add a recipe variant', () => {
+      fixture.detectChanges();
       const navCtrlSpy = jest.spyOn(rmdPage.navCtrl, 'push');
       rmdPage.navToRecipeForm('recipe');
       expect(navCtrlSpy).toHaveBeenCalledWith(
@@ -248,6 +264,7 @@ describe('Recipe Master Details Page', () => {
     }); // end 'should navigate to recipe form to add a recipe variant' test
 
     test('should emit update header event on navigation to recipe form', done => {
+      fixture.detectChanges();
       eventService.subscribe('update-nav-header', data => {
         expect(data.dest).toMatch('recipe-form');
         expect(data.destType).toMatch('page');
@@ -266,12 +283,13 @@ describe('Recipe Master Details Page', () => {
     let injector: TestBed;
     let recipeService: RecipeProvider;
     let httpMock: HttpTestingController;
+    configureTestBed();
 
     beforeAll(async(() => {
       NavParamsMock.setParams('masterId', 'active');
     }));
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           RecipeMasterDetailPage,
@@ -296,9 +314,11 @@ describe('Recipe Master Details Page', () => {
         schemas: [
           NO_ERRORS_SCHEMA
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(async(() => {
       injector = getTestBed();
@@ -313,7 +333,6 @@ describe('Recipe Master Details Page', () => {
     beforeEach(() => {
       fixture = TestBed.createComponent(RecipeMasterDetailPage);
       rmdPage = fixture.componentInstance;
-      fixture.detectChanges();
     });
 
     afterEach(() => {
@@ -321,10 +340,12 @@ describe('Recipe Master Details Page', () => {
     });
 
     test('should check if recipe is able to be deleted', () => {
+      fixture.detectChanges();
       expect(rmdPage.canDelete()).toBe(true);
     }); // end 'should check if recipe is able to be deleted' test
 
     test('should delete a recipe master note', done => {
+      fixture.detectChanges();
       rmdPage.recipeMaster.notes.push('a test note');
       const patchSpy = jest.spyOn(rmdPage.recipeService, 'patchRecipeMasterById');
       rmdPage.deleteNote(0);
@@ -339,6 +360,7 @@ describe('Recipe Master Details Page', () => {
     }); // end 'should delete a recipe master note' test
 
     test('should delete a recipe', done => {
+      fixture.detectChanges();
       const _mockRecipeMaster = mockRecipeMasterActive();
       _mockRecipeMaster.recipes.splice(0, 1);
       const _mockRecipe = mockRecipeComplete();
@@ -363,12 +385,13 @@ describe('Recipe Master Details Page', () => {
     let injector: TestBed;
     let recipeService: RecipeProvider;
     let httpMock: HttpTestingController;
+    configureTestBed();
 
     beforeAll(async(() => {
       NavParamsMock.setParams('masterId', 'active');
     }));
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           RecipeMasterDetailPage,
@@ -393,9 +416,11 @@ describe('Recipe Master Details Page', () => {
         schemas: [
           NO_ERRORS_SCHEMA
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(async(() => {
       injector = getTestBed();
@@ -410,10 +435,10 @@ describe('Recipe Master Details Page', () => {
     beforeEach(() => {
       fixture = TestBed.createComponent(RecipeMasterDetailPage);
       rmdPage = fixture.componentInstance;
-      fixture.detectChanges();
     });
 
     test('should mark a note to be expanded', () => {
+      fixture.detectChanges();
       expect(rmdPage.noteIndex).toBe(-1);
       rmdPage.expandNote(0);
       expect(rmdPage.noteIndex).toBe(0);
@@ -422,6 +447,7 @@ describe('Recipe Master Details Page', () => {
     }); // end 'should mark a note to be expanded' test
 
     test('should toggle notes display', () => {
+      fixture.detectChanges();
       expect(rmdPage.showNotes).toBe(false);
       expect(rmdPage.showNotesIcon).toMatch('arrow-down');
       rmdPage.expandNoteMain();
@@ -430,12 +456,14 @@ describe('Recipe Master Details Page', () => {
     }); // end 'should toggle notes display test
 
     test('should check if a note at a given index should be shown', () => {
+      fixture.detectChanges();
       rmdPage.noteIndex = 2;
       expect(rmdPage.showExpandedNote(2)).toBe(true);
       expect(rmdPage.showExpandedNote(1)).toBe(false);
     }); // end 'should check if a note at a given index should be shown' test
 
     test('should navigate to note form with the note at given index', () => {
+      fixture.detectChanges();
       const noteSpy = jest.spyOn(rmdPage, 'navToRecipeForm');
       rmdPage.updateNote(1);
       expect(noteSpy).toHaveBeenCalledWith(
@@ -453,12 +481,13 @@ describe('Recipe Master Details Page', () => {
     let injector: TestBed;
     let recipeService: RecipeProvider;
     let httpMock: HttpTestingController;
+    configureTestBed();
 
     beforeAll(async(() => {
       NavParamsMock.setParams('masterId', 'active');
     }));
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           RecipeMasterDetailPage,
@@ -483,9 +512,11 @@ describe('Recipe Master Details Page', () => {
         schemas: [
           NO_ERRORS_SCHEMA
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(async(() => {
       injector = getTestBed();
@@ -500,7 +531,6 @@ describe('Recipe Master Details Page', () => {
     beforeEach(() => {
       fixture = TestBed.createComponent(RecipeMasterDetailPage);
       rmdPage = fixture.componentInstance;
-      fixture.detectChanges();
     });
 
     afterEach(() => {
@@ -508,6 +538,7 @@ describe('Recipe Master Details Page', () => {
     });
 
     test('should mark recipe at index to be expanded', () => {
+      fixture.detectChanges();
       expect(rmdPage.recipeIndex).toBe(-1);
       rmdPage.expandRecipe(2);
       expect(rmdPage.recipeIndex).toBe(2);
@@ -516,11 +547,13 @@ describe('Recipe Master Details Page', () => {
     }); // end 'should mark recipe at index to be expanded' test
 
     test('should return recipe at given index is the master', () => {
+      fixture.detectChanges();
       expect(rmdPage.isMaster(0)).toBe(true);
       expect(rmdPage.isMaster(1)).toBe(false);
     }); // end 'should return recipe at given index is the master' test
 
     test('should toggle the recipe master isPublic property', done => {
+      fixture.detectChanges();
       const _mockRecipeMaster = mockRecipeMasterActive();
       _mockRecipeMaster.isPublic = false;
       const recipeSpy = jest.spyOn(rmdPage.recipeService, 'patchRecipeMasterById');
@@ -538,12 +571,14 @@ describe('Recipe Master Details Page', () => {
     }); // end 'should toggle the recipe master isPublic property' test
 
     test('should check if recipe is selected for display', () => {
+      fixture.detectChanges();
       rmdPage.recipeIndex = 2;
       expect(rmdPage.showExpandedRecipe(2)).toBe(true);
       expect(rmdPage.showExpandedRecipe(1)).toBe(false);
     }); // end 'should check if recipe is selected for display'
 
     test('should toggle a recipe\'s isFavorite property', done => {
+      fixture.detectChanges();
       const _mockRecipe = mockRecipeIncomplete();
       _mockRecipe.isFavorite = true;
       const recipeSpy = jest.spyOn(rmdPage.recipeService, 'patchRecipeById');

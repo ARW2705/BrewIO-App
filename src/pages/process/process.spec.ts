@@ -12,6 +12,9 @@ import { apiVersion } from '../../shared/constants/api-version';
 /* Interface imports */
 import { Batch } from '../../shared/interfaces/batch';
 
+/* Test configuration imports */
+import { configureTestBed } from '../../../test-config/configureTestBed';
+
 /* Mock imports */
 import { mockRecipeMasterActive } from '../../../test-config/mockmodels/mockRecipeMasterActive';
 import { mockRecipeComplete } from '../../../test-config/mockmodels/mockRecipeComplete';
@@ -40,6 +43,7 @@ describe('Process Page', () => {
     let fixture: ComponentFixture<ProcessPage>;
     let processPage: ProcessPage;
     let httpMock: HttpTestingController;
+    configureTestBed();
 
     beforeAll(async(() => {
       NavParamsMock.setParams('master', mockRecipeMasterActive());
@@ -47,7 +51,7 @@ describe('Process Page', () => {
       NavParamsMock.setParams('requestedUserId', mockUser()._id);
     }));
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           ProcessPage,
@@ -72,9 +76,11 @@ describe('Process Page', () => {
         schemas: [
           NO_ERRORS_SCHEMA
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(async(() => {
       injector = getTestBed();
@@ -174,6 +180,7 @@ describe('Process Page', () => {
     let processService: ProcessProvider;
     let httpMock: HttpTestingController;
     let eventService: Events;
+    configureTestBed();
 
     beforeAll(async(() => {
       NavParamsMock.setParams('master', mockRecipeMasterActive());
@@ -182,7 +189,7 @@ describe('Process Page', () => {
       NavParamsMock.setParams('selectedBatchId', mockBatch()._id);
     }));
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           ProcessPage,
@@ -207,9 +214,11 @@ describe('Process Page', () => {
         schemas: [
           NO_ERRORS_SCHEMA
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(async(() => {
       injector = getTestBed();
@@ -476,6 +485,7 @@ describe('Process Page', () => {
     let processPage: ProcessPage;
     let injector: TestBed;
     let processService: ProcessProvider;
+    configureTestBed();
 
     beforeAll(async(() => {
       NavParamsMock.setParams('master', mockRecipeMasterActive());
@@ -484,7 +494,7 @@ describe('Process Page', () => {
       NavParamsMock.setParams('selectedBatchId', mockBatch()._id);
     }));
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           ProcessPage,
@@ -509,9 +519,11 @@ describe('Process Page', () => {
         schemas: [
           NO_ERRORS_SCHEMA
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(async(() => {
       injector = getTestBed();
@@ -570,6 +582,7 @@ describe('Process Page', () => {
     let processPage: ProcessPage;
     let injector: TestBed;
     let processService: ProcessProvider;
+    configureTestBed();
 
     beforeAll(async(() => {
       NavParamsMock.setParams('master', mockRecipeMasterActive());
@@ -578,7 +591,7 @@ describe('Process Page', () => {
       NavParamsMock.setParams('selectedBatchId', mockBatch()._id);
     }));
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           ProcessPage,
@@ -603,9 +616,11 @@ describe('Process Page', () => {
         schemas: [
           NO_ERRORS_SCHEMA
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(async(() => {
       injector = getTestBed();
@@ -663,6 +678,7 @@ describe('Process Page', () => {
     let processPage: ProcessPage;
     let injector: TestBed;
     let processService: ProcessProvider;
+    configureTestBed();
 
     beforeAll(async(() => {
       NavParamsMock.setParams('master', mockRecipeMasterActive());
@@ -671,7 +687,7 @@ describe('Process Page', () => {
       NavParamsMock.setParams('selectedBatchId', mockBatch()._id);
     }));
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           ProcessPage,
@@ -696,9 +712,11 @@ describe('Process Page', () => {
         schemas: [
           NO_ERRORS_SCHEMA
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(async(() => {
       injector = getTestBed();
@@ -890,6 +908,7 @@ describe('Process Page', () => {
     let injector: TestBed;
     let processService: ProcessProvider;
     let httpMock: HttpTestingController;
+    configureTestBed();
 
     beforeAll(async(() => {
       NavParamsMock.setParams('master', mockRecipeMasterActive());
@@ -898,7 +917,7 @@ describe('Process Page', () => {
       NavParamsMock.setParams('selectedBatchId', mockBatch()._id);
     }));
 
-    beforeEach(async(() => {
+    beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
           ProcessPage,
@@ -923,9 +942,11 @@ describe('Process Page', () => {
         schemas: [
           NO_ERRORS_SCHEMA
         ]
-      })
-      .compileComponents();
-    }));
+      });
+      await TestBed.compileComponents();
+    })()
+    .then(done)
+    .catch(done.fail));
 
     beforeEach(async(() => {
       injector = getTestBed();
