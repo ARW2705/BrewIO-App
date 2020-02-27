@@ -78,7 +78,7 @@ export class ProcessFormPage {
       } else {
         if (data.type === 'timer') {
           control.concurrent.setValue(data.concurrent);
-          control.splitInterval.setValue(data.setInterval);
+          control.splitInterval.setValue(data.splitInterval);
         }
         control.duration.setValue(data.duration);
       }
