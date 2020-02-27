@@ -148,7 +148,7 @@ describe('Process Page', () => {
         expect(processRecipeUpdateSpy).toHaveBeenCalled();
         expect(processTimerSpy).toHaveBeenCalled();
         done();
-      }, 100);
+      }, 10);
 
       const processRequest = httpMock.expectOne(`${baseURL}/${apiVersion}/process/user/${mockUser()._id}/master/${mockRecipeMasterActive()._id}/recipe/${mockRecipeComplete()._id}`);
       processRequest.flush(mockBatch());
@@ -248,7 +248,7 @@ describe('Process Page', () => {
         expect(gotoSpy).toHaveBeenCalled();
         expect(processPage.selectedBatch._id).toMatch(mockBatch()._id);
         done();
-      }, 100);
+      }, 10);
     }); // end 'should continue a batch' test
 
     test('should check if viewing the last step', () => {
@@ -296,7 +296,7 @@ describe('Process Page', () => {
         expect(processPage.selectedBatch.currentStep).toBe(5);
         expect(processPage.viewStepIndex).toBe(5);
         done();
-      }, 100);
+      }, 10);
 
       const processReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress/${mockBatch()._id}/next`);
       processReq.flush(mockBatch());
@@ -312,7 +312,7 @@ describe('Process Page', () => {
         expect(processPage.selectedBatch.currentStep).toBe(8);
         expect(processPage.viewStepIndex).toBe(8);
         done();
-      }, 100);
+      }, 10);
 
       const processReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress/${mockBatch()._id}/next`);
       processReq.flush(mockBatch());
@@ -333,7 +333,7 @@ describe('Process Page', () => {
           expect(processEndSpy).toHaveBeenCalledWith(mockBatch()._id);
           expect(toastSpy).toHaveBeenCalledWith('Enjoy!', 1000, 'bright-toast');
           done();
-        }, 100);
+        }, 10);
       });
 
       processPage.completeStep();
@@ -988,7 +988,7 @@ describe('Process Page', () => {
       setTimeout(() => {
         expect(consoleSpy).lastCalledWith('Recipe master has active batch: ', false);
         done();
-      }, 100);
+      }, 10);
 
       const recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${processPage.master._id}`);
       const _mockRecipeMasterActive = mockRecipeMasterActive();

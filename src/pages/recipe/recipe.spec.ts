@@ -326,7 +326,7 @@ describe('Recipe Page', () => {
         expect(recipeSpy).toHaveBeenCalled();
         expect(recipePage.masterList.length).toBe(1);
         done();
-      }, 1000);
+      }, 10);
 
       const deleteReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${_mockRecipeMaster._id}`);
       deleteReq.flush(_mockRecipeMaster);

@@ -117,7 +117,7 @@ describe('Recipe Form', () => {
         expect(recipePage.yeastLibrary).not.toBeNull();
         expect(recipePage.styleLibrary).not.toBeNull();
         done();
-      }, 100);
+      }, 10);
     }); // end 'should create the component' test
 
     test('should configure form for new master creation', () => {
@@ -878,7 +878,7 @@ describe('Recipe Form', () => {
         expect(eventSpy.mock.calls[0][0]).toMatch('update-nav-header');
         expect(eventSpy.mock.calls[0][1]).toStrictEqual({other: 'form-submit-complete'});
         done();
-      }, 100);
+      }, 10);
 
       const recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/user`);
       recipeReq.flush(_mockRecipeMaster);
@@ -896,7 +896,7 @@ describe('Recipe Form', () => {
         expect(postSpy.mock.calls[0][0]).toStrictEqual({});
         expect(toastSpy).toHaveBeenCalledWith('<400> Invalid Recipe: ');
         done();
-      }, 100);
+      }, 10);
 
       const recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/user`);
       recipeReq.error(new ErrorEvent('Post Error'), {status: 400, statusText: 'Invalid Recipe'});
@@ -922,7 +922,7 @@ describe('Recipe Form', () => {
         expect(eventSpy.mock.calls[0][0]).toMatch('update-nav-header');
         expect(eventSpy.mock.calls[0][1]).toStrictEqual({other: 'form-submit-complete'});
         done();
-      }, 100);
+      }, 10);
 
       const recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${_mockRecipeMaster._id}`);
       recipeReq.flush(mockRecipeComplete());
@@ -942,7 +942,7 @@ describe('Recipe Form', () => {
         expect(postSpy.mock.calls[0][1]).toStrictEqual({});
         expect(toastSpy).toHaveBeenCalledWith('<400> Invalid Recipe: ');
         done();
-      }, 100);
+      }, 10);
 
       const recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${_mockRecipeMaster._id}`);
       recipeReq.error(new ErrorEvent('Post Error'), {status: 400, statusText: 'Invalid Recipe'});
@@ -973,7 +973,7 @@ describe('Recipe Form', () => {
         expect(eventSpy.mock.calls[0][0]).toMatch('update-nav-header');
         expect(eventSpy.mock.calls[0][1]).toStrictEqual({other: 'form-submit-complete'});
         done();
-      }, 100);
+      }, 10);
 
       const recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${_mockRecipeMaster._id}`);
       recipeReq.flush(_mockRecipeMaster);
@@ -994,7 +994,7 @@ describe('Recipe Form', () => {
         expect(patchSpy.mock.calls[0][1]).toStrictEqual({});
         expect(toastSpy).toHaveBeenCalledWith('<400> Invalid Recipe: ');
         done();
-      }, 100);
+      }, 10);
 
       const recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${_mockRecipeMaster._id}`);
       recipeReq.error(new ErrorEvent('Post Error'), {status: 400, statusText: 'Invalid Recipe'});
@@ -1022,7 +1022,7 @@ describe('Recipe Form', () => {
         expect(eventSpy.mock.calls[0][0]).toMatch('update-nav-header');
         expect(eventSpy.mock.calls[0][1]).toStrictEqual({other: 'form-submit-complete'});
         done();
-      }, 100);
+      }, 10);
 
       const recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${_mockRecipeMaster._id}/recipe/${_mockRecipe._id}`);
       recipeReq.flush(mockRecipeComplete());
@@ -1045,7 +1045,7 @@ describe('Recipe Form', () => {
         expect(patchSpy.mock.calls[0][1]).toMatch(_mockRecipe._id);
         expect(toastSpy).toHaveBeenCalledWith('<400> Invalid Recipe: ');
         done();
-      }, 100);
+      }, 10);
 
       const recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${_mockRecipeMaster._id}/recipe/${_mockRecipe._id}`);
       recipeReq.error(new ErrorEvent('Post Error'), {status: 400, statusText: 'Invalid Recipe'});

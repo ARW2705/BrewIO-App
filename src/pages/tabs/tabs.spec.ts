@@ -94,7 +94,7 @@ describe('Tabs page', () => {
         tabsPage.setIndex(1);
         expect(tabSpy).toHaveBeenCalled();
         expect(tabsPage.currentIndex).toBe(1);
-      }, 100);
+      }, 10);
     }); // end 'should change the tab index' test
 
     test('should change tab navigation index', () => {
@@ -106,7 +106,7 @@ describe('Tabs page', () => {
         expect(tabSpy).toHaveBeenCalledWith(1);
         expect(updateSpy).toHaveBeenCalled();
         expect(tabsPage.currentIndex).toBe(1);
-      }, 100);
+      }, 10);
     }); // end 'should change tab navigation index' test
 
   }); // end 'Tab navigation' section

@@ -195,7 +195,7 @@ describe('User Service', () => {
           setTimeout(() => {
             expect(consoleSpy).toHaveBeenCalledWith('JWT valid');
             done();
-          }, 100);
+          }, 10);
         });
 
       const loginReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/login`);
@@ -219,7 +219,7 @@ describe('User Service', () => {
           setTimeout(() => {
             expect(consoleSpy).toHaveBeenCalledWith('JWT valid');
             done();
-          }, 100);
+          }, 10);
         });
 
       const loginReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/login`);

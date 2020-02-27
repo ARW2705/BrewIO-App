@@ -353,7 +353,7 @@ describe('Recipe Master Details Page', () => {
         expect(rmdPage.recipeMaster.notes.length).toBe(0);
         expect(patchSpy).toHaveBeenCalled();
         done();
-      }, 100);
+      }, 10);
 
       const recipeMasterReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${rmdPage.recipeMaster._id}`);
       recipeMasterReq.flush(mockRecipeMasterActive());
@@ -564,7 +564,7 @@ describe('Recipe Master Details Page', () => {
         expect(recipeSpy).toHaveBeenCalledWith(rmdPage.recipeMaster._id, { isPublic: false });
         expect(rmdPage.recipeMaster.isPublic).toBe(false);
         done();
-      }, 100);
+      }, 10);
 
       const patchReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${rmdPage.recipeMaster._id}`);
       patchReq.flush(_mockRecipeMaster);
@@ -597,7 +597,7 @@ describe('Recipe Master Details Page', () => {
         );
         expect(rmdPage.recipeMaster.recipes[1].isFavorite).toBe(true);
         done();
-      }, 100);
+      }, 10);
 
       const patchReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${rmdPage.recipeMaster._id}/recipe/${_mockRecipe._id}`);
       patchReq.flush(_mockRecipe);

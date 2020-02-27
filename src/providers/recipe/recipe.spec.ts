@@ -145,7 +145,7 @@ describe('Recipe Service', () => {
         setTimeout(() => {
           expect(recipeService.recipeMasterList$.value.length).toBe(2);
           done();
-        }, 100);
+        }, 10);
 
         const getReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/user`);
         expect(getReq.request.method).toMatch('GET');

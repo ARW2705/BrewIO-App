@@ -124,7 +124,7 @@ describe('Login Form', () => {
       expect(toastSpy).toHaveBeenCalledWith(`Welcome ${response.user.username}!`, 1000, 'middle', 'bright-toast');
       expect(viewSpy).toHaveBeenCalledWith(response);
       done();
-    }, 100);
+    }, 10);
 
     const loginReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/login`);
     loginReq.flush(response);
@@ -148,7 +148,7 @@ describe('Login Form', () => {
     setTimeout(() => {
       expect(toastSpy).toHaveBeenCalledWith('<401> Username or Password is incorrect: ', 5000, 'bottom');
       done();
-    }, 100);
+    }, 10);
 
     const loginReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/login`);
     loginReq.error(new ErrorEvent('Login Error'), {status: 401, statusText: 'Username or Password is incorrect'});

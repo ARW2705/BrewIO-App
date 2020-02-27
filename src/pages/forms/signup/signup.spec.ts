@@ -189,7 +189,7 @@ describe('Signup Form', () => {
       expect(toastSpy).toHaveBeenCalledWith('Sign up complete!', 1500, 'bright-toast');
       expect(viewSpy).toHaveBeenCalledWith({success: true});
       done();
-    }, 100);
+    }, 10);
 
     const signupReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/signup`);
     signupReq.flush({success: true});
@@ -212,7 +212,7 @@ describe('Signup Form', () => {
     setTimeout(() => {
       expect(toastSpy).toHaveBeenCalledWith('<400> Username already exists: ', 2000);
       done();
-    }, 100);
+    }, 10);
 
     const signupReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/signup`);
     signupReq.error(new ErrorEvent('Signup Error'), {status: 400, statusText: 'Username already exists'});
