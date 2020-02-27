@@ -47,7 +47,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.user$
       .takeUntil(this.destroy$)
       .subscribe(_user => {
-        console.log(_user);
         this.user = _user;
       });
     this.events.subscribe('update-nav-header', this._headerNavUpdate);
