@@ -138,7 +138,6 @@ export class RecipeFormPage implements AfterViewInit {
         this.mode = 'update';
         this.updateDisplay(data);
         this.calculator.calculateRecipeValues(this.recipe);
-        // this.autoSetProcess('duration', data);
         this.autoSetBoilMashDuration(data);
       }
     });
@@ -177,7 +176,6 @@ export class RecipeFormPage implements AfterViewInit {
         this.updateIngredientList(data, type, toUpdate, data.delete);
         this.calculator.calculateRecipeValues(this.recipe);
         if (data.hopsType !== undefined) {
-          // this.autoSetProcess('hops-addition', data);
           this.autoSetHopsAddition();
         }
       }
