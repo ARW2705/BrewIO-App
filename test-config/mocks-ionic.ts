@@ -9,6 +9,10 @@ import { baseURL } from '../src/shared/constants/base-url';
 import { apiVersion } from '../src/shared/constants/api-version';
 
 export class PlatformMock {
+  public Css = {
+    transition: ''
+  }
+
   public width(): number {
     return 360;
   }
