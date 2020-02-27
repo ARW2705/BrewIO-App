@@ -15,9 +15,9 @@ export const mockTimer = () => {
       height: 360,
       width: 360,
       circle: {
-        strokeDasharray: 'strokeDasharray',
-        strokeDashoffset: 'strokeDashoffset',
-        stroke: 'stroke',
+        strokeDasharray: '5',
+        strokeDashoffset: '10',
+        stroke: '2',
         strokeWidth: 1,
         fill: 'fill',
         radius: 1,
