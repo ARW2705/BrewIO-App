@@ -57,7 +57,7 @@ describe('Ingredient Form', () => {
 
     test('should create the component configured to add a grains instance', () => {
       fixture.detectChanges();
-      expect(IngredientFormPage).toBeDefined();
+      expect(ingredientPage).toBeDefined();
       expect(ingredientPage.title).toMatch('Add grains');
     }); // end 'should create the component configured to add a grains instance' test
 
