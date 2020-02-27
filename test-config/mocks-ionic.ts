@@ -174,16 +174,34 @@ export class StorageMock {
   public set(key: string, value: any): void {
     this.storage[key] = value;
   }
+
+  public remove(key: string) {
+    return new Promise<any>((resolve, reject) => {});
+  }
 }
 
 export class EventsMock {
   public emit(...args): any {
-
+    return;
   }
 
   public subscribe(...args): any {
-
+    return;
   }
+}
+
+export class ConfigMock {
+  public get(...args): any {
+    return;
+  }
+
+  public getBoolean(...args): any {
+    return;
+  }
+}
+
+export class AppMock {
+
 }
 
 @Injectable()
