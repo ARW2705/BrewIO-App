@@ -2,8 +2,6 @@
 
 ## TODO
 
-* IMPLEMENT TESTING!!!
-
 * sort recipe variants on page: master -> favorites (in alpha) -> other (in alpha)
 
 * implement generic error display component
@@ -23,9 +21,9 @@ so jarring when things suddenly load/remove?
 
 * implement recipe scaling
 
+* add process batch notes - append to its recipe on completion in a separate section
+
 
 ## Bugs
 
 * show pre-selected option in select/option dropdowns
-
-* updating timer step does not map duration/interval to form
