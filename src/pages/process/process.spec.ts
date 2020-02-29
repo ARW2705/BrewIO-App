@@ -658,7 +658,7 @@ describe('Process Page', () => {
       const stepDetails = processPage.selectedBatch.schedule[calendarStep];
       processPage.viewStepIndex = calendarStep;
       const data = processPage.getCurrentStepCalendarData();
-      expect(data.id).toMatch(stepDetails._id);
+      expect(data._id).toMatch(stepDetails._id);
       expect(data.duration).toBe(stepDetails.duration);
       expect(data.title).toMatch(stepDetails.name);
       expect(data.description).toMatch(stepDetails.description);

@@ -1,16 +1,10 @@
 /* Module imports */
 import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
-import moment from 'moment';
-import _ from 'lodash';
+import * as moment from 'moment';
+import * as _ from 'lodash';
 
-/* Local interfaces */
-interface CalendarDate {
-  mDate: moment.Moment;
-  isStart?: boolean;
-  isProjected?: boolean;
-  isToday?: boolean;
-  isMonth?: boolean;
-};
+/* Interface imports */
+import { CalendarDate } from '../../shared/interfaces/calendar-date';
 
 @Component({
   selector: 'calendar',
@@ -35,7 +29,7 @@ export class CalendarComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes.stepData.previousValue === undefined
-        || changes.stepData.currentValue.id === changes.stepData.previousValue.id) return;
+        || changes.stepData.currentValue._id === changes.stepData.previousValue._id) return;
     this.stepData = changes.stepData.currentValue;
     this.initCalendar();
   }
@@ -111,7 +105,7 @@ export class CalendarComponent implements OnInit, OnChanges {
   **/
   getFinal(): any {
     return {
-      _id: this.stepData.id,
+      _id: this.stepData._id,
       startDatetime: this.startDate.mDate.toISOString(),
       alerts: this.projectedDates.map(date => {
         return {
@@ -157,7 +151,8 @@ export class CalendarComponent implements OnInit, OnChanges {
    * @return: true if given datetime is the same month as current
   **/
   isMonth(date: moment.Moment): boolean {
-    return moment(this.currentDate).isSame(date, 'months');
+    return  moment(this.currentDate).isSame(date, 'years')
+            && moment(this.currentDate).isSame(date, 'months');
   }
 
   /**
@@ -211,19 +206,6 @@ export class CalendarComponent implements OnInit, OnChanges {
   }
 
   /**
-   * Remove a date from projected dates array
-   *
-   * @params: date - calendar date to remove
-   *
-   * @return: none
-  **/
-  removeFromProjecteDates(date: CalendarDate): void {
-    date.isProjected = false;
-    const index = _.findIndex(this.projectedDates, pDate => pDate === date);
-    this.projectedDates.splice(index, 1);
-  }
-
-  /**
    * Set given date as start date
    *
    * @params: date - datetime to set as start
@@ -233,7 +215,7 @@ export class CalendarComponent implements OnInit, OnChanges {
   selectStartDate(date: CalendarDate): void {
     if (moment(date.mDate).isBefore(this.currentDate, 'day')) return;
     this.startDate = date;
-    this.setProjectedDates();
+    this.resetProjectedDates();
     this.updateView();
   }
 
@@ -243,7 +225,7 @@ export class CalendarComponent implements OnInit, OnChanges {
    * @params: none
    * @return: none
   **/
-  setProjectedDates(): void {
+  resetProjectedDates(): void {
     this.projectedDates = [];
     this.addToProjectedDates({
       mDate: this.startDate.mDate.clone().add(this.stepData.duration, 'days'),

@@ -402,7 +402,7 @@ export class ProcessPage implements OnInit, OnDestroy {
   **/
   getCurrentStepCalendarData(): any {
     return {
-      id: this.selectedBatch.schedule[this.viewStepIndex]._id,
+      _id: this.selectedBatch.schedule[this.viewStepIndex]._id,
       duration: this.selectedBatch.schedule[this.viewStepIndex].duration,
       title: this.selectedBatch.schedule[this.viewStepIndex].name,
       description: this.selectedBatch.schedule[this.viewStepIndex].description
