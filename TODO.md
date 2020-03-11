@@ -1,29 +1,31 @@
-# App TODO and Bug list
+# TODO and Bug list
 
 ## TODO
 
-* sort recipe variants on page: master -> favorites (in alpha) -> other (in alpha)
+---
 
-* implement generic error display component
+### Feature additions
 
-* ?make loading scheme between pages that aren't
-so jarring when things suddenly load/remove?
+* Inventory tracking
+* Implement storage and no-login/offline usage
+* Export calendar to external calendar
+* Notification system
+* Implement standard/metric units
+* Add process batch notes - append to its recipe on completion in a separate section
 
-* implement storage and no-login/offline usage
+### Quality of life updates
 
-* export calendar to external calendar
-
-* notification system
-
-* add toast feedback on successful events
-
-* implement standard/metric units
-
-* implement recipe scaling
-
-* add process batch notes - append to its recipe on completion in a separate section
+* Sort recipe variants on page: master -> favorites (in alpha) -> other (in alpha)
+* Implement generic error display component
+* Make loading scheme between pages that are less jarring when things suddenly load/remove
+* Add toast feedback on successful events
+* Implement quick recipe scaling
 
 
 ## Bugs
 
-* show pre-selected option in select/option dropdowns
+---
+
+* Show pre-selected option in select/option dropdowns
+* Calendar button reads 'start' instead of 'update' when changing a calendar start date
+* Select/option dropdown background color
