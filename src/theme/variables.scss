@@ -16,15 +16,6 @@ $app-direction: ltr;
 @import './mixins';
 
 
-// Shared Variables
-// --------------------------------------------------
-// To customize the look and feel of this app, you can override
-// the Sass variables found in Ionic's source scss files.
-// To view all the possible Ionic variables, see:
-// http://ionicframework.com/docs/theming/overriding-ionic-variables/
-
-
-
 // Named Color Variables
 // --------------------------------------------------
 // Named colors makes it easy to reuse colors on various components.
@@ -52,63 +43,62 @@ $colors: (
   gray-scale-10:         #ffffff
 );
 
+// Shared Variables
+// --------------------------------------------------
+// To customize the look and feel of this app, you can override
+// the Sass variables found in Ionic's source scss files.
+// To view all the possible Ionic variables, see:
+// http://ionicframework.com/docs/theming/overriding-ionic-variables/
+
+
+$alert-button-font-size: 18px;
+
 $background-color: map-get($colors, gray-scale-2);
-$toolbar-background: map-get($colors, gray-scale-2);
+
+$badge-font-size: 1.5rem;
+
+$chip-icon-font-size: 20px;
+
+$font-size-base: 1.6rem;
+$font-size-root: 67%;
+
+$h1-font-size: 2.9rem;
+$h2-font-size: 2.7rem;
+$h3-font-size: 2.5rem;
+$h4-font-size: 2.3rem;
+$h5-font-size: 2.1rem;
+$h6-font-size: 1.9rem;
+
+$refresher-icon-font-size: 33px;
+$refresher-text-font-size: 19px;
+
 $tabs-background: map-get($colors, primary);
+
 $text-color: map-get($colors, gray-scale-8);
 
-$tabs-md-tab-text-color-active: map-get($colors, gray-scale-1);
-$tabs-md-tab-text-color: map-get($colors, gray-scale-5);
-$tabs-md-tab-icon-color: map-get($colors, gray-scale-5);
-$tabs-md-tab-icon-color-active: map-get($colors, gray-scale-1);
-$toolbar-md-title-text-color: map-get($colors, primary);
-
-$button-md-background-color: map-get($colors, primary);
-$button-md-text-color: map-get($colors, gray-scale-1);
-$button-md-border-radius: 10px;
-$button-md-box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.2),
-                       0 1px 2px rgba(0, 0, 0, 0.5);
-
-$action-sheet-md-button-font-size: 2.5rem; // 2rem
-$action-sheet-md-icon-font-size: 2.6rem; // 2.4rem
-$action-sheet-md-title-font-size: 2.2rem; // 1.3rem
-$alert-button-font-size: 18px; // 14px
-$alert-md-message-font-size: 19px; // 15px
-$alert-md-sub-title-font-size: 20px; // 16px
-$alert-md-title-font-size: 26px; // 22px
-$badge-font-size: 1.5rem; // 1.3rem
-$button-md-font-size: 1.8rem; // 1.4rem
-$button-md-large-font-size: 2.3rem; // 2rem
-$button-md-small-font-size: 1.5rem; // 1.3rem
-$button-md-small-icon-font-size: 1.6rem; // 1.4rem
-$card-md-font-size: 1.6rem; //1.4rem
-$card-md-header-font-size: 1.8rem; // 1.6rem
-$card-md-title-font-size: 2.6rem; // 2.4rem
-$chip-icon-font-size: 20px; // 18px
-$chip-md-font-size: 15px; // 13px
-$font-size-base: 1.6rem; // 1.4rem
-$font-size-root: 67%; // 62.5%
-$h1-font-size: 2.9rem; // 2.6rem
-$h2-font-size: 2.7rem; // 2.4rem
-$h3-font-size: 2.5rem; // 2.2rem
-$h4-font-size: 2.3rem; // 2rem
-$h5-font-size: 2.1rem; // 1.8rem
-$h6-font-size: 1.9rem; // 1.6rem
-$item-md-body-text-font-size: 1.7rem; // 1.4rem
-$item-md-font-size: 1.9rem; // 1.6rem
-$list-md-header-font-size: 1.7rem; // 1.4rem
-$picker-md-option-font-size: 25px; // 22px
-$range-md-pin-font-size: 15px; // 12px
-$refresher-icon-font-size: 33px; // 30px
-$refresher-text-font-size: 19px; // 16px
-$segment-button-md-font-size: 1.5rem; // 1.2rem
-$tabs-md-tab-font-size: 1.4rem; // 1.2rem
-$tabs-md-tab-font-size-active: 1.6rem; // 1.4rem
-$toast-md-title-font-size: 1.7rem; // 1.5rem
-$toolbar-md-button-font-size: 1.9rem; // 1.7rem
-$toolbar-md-title-font-size: 2.2rem; // 2rem
+$toolbar-background: map-get($colors, gray-scale-2);
 
 
+.alert-md [aria-checked=true] {
+  background-color: map-get($colors, gray-scale-4);
+}
+
+.alert-md .alert-button-group {
+  background-color: map-get($colors, gray-scale-2);
+
+  .alert-button {
+    background-color: transparent;
+  }
+}
+
+.alert-md .alert-head {
+  color: map-get($colors, primary);
+  background-color: map-get($colors, gray-scale-2);
+}
+
+.alert-md .alert-radio-group {
+  border: none !important;
+}
 
 .button-md-primary {
   color: map-get($colors, gray-scale-2) !important;
@@ -220,6 +210,66 @@ button {
 // --------------------------------------------------
 // iOS only Sass variables can go here
 
+$action-sheet-ios-background: map-get($colors, gray-scale-8);
+$action-sheet-ios-button-font-size: 2.5rem;
+$action-sheet-ios-icon-font-size: 2.6rem;
+$action-sheet-ios-title-font-size: 2.2rem;
+
+$alert-ios-background-color: map-get($colors, gray-scale-8);
+$alert-ios-button-background-color: map-get($colors, gray-scale-8);
+$alert-ios-button-group-justify-content: space-around;
+$alert-ios-button-group-padding-start: 8px;
+$alert-ios-button-text-align: center;
+$alert-ios-button-text-color: map-get($colors, primary);
+$alert-ios-message-font-size: 19px;
+$alert-ios-radio-height: 20px;
+$alert-ios-radio-icon-height: 12px;
+$alert-ios-radio-icon-width: 12px;
+$alert-ios-radio-label-text-color: map-get($colors, gray-scale-1);
+$alert-ios-radio-label-text-color-checked: map-get($colors, primary);
+$alert-ios-radio-width: 20px;
+$alert-ios-sub-title-font-size: 20px;
+$alert-ios-title-font-size: 26px;
+$alert-ios-head-text-align: center;
+
+$button-ios-background-color: map-get($colors, primary);
+$button-ios-border-radius: 10px;
+$button-ios-box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.2),
+                       0 1px 2px rgba(0, 0, 0, 0.5);
+$button-ios-font-size: 1.8rem;
+$button-ios-large-font-size: 2.3rem;
+$button-ios-small-font-size: 1.5rem;
+$button-ios-small-icon-font-size: 1.6rem;
+$button-ios-text-color: map-get($colors, gray-scale-1);
+
+$card-ios-font-size: 1.6rem;
+$card-ios-header-font-size: 1.8rem;
+$card-ios-title-font-size: 2.6rem;
+
+$chip-ios-font-size: 15px;
+
+$item-ios-body-text-font-size: 1.7rem;
+$item-ios-font-size: 1.9rem;
+$list-ios-header-font-size: 1.7rem;
+
+$picker-ios-option-font-size: 25px;
+
+$range-ios-pin-font-size: 15px;
+
+$segment-button-ios-font-size: 1.5rem;
+
+$tabs-ios-tab-icon-color: map-get($colors, gray-scale-5);
+$tabs-ios-tab-icon-color-active: map-get($colors, gray-scale-1);
+$tabs-ios-tab-font-size: 1.4rem;
+$tabs-ios-tab-font-size-active: 1.6rem;
+$tabs-ios-tab-text-color: map-get($colors, gray-scale-5);
+$tabs-ios-tab-text-color-active: map-get($colors, gray-scale-1);
+
+$toast-ios-title-font-size: 1.7rem;
+
+$toolbar-ios-button-font-size: 1.9rem;
+$toolbar-ios-title-font-size: 2.2rem;
+$toolbar-ios-title-text-color: map-get($colors, primary);
 
 
 
@@ -227,6 +277,66 @@ button {
 // --------------------------------------------------
 // Material Design only Sass variables can go here
 
+$action-sheet-md-background: map-get($colors, gray-scale-8);
+$action-sheet-md-button-font-size: 2.5rem;
+$action-sheet-md-icon-font-size: 2.6rem;
+$action-sheet-md-title-font-size: 2.2rem;
+
+$alert-md-background-color: map-get($colors, gray-scale-8);
+$alert-md-button-background-color: map-get($colors, gray-scale-8);
+$alert-md-button-group-justify-content: space-around;
+$alert-md-button-group-padding-start: 8px;
+$alert-md-button-text-align: center;
+$alert-md-button-text-color: map-get($colors, primary);
+$alert-md-message-font-size: 19px;
+$alert-md-radio-height: 20px;
+$alert-md-radio-icon-height: 12px;
+$alert-md-radio-icon-width: 12px;
+$alert-md-radio-label-text-color: map-get($colors, gray-scale-1);
+$alert-md-radio-label-text-color-checked: map-get($colors, primary);
+$alert-md-radio-width: 20px;
+$alert-md-sub-title-font-size: 20px;
+$alert-md-title-font-size: 26px;
+$alert-md-head-text-align: center;
+
+$button-md-background-color: map-get($colors, primary);
+$button-md-border-radius: 10px;
+$button-md-box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.2),
+                       0 1px 2px rgba(0, 0, 0, 0.5);
+$button-md-font-size: 1.8rem;
+$button-md-large-font-size: 2.3rem;
+$button-md-small-font-size: 1.5rem;
+$button-md-small-icon-font-size: 1.6rem;
+$button-md-text-color: map-get($colors, gray-scale-1);
+
+$card-md-font-size: 1.6rem;
+$card-md-header-font-size: 1.8rem;
+$card-md-title-font-size: 2.6rem;
+
+$chip-md-font-size: 15px;
+
+$item-md-body-text-font-size: 1.7rem;
+$item-md-font-size: 1.9rem;
+$list-md-header-font-size: 1.7rem;
+
+$picker-md-option-font-size: 25px;
+
+$range-md-pin-font-size: 15px;
+
+$segment-button-md-font-size: 1.5rem;
+
+$tabs-md-tab-icon-color: map-get($colors, gray-scale-5);
+$tabs-md-tab-icon-color-active: map-get($colors, gray-scale-1);
+$tabs-md-tab-font-size: 1.4rem;
+$tabs-md-tab-font-size-active: 1.6rem;
+$tabs-md-tab-text-color: map-get($colors, gray-scale-5);
+$tabs-md-tab-text-color-active: map-get($colors, gray-scale-1);
+
+$toast-md-title-font-size: 1.7rem;
+
+$toolbar-md-button-font-size: 1.9rem;
+$toolbar-md-title-font-size: 2.2rem;
+$toolbar-md-title-text-color: map-get($colors, primary);
 
 
 

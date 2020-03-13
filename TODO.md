@@ -15,6 +15,7 @@
 
 ### Quality of life updates
 
+* Add confirmation modal for large scale deletions (such as a recipe)
 * Sort recipe variants on page: master -> favorites (in alpha) -> other (in alpha)
 * Implement generic error display component
 * Make loading scheme between pages that are less jarring when things suddenly load/remove
