@@ -16,13 +16,13 @@ import { mockUser } from '../../../test-config/mockmodels/mockUser';
 import { mockUserLogin } from '../../../test-config/mockmodels/mockUserLogin';
 import { mockLoginResponse } from '../../../test-config/mockmodels/mockLoginResponse';
 import { mockJWTSuccess, mockJWTFailed } from '../../../test-config/mockmodels/mockJWTResponse';
-import { StorageMock } from '../../../test-config/mocks-ionic';
 
 /* Provider imports */
 import { UserProvider } from './user';
 import { ProcessProvider } from '../process/process';
 import { RecipeProvider } from '../recipe/recipe';
 import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
+import { StorageProvider } from '../storage/storage';
 
 describe('User Service', () => {
   let injector: TestBed;
@@ -38,11 +38,11 @@ describe('User Service', () => {
       ],
       providers: [
         Events,
-        { provide: Storage, useClass: StorageMock },
         UserProvider,
         ProcessProvider,
         RecipeProvider,
         ProcessHttpErrorProvider,
+        StorageProvider
       ]
     });
   })()

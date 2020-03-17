@@ -1,7 +1,6 @@
 /* Module imports */
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Storage } from '@ionic/storage';
 import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import 'rxjs/add/operator/catch';
@@ -17,6 +16,7 @@ import { User } from '../../shared/interfaces/user';
 import { ProcessProvider } from '../process/process';
 import { RecipeProvider } from '../recipe/recipe';
 import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
+import { StorageProvider } from '../storage/storage';
 
 /* Local Interfaces */
 interface JWTResponse {
@@ -42,10 +42,10 @@ export class UserProvider {
 
   constructor(
     public http: HttpClient,
-    public storage: Storage,
     public processService: ProcessProvider,
     public recipeService: RecipeProvider,
-    public processHttpError: ProcessHttpErrorProvider
+    public processHttpError: ProcessHttpErrorProvider,
+    public storageService: StorageProvider
   ) {}
 
   /**
@@ -86,8 +86,7 @@ export class UserProvider {
       friendList: [],
       token: undefined
     });
-    this.storage.remove(this.userStorageKey)
-      .then(() => console.log('Cleared storage'));
+    this.storageService.removeUser();
     this.recipeService.clearRecipes();
     this.processService.clearProcesses();
   }
@@ -133,11 +132,14 @@ export class UserProvider {
    * @return: none
   **/
   loadUserFromStorage(): void {
-    this.storage.get(this.userStorageKey)
-      .then(profile => {
-        this.user$.next(JSON.parse(profile));
-        this.checkJWToken();
-      });
+    this.storageService.getUser()
+      .subscribe(
+        user => {
+          this.user$.next(user);
+          this.checkJWToken();
+        },
+        error => console.log(error.error)
+      );
   }
 
   /**
@@ -156,7 +158,13 @@ export class UserProvider {
           this.processService.initializeActiveBatchList();
           this.recipeService.initializeRecipeMasterList();
           if (user.remember) {
-            this.storage.set(this.userStorageKey, JSON.stringify(response.user));
+            this.storageService.setUser(response.user)
+              .subscribe(
+                () => {}, // Nothing further required on successful store
+                error => {
+                  // TODO add toast to present feedback on store failure
+                }
+              );
           }
         }
         return response;
