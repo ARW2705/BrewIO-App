@@ -1,6 +1,7 @@
 /* Module imports */
 import { TestBed, getTestBed, async } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { IonicStorageModule } from '@ionic/storage';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { combineLatest } from 'rxjs/observable/combineLatest';
 
@@ -23,6 +24,7 @@ import { RecipeMaster } from '../../shared/interfaces/recipe-master';
 /* Provider imports */
 import { RecipeProvider } from './recipe';
 import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
+import { StorageProvider } from '../storage/storage';
 
 describe('Recipe Service', () => {
   let injector: TestBed;
@@ -33,11 +35,13 @@ describe('Recipe Service', () => {
   beforeAll(done => (async() => {
     TestBed.configureTestingModule({
       imports: [
-        HttpClientTestingModule
+        HttpClientTestingModule,
+        IonicStorageModule.forRoot()
       ],
       providers: [
         RecipeProvider,
-        ProcessHttpErrorProvider
+        ProcessHttpErrorProvider,
+        StorageProvider
       ]
     });
   })()
@@ -140,10 +144,12 @@ describe('Recipe Service', () => {
     describe('GET requests', () => {
 
       test('should get recipe master list', done => {
+        const cacheSpy = jest.spyOn(recipeService.storageService, 'getRecipes');
         expect(recipeService.recipeMasterList$.value.length).toBe(0);
         recipeService.initializeRecipeMasterList();
         setTimeout(() => {
           expect(recipeService.recipeMasterList$.value.length).toBe(2);
+          expect(cacheSpy).toHaveBeenCalled();
           done();
         }, 10);
 
@@ -347,6 +353,16 @@ describe('Recipe Service', () => {
       expect(recipeService.isRecipeProcessPresent(mockRecipeComplete())).toBe(true);
     }); // end 'should check if a recipe has a process list' test
 
+    test('should map an array of recipe masters to a behavior subject of array of behvior subjects', () => {
+      const _mockRecipeMasterActive = mockRecipeMasterActive();
+      const _mockRecipeMasterInactive = mockRecipeMasterInactive();
+      expect(recipeService.recipeMasterList$.value.length).toBe(0);
+      recipeService.mapRecipeMasterArrayToSubjects([_mockRecipeMasterActive, _mockRecipeMasterInactive]);
+      expect(recipeService.recipeMasterList$.value.length).toBe(2);
+      expect(recipeService.recipeMasterList$.value[0].value).toStrictEqual(_mockRecipeMasterActive);
+      expect(recipeService.recipeMasterList$.value[1].value).toStrictEqual(_mockRecipeMasterInactive);
+    }); // end 'should map an array of recipe masters to a behavior subject of array of behvior subjects' test
+
     test('should remove a recipe from a recipe master in the list', done => {
       const _mockRecipeMasterInactive = mockRecipeMasterInactive();
       const _mockRecipeComplete = mockRecipeComplete();
@@ -383,6 +399,25 @@ describe('Recipe Service', () => {
 
       recipeService.removeRecipeMasterFromList(_mockRecipeMasterActive);
     }); // end 'should remove a recipe master from the list' test
+
+    test('should call to update recipe cache', () => {
+      const _mockRecipeMasterActive = mockRecipeMasterActive();
+      const _mockRecipeMasterInactive = mockRecipeMasterInactive();
+      recipeService.recipeMasterList$.next(
+        [
+          new BehaviorSubject<RecipeMaster>(_mockRecipeMasterActive),
+          new BehaviorSubject<RecipeMaster>(_mockRecipeMasterInactive)
+        ]
+      );
+      const cacheSpy = jest.spyOn(recipeService.storageService, 'setRecipes');
+      recipeService.updateCache();
+      expect(cacheSpy).toHaveBeenCalledWith(
+        [
+          _mockRecipeMasterActive,
+          _mockRecipeMasterInactive
+        ]
+      );
+    }); // 'should call to update recipe cache' test
 
     test('should update a recipe master in the list', done => {
       const _updatedMockRecipeMasterInactive = mockRecipeMasterInactive();

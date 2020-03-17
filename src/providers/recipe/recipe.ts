@@ -18,13 +18,15 @@ import { getArrayFromObservables } from '../../shared/utility-functions/utilitie
 
 /* Provider imports */
 import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
+import { StorageProvider } from '../storage/storage';
 
 @Injectable()
 export class RecipeProvider {
   recipeMasterList$: BehaviorSubject<Array<BehaviorSubject<RecipeMaster>>> = new BehaviorSubject<Array<BehaviorSubject<RecipeMaster>>>([]);
 
   constructor(public http: HttpClient,
-    public processHttpError: ProcessHttpErrorProvider) { }
+    public processHttpError: ProcessHttpErrorProvider,
+    public storageService: StorageProvider) { }
 
   /***** Public api access methods *****/
 
@@ -105,20 +107,30 @@ export class RecipeProvider {
   /**
    * Http GET all recipe masters for user, create recipe master subject, then
    * populate recipeMasterList$
+
+   * Get the recipe master list from cache as well as request list from server.
+   * If cache is present, load with this list first to help load the app faster,
+   * or allow some functionality if offline. HTTP request the list from the
+   * server and update the recipeMasterList subject when available
    *
    * @params: none
-   *
-   * @return: observable of array of recipe master observables
+   * @return: none
   **/
   initializeRecipeMasterList(): void {
+    this.storageService.getRecipes()
+      .subscribe(
+        (recipeMasterList: any) => {
+          this.mapRecipeMasterArrayToSubjects(recipeMasterList);
+        },
+        (error: string) => {
+          console.log(`${error}: awaiting data from server`);
+        }
+      );
     this.http.get(`${baseURL}/${apiVersion}/recipes/private/user`)
       .catch(error => this.processHttpError.handleError(error))
       .subscribe((recipeMasterArrayResponse: Array<RecipeMaster>) => {
-        this.recipeMasterList$.next(
-          recipeMasterArrayResponse.map(recipeMaster => {
-            return new BehaviorSubject<RecipeMaster>(recipeMaster);
-          })
-        );
+        this.mapRecipeMasterArrayToSubjects(recipeMasterArrayResponse);
+        this.updateCache();
       });
   }
 
@@ -207,6 +219,7 @@ export class RecipeProvider {
     const list = this.recipeMasterList$.value;
     list.push(recipeMasterSubject$);
     this.recipeMasterList$.next(list);
+    this.updateCache();
   }
 
   /**
@@ -222,6 +235,7 @@ export class RecipeProvider {
     const master = master$.value;
     master.recipes.push(recipe);
     master$.next(master);
+    this.updateCache();
   }
 
   /**
@@ -235,6 +249,7 @@ export class RecipeProvider {
       recipe$.complete();
     });
     this.recipeMasterList$.next([]);
+    this.storageService.removeRecipes();
   }
 
   /**
@@ -289,6 +304,22 @@ export class RecipeProvider {
   }
 
   /**
+   * Convert an array of recipe masters into a BehaviorSubject of an array of
+   * BehaviorSubjects of recipe masters
+   *
+   * @params: recipeMasterList - array of recipe masters
+   *
+   * @return: none
+  **/
+  mapRecipeMasterArrayToSubjects(recipeMasterList: Array<RecipeMaster>): void {
+    this.recipeMasterList$.next(
+      recipeMasterList.map(recipeMaster => {
+        return new BehaviorSubject<RecipeMaster>(recipeMaster);
+      })
+    );
+  }
+
+  /**
    * Remove a recipe in a recipe master in list
    *
    * @params: masterId - recipe's master's id
@@ -302,6 +333,7 @@ export class RecipeProvider {
     const recipeIndex = getIndexById(dbResponse._id, master.recipes);
     master.recipes.splice(recipeIndex, 1);
     master$.next(master);
+    this.updateCache();
   }
 
   /**
@@ -321,6 +353,25 @@ export class RecipeProvider {
     } else {
       // TODO error feedback on missing recipe master
     }
+    this.updateCache();
+  }
+
+  /**
+   * Store the current recipe master list in cache
+   *
+   * @params: none
+   * @return: none
+  **/
+  updateCache(): void {
+    this.storageService.setRecipes(this.recipeMasterList$.value.map((recipeMaster$: BehaviorSubject<RecipeMaster>) => recipeMaster$.value))
+      .subscribe(
+        () => {
+          console.log('stored recipes');
+        },
+        error => {
+          console.log('recipe store error', error);
+        }
+      );
   }
 
   /**
@@ -339,6 +390,7 @@ export class RecipeProvider {
     } else {
       // TODO error feedback on missing recipe master
     }
+    this.updateCache();
   }
 
   /**
@@ -355,6 +407,7 @@ export class RecipeProvider {
     const recipeIndex = getIndexById(updatedRecipe._id, master.recipes);
     master.recipes[recipeIndex] = updatedRecipe;
     master$.next(master);
+    this.updateCache();
   }
 
     /***** End utility methods *****/
