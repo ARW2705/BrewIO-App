@@ -164,9 +164,14 @@ export class StorageMock {
 
   constructor() { }
 
+  public clear(): void {
+    this.storage = {};
+  }
+
   public get(key: string) {
     return new Promise<any>((resolve, reject) => {
       const result = this.storage[key];
+      console.log(result);
       if (result !== undefined) {
         resolve(result);
       } else {
@@ -179,8 +184,13 @@ export class StorageMock {
     this.storage[key] = value;
   }
 
-  public remove(key: string) {
-    return new Promise<any>((resolve, reject) => {});
+  public remove(key: string): Promise<any> {
+    console.log('remove!!', this.storage[key]);
+    return new Promise<any>((resolve, reject) => {
+      delete this.storage[key];
+      console.log('removed', this.storage[key])
+      resolve();
+    });
   }
 }
 
