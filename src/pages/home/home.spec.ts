@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/test
 import { IonicModule, NavController, ModalController } from 'ionic-angular';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { Storage } from '@ionic/storage';
+import { IonicStorageModule } from '@ionic/storage';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 /* Test configuration imports */
@@ -28,6 +28,7 @@ import { RecipeProvider } from '../../providers/recipe/recipe';
 import { ModalProvider } from '../../providers/modal/modal';
 import { ProcessProvider } from '../../providers/process/process';
 import { ProcessHttpErrorProvider } from '../../providers/process-http-error/process-http-error';
+import { StorageProvider } from '../../providers/storage/storage';
 
 
 describe('Home Page', () => {
@@ -44,12 +45,14 @@ describe('Home Page', () => {
         ],
         imports: [
           IonicModule.forRoot(HomePage),
-          HttpClientTestingModule
+          HttpClientTestingModule,
+          IonicStorageModule.forRoot()
         ],
         providers: [
           UserProvider,
           RecipeProvider,
           ModalProvider,
+          StorageProvider,
           { provide: ProcessProvider, useValue: {} },
           { provide: ProcessHttpErrorProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },
@@ -107,12 +110,14 @@ describe('Home Page', () => {
         ],
         imports: [
           IonicModule.forRoot(HomePage),
-          HttpClientTestingModule
+          HttpClientTestingModule,
+          IonicStorageModule.forRoot()
         ],
         providers: [
           UserProvider,
           RecipeProvider,
           ModalProvider,
+          StorageProvider,
           { provide: ProcessProvider, useValue: {} },
           { provide: ProcessHttpErrorProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },

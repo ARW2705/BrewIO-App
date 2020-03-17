@@ -2,7 +2,7 @@
 import { async, TestBed, ComponentFixture } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { IonicModule, Platform } from 'ionic-angular';
-import { Storage } from '@ionic/storage';
+import { IonicStorageModule } from '@ionic/storage';
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 
@@ -21,6 +21,7 @@ import { UserProvider } from '../providers/user/user';
 import { ProcessProvider } from '../providers/process/process';
 import { RecipeProvider } from '../providers/recipe/recipe';
 import { ProcessHttpErrorProvider } from '../providers/process-http-error/process-http-error';
+import { StorageProvider } from '../providers/storage/storage';
 
 
 describe('MyApp Component', () => {
@@ -33,11 +34,13 @@ describe('MyApp Component', () => {
       declarations: [ MyApp ],
       imports: [
         IonicModule.forRoot(MyApp),
-        HttpClientTestingModule
+        HttpClientTestingModule,
+        IonicStorageModule.forRoot()
       ],
       providers: [
         LibraryProvider,
         UserProvider,
+        StorageProvider,
         { provide: ProcessProvider, useValue: {} },
         { provide: RecipeProvider, useValue: {} },
         { provide: ProcessHttpErrorProvider, useValue: {} },

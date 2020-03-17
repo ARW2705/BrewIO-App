@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/test
 import { IonicModule, NavController, NavParams, Events, ToastController } from 'ionic-angular';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { IonicStorageModule } from '@ionic/storage';
 
 /* Constants imports */
 import { baseURL } from '../../shared/constants/base-url';
@@ -28,6 +29,7 @@ import { RecipeProvider } from '../../providers/recipe/recipe';
 import { ProcessProvider } from '../../providers/process/process';
 import { ToastProvider } from '../../providers/toast/toast';
 import { ProcessHttpErrorProvider } from '../../providers/process-http-error/process-http-error';
+import { StorageProvider } from '../../providers/storage/storage';
 
 
 describe('Recipe Master Details Page', () => {
@@ -51,12 +53,14 @@ describe('Recipe Master Details Page', () => {
         ],
         imports: [
           IonicModule.forRoot(RecipeMasterDetailPage),
-          HttpClientTestingModule
+          HttpClientTestingModule,
+          IonicStorageModule.forRoot()
         ],
         providers: [
           RecipeProvider,
           ProcessProvider,
           Events,
+          StorageProvider,
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ToastProvider, useValue: {} },
@@ -125,13 +129,15 @@ describe('Recipe Master Details Page', () => {
         ],
         imports: [
           IonicModule.forRoot(RecipeMasterDetailPage),
-          HttpClientTestingModule
+          HttpClientTestingModule,
+          IonicStorageModule.forRoot()
         ],
         providers: [
           RecipeProvider,
           ProcessProvider,
           Events,
           ToastProvider,
+          StorageProvider,
           { provide: ToastController, useClass: ToastControllerMock },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
@@ -299,13 +305,15 @@ describe('Recipe Master Details Page', () => {
         ],
         imports: [
           IonicModule.forRoot(RecipeMasterDetailPage),
-          HttpClientTestingModule
+          HttpClientTestingModule,
+          IonicStorageModule.forRoot()
         ],
         providers: [
           RecipeProvider,
           ProcessProvider,
           Events,
           ToastProvider,
+          StorageProvider,
           { provide: ToastController, useClass: ToastControllerMock },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
@@ -401,13 +409,15 @@ describe('Recipe Master Details Page', () => {
         ],
         imports: [
           IonicModule.forRoot(RecipeMasterDetailPage),
-          HttpClientTestingModule
+          HttpClientTestingModule,
+          IonicStorageModule.forRoot()
         ],
         providers: [
           RecipeProvider,
           ProcessProvider,
           Events,
           ToastProvider,
+          StorageProvider,
           { provide: ToastController, useClass: ToastControllerMock },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
@@ -497,13 +507,15 @@ describe('Recipe Master Details Page', () => {
         ],
         imports: [
           IonicModule.forRoot(RecipeMasterDetailPage),
-          HttpClientTestingModule
+          HttpClientTestingModule,
+          IonicStorageModule.forRoot()
         ],
         providers: [
           RecipeProvider,
           ProcessProvider,
           Events,
           ToastProvider,
+          StorageProvider,
           { provide: ToastController, useClass: ToastControllerMock },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },

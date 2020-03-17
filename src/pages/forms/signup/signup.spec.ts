@@ -2,7 +2,7 @@
 import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/testing';
 import { HttpTestingController, HttpClientTestingModule } from '@angular/common/http/testing';
 import { IonicModule, NavController, NavParams, ViewController, ToastController } from 'ionic-angular';
-import { Storage } from '@ionic/storage';
+import { IonicStorageModule } from '@ionic/storage';
 
 /* Constants imports */
 import { baseURL } from '../../../shared/constants/base-url';
@@ -24,6 +24,8 @@ import { FormValidatorProvider } from '../../../providers/form-validator/form-va
 import { ProcessProvider } from '../../../providers/process/process';
 import { RecipeProvider } from '../../../providers/recipe/recipe';
 import { ProcessHttpErrorProvider } from '../../../providers/process-http-error/process-http-error';
+import { StorageProvider } from '../../../providers/storage/storage';
+
 
 describe('Signup Form', () => {
   let fixture: ComponentFixture<SignupPage>;
@@ -39,7 +41,8 @@ describe('Signup Form', () => {
       ],
       imports: [
         IonicModule.forRoot(SignupPage),
-        HttpClientTestingModule
+        HttpClientTestingModule,
+        IonicStorageModule.forRoot()
       ],
       providers: [
         UserProvider,
@@ -48,10 +51,12 @@ describe('Signup Form', () => {
         ProcessHttpErrorProvider,
         { provide: ProcessProvider, useValue: {} },
         { provide: RecipeProvider, useValue: {} },
+        { provide: StorageProvider, useValue: {} },
         { provide: NavController, useClass: NavMock },
         { provide: NavParams, useClass: NavParamsMock },
         { provide: ViewController, useClass: ViewControllerMock },
         { provide: ToastController, useClass: ToastControllerMock },
+        { provide: StorageProvider, useValue: {} },
         { provide: Storage, useClass: StorageMock }
       ]
     });

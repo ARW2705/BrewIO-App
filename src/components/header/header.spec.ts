@@ -1,8 +1,8 @@
 /* Module imports */
 import { TestBed, getTestBed, async, ComponentFixture } from '@angular/core/testing';
 import { IonicModule, NavController, ModalController, Events, Config, App } from 'ionic-angular';
+import { IonicStorageModule } from '@ionic/storage';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { Storage } from '@ionic/storage';
 import { By } from '@angular/platform-browser';
 
 /* Test configuration imports */
@@ -21,6 +21,7 @@ import { ModalProvider } from '../../providers/modal/modal';
 import { ProcessProvider } from '../../providers/process/process';
 import { RecipeProvider } from '../../providers/recipe/recipe';
 import { ProcessHttpErrorProvider } from '../../providers/process-http-error/process-http-error';
+import { StorageProvider } from '../../providers/storage/storage';
 
 
 describe('Header Component', () => {
@@ -39,18 +40,19 @@ describe('Header Component', () => {
         ],
         imports: [
           IonicModule,
-          HttpClientTestingModule
+          HttpClientTestingModule,
+          IonicStorageModule.forRoot()
         ],
         providers: [
           UserProvider,
           ProcessProvider,
           RecipeProvider,
+          StorageProvider,
           ModalProvider,
           Events,
           { provide: ProcessHttpErrorProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },
           { provide: ModalController, useClass: ModalControllerMock },
-          { provide: Storage, useClass: StorageMock },
           { provide: Config, useClass: ConfigMock },
           { provide: App, useClass: AppMock }
         ]
@@ -215,12 +217,14 @@ describe('Header Component', () => {
         ],
         imports: [
           IonicModule,
-          HttpClientTestingModule
+          HttpClientTestingModule,
+          IonicStorageModule.forRoot()
         ],
         providers: [
           UserProvider,
           ProcessProvider,
           RecipeProvider,
+          StorageProvider,
           ModalProvider,
           Events,
           { provide: ProcessHttpErrorProvider, useValue: {} },

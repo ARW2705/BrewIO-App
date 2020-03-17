@@ -27,6 +27,7 @@ import { RecipeProvider } from '../../providers/recipe/recipe';
 import { ProcessHttpErrorProvider } from '../../providers/process-http-error/process-http-error';
 import { ModalProvider } from '../../providers/modal/modal';
 import { ToastProvider } from '../../providers/toast/toast';
+import { StorageProvider } from '../../providers/storage/storage';
 
 
 describe('User Page', () => {
@@ -56,6 +57,7 @@ describe('User Page', () => {
           { provide: ProcessHttpErrorProvider, useValue: {} },
           { provide: ModalProvider, useValue: {} },
           { provide: ToastProvider, useValue: {} },
+          { provide: StorageProvider, useValue: {} },
           { provide: Storage, useClass: StorageMock }
         ]
       });
@@ -109,7 +111,8 @@ describe('User Page', () => {
           { provide: ProcessHttpErrorProvider, useValue: {} },
           { provide: ModalProvider, useValue: {} },
           { provide: Storage, useClass: StorageMock },
-          { provide: ToastController, useClass: ToastControllerMock }
+          { provide: ToastController, useClass: ToastControllerMock },
+          { provide: StorageProvider, useValue: {} }
         ]
       });
       await TestBed.compileComponents();
@@ -225,6 +228,7 @@ describe('User Page', () => {
           { provide: ProcessHttpErrorProvider, useValue: {} },
           { provide: ModalProvider, useValue: {} },
           { provide: ToastProvider, useValue: {} },
+          { provide: StorageProvider, useValue: {} },
           { provide: Storage, useClass: StorageMock }
         ]
       });
@@ -284,6 +288,7 @@ describe('User Page', () => {
           { provide: ProcessHttpErrorProvider, useValue: {} },
           { provide: ToastProvider, useValue: {} },
           { provide: Storage, useClass: StorageMock },
+          { provide: StorageProvider, useValue: {} },
           { provide: ModalController, useClass: ModalControllerMock }
         ]
       });

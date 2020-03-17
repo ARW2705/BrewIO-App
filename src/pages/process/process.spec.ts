@@ -2,6 +2,7 @@
 import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/testing';
 import { HttpTestingController, HttpClientTestingModule } from '@angular/common/http/testing';
 import { IonicModule, NavController, NavParams, ToastController, Events, Platform } from 'ionic-angular';
+import { IonicStorageModule } from '@ionic/storage';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
@@ -33,6 +34,7 @@ import { RecipeProvider } from '../../providers/recipe/recipe';
 import { UserProvider } from '../../providers/user/user';
 import { ToastProvider } from '../../providers/toast/toast';
 import { ProcessHttpErrorProvider } from '../../providers/process-http-error/process-http-error';
+import { StorageProvider } from '../../providers/storage/storage';
 
 
 describe('Process Page', () => {
@@ -59,13 +61,15 @@ describe('Process Page', () => {
         ],
         imports: [
           IonicModule.forRoot(ProcessPage),
-          HttpClientTestingModule
+          HttpClientTestingModule,
+          IonicStorageModule.forRoot()
         ],
         providers: [
           ProcessProvider,
           RecipeProvider,
           Events,
           ToastProvider,
+          StorageProvider,
           { provide: UserProvider, useValue: {} },
           { provide: Platform, useClass: PlatformMock },
           { provide: NavController, useClass: NavMock },
@@ -197,13 +201,15 @@ describe('Process Page', () => {
         ],
         imports: [
           IonicModule.forRoot(ProcessPage),
-          HttpClientTestingModule
+          HttpClientTestingModule,
+          IonicStorageModule.forRoot()
         ],
         providers: [
           ProcessProvider,
           RecipeProvider,
           Events,
           ToastProvider,
+          StorageProvider,
           { provide: UserProvider, useValue: {} },
           { provide: Platform, useClass: PlatformMock },
           { provide: NavController, useClass: NavMock },
@@ -502,7 +508,8 @@ describe('Process Page', () => {
         ],
         imports: [
           IonicModule.forRoot(ProcessPage),
-          HttpClientTestingModule
+          HttpClientTestingModule,
+          IonicStorageModule.forRoot()
         ],
         providers: [
           ProcessProvider,
@@ -514,6 +521,7 @@ describe('Process Page', () => {
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ToastController, useClass: ToastControllerMock },
+          { provide: StorageProvider, useValue: {} },
           { provide: ProcessHttpErrorProvider, useValue: {} }
         ],
         schemas: [
@@ -599,7 +607,8 @@ describe('Process Page', () => {
         ],
         imports: [
           IonicModule.forRoot(ProcessPage),
-          HttpClientTestingModule
+          HttpClientTestingModule,
+          IonicStorageModule.forRoot()
         ],
         providers: [
           ProcessProvider,
@@ -611,6 +620,7 @@ describe('Process Page', () => {
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ToastController, useClass: ToastControllerMock },
+          { provide: StorageProvider, useValue: {} },
           { provide: ProcessHttpErrorProvider, useValue: {} }
         ],
         schemas: [
@@ -695,7 +705,8 @@ describe('Process Page', () => {
         ],
         imports: [
           IonicModule.forRoot(ProcessPage),
-          HttpClientTestingModule
+          HttpClientTestingModule,
+          IonicStorageModule.forRoot()
         ],
         providers: [
           ProcessProvider,
@@ -707,6 +718,7 @@ describe('Process Page', () => {
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ToastController, useClass: ToastControllerMock },
+          { provide: StorageProvider, useValue: {} },
           { provide: ProcessHttpErrorProvider, useValue: {} }
         ],
         schemas: [
@@ -925,13 +937,15 @@ describe('Process Page', () => {
         ],
         imports: [
           IonicModule.forRoot(ProcessPage),
-          HttpClientTestingModule
+          HttpClientTestingModule,
+          IonicStorageModule.forRoot()
         ],
         providers: [
           ProcessProvider,
           Events,
           ToastProvider,
           RecipeProvider,
+          StorageProvider,
           { provide: UserProvider, useValue: {} },
           { provide: Platform, useClass: PlatformMock },
           { provide: NavController, useClass: NavMock },
@@ -986,7 +1000,9 @@ describe('Process Page', () => {
       expect(processPage.master.hasActiveBatch).toBe(true);
       processPage.updateRecipeMasterActive(false);
       setTimeout(() => {
-        expect(consoleSpy).lastCalledWith('Recipe master has active batch: ', false);
+        const secondToLastCall = consoleSpy.mock.calls.length - 2;
+        expect(consoleSpy.mock.calls[secondToLastCall][0]).toMatch('Recipe master has active batch: ');
+        expect(consoleSpy.mock.calls[secondToLastCall][1]).toBe(false);
         done();
       }, 10);
 

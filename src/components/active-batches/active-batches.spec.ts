@@ -33,6 +33,7 @@ import { RecipeProvider } from '../../providers/recipe/recipe';
 import { ToastProvider } from '../../providers/toast/toast';
 import { UserProvider } from '../../providers/user/user';
 import { ProcessHttpErrorProvider } from '../../providers/process-http-error/process-http-error';
+import { StorageProvider } from '../../providers/storage/storage';
 
 
 describe('Active Batch Component', () => {
@@ -63,6 +64,7 @@ describe('Active Batch Component', () => {
           { provide: ProcessHttpErrorProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },
           { provide: Storage, useClass: StorageMock },
+          { provide: StorageProvider, useValue: {} },
           { provide: ToastController, useClass: ToastControllerMock }
         ]
       });
@@ -154,6 +156,7 @@ describe('Active Batch Component', () => {
           { provide: ProcessHttpErrorProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },
           { provide: Storage, useClass: StorageMock },
+          { provide: StorageProvider, useValue: {} },
           { provide: ToastController, useClass: ToastControllerMock },
           { provide: Config, useClass: ConfigMock },
           { provide: Platform, useClass: PlatformMock },

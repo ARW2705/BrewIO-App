@@ -2,7 +2,7 @@
 import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/testing';
 import { HttpTestingController, HttpClientTestingModule } from '@angular/common/http/testing';
 import { IonicModule, NavController, NavParams, ViewController, ToastController } from 'ionic-angular';
-import { Storage } from '@ionic/storage';
+import { IonicStorageModule } from '@ionic/storage';
 
 /* Constants imports */
 import { baseURL } from '../../../shared/constants/base-url';
@@ -24,6 +24,7 @@ import { FormValidatorProvider } from '../../../providers/form-validator/form-va
 import { ProcessProvider } from '../../../providers/process/process';
 import { RecipeProvider } from '../../../providers/recipe/recipe';
 import { ProcessHttpErrorProvider } from '../../../providers/process-http-error/process-http-error';
+import { StorageProvider } from '../../../providers/storage/storage';
 
 
 describe('Login Form', () => {
@@ -40,7 +41,8 @@ describe('Login Form', () => {
       ],
       imports: [
         IonicModule.forRoot(LoginPage),
-        HttpClientTestingModule
+        HttpClientTestingModule,
+        IonicStorageModule.forRoot()
       ],
       providers: [
         UserProvider,
@@ -49,6 +51,7 @@ describe('Login Form', () => {
         RecipeProvider,
         FormValidatorProvider,
         ProcessHttpErrorProvider,
+        StorageProvider,
         { provide: NavController, useClass: NavMock },
         { provide: NavParams, useClass: NavParamsMock },
         { provide: ViewController, useClass: ViewControllerMock },

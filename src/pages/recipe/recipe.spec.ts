@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/test
 import { HttpTestingController, HttpClientTestingModule } from '@angular/common/http/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { IonicModule, NavController, Events, ToastController } from 'ionic-angular';
-import { Storage } from '@ionic/storage';
+import { IonicStorageModule } from '@ionic/storage';
 
 /* Constants imports */
 import { baseURL } from '../../shared/constants/base-url';
@@ -30,6 +30,7 @@ import { RecipeProvider } from '../../providers/recipe/recipe';
 import { ProcessProvider } from '../../providers/process/process';
 import { ToastProvider } from '../../providers/toast/toast';
 import { ProcessHttpErrorProvider } from '../../providers/process-http-error/process-http-error';
+import { StorageProvider } from '../../providers/storage/storage';
 
 
 describe('Recipe Page', () => {
@@ -53,13 +54,15 @@ describe('Recipe Page', () => {
         ],
         imports: [
           IonicModule.forRoot(RecipePage),
-          HttpClientTestingModule
+          HttpClientTestingModule,
+          IonicStorageModule.forRoot()
         ],
         providers: [
           UserProvider,
           RecipeProvider,
           ProcessProvider,
           ToastProvider,
+          StorageProvider,
           { provide: NavController, useClass: NavMock },
           { provide: ToastController, useClass: ToastControllerMock },
           { provide: ProcessHttpErrorProvider, useValue: {} },
@@ -125,13 +128,15 @@ describe('Recipe Page', () => {
         ],
         imports: [
           IonicModule.forRoot(RecipePage),
-          HttpClientTestingModule
+          HttpClientTestingModule,
+          IonicStorageModule.forRoot()
         ],
         providers: [
           UserProvider,
           RecipeProvider,
           ToastProvider,
           Events,
+          StorageProvider,
           { provide: NavController, useClass: NavMock },
           { provide: ToastController, useClass: ToastControllerMock },
           { provide: ProcessHttpErrorProvider, useValue: {} },
@@ -272,7 +277,8 @@ describe('Recipe Page', () => {
         ],
         imports: [
           IonicModule.forRoot(RecipePage),
-          HttpClientTestingModule
+          HttpClientTestingModule,
+          IonicStorageModule.forRoot()
         ],
         providers: [
           UserProvider,
@@ -280,6 +286,7 @@ describe('Recipe Page', () => {
           ProcessProvider,
           ToastProvider,
           Events,
+          StorageProvider,
           { provide: NavController, useClass: NavMock },
           { provide: ToastController, useClass: ToastControllerMock },
           { provide: ProcessHttpErrorProvider, useValue: {} },

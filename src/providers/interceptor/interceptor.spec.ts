@@ -21,6 +21,7 @@ import { UserProvider } from '../user/user';
 import { ProcessProvider } from '../process/process';
 import { RecipeProvider } from '../recipe/recipe';
 import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
+import { StorageProvider } from '../storage/storage';
 
 
 describe('HTTP Interceptor service', () => {
@@ -41,8 +42,8 @@ describe('HTTP Interceptor service', () => {
         ProcessProvider,
         RecipeProvider,
         ProcessHttpErrorProvider,
+        StorageProvider,
         HttpMock,
-        { provide: Storage, useClass: StorageMock },
         { provide: HTTP_INTERCEPTORS, useClass: AuthorizedInterceptor, multi: true },
         { provide: HTTP_INTERCEPTORS, useClass: UnauthorizedInterceptor, multi: true}
       ]

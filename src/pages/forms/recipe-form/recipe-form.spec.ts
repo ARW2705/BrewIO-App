@@ -2,6 +2,7 @@
 import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/testing';
 import { HttpTestingController, HttpClientTestingModule } from '@angular/common/http/testing';
 import { IonicModule, NavController, NavParams, ModalController, ActionSheetController, ToastController, Events } from 'ionic-angular';
+import { IonicStorageModule } from '@ionic/storage';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 /* Constants imports */
@@ -49,6 +50,7 @@ import { CalculationsProvider } from '../../../providers/calculations/calculatio
 import { ToastProvider } from '../../../providers/toast/toast';
 import { ActionSheetProvider } from '../../../providers/action-sheet/action-sheet';
 import { ProcessHttpErrorProvider } from '../../../providers/process-http-error/process-http-error';
+import { StorageProvider } from '../../../providers/storage/storage';
 
 
 describe('Recipe Form', () => {
@@ -72,7 +74,8 @@ describe('Recipe Form', () => {
         ],
         imports: [
           IonicModule.forRoot(RecipeFormPage),
-          HttpClientTestingModule
+          HttpClientTestingModule,
+          IonicStorageModule.forRoot()
         ],
         providers: [
           LibraryProvider,
@@ -82,6 +85,7 @@ describe('Recipe Form', () => {
           { provide: ToastProvider, useValue: {} },
           { provide: ProcessHttpErrorProvider, useValue: {} },
           { provide: ActionSheetProvider, useValue: {} },
+          { provide: StorageProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ModalController, useClass: ModalControllerMock },
@@ -219,7 +223,8 @@ describe('Recipe Form', () => {
         ],
         imports: [
           IonicModule.forRoot(RecipeFormPage),
-          HttpClientTestingModule
+          HttpClientTestingModule,
+          IonicStorageModule.forRoot()
         ],
         providers: [
           LibraryProvider,
@@ -229,6 +234,7 @@ describe('Recipe Form', () => {
           { provide: ToastProvider, useValue: {} },
           { provide: ProcessHttpErrorProvider, useValue: {} },
           { provide: ActionSheetProvider, useValue: {} },
+          { provide: StorageProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ModalController, useClass: ModalControllerMock },
@@ -462,7 +468,8 @@ describe('Recipe Form', () => {
         ],
         imports: [
           IonicModule.forRoot(RecipeFormPage),
-          HttpClientTestingModule
+          HttpClientTestingModule,
+          IonicStorageModule.forRoot()
         ],
         providers: [
           ActionSheetProvider,
@@ -472,6 +479,7 @@ describe('Recipe Form', () => {
           { provide: CalculationsProvider, useValue: {} },
           { provide: ToastProvider, useValue: {} },
           { provide: ProcessHttpErrorProvider, useValue: {} },
+          { provide: StorageProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ModalController, useClass: ModalControllerMock },
@@ -527,7 +535,8 @@ describe('Recipe Form', () => {
         ],
         imports: [
           IonicModule.forRoot(RecipeFormPage),
-          HttpClientTestingModule
+          HttpClientTestingModule,
+          IonicStorageModule.forRoot()
         ],
         providers: [
           LibraryProvider,
@@ -537,6 +546,7 @@ describe('Recipe Form', () => {
           { provide: ToastProvider, useValue: {} },
           { provide: ProcessHttpErrorProvider, useValue: {} },
           { provide: ActionSheetProvider, useValue: {} },
+          { provide: StorageProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ModalController, useClass: ModalControllerMock },
@@ -621,7 +631,8 @@ describe('Recipe Form', () => {
         ],
         imports: [
           IonicModule.forRoot(RecipeFormPage),
-          HttpClientTestingModule
+          HttpClientTestingModule,
+          IonicStorageModule.forRoot()
         ],
         providers: [
           LibraryProvider,
@@ -631,6 +642,7 @@ describe('Recipe Form', () => {
           { provide: ToastProvider, useValue: {} },
           { provide: ProcessHttpErrorProvider, useValue: {} },
           { provide: ActionSheetProvider, useValue: {} },
+          { provide: StorageProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ModalController, useClass: ModalControllerMock },
@@ -715,7 +727,8 @@ describe('Recipe Form', () => {
         ],
         imports: [
           IonicModule.forRoot(RecipeFormPage),
-          HttpClientTestingModule
+          HttpClientTestingModule,
+          IonicStorageModule.forRoot()
         ],
         providers: [
           LibraryProvider,
@@ -723,6 +736,7 @@ describe('Recipe Form', () => {
           ToastProvider,
           ProcessHttpErrorProvider,
           Events,
+          StorageProvider,
           { provide: CalculationsProvider, useValue: {} },
           { provide: ActionSheetProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },
@@ -1071,7 +1085,8 @@ describe('Recipe Form', () => {
         ],
         imports: [
           IonicModule.forRoot(RecipeFormPage),
-          HttpClientTestingModule
+          HttpClientTestingModule,
+          IonicStorageModule.forRoot()
         ],
         providers: [
           LibraryProvider,
@@ -1079,6 +1094,7 @@ describe('Recipe Form', () => {
           ToastProvider,
           ProcessHttpErrorProvider,
           Events,
+          StorageProvider,
           { provide: CalculationsProvider, useValue: {} },
           { provide: ActionSheetProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },
@@ -1254,7 +1270,8 @@ describe('Recipe Form', () => {
         ],
         imports: [
           IonicModule.forRoot(RecipeFormPage),
-          HttpClientTestingModule
+          HttpClientTestingModule,
+          IonicStorageModule.forRoot()
         ],
         providers: [
           LibraryProvider,
@@ -1264,6 +1281,7 @@ describe('Recipe Form', () => {
           { provide: ToastProvider, useValue: {} },
           { provide: ProcessHttpErrorProvider, useValue: {} },
           { provide: ActionSheetProvider, useValue: {} },
+          { provide: StorageProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ModalController, useClass: ModalControllerMock },
