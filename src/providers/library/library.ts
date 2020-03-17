@@ -10,10 +10,12 @@ import { baseURL } from '../../shared/constants/base-url';
 import { apiVersion } from '../../shared/constants/api-version';
 
 /* Interface imports */
-import { Grains, Hops, Yeast, Style } from '../../shared/interfaces/library';
+import { Grains, Hops, Yeast, Style, LibraryCache } from '../../shared/interfaces/library';
 
 /* Provider imports */
 import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
+import { StorageProvider } from '../storage/storage';
+
 
 @Injectable()
 export class LibraryProvider {
@@ -23,7 +25,8 @@ export class LibraryProvider {
   styleLibrary: Array<Style> = null;
 
   constructor(public http: HttpClient,
-    public processHttpError: ProcessHttpErrorProvider) { }
+    public processHttpError: ProcessHttpErrorProvider,
+    public storageService: StorageProvider) { }
 
   /***** API access methods *****/
 
@@ -32,18 +35,45 @@ export class LibraryProvider {
    * memory, not to be used to return the observables
    *
    * @params: none
-   *
-   * @return: combined observable of all library requests
+   * @return: none
   **/
-  fetchAllLibraries() {
-    this.fetchGrainsLibrary()
-      .subscribe(() => {});
-    this.fetchHopsLibrary()
-      .subscribe(() => {});
-    this.fetchYeastLibrary()
-      .subscribe(() => {});
-    this.fetchStyleLibrary()
-      .subscribe(() => {});
+  fetchAllLibraries(): void {
+    this.storageService.getLibrary()
+      .subscribe(
+        (libraries: LibraryCache) => {
+          this.grainsLibrary = libraries.grains;
+          this.hopsLibrary = libraries.hops;
+          this.yeastLibrary = libraries.yeast;
+          this.styleLibrary = libraries.style;
+        },
+        error => {
+          console.log(`${error}: awaiting data from server`);
+        }
+      );
+    Observable.forkJoin(
+      this.fetchGrainsLibrary(),
+      this.fetchHopsLibrary(),
+      this.fetchYeastLibrary(),
+      this.fetchStyleLibrary()
+    )
+    .subscribe(([grainsLibrary, hopsLibrary, yeastLibrary, styleLibrary]) => {
+      this.grainsLibrary = grainsLibrary;
+      this.hopsLibrary = hopsLibrary;
+      this.yeastLibrary = yeastLibrary;
+      this.styleLibrary = styleLibrary;
+      this.storageService.setLibrary({
+        grains: grainsLibrary,
+        hops: hopsLibrary,
+        yeast: yeastLibrary,
+        style: styleLibrary
+      })
+      .subscribe(
+        () => {},
+        error => {
+          console.log('Error storing library', error);
+        }
+      );
+    });
   }
 
   /**

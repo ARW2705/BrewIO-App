@@ -1,6 +1,7 @@
 /* Module imports */
 import { TestBed, getTestBed, async } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { IonicStorageModule } from '@ionic/storage';
 
 /* Constant imports */
 import { baseURL } from '../../shared/constants/base-url';
@@ -18,6 +19,7 @@ import { mockStyles } from '../../../test-config/mockmodels/mockStyles';
 /* Provider imports */
 import { LibraryProvider } from './library';
 import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
+import { StorageProvider } from '../storage/storage';
 
 describe('Library service', () => {
   let injector: TestBed;
@@ -27,10 +29,14 @@ describe('Library service', () => {
 
   beforeAll(done => (async() => {
     TestBed.configureTestingModule({
-      imports: [ HttpClientTestingModule ],
+      imports: [
+        HttpClientTestingModule,
+        IonicStorageModule.forRoot()
+      ],
       providers: [
         LibraryProvider,
-        ProcessHttpErrorProvider
+        ProcessHttpErrorProvider,
+        StorageProvider
       ]
     });
   })()
@@ -143,18 +149,25 @@ describe('Library service', () => {
         reqStyles.flush(_mockStyles);
       }); // end 'should return an Observable with an array of each library' test
 
-      test('should call each fetch method', () => {
+      test('should call each fetch method', done => {
         const fetchGrainsLibrarySpy = jest.spyOn(libraryService, 'fetchGrainsLibrary');
         const fetchHopsLibrarySpy = jest.spyOn(libraryService, 'fetchHopsLibrary');
         const fetchYeastLibrarySpy = jest.spyOn(libraryService, 'fetchYeastLibrary');
         const fetchStyleLibrarySpy = jest.spyOn(libraryService, 'fetchStyleLibrary');
+        const cacheGetSpy = jest.spyOn(libraryService.storageService, 'getLibrary');
+        const cacheSetSpy = jest.spyOn(libraryService.storageService, 'setLibrary');
 
         libraryService.fetchAllLibraries();
 
-        expect(fetchGrainsLibrarySpy).toHaveBeenCalled();
-        expect(fetchHopsLibrarySpy).toHaveBeenCalled();
-        expect(fetchYeastLibrarySpy).toHaveBeenCalled();
-        expect(fetchStyleLibrarySpy).toHaveBeenCalled();
+        setTimeout(() => {
+          expect(fetchGrainsLibrarySpy).toHaveBeenCalled();
+          expect(fetchHopsLibrarySpy).toHaveBeenCalled();
+          expect(fetchYeastLibrarySpy).toHaveBeenCalled();
+          expect(fetchStyleLibrarySpy).toHaveBeenCalled();
+          expect(cacheGetSpy).toHaveBeenCalled();
+          expect(cacheSetSpy).toHaveBeenCalled();
+          done();
+        }, 10);
 
         const reqGrains = httpMock.expectOne(`${baseURL}/${apiVersion}/library/grains`);
         expect(reqGrains.request.method).toBe('GET');
