@@ -58,3 +58,10 @@ export interface YeastRefs {
   name: string;
   styles: Array<string>;
 };
+
+export interface LibraryCache {
+  grains: Array<Grains>;
+  hops: Array<Hops>;
+  yeast: Array<Yeast>;
+  style: Array<Style>;
+};
