@@ -21,7 +21,8 @@ export class ProcessHttpErrorProvider {
     let errMsg: string;
     if (error instanceof HttpErrorResponse) {
       if (error.status == 401 && error.error.error) {
-        errMsg = error.error.error.message;
+        const drilldownError = error.error.error;
+        errMsg = `${drilldownError.name}: ${drilldownError.message}`;
       } else {
         const errStatus = error.status ? error.status: 503;
         const errText = error.status ? error.statusText: 'Service unavailable';
