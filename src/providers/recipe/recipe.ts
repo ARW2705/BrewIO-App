@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 
 /* Constants imports */
 import { baseURL } from '../../shared/constants/base-url';
@@ -120,15 +121,17 @@ export class RecipeProvider {
     this.storageService.getRecipes()
       .subscribe(
         (recipeMasterList: any) => {
+          console.log('recipes from cache');
           this.mapRecipeMasterArrayToSubjects(recipeMasterList);
         },
-        (error: string) => {
-          console.log(`${error}: awaiting data from server`);
+        (error: ErrorObservable) => {
+          console.log(`${error.error}: awaiting data from server`);
         }
       );
     this.http.get(`${baseURL}/${apiVersion}/recipes/private/user`)
       .catch(error => this.processHttpError.handleError(error))
       .subscribe((recipeMasterArrayResponse: Array<RecipeMaster>) => {
+        console.log('recipes from server');
         this.mapRecipeMasterArrayToSubjects(recipeMasterArrayResponse);
         this.updateCache();
       });
@@ -365,12 +368,8 @@ export class RecipeProvider {
   updateCache(): void {
     this.storageService.setRecipes(this.recipeMasterList$.value.map((recipeMaster$: BehaviorSubject<RecipeMaster>) => recipeMaster$.value))
       .subscribe(
-        () => {
-          console.log('stored recipes');
-        },
-        error => {
-          console.log('recipe store error', error);
-        }
+        () => console.log('stored recipes'),
+        (error: ErrorObservable) => console.log('recipe store error', error)
       );
   }
 
