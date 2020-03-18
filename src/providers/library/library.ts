@@ -2,6 +2,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
+import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/operator/map';
 
@@ -46,8 +47,8 @@ export class LibraryProvider {
           this.yeastLibrary = libraries.yeast;
           this.styleLibrary = libraries.style;
         },
-        error => {
-          console.log(`${error}: awaiting data from server`);
+        (error: ErrorObservable) => {
+          console.log(`${error.error}: awaiting data from server`);
         }
       );
     Observable.forkJoin(
