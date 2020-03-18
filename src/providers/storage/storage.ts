@@ -9,8 +9,9 @@ import { _throw as throwError } from 'rxjs/observable/throw';
 /* Interface imports */
 import { User } from '../../shared/interfaces/user';
 import { RecipeMaster } from '../../shared/interfaces/recipe-master';
-import { Process } from '../../shared/interfaces/process';
-import { Grains, Hops, Yeast, Style, LibraryCache } from '../../shared/interfaces/library';
+// import { Process } from '../../shared/interfaces/process';
+import { Batch } from '../../shared/interfaces/batch';
+import { LibraryCache } from '../../shared/interfaces/library';
 
 
 @Injectable()
@@ -21,6 +22,28 @@ export class StorageProvider {
   libraryStorageKey = 'library';
 
   constructor(public storage: Storage) { }
+
+  getProcesses(): Observable<Array<RecipeMaster>> {
+    return fromPromise(this.storage.get(this.processStorageKey))
+      .pipe(
+        map((activeBatchList: string) => {
+          const parsed = JSON.parse(activeBatchList);
+          if (parsed === null || parsed.length === 0) {
+            throw throwError('Recipe data not found');
+          }
+          return parsed;
+        })
+      );
+  }
+
+  removeProcesses(): void {
+    this.storage.remove(this.processStorageKey)
+      .then(() => console.log('Active batch data cleared'));
+  }
+
+  setProcesses(activeBatchList: Array<Batch>): Observable<any> {
+    return fromPromise(this.storage.set(this.processStorageKey, JSON.stringify(activeBatchList)));
+  }
 
   getLibrary(): Observable<any> {
     return fromPromise(this.storage.get(this.libraryStorageKey))
@@ -36,8 +59,6 @@ export class StorageProvider {
   }
 
   setLibrary(library: LibraryCache): Observable<any> {
-    console.log(library.hops);
-    console.log(library.styles);
     return fromPromise(this.storage.set(this.libraryStorageKey, JSON.stringify(library)));
   }
 
