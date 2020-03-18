@@ -13,7 +13,10 @@ export const mockJWTFailed = () => {
   const mock = {
     status: 'JWT invalid',
     success: false,
-    error: 'error msg'
+    error: {
+      name: 'JsonWebToken',
+      message: 'jwt invalid'
+    }
   };
   return mock;
 };

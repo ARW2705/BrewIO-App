@@ -188,51 +188,34 @@ describe('User Service', () => {
     }); // end ''should clear user data'' test
 
     test('should succeed jwt check', done => {
-      userService.logIn(mockUserLogin())
-        .subscribe(_ => {
-          const consoleSpy = jest.spyOn(console, 'log');
-          userService.checkJWToken();
-          setTimeout(() => {
-            expect(consoleSpy).toHaveBeenCalledWith('JWT valid');
-            done();
-          }, 10);
+      userService.checkJWToken()
+        .subscribe((jwtResponse: any) => {
+          expect(jwtResponse.success).toBe(true);
+          done();
         });
-
-      const loginReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/login`);
-      loginReq.flush(mockLoginResponse());
 
       const jwtReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/checkJWToken`);
       jwtReq.flush(mockJWTSuccess());
-
-      /* Process service and Recipe service tests are handled in their own spec */
-      const _processReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress`);
-      _processReq.flush([]);
-      const _recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/user`);
-      _recipeReq.flush([]);
     }); // end 'should succeed jwt check' test
 
     test('should fail jwt check', done => {
-      userService.logIn(mockUserLogin())
-        .subscribe(_ => {
-          const consoleSpy = jest.spyOn(console, 'log');
-          userService.checkJWToken();
-          setTimeout(() => {
-            expect(consoleSpy).toHaveBeenCalledWith('JWT valid');
+      const _mockJWTFailed = mockJWTFailed();
+      userService.checkJWToken()
+        .subscribe(
+          (res) => { console.log('shouldnt be here', res) },
+          (jwtErrorResponse: any) => {
+            console.log(jwtErrorResponse);
+            expect(jwtErrorResponse).toMatch(`${_mockJWTFailed.error.name}: ${_mockJWTFailed.error.message}`);
             done();
-          }, 10);
-        });
+          }
+        );
 
-      const loginReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/login`);
-      loginReq.flush(mockLoginResponse());
-
+      const errorResponse = {
+        status: 401,
+        statusText: 'not authorized'
+      };
       const jwtReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/checkJWToken`);
-      jwtReq.flush(mockJWTFailed());
-
-      /* Process service and Recipe service tests are handled in their own spec */
-      const _processReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress`);
-      _processReq.flush([]);
-      const _recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/user`);
-      _recipeReq.flush([]);
+      jwtReq.flush(_mockJWTFailed, errorResponse);
     }); // end 'should fail jwt check' test
 
   }); // end 'User is logged in' section
