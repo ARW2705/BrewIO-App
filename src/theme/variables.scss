@@ -234,8 +234,8 @@ $alert-ios-head-text-align: center;
 
 $button-ios-background-color: map-get($colors, primary);
 $button-ios-border-radius: 10px;
-$button-ios-box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.2),
-                       0 1px 2px rgba(0, 0, 0, 0.5);
+$button-ios-box-shadow: 3px 5px 5px rgba(0, 0, 0, 0.7);
+$button-ios-box-shadow-activated: 0 0 0 rgba(0, 0, 0, 0);
 $button-ios-font-size: 1.8rem;
 $button-ios-large-font-size: 2.3rem;
 $button-ios-small-font-size: 1.5rem;
@@ -301,8 +301,8 @@ $alert-md-head-text-align: center;
 
 $button-md-background-color: map-get($colors, primary);
 $button-md-border-radius: 10px;
-$button-md-box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.2),
-                       0 1px 2px rgba(0, 0, 0, 0.5);
+$button-md-box-shadow: 3px 5px 5px rgba(0, 0, 0, 0.7);
+$button-md-box-shadow-activated: 0 0 0 rgba(0, 0, 0, 0);
 $button-md-font-size: 1.8rem;
 $button-md-large-font-size: 2.3rem;
 $button-md-small-font-size: 1.5rem;
