@@ -37,6 +37,20 @@ page-recipe-form {
   #generalInfoModalButton {
     /* Display */
     border-radius: 10px;
+    box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.6);
+    -webkit-box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.6);
+
+    /* Color */
+    background-color: map-get($colors, gray-scale-9);
+  }
+
+  #generalInfoModalButton.activated {
+    /* Display */
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    -webkit-box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+
+    /* Color */
+    background-color: map-get($colors, gray-scale-8);
   }
 
   #submit-button {
