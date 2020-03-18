@@ -1,8 +1,9 @@
 /* Module imports */
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 import 'rxjs/add/operator/catch';
 
 /* Constants imports */
@@ -55,16 +56,9 @@ export class UserProvider {
    *
    * @return: none
   **/
-  checkJWToken(): void {
-    this.http.get<JWTResponse>(`${baseURL}/${apiVersion}/users/checkJWToken`)
-      .subscribe(
-        response => {
-          console.log(response.status);
-        },
-        error => {
-          console.log(error.status);
-          this.clearUserData();
-        });
+  checkJWToken(): Observable<JWTResponse> {
+    return this.http.get<JWTResponse>(`${baseURL}/${apiVersion}/users/checkJWToken`)
+      .catch(error => this.processHttpError.handleError(error));
   }
 
   /**
@@ -136,7 +130,18 @@ export class UserProvider {
       .subscribe(
         user => {
           this.user$.next(user);
-          this.checkJWToken();
+          this.checkJWToken()
+            .subscribe(
+              (jwtResponse: JWTResponse) => {
+                console.log(jwtResponse.status);
+                this.processService.initializeActiveBatchList();
+                this.recipeService.initializeRecipeMasterList();
+              },
+              (error: HttpErrorResponse) => {
+                console.log(error);
+                this.clearUserData();
+              }
+            );
         },
         error => console.log(error.error)
       );
@@ -160,10 +165,8 @@ export class UserProvider {
           if (user.remember) {
             this.storageService.setUser(response.user)
               .subscribe(
-                () => {}, // Nothing further required on successful store
-                error => {
-                  // TODO add toast to present feedback on store failure
-                }
+                () => console.log('stored user data'),
+                (error: ErrorObservable) => console.log('user store error', error)
               );
           }
         }
