@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 import 'rxjs/add/operator/catch';
 
 /* Constants imports */
@@ -15,13 +16,15 @@ import { Process } from '../../shared/interfaces/process';
 
 /* Provider imports */
 import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
+import { StorageProvider } from '../storage/storage';
 
 @Injectable()
 export class ProcessProvider {
   activeBatchList$: BehaviorSubject<Array<BehaviorSubject<Batch>>> = new BehaviorSubject<Array<BehaviorSubject<Batch>>>([]);
 
   constructor(public http: HttpClient,
-    public processHttpError: ProcessHttpErrorProvider) { }
+    public processHttpError: ProcessHttpErrorProvider,
+    public storageService: StorageProvider) { }
 
   /***** API access methods *****/
 
@@ -66,14 +69,20 @@ export class ProcessProvider {
    * @return: none
   **/
   initializeActiveBatchList(): void {
+    this.storageService.getProcesses()
+      .subscribe(
+        (recipeMasterList: any) => {
+          this.mapActiveBatchArrayToSubjects(recipeMasterList);
+        },
+        (error: ErrorObservable) => {
+          console.log(`${error.error}: awaiting data from server`);
+        }
+      );
     this.http.get(`${baseURL}/${apiVersion}/process/in-progress`)
       .catch(error => this.processHttpError.handleError(error))
       .subscribe(batchList => {
-        this.activeBatchList$.next(
-          batchList.map(activeBatch => {
-            return new BehaviorSubject<Batch>(activeBatch);
-          })
-        );
+        this.mapActiveBatchArrayToSubjects(batchList);
+        this.updateCache();
       });
   }
 
@@ -160,6 +169,7 @@ export class ProcessProvider {
       batch$.complete();
     });
     this.activeBatchList$.next([]);
+    this.storageService.removeProcesses();
   }
 
   /**
@@ -192,6 +202,22 @@ export class ProcessProvider {
   **/
   getActiveBatchesList(): BehaviorSubject<Array<BehaviorSubject<Batch>>> {
     return this.activeBatchList$;
+  }
+
+  /**
+   * Convert an array of active batches into a BehaviorSubject of an array of
+   * BehaviorSubjects of active batches
+   *
+   * @params: activeBatchList - array of recipe masters
+   *
+   * @return: none
+  **/
+  mapActiveBatchArrayToSubjects(activeBatchList: Array<Batch>): void {
+    this.activeBatchList$.next(
+      activeBatchList.map(activeBatch => {
+        return new BehaviorSubject<Batch>(activeBatch);
+      })
+    );
   }
 
   /**
@@ -231,6 +257,20 @@ export class ProcessProvider {
     } else {
       // TODO error feedback on missing batch
     }
+  }
+
+  /**
+   * Update the cache with current active batch list
+   *
+   * @params: none
+   * @return: none
+  **/
+  updateCache(): void {
+    this.storageService.setProcesses(this.activeBatchList$.value.map((activeBatch$: BehaviorSubject<Batch>) => activeBatch$.value))
+      .subscribe(
+        () => console.log('stored active batches'),
+        (error: ErrorObservable) => console.log('active batch store error', error)
+      );
   }
 
   /***** End utility methods *****/

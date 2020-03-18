@@ -1,6 +1,7 @@
 /* Module imports */
 import { TestBed, getTestBed, async } from '@angular/core/testing';
 import { HttpTestingController, HttpClientTestingModule } from '@angular/common/http/testing';
+import { IonicStorageModule } from '@ionic/storage';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { combineLatest } from 'rxjs/observable/combineLatest';
 
@@ -21,6 +22,7 @@ import { Batch } from '../../shared/interfaces/batch';
 /* Provider imports */
 import { ProcessProvider } from './process';
 import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
+import { StorageProvider } from '../storage/storage';
 
 describe('Process Service', () => {
   let injector: TestBed;
@@ -31,11 +33,13 @@ describe('Process Service', () => {
   beforeAll(done => (async() => {
     TestBed.configureTestingModule({
       imports: [
-        HttpClientTestingModule
+        HttpClientTestingModule,
+        IonicStorageModule.forRoot()
       ],
       providers: [
         ProcessProvider,
-        ProcessHttpErrorProvider
+        ProcessHttpErrorProvider,
+        StorageProvider
       ]
     });
   })()
@@ -101,12 +105,18 @@ describe('Process Service', () => {
 
     test('should initialize the active batch list', done => {
       expect(processService.activeBatchList$.value.length).toBe(0);
+      const getSpy = jest.spyOn(processService.storageService, 'getProcesses');
+      const storeSpy = jest.spyOn(processService, 'updateCache');
 
       processService.activeBatchList$
         .skip(1)
         .subscribe(batchList => {
-          expect(batchList.length).toBe(3);
-          done();
+          setTimeout(() => {
+            expect(batchList.length).toBe(3);
+            expect(getSpy).toHaveBeenCalled();
+            expect(storeSpy).toHaveBeenCalled();
+            done();
+          }, 10);
         });
 
       processService.initializeActiveBatchList();
@@ -256,6 +266,14 @@ describe('Process Service', () => {
       expect(processService.getActiveBatchesList()).toBe(processService.activeBatchList$);
     }); // end 'should get active batches list' test
 
+    test('should map an array of active batches to a behavior subject of array of behvior subjects', () => {
+      const _mockBatch = mockBatch();
+      expect(processService.activeBatchList$.value.length).toBe(0);
+      processService.mapActiveBatchArrayToSubjects([_mockBatch, _mockBatch, _mockBatch]);
+      expect(processService.activeBatchList$.value.length).toBe(3);
+      expect(processService.activeBatchList$.value[1].value).toStrictEqual(_mockBatch);
+    }); // end 'should map an array of active batches to a behavior subject of array of behvior subjects' test
+
     test('should remove a batch from the list', done => {
       const _mockBatch = mockBatch();
       const _deleteMockBatch = mockBatch();
@@ -294,6 +312,24 @@ describe('Process Service', () => {
 
       processService.updateBatchInList(_updatedMockBatch);
     }); // end 'should update a batch in the list' test
+
+    test('should call to update process cache', () => {
+      const _mockBatch = mockBatch();
+      processService.activeBatchList$.next(
+        [
+          new BehaviorSubject<Batch>(_mockBatch),
+          new BehaviorSubject<Batch>(_mockBatch)
+        ]
+      );
+      const cacheSpy = jest.spyOn(processService.storageService, 'setProcesses');
+      processService.updateCache();
+      expect(cacheSpy).toHaveBeenCalledWith(
+        [
+          _mockBatch,
+          _mockBatch
+        ]
+      );
+    }); // 'should call to update process cache' test
 
   }); // end 'Utility methods' section
 
