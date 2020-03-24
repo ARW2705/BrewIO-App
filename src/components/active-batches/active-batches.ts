@@ -177,6 +177,7 @@ export class ActiveBatchesComponent implements OnInit, OnDestroy {
     const master = this.getMasterByBatch(batch)
     if (master) {
       this.events.publish('update-nav-header', {
+        caller: 'active batches component',
         dest: 'process',
         destType: 'page',
         destTitle: master.recipes.find(recipe => recipe._id === batch.recipe).variantName,

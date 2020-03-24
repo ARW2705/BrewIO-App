@@ -100,6 +100,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
       // if on process page and batch has been completed,
       // or a form submission has completed,
       // automatically go back
+      console.log(data.caller);
       this.goBack();
     }
   }

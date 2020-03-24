@@ -95,6 +95,7 @@ export class TabsPage implements OnInit, OnDestroy {
   **/
   updateHeader(): void {
     this.events.publish('update-nav-header', {
+      caller: 'tabs component',
       dest: this.tabs[this.currentIndex].title.toLowerCase(),
       destType: 'tab',
       destTitle: this.tabs[this.currentIndex].header
