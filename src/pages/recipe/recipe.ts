@@ -87,6 +87,7 @@ export class RecipePage implements OnInit, OnDestroy {
       master.recipes.find(recipe => recipe._id === master.master)
     )) {
       this.events.publish('update-nav-header', {
+        caller: 'recipe page',
         dest: 'process',
         destType: 'page',
         destTitle: master.recipes.find(recipe => recipe._id === master.master).variantName,
@@ -113,6 +114,7 @@ export class RecipePage implements OnInit, OnDestroy {
     if (-1 < index && index < this.masterList.length) {
       const recipeMaster = getArrayFromObservables(this.masterList)[index];
       this.events.publish('update-nav-header', {
+        caller: 'recipe page',
         destType: 'page',
         destTitle: recipeMaster.name,
         origin: this.navCtrl.getActive().name
@@ -131,6 +133,7 @@ export class RecipePage implements OnInit, OnDestroy {
   **/
   navToRecipeForm(): void {
     this.events.publish('update-nav-header', {
+      caller: 'recipe page',
       dest: 'recipe-form',
       destType: 'page',
       destTitle: 'Create Recipe',
@@ -155,7 +158,15 @@ export class RecipePage implements OnInit, OnDestroy {
     if (master.hasActiveBatch) {
       this.toastService.presentToast('Cannot delete a recipe master with a batch in progress', 3000);
     } else {
-      this.recipeService.deleteRecipeMasterById(master._id);
+      this.recipeService.deleteRecipeMasterById(master._id)
+        .subscribe(
+          () => {
+          // add toast feedback
+          },
+          error => {
+            // add toast feedback
+          }
+        );
     }
   }
 

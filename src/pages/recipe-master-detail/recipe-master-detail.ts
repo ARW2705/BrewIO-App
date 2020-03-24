@@ -86,7 +86,7 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
       this.navCtrl.pop();
     } else if (data.origin === 'RecipeMasterDetailPage') {
       // update header title with current recipeMaster name
-      this.events.publish('update-nav-header', {destTitle: this.recipeMaster.name});
+      this.events.publish('update-nav-header', {caller: 'recipe master details page', destTitle: this.recipeMaster.name});
     }
   }
 
@@ -100,6 +100,7 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
   navToBrewProcess(recipe: Recipe): void {
     if (this.recipeService.isRecipeProcessPresent(recipe)) {
       this.events.publish('update-nav-header', {
+        caller: 'recipe master details page',
         dest: 'process',
         destType: 'page',
         destTitle: recipe.variantName,
@@ -146,6 +147,7 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
       }
     }
     this.events.publish('update-nav-header', {
+      caller: 'recipe master details page',
       dest: 'recipe-form',
       destType: 'page',
       destTitle: title,
@@ -182,9 +184,14 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
   deleteNote(index: number): void {
     this.recipeMaster.notes.splice(index, 1);
     this.recipeService.patchRecipeMasterById(this.recipeMaster._id, {notes: this.recipeMaster.notes})
-      .subscribe(() => {
-        this.toastService.presentToast('Note deleted', 1000);
-      });
+      .subscribe(
+        () => {
+          this.toastService.presentToast('Note deleted', 1000);
+        },
+        error => {
+          // TODO add error feedback
+        }
+      );
   }
 
   /**
@@ -197,10 +204,15 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
   deleteRecipe(recipe: Recipe): void {
     this.deletionInProgress = true;
     this.recipeService.deleteRecipeById(this.recipeMaster._id, recipe._id)
-      .subscribe(() => {
-        this.toastService.presentToast('Recipe deleted!', 1500);
-        this.deletionInProgress = false;
-      });
+      .subscribe(
+        () => {
+          this.toastService.presentToast('Recipe deleted!', 1500);
+          this.deletionInProgress = false;
+        },
+        error => {
+          // TODO add error feedback
+        }
+      );
   }
 
   /***** End deletion handling *****/
@@ -291,9 +303,14 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
       this.recipeMaster._id,
       { isPublic: !this.recipeMaster.isPublic }
     )
-    .subscribe(response => {
-      this.recipeMaster.isPublic = response.isPublic;
-    });
+    .subscribe(
+      response => {
+        this.recipeMaster.isPublic = response.isPublic;
+      },
+      error => {
+        // TODO add error feedback
+      }
+    );
   }
 
   /**
@@ -320,11 +337,16 @@ export class RecipeMasterDetailPage implements OnInit, OnDestroy {
       recipe._id,
       {isFavorite: !recipe.isFavorite}
     )
-    .subscribe(updatedRecipe => {
-      if (updatedRecipe) {
-        this.toastService.presentToast(`${updatedRecipe.isFavorite ? 'Added to': 'Removed from'} favorites`, 1000);
+    .subscribe(
+      updatedRecipe => {
+        if (updatedRecipe) {
+          this.toastService.presentToast(`${updatedRecipe.isFavorite ? 'Added to': 'Removed from'} favorites`, 1000);
+        }
+      },
+      error => {
+        // TODO add error feedback
       }
-    });
+    );
   }
 
   /***** End recipe *****/
