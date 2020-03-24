@@ -3,6 +3,7 @@ import { GrainBill } from '../../src/shared/interfaces/grain-bill';
 export const mockGrainBill = () => {
   const mock: Array<GrainBill> = [
     {
+      _id: '1',
       grainType: {
         "_id": "5ca285e8f7e5f91a1f31d776",
         "name": "Pale Malt 2-row",
@@ -17,6 +18,7 @@ export const mockGrainBill = () => {
       notes: []
     },
     {
+      _id: '2',
       grainType: {
         "_id": "5ca285e8f7e5f91a1f31d775",
         "name": "Munich Malt",
@@ -31,6 +33,7 @@ export const mockGrainBill = () => {
       notes: []
     },
     {
+      _id: '3',
       grainType: {
         "_id": "5ca285e8f7e5f91a1f31d76b",
         "name": "US Chocolate Malt",

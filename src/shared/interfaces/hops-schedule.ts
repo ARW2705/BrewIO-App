@@ -1,7 +1,7 @@
 import { Hops } from './library';
 
 export interface HopsSchedule {
-  _id?: string;
+  _id: string;
   createdAt?: string;
   updatedAt?: string;
   hopsType: Hops;

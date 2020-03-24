@@ -1,6 +1,7 @@
 /* Module imports */
 import { Component, ChangeDetectorRef, AfterViewInit } from '@angular/core';
 import { NavController, NavParams, ModalController, Events } from 'ionic-angular';
+import { Subject } from 'rxjs/Subject';
 
 /* Interface imports */
 import { Recipe } from '../../../shared/interfaces/recipe';
@@ -48,6 +49,7 @@ export class RecipeFormPage implements AfterViewInit {
   recipe: Recipe = null;
   textarea = '';
   _headerNavPop: any;
+  destroy$: Subject<boolean> = new Subject<boolean>();
 
   constructor(
     public navCtrl: NavController,
@@ -70,6 +72,7 @@ export class RecipeFormPage implements AfterViewInit {
       navParams.get('additionalData')
     );
     this.libraryService.getAllLibraries()
+      .takeUntil(this.destroy$)
       .subscribe(([grainsLibrary, hopsLibrary, yeastLibrary, styleLibrary]) => {
         this.grainsLibrary = grainsLibrary;
         this.hopsLibrary = hopsLibrary;
@@ -87,6 +90,8 @@ export class RecipeFormPage implements AfterViewInit {
 
   ngOnDestroy() {
     this.events.unsubscribe('pop-header-nav', this._headerNavPop);
+    this.destroy$.next(true);
+    this.destroy$.unsubscribe();
   }
 
   ngOnInit() {
@@ -356,6 +361,7 @@ export class RecipeFormPage implements AfterViewInit {
     if (mashIndex === -1) {
       // add mash timer if one does not already exist
       this.recipe.processSchedule.push({
+        _id: Date.now().toString(),
         type: 'timer',
         name: 'Mash',
         description: 'Mash grains',
@@ -371,6 +377,7 @@ export class RecipeFormPage implements AfterViewInit {
     if (boilIndex === -1) {
       // add boil timer if one does not already exist
       this.recipe.processSchedule.push({
+        _id: Date.now().toString(),
         type: 'timer',
         name: 'Boil',
         description: 'Boil wort',
@@ -412,6 +419,7 @@ export class RecipeFormPage implements AfterViewInit {
 
     hopsForTimers.forEach(hopsAddition => {
       this.recipe.processSchedule.push({
+        _id: Date.now().toString(),
         type: 'timer',
         name: `Add ${hopsAddition.hopsType.name} hops`,
         concurrent: true,
@@ -511,7 +519,7 @@ export class RecipeFormPage implements AfterViewInit {
         payload = {
           master: {
             name: this.master.name,
-            style: this.master.style._id,
+            style: this.master.style,
             notes: this.master.notes,
             isPublic: this.master.isPublic,
           },
@@ -520,7 +528,7 @@ export class RecipeFormPage implements AfterViewInit {
       } else {
         payload = {
           name: this.master.name,
-          style: this.master.style._id,
+          style: this.master.style,
           notes: this.master.notes,
           isPublic: this.master.isPublic
         };
@@ -554,6 +562,7 @@ export class RecipeFormPage implements AfterViewInit {
   **/
   onSubmit(): void {
     const payload = this.constructPayload();
+
     const message = toTitleCase(`${this.formType} ${this.docMethod} Successful!`);
     if (this.docMethod === 'create') {
       this.submitCreationPost(payload, message);
@@ -620,10 +629,12 @@ export class RecipeFormPage implements AfterViewInit {
   submitCreationPost(payload: any, message: string): void {
     if (this.formType === 'master') {
       this.recipeService.postRecipeMaster(payload)
+        .takeUntil(this.destroy$)
         .subscribe(
           () => {
+            console.log('master create success');
             this.toastService.presentToast(message);
-            this.events.publish('update-nav-header', {other: 'form-submit-complete'});
+            this.events.publish('update-nav-header', {caller: 'recipe form page', other: 'form-submit-complete'});
           },
           error => {
             this.toastService.presentToast(error);
@@ -631,10 +642,12 @@ export class RecipeFormPage implements AfterViewInit {
         );
     } else if (this.formType === 'recipe') {
       this.recipeService.postRecipeToMasterById(this.master._id, payload)
+        .takeUntil(this.destroy$)
         .subscribe(
           () => {
+            console.log('recipe create success');
             this.toastService.presentToast(message);
-            this.events.publish('update-nav-header', {other: 'form-submit-complete'});
+            this.events.publish('update-nav-header', {caller: 'recipe form page', other: 'form-submit-complete'});
           },
           error => {
             this.toastService.presentToast(error);
@@ -654,10 +667,12 @@ export class RecipeFormPage implements AfterViewInit {
   submitPatchUpdate(payload: any, message: string): void {
     if (this.formType === 'master') {
       this.recipeService.patchRecipeMasterById(this.master._id, payload)
+        .takeUntil(this.destroy$)
         .subscribe(
           () => {
+            console.log('master patch success');
             this.toastService.presentToast(message);
-            this.events.publish('update-nav-header', {other: 'form-submit-complete'});
+            this.events.publish('update-nav-header', {caller: 'recipe form page', other: 'form-submit-complete'});
           },
           error => {
             this.toastService.presentToast(error);
@@ -665,10 +680,12 @@ export class RecipeFormPage implements AfterViewInit {
         );
     } else if (this.formType === 'recipe') {
       this.recipeService.patchRecipeById(this.master._id, this.recipe._id, payload)
+        .takeUntil(this.destroy$)
         .subscribe(
           () => {
+            console.log('recipe patch success');
             this.toastService.presentToast(message);
-            this.events.publish('update-nav-header', {other: 'form-submit-complete'});
+            this.events.publish('update-nav-header', {caller: 'recipe form page', other: 'form-submit-complete'});
           },
           error => {
             this.toastService.presentToast(error);

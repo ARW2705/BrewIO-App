@@ -1,7 +1,7 @@
 import { Grains } from './library';
 
 export interface GrainBill {
-  _id?: string;
+  _id: string;
   createdAt?: string;
   updatedAt?: string;
   grainType: Grains;

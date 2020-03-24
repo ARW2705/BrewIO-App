@@ -3,6 +3,7 @@ import { HopsSchedule } from '../../src/shared/interfaces/hops-schedule';
 export const mockHopsSchedule = () => {
   const mock: Array<HopsSchedule> = [
     {
+      _id: '1',
       hopsType: {
         "usedFor": [],
         "alternatives": [],
@@ -20,6 +21,7 @@ export const mockHopsSchedule = () => {
       notes: []
     },
     {
+      _id: '2',
       hopsType: {
         "usedFor": [],
         "alternatives": [],
@@ -37,6 +39,7 @@ export const mockHopsSchedule = () => {
       notes: []
     },
     {
+      _id: '3',
       hopsType: {
         "usedFor": [],
         "alternatives": [],
@@ -54,6 +57,7 @@ export const mockHopsSchedule = () => {
       notes: []
     },
     {
+      _id: '4',
       hopsType: {
         "usedFor": [],
         "alternatives": [],

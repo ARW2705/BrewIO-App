@@ -1,5 +1,5 @@
 export interface OtherIngredients {
-  _id?: string;
+  _id: string;
   createdAt?: string;
   updatedAt?: string;
   name: string;

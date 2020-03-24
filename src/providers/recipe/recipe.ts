@@ -102,13 +102,11 @@ export class RecipeProvider {
   **/
   deleteRecipeById(masterId: string, recipeId: string): Observable<boolean> {
     const master$ = this.getMasterById(masterId);
-    if (master$.value.recipes.length < 2) throw throwError('At least one recipe must remain');
+    if (master$.value.recipes.length < 2) return throwError('At least one recipe must remain');
 
     if (this.connectionService.isConnected()) {
       return this.http.delete(`${baseURL}/${apiVersion}/recipes/private/master/${masterId}/recipe/${recipeId}`)
-        .map(() => {
-          return this.removeRecipeFromMasterInList(master$, recipeId);
-        })
+        .flatMap(() => { return this.removeRecipeFromMasterInList(master$, recipeId); })
         .catch(error => this.processHttpError.handleError(error));
     }
     return this.removeRecipeFromMasterInList(master$, recipeId);
@@ -125,7 +123,7 @@ export class RecipeProvider {
   deleteRecipeMasterById(masterId: string): Observable<boolean> {
     if (this.connectionService.isConnected()) {
       return this.http.delete(`${baseURL}/${apiVersion}/recipes/private/master/${masterId}`)
-        .map(() => { return this.removeRecipeMasterFromList(masterId); })
+        .flatMap(() => { return this.removeRecipeMasterFromList(masterId); })
         .catch(error => this.processHttpError.handleError(error));
     }
     return this.removeRecipeMasterFromList(masterId);
@@ -174,7 +172,7 @@ export class RecipeProvider {
   patchRecipeMasterById(masterId: string, update: object): Observable<RecipeMaster> {
     if (this.connectionService.isConnected()) {
       return this.http.patch(`${baseURL}/${apiVersion}/recipes/private/master/${masterId}`, update)
-        .map((updatedRecipeMasterResponse: RecipeMaster) => {
+        .flatMap((updatedRecipeMasterResponse: RecipeMaster) => {
           return this.updateRecipeMasterInList(masterId, updatedRecipeMasterResponse);
         })
         .catch(error => this.processHttpError.handleError(error));
@@ -200,12 +198,12 @@ export class RecipeProvider {
       && !update['isMaster']
       && master$.value.recipes.length < 2
     ) {
-      throw throwError('At least one recipe is required to be set as master');
+      return throwError('At least one recipe is required to be set as master');
     }
 
     if (this.connectionService.isConnected()) {
       return this.http.patch(`${baseURL}/${apiVersion}/recipes/private/master/${masterId}/recipe/${recipeId}`, update)
-        .map((updatedRecipeResponse: Recipe) => {
+        .flatMap((updatedRecipeResponse: Recipe) => {
           return this.updateRecipeOfMasterInList(master$, updatedRecipeResponse);
         })
         .catch(error => this.processHttpError.handleError(error));
@@ -228,7 +226,7 @@ export class RecipeProvider {
       stripSharedProperties(_master);
       _master.master.style = styleId;
       return this.http.post(`${baseURL}/${apiVersion}/recipes/private/user`, _master)
-        .map((newRecipeMaster: RecipeMaster) => {
+        .flatMap((newRecipeMaster: RecipeMaster) => {
           return this.addRecipeMasterToList(newRecipeMaster);
         })
         .catch(error => this.processHttpError.handleError(error));
@@ -250,7 +248,7 @@ export class RecipeProvider {
       const _recipe = clone(recipe);
       stripSharedProperties(_recipe);
       return this.http.post(`${baseURL}/${apiVersion}/recipes/private/master/${masterId}`, _recipe)
-        .map((newRecipeResponse: Recipe) => {
+        .flatMap((newRecipeResponse: Recipe) => {
           return this.addRecipeToMasterInList(masterId, newRecipeResponse);
         })
         .catch(error => this.processHttpError.handleError(error));
@@ -274,11 +272,11 @@ export class RecipeProvider {
   **/
   addRecipeMasterToList(newRecipeMasterData: object): Observable<RecipeMaster> {
     const user = this.userService.getUser().value;
-    if (user._id === undefined) throw throwError('Missing user id');
+    if (user._id === undefined) return throwError('Missing user id');
 
     let recipeMasterSubject$;
 
-    if (this.connectionService.isConnected() && RegExp('[^0-9]+', 'g').test(newRecipeMasterData['_id'])) {
+    if (this.connectionService.isConnected() && RegExp('^[^0-9]+$', 'g').test(newRecipeMasterData['_id'])) {
       recipeMasterSubject$ = new BehaviorSubject<RecipeMaster>(<RecipeMaster>newRecipeMasterData);
     } else {
       const now = Date.now();
@@ -462,7 +460,7 @@ export class RecipeProvider {
     const master = master$.value;
     const recipeIndex = getIndexById(recipeId, master.recipes);
 
-    if (recipeIndex === -1) throw throwError(`Delete error: recipe with id ${recipeId} not found`);
+    if (recipeIndex === -1) return throwError(`Delete error: recipe with id ${recipeId} not found`);
 
     this.removeRecipeAsMaster(master, recipeIndex);
     master.recipes.splice(recipeIndex, 1);
@@ -482,7 +480,7 @@ export class RecipeProvider {
     const masterList = this.recipeMasterList$.value;
     const indexToRemove = getIndexById(masterId, getArrayFromObservables(masterList));
 
-    if (indexToRemove === -1) throw throwError(`Delete error: Recipe master with id ${masterId} not found`);
+    if (indexToRemove === -1) return throwError(`Delete error: Recipe master with id ${masterId} not found`);
 
     masterList[indexToRemove].complete();
     masterList.splice(indexToRemove, 1);
@@ -521,6 +519,7 @@ export class RecipeProvider {
     recipeMaster.recipes.forEach((recipe, index) => {
       recipe.isMaster = (index === changeIndex);
     });
+    recipeMaster.master = recipeMaster.recipes[changeIndex]._id;
   }
 
   /**
@@ -549,7 +548,7 @@ export class RecipeProvider {
     const masterList = this.recipeMasterList$.value;
     const masterIndex = masterList.findIndex(recipeMaster$ => recipeMaster$.value._id === masterId);
 
-    if (masterIndex === -1) throw throwError(`Recipe master with id ${masterId} not found`);
+    if (masterIndex === -1) return throwError(`Recipe master with id ${masterId} not found`);
 
     const master$ = masterList[masterIndex];
     const master = master$.value;
@@ -577,7 +576,7 @@ export class RecipeProvider {
     const master = master$.value;
     const recipeIndex = getIndexById(update['_id'], master.recipes);
 
-    if (recipeIndex === -1) throw throwError(`Recipe with id ${update['_id']} not found`);
+    if (recipeIndex === -1) return throwError(`Recipe with id ${update['_id']} not found`);
 
     const recipe = master.recipes[recipeIndex];
     for (const key in update) {

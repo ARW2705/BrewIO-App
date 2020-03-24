@@ -5,7 +5,7 @@ import { OtherIngredients } from './other-ingredients';
 import { Process } from './process';
 
 export interface Recipe {
-  _id?: string;
+  _id: string;
   createdAt?: string;
   updatedAt?: string;
   variantName: string;
@@ -14,6 +14,7 @@ export interface Recipe {
   isFavorite: boolean;
   isMaster?: boolean;
   rating?: number;
+  owner?: string;
   efficiency: number;
   brewingType: string;
   mashDuration: number;

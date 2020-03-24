@@ -3,6 +3,7 @@ import { YeastBatch } from '../../src/shared/interfaces/yeast-batch';
 export const mockYeastGroup = () => {
   const mock: Array<YeastBatch> = [
     {
+      _id: '1',
       yeastType: {
         "attenuation": [
             73,
@@ -30,6 +31,7 @@ export const mockYeastGroup = () => {
       notes: []
     },
     {
+      _id: '2',
       yeastType: {
         "attenuation": [
             71,
