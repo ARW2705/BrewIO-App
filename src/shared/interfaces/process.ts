@@ -1,5 +1,5 @@
 export interface Process {
-  _id?: string;
+  _id: string;
   createdAt?: string;
   updatedAt?: string;
   type: string;
