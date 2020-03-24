@@ -16,6 +16,12 @@ import { mockHops } from '../../../test-config/mockmodels/mockHops';
 import { mockYeast } from '../../../test-config/mockmodels/mockYeast';
 import { mockStyles } from '../../../test-config/mockmodels/mockStyles';
 
+/* Interface imports */
+import { Style } from '../../shared/interfaces/library';
+import { Grains } from '../../shared/interfaces/library';
+import { Hops } from '../../shared/interfaces/library';
+import { Yeast } from '../../shared/interfaces/library';
+
 /* Provider imports */
 import { LibraryProvider } from './library';
 import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
@@ -297,7 +303,7 @@ describe('Library service', () => {
         libraryService.grainsLibrary = _mockGrains;
 
         libraryService.getGrainsById(_mockSelected._id)
-          .subscribe(grains => {
+          .subscribe((grains: Grains) => {
             expect(grains).toEqual(_mockSelected);
             done();
           });
@@ -308,10 +314,11 @@ describe('Library service', () => {
         const _mockSelected = _mockHops[0];
         libraryService.hopsLibrary = _mockHops;
 
-        libraryService.getHopsById(_mockSelected._id).subscribe(hops => {
-          expect(hops).toEqual(_mockSelected);
-          done();
-        });
+        libraryService.getHopsById(_mockSelected._id)
+          .subscribe((hops: Hops) => {
+            expect(hops).toEqual(_mockSelected);
+            done();
+          });
       }); // end 'should return an Observable<Hops>' test
 
       test('should return an Observable<Yeast>', done => {
@@ -319,11 +326,24 @@ describe('Library service', () => {
         const _mockSelected = _mockYeast[0];
         libraryService.yeastLibrary = _mockYeast;
 
-        libraryService.getYeastById(_mockSelected._id).subscribe(yeast => {
-          expect(yeast).toEqual(_mockSelected);
-          done();
-        });
+        libraryService.getYeastById(_mockSelected._id)
+          .subscribe((yeast: Yeast) => {
+            expect(yeast).toEqual(_mockSelected);
+            done();
+          });
       }); // end 'should return an Observable<Yeast>' test
+
+      test('should return an Observable<Style>', done => {
+        const _mockStyle = mockStyles();
+        const _mockSelected = _mockStyle[0];
+        libraryService.styleLibrary = _mockStyle;
+
+        libraryService.getStyleById(_mockSelected._id)
+          .subscribe((style: Style) => {
+            expect(style).toStrictEqual(_mockSelected);
+            done();
+          });
+      }); // end 'should return an Observable<Style>' test
 
     }); // end 'fetch Library entries by id with entries stored' section
 

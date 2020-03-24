@@ -257,6 +257,24 @@ export class LibraryProvider {
   }
 
   /**
+   * Get style document by id
+   *
+   * @params: styleId - id of yeast document to retrieve
+   *
+   * @return: observable of style document
+  **/
+  getStyleById(styleId: string): Observable<any> {
+    let style;
+    if (this.styleLibrary !== null) {
+      style = this.styleLibrary.find(entry => entry._id === styleId);
+    }
+    return style !== undefined
+            ? Observable.of(style)
+            : this.fetchStyleLibrary()
+              .map(library => library.find(entry => entry._id === styleId));
+  }
+
+  /**
    * Comparator to sort object alphabetically
    *
    * @params: a - lefthand object
