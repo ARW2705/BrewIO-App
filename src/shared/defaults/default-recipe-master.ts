@@ -4,6 +4,7 @@ import { defaultStyle } from '../defaults/default-style';
 
 export const defaultRecipeMaster = () => {
   const def: RecipeMaster = {
+    _id: 'default',
     name: '',
     style: defaultStyle(),
     notes: [],

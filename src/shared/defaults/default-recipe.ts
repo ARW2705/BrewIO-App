@@ -2,11 +2,13 @@ import { Recipe } from '../interfaces/recipe';
 
 export const defaultRecipe = () => {
   const def: Recipe = {
+    _id: 'default',
     variantName: 'Initial Batch',
     notes: [],
     isActive: false,
     isFavorite: false,
     isMaster: false,
+    // owner: 'default',
     efficiency: 70,
     brewingType: 'None Selected',
     mashDuration: 60,
