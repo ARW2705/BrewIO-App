@@ -1,8 +1,14 @@
 /* Module imports */
-import { Observable } from 'rxjs';
+import { Observable } from 'rxjs/Observable';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 /* Constants imports */
 import { sharedProperties } from '../constants/shared-properties';
+
+
+export function toSubjectArray<T>(array: Array<T>): Array<BehaviorSubject<T>> {
+  return array.map(item => new BehaviorSubject<T>(item));
+}
 
 /**
  * Deep copy an object - use with objects whose values follow the types
@@ -46,9 +52,19 @@ export function clone(obj: any): any {
  * @return: none
 **/
 export function stripSharedProperties(obj: any): void {
-  for (const key in obj) {
-    if (sharedProperties.includes(key)) {
-      delete obj[key];
+  if (Array.isArray(obj)) {
+    for (let item of obj) {
+      if (typeof item === 'object' && item !== null) {
+        stripSharedProperties(item);
+      }
+    }
+  } else if (typeof obj === 'object' && obj !== null) {
+    for (const key in obj) {
+      if (sharedProperties.includes(key)) {
+        delete obj[key];
+      } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+        stripSharedProperties(obj[key]);
+      }
     }
   }
 }
@@ -61,7 +77,7 @@ export function stripSharedProperties(obj: any): void {
  *
  * @return: index of object with matching id or -1 if none found
 **/
-export function getIndexById(id: string, arr: Array<any>) {
+export function getIndexById(id: string, arr: Array<any>): number {
   for (let i=0; i < arr.length; i++) {
     if (arr[i]._id == id) {
       return i;
