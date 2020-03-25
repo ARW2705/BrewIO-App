@@ -1,3 +1,5 @@
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+
 /* Function imports */
 import * as utils from './utilities';
 
@@ -8,6 +10,13 @@ import { mockObservablesArray } from '../../../test-config/mockmodels/mockObserv
 
 
 describe('Shared: utility functions', () => {
+
+  test('should convert an array of <T> into an array of BehaviorSubject<T>', () => {
+    const bsa = utils.toSubjectArray(mockObjectArray());
+    bsa.forEach(sub => {
+      expect(sub instanceof BehaviorSubject).toBe(true);
+    });
+  }); // end 'should convert an array of <T> into an array of BehaviorSubject<T>' test
 
   test('should deep copy an object', () => {
     const _mockNestedObject = mockNestedObject();
