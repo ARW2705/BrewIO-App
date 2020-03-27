@@ -30,3 +30,5 @@
 * Show pre-selected option in select/option dropdowns
 * Calendar button reads 'start' instead of 'update' when changing a calendar start date
 * Select/option dropdown background color
+* Long recipe master names overflow header - need to truncate
+* Completing process step needs intermediate view while states change
