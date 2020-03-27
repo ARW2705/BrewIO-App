@@ -2,6 +2,8 @@
 import { TestBed, getTestBed, async } from '@angular/core/testing';
 import { HttpTestingController, HttpClientTestingModule } from '@angular/common/http/testing';
 import { IonicStorageModule } from '@ionic/storage';
+import { Events } from 'ionic-angular';
+import { Network } from '@ionic-native/network/ngx';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { combineLatest } from 'rxjs/observable/combineLatest';
 
@@ -23,10 +25,14 @@ import { Batch } from '../../shared/interfaces/batch';
 import { ProcessProvider } from './process';
 import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
 import { StorageProvider } from '../storage/storage';
+import { ConnectionProvider } from '../connection/connection';
+import { UserProvider } from '../user/user';
+import { RecipeProvider } from '../recipe/recipe';
 
 describe('Process Service', () => {
   let injector: TestBed;
   let processService: ProcessProvider;
+  let connectionService: ConnectionProvider;
   let httpMock: HttpTestingController;
   configureTestBed();
 
@@ -39,7 +45,12 @@ describe('Process Service', () => {
       providers: [
         ProcessProvider,
         ProcessHttpErrorProvider,
-        StorageProvider
+        StorageProvider,
+        ConnectionProvider,
+        UserProvider,
+        RecipeProvider,
+        Events,
+        Network
       ]
     });
   })()
@@ -49,6 +60,7 @@ describe('Process Service', () => {
   beforeEach(() => {
     injector = getTestBed();
     processService = injector.get(ProcessProvider);
+    connectionService = injector.get(ConnectionProvider);
     httpMock = injector.get(HttpTestingController);
   });
 
@@ -58,7 +70,8 @@ describe('Process Service', () => {
 
   describe('API requests', () => {
 
-    test('should end a batch', done => {
+    test('should end a batch [online]', done => {
+      connectionService.connection = true;
       const _mockBatch = mockBatch();
 
       processService.activeBatchList$.next([
@@ -70,19 +83,19 @@ describe('Process Service', () => {
         processService.endBatchById(_mockBatch._id)
       ).subscribe(([fromSubject, fromResponse]) => {
         expect(fromSubject.length).toBe(0);
-        expect(fromResponse._id).toMatch(_mockBatch._id);
+        expect(fromResponse).toBeNull();
         done();
       });
 
       const endReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress/${_mockBatch._id}`);
       expect(endReq.request.method).toMatch('DELETE');
       endReq.flush(_mockBatch);
-    }); // end 'should end a batch' test
+    }); // end 'should end a batch [online]' test
 
-    test('should increment the batch\'s current step', done => {
+    test('should increment the batch\'s current step [online]', done => {
+      connectionService.connection = true;
       const _mockBatch = mockBatch();
-      const _updatedMockBatch = mockBatch();
-      _updatedMockBatch.currentStep++;
+      const currentStep = _mockBatch.currentStep;
 
       processService.activeBatchList$.next([
         new BehaviorSubject<Batch>(_mockBatch)
@@ -90,20 +103,20 @@ describe('Process Service', () => {
 
       combineLatest(
         processService.activeBatchList$,
-        processService.incrementCurrentStep(_mockBatch._id)
+        processService.incrementCurrentStep(_mockBatch, currentStep + 1)
       ).subscribe(([fromSubject, fromResponse]) => {
-        const expectedStep = _mockBatch.currentStep + 1;
-        expect(fromSubject[0].value.currentStep).toBe(expectedStep);
-        expect(fromResponse.currentStep).toBe(expectedStep);
+        expect(fromSubject[0].value.currentStep).toBe(_mockBatch.currentStep);
+        expect(fromResponse.currentStep).toBe(_mockBatch.currentStep);
         done();
       });
 
-      const incReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress/${_mockBatch._id}/next`);
-      expect(incReq.request.method).toMatch('GET');
-      incReq.flush(_updatedMockBatch);
-    }); // end 'should increment the batch's current step' test
+      const incReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress/${_mockBatch._id}`);
+      expect(incReq.request.method).toMatch('PATCH');
+      incReq.flush(_mockBatch);
+    }); // end 'should increment the batch's current step [online]' test
 
-    test('should initialize the active batch list', done => {
+    test('should initialize the active batch list [online]', done => {
+      connectionService.connection = true;
       expect(processService.activeBatchList$.value.length).toBe(0);
       const getSpy = jest.spyOn(processService.storageService, 'getProcesses');
       const storeSpy = jest.spyOn(processService, 'updateCache');
@@ -124,36 +137,14 @@ describe('Process Service', () => {
       const getReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress`);
       expect(getReq.request.method).toMatch('GET');
       getReq.flush([mockBatch(), mockBatch(), mockBatch()]);
-    }); // end 'should initialize the active batch list' test
+    }); // end 'should initialize the active batch list [online]' test
 
-    test('should update a batch by its id', done => {
-      const _mockBatch = mockBatch();
-      const _updatedMockBatch = mockBatch();
-      _updatedMockBatch.updatedAt = 'just now';
-
-      processService.activeBatchList$.next([
-        new BehaviorSubject<Batch>(_mockBatch)
-      ]);
-
-      combineLatest(
-        processService.activeBatchList$.value[0],
-        processService.patchBatchById(_mockBatch._id, _updatedMockBatch)
-      ).subscribe(([fromSubject, fromResponse]) => {
-        expect(fromSubject.updatedAt).toMatch('just now');
-        expect(fromResponse.updatedAt).toMatch('just now');
-        done();
-      });
-
-      const patchReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress/${_mockBatch._id}`);
-      expect(patchReq.request.method).toMatch('PATCH');
-      patchReq.flush(_updatedMockBatch);
-    }); // end 'should update batch by its id' test
-
-    test('should update a step of a batch', done => {
+    test('should update a step of a batch [online]', done => {
+      connectionService.connection = true;
       const _mockBatch = mockBatch();
       const _updatedMockBatch = mockBatch();
       const _updatedStep = mockProcessSchedule()[_mockBatch.currentStep];
-      _updatedStep.name = 'new name';
+      _updatedStep.startDatetime = 'datetime';
       _updatedMockBatch.schedule[_mockBatch.currentStep] = _updatedStep;
 
       processService.activeBatchList$.next([
@@ -162,19 +153,19 @@ describe('Process Service', () => {
 
       combineLatest(
         processService.activeBatchList$.value[0],
-        processService.patchStepById(_mockBatch._id, _updatedStep._id, _updatedStep)
+        processService.patchBatchStepById(_mockBatch, _updatedStep._id, _updatedStep)
       ).subscribe(([fromSubject, fromResponse]) => {
         expect(fromSubject.schedule[_mockBatch.currentStep].name).toMatch(_updatedStep.name);
-        expect(fromResponse.name).toMatch(_updatedStep.name);
+        expect(fromResponse.schedule[_mockBatch.currentStep].name).toMatch(_updatedStep.name);
         done();
       });
 
-      const patchReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress/${_mockBatch._id}/step/${_updatedStep._id}`);
+      const patchReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress/${_mockBatch._id}`);
       expect(patchReq.request.method).toMatch('PATCH');
       patchReq.flush(_updatedMockBatch);
-    }); // end 'should update step of a batch' test
+    }); // end 'should update step of a batch [online]' test
 
-    test('should start a new batch', done => {
+    test('should start a new batch [online]', done => {
       const _mockBatch = mockBatch();
 
       combineLatest(
@@ -189,7 +180,7 @@ describe('Process Service', () => {
       const getReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/user/userid/master/masterid/recipe/${_mockBatch.recipe}`);
       expect(getReq.request.method).toMatch('GET');
       getReq.flush(_mockBatch);
-    }); // end 'should start a new batch'
+    }); // end 'should start a new batch [online]'
 
   }); // end 'API requests' section
 
@@ -285,14 +276,24 @@ describe('Process Service', () => {
         new BehaviorSubject<Batch>(_mockBatch)
       ]);
 
-      processService.activeBatchList$
-        .skip(1)
-        .subscribe(batchList => {
-          expect(batchList.length).toBe(2);
-          done();
-        });
-
-      processService.removeBatchFromList(_deleteMockBatch);
+      // processService.activeBatchList$
+      //   .skip(1)
+      //   .subscribe(batchList => {
+      //     expect(batchList.length).toBe(2);
+      //     done();
+      //   });
+      //
+      // processService.removeBatchFromList(_deleteMockBatch)
+      //   .subscribe()
+      combineLatest(
+        processService.activeBatchList$,
+        processService.removeBatchFromList(_deleteMockBatch._id)
+      )
+      .subscribe(([fromSubject, fromResponse]) => {
+        expect(fromSubject.length).toBe(2);
+        expect(fromResponse).toBeNull();
+        done();
+      });
     }); // end 'should remove a batch from the list' test
 
     test('should update a batch in the list', done => {
