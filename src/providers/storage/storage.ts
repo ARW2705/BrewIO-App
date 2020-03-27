@@ -35,7 +35,7 @@ export class StorageProvider {
         map((libraries: string) => {
           const parsed = JSON.parse(libraries);
           if (parsed === null) {
-            return throwError('Library data not found');
+            throw throwError('Library data not found');
           }
           return parsed;
         })
@@ -66,7 +66,7 @@ export class StorageProvider {
         map((activeBatchList: string) => {
           const parsed = JSON.parse(activeBatchList);
           if (parsed === null || parsed.length === 0) {
-            return throwError('Active batch data not found');
+            throw throwError('Active batch data not found');
           }
           return parsed;
         })
@@ -108,7 +108,7 @@ export class StorageProvider {
         map((recipeMasterList: string) => {
           const parsed = JSON.parse(recipeMasterList);
           if (parsed === null || parsed.length === 0) {
-            return throwError('Recipe data not found');
+            throw throwError('Recipe data not found');
           }
           return parsed;
         })
