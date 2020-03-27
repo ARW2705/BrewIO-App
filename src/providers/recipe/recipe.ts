@@ -203,12 +203,10 @@ export class RecipeProvider {
 
     if (this.connectionService.isConnected()) {
       return this.http.patch(`${baseURL}/${apiVersion}/recipes/private/master/${masterId}/recipe/${recipeId}`, update)
-        .flatMap((updatedRecipeResponse: Recipe) => {
-          return this.updateRecipeOfMasterInList(master$, updatedRecipeResponse);
-        })
+        .flatMap((updatedRecipeResponse: Recipe) => { return this.updateRecipeOfMasterInList(master$, recipeId, updatedRecipeResponse); })
         .catch(error => this.processHttpError.handleError(error));
     }
-    return this.updateRecipeOfMasterInList(master$, update);
+    return this.updateRecipeOfMasterInList(master$, recipeId, update);
   }
 
   /**
@@ -548,7 +546,7 @@ export class RecipeProvider {
     const masterList = this.recipeMasterList$.value;
     const masterIndex = masterList.findIndex(recipeMaster$ => recipeMaster$.value._id === masterId);
 
-    if (masterIndex === -1) return throwError(`Recipe master with id ${masterId} not found`);
+    if (masterIndex === -1) return throwError(`Update error: Recipe master with id ${masterId} not found`);
 
     const master$ = masterList[masterIndex];
     const master = master$.value;
@@ -572,11 +570,10 @@ export class RecipeProvider {
    *
    * @return: Observable of updated recipe
   **/
-  updateRecipeOfMasterInList(master$: BehaviorSubject<RecipeMaster>, update: Recipe | object): Observable<Recipe> {
+  updateRecipeOfMasterInList(master$: BehaviorSubject<RecipeMaster>, recipeId: string, update: Recipe | object): Observable<Recipe> {
     const master = master$.value;
-    const recipeIndex = getIndexById(update['_id'], master.recipes);
-
-    if (recipeIndex === -1) return throwError(`Recipe with id ${update['_id']} not found`);
+    const recipeIndex = getIndexById(recipeId, master.recipes);
+    if (recipeIndex === -1) return throwError(`Recipe with id ${recipeId} not found`);
 
     const recipe = master.recipes[recipeIndex];
     for (const key in update) {

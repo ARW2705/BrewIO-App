@@ -735,7 +735,7 @@ describe('Recipe Service', () => {
         new BehaviorSubject<RecipeMaster>(mockRecipeMasterInactive())
       ]);
 
-      recipeService.updateRecipeOfMasterInList(recipeService.recipeMasterList$.value[0], _updatedMockRecipeIncomplete)
+      recipeService.updateRecipeOfMasterInList(recipeService.recipeMasterList$.value[0], _updatedMockRecipeIncomplete._id, _updatedMockRecipeIncomplete)
         .subscribe((updated: Recipe) => {
           expect(updated._id).toMatch(recipeService.recipeMasterList$.value[0].value.recipes[1]._id);
           expect(updated.isMaster).toBe(true);
@@ -752,7 +752,7 @@ describe('Recipe Service', () => {
         new BehaviorSubject<RecipeMaster>(mockRecipeMasterInactive())
       ]);
 
-      recipeService.updateRecipeOfMasterInList(recipeService.recipeMasterList$.value[1], _updatedMockRecipeIncomplete)
+      recipeService.updateRecipeOfMasterInList(recipeService.recipeMasterList$.value[1], _updatedMockRecipeIncomplete._id, _updatedMockRecipeIncomplete)
         .subscribe(
           () => { },
           error => {
