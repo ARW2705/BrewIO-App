@@ -3,6 +3,7 @@ import { TestBed, getTestBed, async } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { Events } from 'ionic-angular';
 import { IonicStorageModule } from '@ionic/storage';
+import { Network } from '@ionic-native/network/ngx';
 
 /* Constants imports */
 import { baseURL } from '../../shared/constants/base-url';
@@ -23,10 +24,12 @@ import { ProcessProvider } from '../process/process';
 import { RecipeProvider } from '../recipe/recipe';
 import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
 import { StorageProvider } from '../storage/storage';
+import { ConnectionProvider } from '../connection/connection';
 
 describe('User Service', () => {
   let injector: TestBed;
   let userService: UserProvider;
+  let connectionService: ConnectionProvider;
   let httpMock: HttpTestingController;
   configureTestBed();
 
@@ -38,11 +41,13 @@ describe('User Service', () => {
       ],
       providers: [
         Events,
+        Network,
         UserProvider,
         ProcessProvider,
         RecipeProvider,
         ProcessHttpErrorProvider,
-        StorageProvider
+        StorageProvider,
+        ConnectionProvider
       ]
     });
   })()
@@ -52,6 +57,8 @@ describe('User Service', () => {
   beforeEach(() => {
     injector = getTestBed();
     userService = injector.get(UserProvider);
+    connectionService = injector.get(ConnectionProvider);
+    connectionService.connection = true;
     httpMock = injector.get(HttpTestingController);
   });
 
@@ -92,12 +99,6 @@ describe('User Service', () => {
       const loginReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/login`);
       expect(loginReq.request.method).toMatch('POST');
       loginReq.flush(mockLoginResponse());
-
-      /* Process service and Recipe service tests are handled in their own spec */
-      const _processReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress`);
-      _processReq.flush([]);
-      const _recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/user`);
-      _recipeReq.flush([]);
     }); // end 'should log out' test
 
   }); // end 'User is not logged in' section
@@ -114,12 +115,6 @@ describe('User Service', () => {
       const loginReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/login`);
       expect(loginReq.request.method).toMatch('POST');
       loginReq.flush(mockLoginResponse());
-
-      /* Process service and Recipe service tests are handled in their own spec */
-      const _processReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress`);
-      _processReq.flush([]);
-      const _recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/user`);
-      _recipeReq.flush([]);
     }); // end 'should log in' test
 
     test('should have token', done => {
@@ -131,12 +126,6 @@ describe('User Service', () => {
 
         const loginReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/login`);
         loginReq.flush(mockLoginResponse());
-
-        /* Process service and Recipe service tests are handled in their own spec */
-        const _processReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress`);
-        _processReq.flush([]);
-        const _recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/user`);
-        _recipeReq.flush([]);
     }); // end 'should have token' test
 
     test('should have user data', done => {
@@ -154,12 +143,6 @@ describe('User Service', () => {
 
         const loginReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/login`);
         loginReq.flush(mockLoginResponse());
-
-        /* Process service and Recipe service tests are handled in their own spec */
-        const _processReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress`);
-        _processReq.flush([]);
-        const _recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/user`);
-        _recipeReq.flush([]);
     }); // end 'should have user data' test
 
     test('should clear user data', done => {
@@ -179,12 +162,6 @@ describe('User Service', () => {
 
       const loginReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/login`);
       loginReq.flush(mockLoginResponse());
-
-      /* Process service and Recipe service tests are handled in their own spec */
-      const _processReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress`);
-      _processReq.flush([]);
-      const _recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/user`);
-      _recipeReq.flush([]);
     }); // end ''should clear user data'' test
 
     test('should succeed jwt check', done => {
@@ -234,12 +211,6 @@ describe('User Service', () => {
 
       const loginReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/login`);
       loginReq.flush(mockLoginResponse());
-
-      /* Process service and Recipe service tests are handled in their own spec */
-      const _processReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress`);
-      _processReq.flush([]);
-      const _recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/user`);
-      _recipeReq.flush([]);
     }); // end 'should sign up' test
 
     test('should fail signup', done => {
@@ -279,12 +250,6 @@ describe('User Service', () => {
       const _updatedMockUser = mockUser();
       _updatedMockUser.username = 'mock';
       updateReq.flush(_updatedMockUser);
-
-      /* Process service and Recipe service tests are handled in their own spec */
-      const _processReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress`);
-      _processReq.flush([]);
-      const _recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/user`);
-      _recipeReq.flush([]);
     }); // end 'should update profile' test
 
   }); // end 'Profile update' section

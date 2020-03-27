@@ -1,6 +1,7 @@
 /* Module imports */
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { Events } from 'ionic-angular';
 import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
@@ -14,10 +15,9 @@ import { apiVersion } from '../../shared/constants/api-version';
 import { User } from '../../shared/interfaces/user';
 
 /* Provider imports */
-import { ProcessProvider } from '../process/process';
-import { RecipeProvider } from '../recipe/recipe';
 import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
 import { StorageProvider } from '../storage/storage';
+import { ConnectionProvider } from '../connection/connection';
 
 /* Local Interfaces */
 interface JWTResponse {
@@ -43,10 +43,10 @@ export class UserProvider {
 
   constructor(
     public http: HttpClient,
-    public processService: ProcessProvider,
-    public recipeService: RecipeProvider,
+    public events: Events,
     public processHttpError: ProcessHttpErrorProvider,
-    public storageService: StorageProvider
+    public storageService: StorageProvider,
+    public connectionService: ConnectionProvider
   ) {}
 
   /**
@@ -81,8 +81,7 @@ export class UserProvider {
       token: undefined
     });
     this.storageService.removeUser();
-    this.recipeService.clearRecipes();
-    this.processService.clearProcesses();
+    this.events.publish('clear-data');
   }
 
   /**
@@ -130,20 +129,23 @@ export class UserProvider {
       .subscribe(
         user => {
           this.user$.next(user);
-          this.checkJWToken()
-            .subscribe(
-              (jwtResponse: JWTResponse) => {
-                console.log(jwtResponse.status);
-                this.processService.initializeActiveBatchList();
-                this.recipeService.initializeRecipeMasterList();
-              },
-              (error: HttpErrorResponse) => {
-                console.log(error);
-                this.clearUserData();
-              }
-            );
+          if (user._id === 'offline') {
+            this.connectionService.setOfflineMode(true);
+          } else {
+            this.checkJWToken()
+              .subscribe(
+                (jwtResponse: JWTResponse) => {
+                  console.log(jwtResponse.status);
+                },
+                (error: HttpErrorResponse) => {
+                  console.log(error);
+                  this.clearUserData();
+                }
+              );
+          }
+          this.events.publish('init-data');
         },
-        error => console.log(error.error)
+        error => console.log('user load error', error.error)
       );
   }
 
@@ -160,8 +162,8 @@ export class UserProvider {
       .map((response: any) => {
         if (response.success) {
           this.user$.next(response.user);
-          this.processService.initializeActiveBatchList();
-          this.recipeService.initializeRecipeMasterList();
+          this.connectionService.setOfflineMode(false);
+          this.events.publish('init-data');
           if (user.remember) {
             this.storageService.setUser(response.user)
               .subscribe(
@@ -183,6 +185,7 @@ export class UserProvider {
    * @return: none
   **/
   logOut(): void {
+    this.connectionService.setOfflineMode(true);
     this.clearUserData();
   }
 
