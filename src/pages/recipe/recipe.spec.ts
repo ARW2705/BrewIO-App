@@ -4,6 +4,7 @@ import { HttpTestingController, HttpClientTestingModule } from '@angular/common/
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { IonicModule, NavController, Events, ToastController } from 'ionic-angular';
 import { IonicStorageModule } from '@ionic/storage';
+import { Network } from '@ionic-native/network/ngx';
 
 /* Constants imports */
 import { baseURL } from '../../shared/constants/base-url';
@@ -31,6 +32,7 @@ import { ProcessProvider } from '../../providers/process/process';
 import { ToastProvider } from '../../providers/toast/toast';
 import { ProcessHttpErrorProvider } from '../../providers/process-http-error/process-http-error';
 import { StorageProvider } from '../../providers/storage/storage';
+import { ConnectionProvider } from '../../providers/connection/connection';
 
 
 describe('Recipe Page', () => {
@@ -63,6 +65,8 @@ describe('Recipe Page', () => {
           ProcessProvider,
           ToastProvider,
           StorageProvider,
+          Network,
+          ConnectionProvider,
           { provide: NavController, useClass: NavMock },
           { provide: ToastController, useClass: ToastControllerMock },
           { provide: ProcessHttpErrorProvider, useValue: {} },
@@ -137,6 +141,8 @@ describe('Recipe Page', () => {
           ToastProvider,
           Events,
           StorageProvider,
+          Network,
+          ConnectionProvider,
           { provide: NavController, useClass: NavMock },
           { provide: ToastController, useClass: ToastControllerMock },
           { provide: ProcessHttpErrorProvider, useValue: {} },
@@ -287,6 +293,8 @@ describe('Recipe Page', () => {
           ToastProvider,
           Events,
           StorageProvider,
+          Network,
+          ConnectionProvider,
           { provide: NavController, useClass: NavMock },
           { provide: ToastController, useClass: ToastControllerMock },
           { provide: ProcessHttpErrorProvider, useValue: {} },

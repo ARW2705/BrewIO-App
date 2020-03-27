@@ -5,6 +5,7 @@ import { IonicModule, NavController, NavParams, ToastController, Events, Platfor
 import { IonicStorageModule } from '@ionic/storage';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { Network } from '@ionic-native/network/ngx';
 
 /* Constant imports */
 import { baseURL } from '../../shared/constants/base-url';
@@ -12,6 +13,7 @@ import { apiVersion } from '../../shared/constants/api-version';
 
 /* Interface imports */
 import { Batch } from '../../shared/interfaces/batch';
+import { RecipeMaster } from '../../shared/interfaces/recipe-master';
 
 /* Test configuration imports */
 import { configureTestBed } from '../../../test-config/configureTestBed';
@@ -35,6 +37,7 @@ import { UserProvider } from '../../providers/user/user';
 import { ToastProvider } from '../../providers/toast/toast';
 import { ProcessHttpErrorProvider } from '../../providers/process-http-error/process-http-error';
 import { StorageProvider } from '../../providers/storage/storage';
+import { ConnectionProvider } from '../../providers/connection/connection';
 
 
 describe('Process Page', () => {
@@ -42,8 +45,10 @@ describe('Process Page', () => {
   describe('Component creation', () => {
     let injector: TestBed;
     let processService: ProcessProvider;
+    let recipeService: RecipeProvider;
     let fixture: ComponentFixture<ProcessPage>;
     let processPage: ProcessPage;
+    let connectionService: ConnectionProvider;
     let httpMock: HttpTestingController;
     configureTestBed();
 
@@ -70,12 +75,14 @@ describe('Process Page', () => {
           Events,
           ToastProvider,
           StorageProvider,
-          { provide: UserProvider, useValue: {} },
+          Network,
+          ConnectionProvider,
+          UserProvider,
+          ProcessHttpErrorProvider,
           { provide: Platform, useClass: PlatformMock },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
-          { provide: ToastController, useClass: ToastControllerMock },
-          { provide: ProcessHttpErrorProvider, useValue: {} },
+          { provide: ToastController, useClass: ToastControllerMock }
         ],
         schemas: [
           NO_ERRORS_SCHEMA
@@ -89,6 +96,10 @@ describe('Process Page', () => {
     beforeEach(async(() => {
       injector = getTestBed();
       processService = injector.get(ProcessProvider);
+      connectionService = injector.get(ConnectionProvider);
+      connectionService.connection = true;
+      recipeService = injector.get(RecipeProvider);
+      recipeService.recipeMasterList$.next([new BehaviorSubject<RecipeMaster>(mockRecipeMasterActive())])
       httpMock = injector.get(HttpTestingController);
     }));
 
@@ -103,10 +114,13 @@ describe('Process Page', () => {
 
     test('should create the component', () => {
       fixture.detectChanges();
+
       expect(processPage).toBeDefined();
 
-      const recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/user/${processPage.requestedUserId}/master/${processPage.master._id}/recipe/${processPage.recipe._id}`);
-      recipeReq.flush(mockBatch());
+      const _mockBatch = mockBatch();
+      _mockBatch.owner = processPage.master._id
+      const batchReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/user/${processPage.requestedUserId}/master/${processPage.master._id}/recipe/${processPage.recipe._id}`);
+      batchReq.flush(_mockBatch);
 
       const recipeMasterReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${processPage.master._id}`);
       recipeMasterReq.flush(mockRecipeMasterActive());
@@ -114,10 +128,13 @@ describe('Process Page', () => {
 
     test('should have a recipe master passed as a NavParam', () => {
       fixture.detectChanges();
+
       expect(processPage.master._id).toMatch(mockRecipeMasterActive()._id);
 
-      const recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/user/${processPage.requestedUserId}/master/${processPage.master._id}/recipe/${processPage.recipe._id}`);
-      recipeReq.flush(mockBatch());
+      const _mockBatch = mockBatch();
+      _mockBatch.owner = processPage.master._id
+      const batchReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/user/${processPage.requestedUserId}/master/${processPage.master._id}/recipe/${processPage.recipe._id}`);
+      batchReq.flush(_mockBatch);
 
       const recipeMasterReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${processPage.master._id}`);
       recipeMasterReq.flush(mockRecipeMasterActive());
@@ -125,10 +142,13 @@ describe('Process Page', () => {
 
     test('should have found the selected recipe from the master\'s recipe list', () => {
       fixture.detectChanges();
+
       expect(processPage.recipe).toBeDefined();
 
-      const recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/user/${processPage.requestedUserId}/master/${processPage.master._id}/recipe/${processPage.recipe._id}`);
-      recipeReq.flush(mockBatch());
+      const _mockBatch = mockBatch();
+      _mockBatch.owner = processPage.master._id
+      const batchReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/user/${processPage.requestedUserId}/master/${processPage.master._id}/recipe/${processPage.recipe._id}`);
+      batchReq.flush(_mockBatch);
 
       const recipeMasterReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${processPage.master._id}`);
       recipeMasterReq.flush(mockRecipeMasterActive());
@@ -137,10 +157,13 @@ describe('Process Page', () => {
     test('should start a new batch', done => {
       expect(processPage.batchId).toBeUndefined();
       expect(processPage.selectedBatch$).toBeNull();
+
       const processStartSpy = jest.spyOn(processService, 'startNewBatch');
       const processRecipeUpdateSpy = jest.spyOn(processPage, 'updateRecipeMasterActive');
       const processTimerSpy = jest.spyOn(processPage, 'composeTimers');
+
       fixture.detectChanges();
+
       expect(processStartSpy).toHaveBeenCalledWith(
         processPage.requestedUserId,
         processPage.master._id,
@@ -154,8 +177,10 @@ describe('Process Page', () => {
         done();
       }, 10);
 
-      const processRequest = httpMock.expectOne(`${baseURL}/${apiVersion}/process/user/${mockUser()._id}/master/${mockRecipeMasterActive()._id}/recipe/${mockRecipeComplete()._id}`);
-      processRequest.flush(mockBatch());
+      const _mockBatch = mockBatch();
+      _mockBatch.owner = processPage.master._id
+      const batchReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/user/${processPage.requestedUserId}/master/${processPage.master._id}/recipe/${processPage.recipe._id}`);
+      batchReq.flush(_mockBatch);
 
       const recipeMasterReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${processPage.master._id}`);
       recipeMasterReq.flush(mockRecipeMasterActive());
@@ -163,12 +188,15 @@ describe('Process Page', () => {
 
     test('should configure timer values for 360px wide screen', () => {
       fixture.detectChanges();
+
       expect(processPage.timerWidth).toBe(240);
       expect(processPage.timerRadius).toBe(104);
       expect(processPage.timerDY).toMatch('0.3em');
 
-      const recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/user/${processPage.requestedUserId}/master/${processPage.master._id}/recipe/${processPage.recipe._id}`);
-      recipeReq.flush(mockBatch());
+      const _mockBatch = mockBatch();
+      _mockBatch.owner = processPage.master._id
+      const batchReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/user/${processPage.requestedUserId}/master/${processPage.master._id}/recipe/${processPage.recipe._id}`);
+      batchReq.flush(_mockBatch);
 
       const recipeMasterReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${processPage.master._id}`);
       recipeMasterReq.flush(mockRecipeMasterActive());
@@ -182,6 +210,8 @@ describe('Process Page', () => {
     let processPage: ProcessPage;
     let injector: TestBed;
     let processService: ProcessProvider;
+    let recipeService: RecipeProvider;
+    let connectionService: ConnectionProvider;
     let httpMock: HttpTestingController;
     let eventService: Events;
     configureTestBed();
@@ -210,12 +240,14 @@ describe('Process Page', () => {
           Events,
           ToastProvider,
           StorageProvider,
-          { provide: UserProvider, useValue: {} },
+          Network,
+          ConnectionProvider,
+          UserProvider,
+          ProcessHttpErrorProvider,
           { provide: Platform, useClass: PlatformMock },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
-          { provide: ToastController, useClass: ToastControllerMock },
-          { provide: ProcessHttpErrorProvider, useValue: {} }
+          { provide: ToastController, useClass: ToastControllerMock }
         ],
         schemas: [
           NO_ERRORS_SCHEMA
@@ -230,6 +262,10 @@ describe('Process Page', () => {
       injector = getTestBed();
       processService = injector.get(ProcessProvider);
       processService.activeBatchList$.next([new BehaviorSubject<Batch>(mockBatch())]);
+      recipeService = injector.get(RecipeProvider);
+      recipeService.recipeMasterList$.next([new BehaviorSubject<RecipeMaster>(mockRecipeMasterActive())])
+      connectionService = injector.get(ConnectionProvider);
+      connectionService.connection = true;
       httpMock = injector.get(HttpTestingController);
       eventService = injector.get(Events);
     }));
@@ -295,6 +331,7 @@ describe('Process Page', () => {
 
     test('should complete the current step and continue schedule', done => {
       fixture.detectChanges();
+
       const processSpy = jest.spyOn(processService, 'incrementCurrentStep');
       processPage.completeStep();
       setTimeout(() => {
@@ -304,7 +341,7 @@ describe('Process Page', () => {
         done();
       }, 10);
 
-      const processReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress/${mockBatch()._id}/next`);
+      const processReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress/${mockBatch()._id}`);
       processReq.flush(mockBatch());
     }); // end 'should complete the current step and continue schedule' test
 
@@ -320,13 +357,16 @@ describe('Process Page', () => {
         done();
       }, 10);
 
-      const processReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress/${mockBatch()._id}/next`);
+      const processReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress/${mockBatch()._id}`);
       processReq.flush(mockBatch());
     }); // end 'should complete the current concurrent steps and continue schedule' test
 
     test('should complete the current step and end the batch', done => {
       fixture.detectChanges();
-      processPage.selectedBatch.currentStep = 19;
+      const nextIndex = 19;
+      processPage.selectedBatch.currentStep = nextIndex;
+      const _mockBatch = mockBatch();
+      _mockBatch.currentStep = nextIndex;
       const processSpy = jest.spyOn(processService, 'incrementCurrentStep');
       const processEndSpy = jest.spyOn(processService, 'endBatchById');
       const toastSpy = jest.spyOn(processPage.toastService, 'presentToast');
@@ -335,17 +375,14 @@ describe('Process Page', () => {
         setTimeout(() => {
           expect(updateMasterSpy).toHaveBeenCalledWith(false);
           expect(data.other).toMatch('batch-end')
-          expect(processSpy).toHaveBeenCalledWith(mockBatch()._id);
-          expect(processEndSpy).toHaveBeenCalledWith(mockBatch()._id);
+          expect(processSpy).toHaveBeenCalledWith(_mockBatch, -1);
+          expect(processEndSpy).toHaveBeenCalledWith(_mockBatch._id);
           expect(toastSpy).toHaveBeenCalledWith('Enjoy!', 1000, 'bright-toast');
           done();
         }, 10);
       });
 
       processPage.completeStep();
-
-      const processReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress/${mockBatch()._id}/next`);
-      processReq.flush(mockBatch());
 
       const endReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress/${mockBatch()._id}`);
       endReq.flush(mockBatch());
@@ -514,15 +551,17 @@ describe('Process Page', () => {
         providers: [
           ProcessProvider,
           Events,
+          Network,
+          ConnectionProvider,
+          UserProvider,
+          ProcessHttpErrorProvider,
           { provide: RecipeProvider, useValue: {} },
-          { provide: UserProvider, useValue: {} },
           { provide: ToastProvider, useValue: {} },
           { provide: Platform, useClass: PlatformMock },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ToastController, useClass: ToastControllerMock },
-          { provide: StorageProvider, useValue: {} },
-          { provide: ProcessHttpErrorProvider, useValue: {} }
+          { provide: StorageProvider, useValue: {} }
         ],
         schemas: [
           NO_ERRORS_SCHEMA
@@ -614,14 +653,16 @@ describe('Process Page', () => {
           ProcessProvider,
           Events,
           ToastProvider,
+          Network,
+          ConnectionProvider,
+          UserProvider,
+          ProcessHttpErrorProvider,
           { provide: RecipeProvider, useValue: {} },
-          { provide: UserProvider, useValue: {} },
           { provide: Platform, useClass: PlatformMock },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ToastController, useClass: ToastControllerMock },
-          { provide: StorageProvider, useValue: {} },
-          { provide: ProcessHttpErrorProvider, useValue: {} }
+          { provide: StorageProvider, useValue: {} }
         ],
         schemas: [
           NO_ERRORS_SCHEMA
@@ -712,14 +753,16 @@ describe('Process Page', () => {
           ProcessProvider,
           Events,
           ToastProvider,
+          Network,
+          ConnectionProvider,
+          UserProvider,
+          ProcessHttpErrorProvider,
           { provide: RecipeProvider, useValue: {} },
-          { provide: UserProvider, useValue: {} },
           { provide: Platform, useClass: PlatformMock },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ToastController, useClass: ToastControllerMock },
           { provide: StorageProvider, useValue: {} },
-          { provide: ProcessHttpErrorProvider, useValue: {} }
         ],
         schemas: [
           NO_ERRORS_SCHEMA
@@ -919,6 +962,7 @@ describe('Process Page', () => {
     let processPage: ProcessPage;
     let injector: TestBed;
     let processService: ProcessProvider;
+    let recipeService: RecipeProvider;
     let httpMock: HttpTestingController;
     configureTestBed();
 
@@ -946,12 +990,14 @@ describe('Process Page', () => {
           ToastProvider,
           RecipeProvider,
           StorageProvider,
-          { provide: UserProvider, useValue: {} },
+          Network,
+          ConnectionProvider,
+          UserProvider,
+          ProcessHttpErrorProvider,
           { provide: Platform, useClass: PlatformMock },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
-          { provide: ToastController, useClass: ToastControllerMock },
-          { provide: ProcessHttpErrorProvider, useValue: {} }
+          { provide: ToastController, useClass: ToastControllerMock }
         ],
         schemas: [
           NO_ERRORS_SCHEMA
@@ -966,6 +1012,8 @@ describe('Process Page', () => {
       injector = getTestBed();
       processService = injector.get(ProcessProvider);
       processService.activeBatchList$.next([new BehaviorSubject<Batch>(mockBatch())]);
+      recipeService = injector.get(RecipeProvider);
+      recipeService.recipeMasterList$.next([new BehaviorSubject<RecipeMaster>(mockRecipeMasterActive())])
       httpMock = injector.get(HttpTestingController);
     }));
 

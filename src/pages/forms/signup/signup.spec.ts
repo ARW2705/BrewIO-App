@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/test
 import { HttpTestingController, HttpClientTestingModule } from '@angular/common/http/testing';
 import { IonicModule, NavController, NavParams, ViewController, ToastController } from 'ionic-angular';
 import { IonicStorageModule } from '@ionic/storage';
+import { Network } from '@ionic-native/network/ngx';
 
 /* Constants imports */
 import { baseURL } from '../../../shared/constants/base-url';
@@ -25,6 +26,7 @@ import { ProcessProvider } from '../../../providers/process/process';
 import { RecipeProvider } from '../../../providers/recipe/recipe';
 import { ProcessHttpErrorProvider } from '../../../providers/process-http-error/process-http-error';
 import { StorageProvider } from '../../../providers/storage/storage';
+import { ConnectionProvider } from '../../../providers/connection/connection';
 
 
 describe('Signup Form', () => {
@@ -49,6 +51,8 @@ describe('Signup Form', () => {
         ToastProvider,
         FormValidatorProvider,
         ProcessHttpErrorProvider,
+        Network,
+        ConnectionProvider,
         { provide: ProcessProvider, useValue: {} },
         { provide: RecipeProvider, useValue: {} },
         { provide: StorageProvider, useValue: {} },

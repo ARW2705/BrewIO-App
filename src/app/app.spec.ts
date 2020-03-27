@@ -5,6 +5,7 @@ import { IonicModule, Platform } from 'ionic-angular';
 import { IonicStorageModule } from '@ionic/storage';
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
+import { Network } from '@ionic-native/network/ngx';
 
 /* Test configuration imports */
 import { configureTestBed } from '../../test-config/configureTestBed';
@@ -22,6 +23,7 @@ import { ProcessProvider } from '../providers/process/process';
 import { RecipeProvider } from '../providers/recipe/recipe';
 import { ProcessHttpErrorProvider } from '../providers/process-http-error/process-http-error';
 import { StorageProvider } from '../providers/storage/storage';
+import { ConnectionProvider } from '../providers/connection/connection';
 
 
 describe('MyApp Component', () => {
@@ -41,6 +43,8 @@ describe('MyApp Component', () => {
         LibraryProvider,
         UserProvider,
         StorageProvider,
+        Network,
+        ConnectionProvider,
         { provide: ProcessProvider, useValue: {} },
         { provide: RecipeProvider, useValue: {} },
         { provide: ProcessHttpErrorProvider, useValue: {} },

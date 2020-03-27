@@ -110,16 +110,22 @@ export class ProcessPage implements OnInit, OnDestroy {
       // Start a new batch
       console.log('starting batch');
       this.processService.startNewBatch(this.requestedUserId, this.master._id, this.recipe._id)
-        .subscribe(newBatch => {
-          this.selectedBatch$ = this.processService.getActiveBatchById(newBatch._id);
-          this.selectedBatch$
-            .takeUntil(this.destroy$)
-            .subscribe((selectedBatch: Batch) => {
-              this.selectedBatch = selectedBatch;
-              this.batchId = selectedBatch._id;
-              this.updateRecipeMasterActive(true);
-              this.composeTimers();
-            });
+        .subscribe(
+          newBatch => {
+            this.selectedBatch$ = this.processService.getActiveBatchById(newBatch._id);
+            this.selectedBatch$
+              .takeUntil(this.destroy$)
+              .subscribe((selectedBatch: Batch) => {
+                this.selectedBatch = selectedBatch;
+                this.batchId = selectedBatch._id;
+                this.updateRecipeMasterActive(true);
+                if (this.timers.length === 0) this.composeTimers();
+              });
+          },
+          error => {
+            // TODO change toast to error message in view, then call go back
+            this.toastService.presentToast(error);
+            this.events.publish('update-nav-header', {caller: 'process page', other: 'batch-end'});
         });
     } else {
       // Continue an existing batch
@@ -129,7 +135,7 @@ export class ProcessPage implements OnInit, OnDestroy {
         .takeUntil(this.destroy$)
         .subscribe((selectedBatch: Batch) => {
           this.selectedBatch = selectedBatch;
-          this.composeTimers();
+          if (this.timers.length === 0) this.composeTimers();
           this.goToActiveStep();
         });
     }
@@ -181,15 +187,13 @@ export class ProcessPage implements OnInit, OnDestroy {
     if (!isFinished && this.selectedBatch.schedule[this.selectedBatch.currentStep + 1].type === 'timer') {
       this.setViewTimers(nextIndex);
     }
-    this.processService.incrementCurrentStep(this.batchId)
-      .subscribe(() => {
+    this.processService.incrementCurrentStep(this.selectedBatch, nextIndex)
+      .subscribe((updated: Batch) => {
         if (isFinished) {
-          this.processService.endBatchById(this.batchId)
-            .subscribe(() => {
-              this.updateRecipeMasterActive(false);
-              this.toastService.presentToast('Enjoy!', 1000, 'bright-toast');
-              this.events.publish('update-nav-header', {other: 'batch-end'});
-            });
+          console.log(isFinished);
+          this.updateRecipeMasterActive(false);
+          this.toastService.presentToast('Enjoy!', 1000, 'bright-toast');
+          this.events.publish('update-nav-header', {caller: 'process page', other: 'batch-end'});
         } else {
           this.selectedBatch.currentStep = nextIndex;
           this.viewStepIndex = nextIndex;
@@ -425,7 +429,8 @@ export class ProcessPage implements OnInit, OnDestroy {
       startDatetime: calendarValues.startDatetime,
       alerts: calendarValues.alerts
     };
-    this.processService.patchStepById(this.batchId, calendarValues._id, update)
+    // this.processService.patchStepById(this.batchId, calendarValues._id, update)
+    this.processService.patchBatchStepById(this.selectedBatch, calendarValues._id, update)
       .subscribe(() => {
         console.log('Started calendar');
       });

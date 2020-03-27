@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/test
 import { HttpTestingController, HttpClientTestingModule } from '@angular/common/http/testing';
 import { IonicModule, NavController, NavParams, ViewController, ToastController } from 'ionic-angular';
 import { IonicStorageModule } from '@ionic/storage';
+import { Network } from '@ionic-native/network/ngx';
 
 /* Constants imports */
 import { baseURL } from '../../../shared/constants/base-url';
@@ -25,6 +26,7 @@ import { ProcessProvider } from '../../../providers/process/process';
 import { RecipeProvider } from '../../../providers/recipe/recipe';
 import { ProcessHttpErrorProvider } from '../../../providers/process-http-error/process-http-error';
 import { StorageProvider } from '../../../providers/storage/storage';
+import { ConnectionProvider } from '../../../providers/connection/connection';
 
 
 describe('Login Form', () => {
@@ -45,6 +47,8 @@ describe('Login Form', () => {
         IonicStorageModule.forRoot()
       ],
       providers: [
+        Network,
+        ConnectionProvider,
         UserProvider,
         ToastProvider,
         ProcessProvider,
@@ -131,12 +135,6 @@ describe('Login Form', () => {
 
     const loginReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/login`);
     loginReq.flush(response);
-
-    const processReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/in-progress`);
-    processReq.flush([]);
-
-    const recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/user`);
-    recipeReq.flush([]);
   }); // end 'should submit a login form and get a success response' test
 
   test('should submit a login form and get an error response', done => {

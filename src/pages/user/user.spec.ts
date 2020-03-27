@@ -28,6 +28,7 @@ import { ProcessHttpErrorProvider } from '../../providers/process-http-error/pro
 import { ModalProvider } from '../../providers/modal/modal';
 import { ToastProvider } from '../../providers/toast/toast';
 import { StorageProvider } from '../../providers/storage/storage';
+import { ConnectionProvider } from '../../providers/connection/connection';
 
 
 describe('User Page', () => {
@@ -58,6 +59,7 @@ describe('User Page', () => {
           { provide: ModalProvider, useValue: {} },
           { provide: ToastProvider, useValue: {} },
           { provide: StorageProvider, useValue: {} },
+          { provide: ConnectionProvider, useValue: {} },
           { provide: Storage, useClass: StorageMock }
         ]
       });
@@ -112,6 +114,7 @@ describe('User Page', () => {
           { provide: ModalProvider, useValue: {} },
           { provide: Storage, useClass: StorageMock },
           { provide: ToastController, useClass: ToastControllerMock },
+          { provide: ConnectionProvider, useValue: {} },
           { provide: StorageProvider, useValue: {} }
         ]
       });
@@ -229,6 +232,7 @@ describe('User Page', () => {
           { provide: ModalProvider, useValue: {} },
           { provide: ToastProvider, useValue: {} },
           { provide: StorageProvider, useValue: {} },
+          { provide: ConnectionProvider, useValue: {} },
           { provide: Storage, useClass: StorageMock }
         ]
       });
@@ -289,6 +293,7 @@ describe('User Page', () => {
           { provide: ToastProvider, useValue: {} },
           { provide: Storage, useClass: StorageMock },
           { provide: StorageProvider, useValue: {} },
+          { provide: ConnectionProvider, useValue: {} },
           { provide: ModalController, useClass: ModalControllerMock }
         ]
       });

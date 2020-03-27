@@ -6,6 +6,7 @@ import { Storage } from '@ionic/storage';
 import { By } from '@angular/platform-browser';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { Network } from '@ionic-native/network/ngx';
 
 /* Test configuration imports */
 import { configureTestBed } from '../../../test-config/configureTestBed';
@@ -34,6 +35,7 @@ import { ToastProvider } from '../../providers/toast/toast';
 import { UserProvider } from '../../providers/user/user';
 import { ProcessHttpErrorProvider } from '../../providers/process-http-error/process-http-error';
 import { StorageProvider } from '../../providers/storage/storage';
+import { ConnectionProvider } from '../../providers/connection/connection';
 
 
 describe('Active Batch Component', () => {
@@ -61,6 +63,8 @@ describe('Active Batch Component', () => {
           RecipeProvider,
           ToastProvider,
           Events,
+          Network,
+          ConnectionProvider,
           { provide: ProcessHttpErrorProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },
           { provide: Storage, useClass: StorageMock },
@@ -153,6 +157,8 @@ describe('Active Batch Component', () => {
           ItemSliding,
           DomController,
           Form,
+          Network,
+          ConnectionProvider,
           { provide: ProcessHttpErrorProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },
           { provide: Storage, useClass: StorageMock },

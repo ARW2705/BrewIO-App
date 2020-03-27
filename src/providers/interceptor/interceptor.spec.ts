@@ -3,6 +3,7 @@ import { TestBed, getTestBed, async } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { IonicStorageModule } from '@ionic/storage';
+import { Events } from 'ionic-angular';
 
 /* Constant imports */
 import { baseURL } from '../../shared/constants/base-url';
@@ -12,7 +13,7 @@ import { apiVersion } from '../../shared/constants/api-version';
 import { configureTestBed } from '../../../test-config/configureTestBed';
 
 /* Mock imports */
-import { StorageMock, HttpMock } from '../../../test-config/mocks-ionic';
+import { HttpMock } from '../../../test-config/mocks-ionic';
 import { mockUser } from '../../../test-config/mockmodels/mockUser';
 
 /* Provider imports */
@@ -22,6 +23,7 @@ import { ProcessProvider } from '../process/process';
 import { RecipeProvider } from '../recipe/recipe';
 import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
 import { StorageProvider } from '../storage/storage';
+import { ConnectionProvider } from '../connection/connection';
 
 
 describe('HTTP Interceptor service', () => {
@@ -39,11 +41,13 @@ describe('HTTP Interceptor service', () => {
       ],
       providers: [
         UserProvider,
-        ProcessProvider,
-        RecipeProvider,
-        ProcessHttpErrorProvider,
-        StorageProvider,
         HttpMock,
+        Events,
+        { provide: ProcessProvider, useValue: {} },
+        { provide: RecipeProvider, useValue: {} },
+        { provide: ProcessHttpErrorProvider, useValue: {} },
+        { provide: StorageProvider, useValue: {} },
+        { provide: ConnectionProvider, useValue: {} },
         { provide: HTTP_INTERCEPTORS, useClass: AuthorizedInterceptor, multi: true },
         { provide: HTTP_INTERCEPTORS, useClass: UnauthorizedInterceptor, multi: true}
       ]

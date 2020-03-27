@@ -4,6 +4,7 @@ import { HttpTestingController, HttpClientTestingModule } from '@angular/common/
 import { IonicModule, NavController, NavParams, ModalController, ActionSheetController, ToastController, Events } from 'ionic-angular';
 import { IonicStorageModule } from '@ionic/storage';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { Network } from '@ionic-native/network/ngx';
 
 /* Constants imports */
 import { baseURL } from '../../../shared/constants/base-url';
@@ -11,6 +12,7 @@ import { apiVersion } from '../../../shared/constants/api-version';
 
 /* Interface imports */
 import { RecipeMaster } from '../../../shared/interfaces/recipe-master';
+import { User } from '../../../shared/interfaces/user';
 
 /* Default imports */
 import { defaultRecipeMaster } from '../../../shared/defaults/default-recipe-master';
@@ -34,6 +36,7 @@ import { mockGrainBill } from '../../../../test-config/mockmodels/mockGrainBill'
 import { mockHopsSchedule } from '../../../../test-config/mockmodels/mockHopsSchedule';
 import { mockYeastGroup } from '../../../../test-config/mockmodels/mockYeastGroup';
 import { mockOtherIngredient } from '../../../../test-config/mockmodels/mockOtherIngredient';
+import { mockUser } from '../../../../test-config/mockmodels/mockUser';
 import { NavMock, NavParamsMock, ModalControllerMock, ActionSheetControllerMock, ToastControllerMock } from '../../../../test-config/mocks-ionic';
 
 /* Page imports */
@@ -51,6 +54,8 @@ import { ToastProvider } from '../../../providers/toast/toast';
 import { ActionSheetProvider } from '../../../providers/action-sheet/action-sheet';
 import { ProcessHttpErrorProvider } from '../../../providers/process-http-error/process-http-error';
 import { StorageProvider } from '../../../providers/storage/storage';
+import { UserProvider } from '../../../providers/user/user';
+import { ConnectionProvider } from '../../../providers/connection/connection';
 
 
 describe('Recipe Form', () => {
@@ -80,7 +85,9 @@ describe('Recipe Form', () => {
         providers: [
           LibraryProvider,
           Events,
-          { provide: RecipeProvider, useValue: {}},
+          { provide: RecipeProvider, useValue: {} },
+          { provide: UserProvider, useValue: {} },
+          { provide: ConnectionProvider, useValue: {} },
           { provide: CalculationsProvider, useValue: {} },
           { provide: ToastProvider, useValue: {} },
           { provide: ProcessHttpErrorProvider, useValue: {} },
@@ -229,7 +236,9 @@ describe('Recipe Form', () => {
         providers: [
           LibraryProvider,
           Events,
-          { provide: RecipeProvider, useValue: {}},
+          { provide: RecipeProvider, useValue: {} },
+          { provide: UserProvider, useValue: {} },
+          { provide: ConnectionProvider, useValue: {} },
           { provide: CalculationsProvider, useValue: {} },
           { provide: ToastProvider, useValue: {} },
           { provide: ProcessHttpErrorProvider, useValue: {} },
@@ -475,7 +484,9 @@ describe('Recipe Form', () => {
           ActionSheetProvider,
           LibraryProvider,
           Events,
-          { provide: RecipeProvider, useValue: {}},
+          { provide: RecipeProvider, useValue: {} },
+          { provide: UserProvider, useValue: {} },
+          { provide: ConnectionProvider, useValue: {} },
           { provide: CalculationsProvider, useValue: {} },
           { provide: ToastProvider, useValue: {} },
           { provide: ProcessHttpErrorProvider, useValue: {} },
@@ -541,7 +552,9 @@ describe('Recipe Form', () => {
         providers: [
           LibraryProvider,
           Events,
-          { provide: RecipeProvider, useValue: {}},
+          { provide: RecipeProvider, useValue: {} },
+          { provide: UserProvider, useValue: {} },
+          { provide: ConnectionProvider, useValue: {} },
           { provide: CalculationsProvider, useValue: {} },
           { provide: ToastProvider, useValue: {} },
           { provide: ProcessHttpErrorProvider, useValue: {} },
@@ -593,20 +606,8 @@ describe('Recipe Form', () => {
 
       const hopsAdditionStartIndex = recipePage.recipe.processSchedule.length - 2;
 
-      expect(recipePage.recipe.processSchedule[hopsAdditionStartIndex + 1]).toStrictEqual({
-        type: 'timer',
-        name: `Add ${_mockHopsInstance30.hopsType.name} hops`,
-        concurrent: true,
-        description: `Hops addition: ${_mockHopsInstance30.quantity} oz`,
-        duration: 30
-      });
-      expect(recipePage.recipe.processSchedule[hopsAdditionStartIndex]).toStrictEqual({
-        type: 'timer',
-        name: `Add ${_mockHopsInstance45.hopsType.name} hops`,
-        concurrent: true,
-        description: `Hops addition: ${_mockHopsInstance45.quantity} oz`,
-        duration: 15
-      });
+      expect(recipePage.recipe.processSchedule[hopsAdditionStartIndex + 1].description).toMatch(`Hops addition: ${_mockHopsInstance30.quantity} oz`);
+      expect(recipePage.recipe.processSchedule[hopsAdditionStartIndex].name).toMatch(`Add ${_mockHopsInstance45.hopsType.name} hops`);
     }); // end 'should add a hops addition timer and adjust concurrent timers accordingly' test
 
   }); // end 'Form auto-generated values' section
@@ -640,6 +641,8 @@ describe('Recipe Form', () => {
           Events,
           { provide: RecipeProvider, useValue: {} },
           { provide: ToastProvider, useValue: {} },
+          { provide: UserProvider, useValue: {} },
+          { provide: ConnectionProvider, useValue: {} },
           { provide: ProcessHttpErrorProvider, useValue: {} },
           { provide: ActionSheetProvider, useValue: {} },
           { provide: StorageProvider, useValue: {} },
@@ -684,12 +687,14 @@ describe('Recipe Form', () => {
       fixture.detectChanges();
       const _mockRecipe = mockRecipeComplete();
       _mockRecipe.grains.push({
+        _id: '1',
         grainType: mockGrains()[0],
         quantity: 2,
         mill: 1,
         notes: []
       });
       _mockRecipe.hops.push({
+        _id: '1',
         hopsType: mockHops()[2],
         quantity: 0.5,
         addAt: 20,
@@ -713,6 +718,7 @@ describe('Recipe Form', () => {
     let httpMock: HttpTestingController;
     let libraryService: LibraryProvider;
     let recipeService: RecipeProvider;
+    let userService: UserProvider;
     configureTestBed();
 
     beforeAll(async(() => {
@@ -737,6 +743,9 @@ describe('Recipe Form', () => {
           ProcessHttpErrorProvider,
           Events,
           StorageProvider,
+          UserProvider,
+          ConnectionProvider,
+          Network,
           { provide: CalculationsProvider, useValue: {} },
           { provide: ActionSheetProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },
@@ -760,6 +769,7 @@ describe('Recipe Form', () => {
       libraryService.hopsLibrary = mockHops();
       libraryService.yeastLibrary = mockYeast();
       libraryService.styleLibrary = mockStyles();
+      userService = injector.get(UserProvider);
     }));
 
     beforeEach(() => {
@@ -777,15 +787,9 @@ describe('Recipe Form', () => {
       recipePage.master = _mockRecipeMaster
       recipePage.recipe = _mockRecipeMaster.recipes[0];
       const payload = recipePage.constructPayload();
-      expect(payload).toStrictEqual({
-        master: {
-          name: _mockRecipeMaster.name,
-          style: _mockRecipeMaster.style._id,
-          notes: _mockRecipeMaster.notes,
-          isPublic: true
-        },
-        recipe: _mockRecipeMaster.recipes[0]
-      });
+      expect(payload.master.name).toMatch(_mockRecipeMaster.name);
+      expect(payload.master.style).toStrictEqual(mockStyles()[0]);
+      expect(payload.recipe).toStrictEqual(_mockRecipeMaster.recipes[0]);
     }); // end 'should create a submission payload for a new master' test
 
     test('should update a recipe master', () => {
@@ -796,7 +800,7 @@ describe('Recipe Form', () => {
       const payload = recipePage.constructPayload();
       expect(payload).toStrictEqual({
         name: _mockRecipeMaster.name,
-        style: _mockRecipeMaster.style._id,
+        style: _mockRecipeMaster.style,
         notes: _mockRecipeMaster.notes,
         isPublic: _mockRecipeMaster.isPublic
       });
@@ -836,7 +840,7 @@ describe('Recipe Form', () => {
       expect(formSpy.mock.calls[0][0]).toStrictEqual({
         master: {
           name: _mockRecipeMaster.name,
-          style: _mockRecipeMaster.style._id,
+          style: _mockRecipeMaster.style,
           notes: _mockRecipeMaster.notes,
           isPublic: true
         },
@@ -857,7 +861,7 @@ describe('Recipe Form', () => {
       recipePage.onSubmit();
       expect(formSpy.mock.calls[0][0]).toStrictEqual({
         name: _mockRecipeMaster.name,
-        style: _mockRecipeMaster.style._id,
+        style: _mockRecipeMaster.style,
         notes: _mockRecipeMaster.notes,
         isPublic: _mockRecipeMaster.isPublic
       });
@@ -868,6 +872,7 @@ describe('Recipe Form', () => {
     }); // end 'should submit the form for an update' test
 
     test('should submit a recipe master creation post', done => {
+      userService.user$ = new BehaviorSubject<User>(mockUser());
       fixture.detectChanges();
       const postSpy = jest.spyOn(recipePage.recipeService, 'postRecipeMaster');
       const toastSpy = jest.spyOn(recipePage.toastService, 'presentToast');
@@ -878,7 +883,7 @@ describe('Recipe Form', () => {
       const payload = {
         master: {
           name: _mockRecipeMaster.name,
-          style: _mockRecipeMaster.style._id,
+          style: _mockRecipeMaster.style,
           notes: _mockRecipeMaster.notes,
           isPublic: true
         },
@@ -890,7 +895,7 @@ describe('Recipe Form', () => {
         expect(postSpy.mock.calls[0][0]).toStrictEqual(payload);
         expect(toastSpy).toHaveBeenCalledWith(message);
         expect(eventSpy.mock.calls[0][0]).toMatch('update-nav-header');
-        expect(eventSpy.mock.calls[0][1]).toStrictEqual({other: 'form-submit-complete'});
+        expect(eventSpy.mock.calls[0][1]).toStrictEqual({caller: 'recipe form page', other: 'form-submit-complete'});
         done();
       }, 10);
 
@@ -903,11 +908,11 @@ describe('Recipe Form', () => {
       const postSpy = jest.spyOn(recipePage.recipeService, 'postRecipeMaster');
       const toastSpy = jest.spyOn(recipePage.toastService, 'presentToast');
       const _mockRecipeMaster = mockRecipeMasterInactive();
-      recipePage.master = _mockRecipeMaster
-      recipePage.recipe = _mockRecipeMaster.recipes[0];
-      recipePage.submitCreationPost({}, '');
+      recipePage.submitCreationPost({master: _mockRecipeMaster, recipe: _mockRecipeMaster.recipes[0]}, '');
       setTimeout(() => {
-        expect(postSpy.mock.calls[0][0]).toStrictEqual({});
+        const postCall = postSpy.mock.calls[0][0]
+        expect(postCall.master._id).toMatch(_mockRecipeMaster._id);
+        expect(postCall.recipe._id).toMatch(_mockRecipeMaster.recipes[0]._id);
         expect(toastSpy).toHaveBeenCalledWith('<400> Invalid Recipe: ');
         done();
       }, 10);
@@ -934,7 +939,7 @@ describe('Recipe Form', () => {
         expect(postSpy.mock.calls[0][1]).toStrictEqual(_mockRecipe);
         expect(toastSpy).toHaveBeenCalledWith(message);
         expect(eventSpy.mock.calls[0][0]).toMatch('update-nav-header');
-        expect(eventSpy.mock.calls[0][1]).toStrictEqual({other: 'form-submit-complete'});
+        expect(eventSpy.mock.calls[0][1]).toStrictEqual({caller: 'recipe form page', other: 'form-submit-complete'});
         done();
       }, 10);
 
@@ -972,7 +977,7 @@ describe('Recipe Form', () => {
       const message = 'Test update';
       const payload = {
         name: _mockRecipeMaster.name,
-        style: _mockRecipeMaster.style._id,
+        style: _mockRecipeMaster.style,
         notes: _mockRecipeMaster.notes,
         isPublic: _mockRecipeMaster.isPublic
       };
@@ -985,7 +990,7 @@ describe('Recipe Form', () => {
         expect(patchSpy.mock.calls[0][1]).toStrictEqual(payload);
         expect(toastSpy).toHaveBeenCalledWith(message);
         expect(eventSpy.mock.calls[0][0]).toMatch('update-nav-header');
-        expect(eventSpy.mock.calls[0][1]).toStrictEqual({other: 'form-submit-complete'});
+        expect(eventSpy.mock.calls[0][1]).toStrictEqual({caller: 'recipe form page', other: 'form-submit-complete'});
         done();
       }, 10);
 
@@ -1034,7 +1039,7 @@ describe('Recipe Form', () => {
         expect(patchSpy.mock.calls[0][2]).toStrictEqual(_mockRecipe);
         expect(toastSpy).toHaveBeenCalledWith(message);
         expect(eventSpy.mock.calls[0][0]).toMatch('update-nav-header');
-        expect(eventSpy.mock.calls[0][1]).toStrictEqual({other: 'form-submit-complete'});
+        expect(eventSpy.mock.calls[0][1]).toStrictEqual({caller: 'recipe form page', other: 'form-submit-complete'});
         done();
       }, 10);
 
@@ -1096,6 +1101,8 @@ describe('Recipe Form', () => {
           Events,
           StorageProvider,
           { provide: CalculationsProvider, useValue: {} },
+          { provide: UserProvider, useValue: {} },
+          { provide: ConnectionProvider, useValue: {} },
           { provide: ActionSheetProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
@@ -1276,7 +1283,9 @@ describe('Recipe Form', () => {
         providers: [
           LibraryProvider,
           Events,
-          { provide: RecipeProvider, useValue: {}},
+          { provide: RecipeProvider, useValue: {} },
+          { provide: UserProvider, useValue: {} },
+          { provide: ConnectionProvider, useValue: {} },
           { provide: CalculationsProvider, useValue: {} },
           { provide: ToastProvider, useValue: {} },
           { provide: ProcessHttpErrorProvider, useValue: {} },

@@ -4,6 +4,7 @@ import { IonicModule, NavController, ModalController, Events, Config, App } from
 import { IonicStorageModule } from '@ionic/storage';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { By } from '@angular/platform-browser';
+import { Network } from '@ionic-native/network/ngx';
 
 /* Test configuration imports */
 import { configureTestBed } from '../../../test-config/configureTestBed';
@@ -22,6 +23,7 @@ import { ProcessProvider } from '../../providers/process/process';
 import { RecipeProvider } from '../../providers/recipe/recipe';
 import { ProcessHttpErrorProvider } from '../../providers/process-http-error/process-http-error';
 import { StorageProvider } from '../../providers/storage/storage';
+import { ConnectionProvider } from '../../providers/connection/connection';
 
 
 describe('Header Component', () => {
@@ -50,6 +52,8 @@ describe('Header Component', () => {
           StorageProvider,
           ModalProvider,
           Events,
+          Network,
+          ConnectionProvider,
           { provide: ProcessHttpErrorProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },
           { provide: ModalController, useClass: ModalControllerMock },
@@ -227,6 +231,8 @@ describe('Header Component', () => {
           StorageProvider,
           ModalProvider,
           Events,
+          Network,
+          ConnectionProvider,
           { provide: ProcessHttpErrorProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },
           { provide: ModalController, useClass: ModalControllerMock },
