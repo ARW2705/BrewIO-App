@@ -1,7 +1,7 @@
 /* Module imports */
 import { TestBed, getTestBed, async } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { Events } from 'ionic-angular';
+import { Events, Platform } from 'ionic-angular';
 import { IonicStorageModule } from '@ionic/storage';
 import { Network } from '@ionic-native/network/ngx';
 
@@ -17,6 +17,7 @@ import { mockUser } from '../../../test-config/mockmodels/mockUser';
 import { mockUserLogin } from '../../../test-config/mockmodels/mockUserLogin';
 import { mockLoginResponse } from '../../../test-config/mockmodels/mockLoginResponse';
 import { mockJWTSuccess, mockJWTFailed } from '../../../test-config/mockmodels/mockJWTResponse';
+import { PlatformMock } from '../../../test-config/mocks-ionic';
 
 /* Provider imports */
 import { UserProvider } from './user';
@@ -47,7 +48,8 @@ describe('User Service', () => {
         RecipeProvider,
         ProcessHttpErrorProvider,
         StorageProvider,
-        ConnectionProvider
+        ConnectionProvider,
+        { provide: Platform, useClass: PlatformMock }
       ]
     });
   })()
