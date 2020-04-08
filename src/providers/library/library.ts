@@ -11,7 +11,7 @@ import { baseURL } from '../../shared/constants/base-url';
 import { apiVersion } from '../../shared/constants/api-version';
 
 /* Interface imports */
-import { Grains, Hops, Yeast, Style, LibraryCache } from '../../shared/interfaces/library';
+import { Grains, Hops, Yeast, Style, LibraryStorage} from '../../shared/interfaces/library';
 
 /* Provider imports */
 import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
@@ -41,7 +41,7 @@ export class LibraryProvider {
   fetchAllLibraries(): void {
     this.storageService.getLibrary()
       .subscribe(
-        (libraries: LibraryCache) => {
+        (libraries: LibraryStorage) => {
           this.grainsLibrary = libraries.grains;
           this.hopsLibrary = libraries.hops;
           this.yeastLibrary = libraries.yeast;
