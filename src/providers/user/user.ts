@@ -5,7 +5,6 @@ import { Events } from 'ionic-angular';
 import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
-import 'rxjs/add/operator/catch';
 
 /* Constants imports */
 import { baseURL } from '../../shared/constants/base-url';
@@ -25,6 +24,7 @@ interface JWTResponse {
   success: boolean;
   user: any
 };
+
 
 @Injectable()
 export class UserProvider {
@@ -47,14 +47,14 @@ export class UserProvider {
     public processHttpError: ProcessHttpErrorProvider,
     public storageService: StorageProvider,
     public connectionService: ConnectionProvider
-  ) {}
+  ) { }
 
   /**
    * Request server check json web token validity
    *
    * @params: none
    *
-   * @return: none
+   * @return: Observable of JWTResponse
   **/
   checkJWToken(): Observable<JWTResponse> {
     return this.http.get<JWTResponse>(`${baseURL}/${apiVersion}/users/checkJWToken`)
@@ -65,7 +65,6 @@ export class UserProvider {
    * Set user subject data to undefined values and clear ionic storage
    *
    * @params: none
-   *
    * @return: none
   **/
   clearUserData(): void {
@@ -80,6 +79,7 @@ export class UserProvider {
       friendList: [],
       token: undefined
     });
+
     this.storageService.removeUser();
     this.events.publish('clear-data');
   }
@@ -88,7 +88,6 @@ export class UserProvider {
    * Retrieve user authentication json web token
    *
    * @params: none
-   *
    * @return: none
   **/
   getToken(): string {
@@ -100,7 +99,7 @@ export class UserProvider {
    *
    * @params: none
    *
-   * @return: user subject
+   * @return: user behavior subject
   **/
   getUser(): BehaviorSubject<User> {
     return this.user$;
@@ -118,10 +117,11 @@ export class UserProvider {
   }
 
   /**
-   * Load user data from ionic storage
+   * Load user data ionic storage. If user id is not 'offline', check if the
+   * json web token is still valid before continuing. On success, publish event
+   * to trigger data requests
    *
    * @params: none
-   *
    * @return: none
   **/
   loadUserFromStorage(): void {
@@ -181,7 +181,6 @@ export class UserProvider {
    * Clear stored user data on logout
    *
    * @params: none
-   *
    * @return: none
   **/
   logOut(): void {
@@ -211,7 +210,7 @@ export class UserProvider {
   }
 
   /**
-   * HTTP PATCH user profile
+   * Update user profile
    *
    * @params: user - object with user profile data
    *
