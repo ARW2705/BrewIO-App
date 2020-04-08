@@ -10,7 +10,7 @@ import { _throw as throwError } from 'rxjs/observable/throw';
 import { User } from '../../shared/interfaces/user';
 import { RecipeMaster } from '../../shared/interfaces/recipe-master';
 import { Batch } from '../../shared/interfaces/batch';
-import { LibraryCache } from '../../shared/interfaces/library';
+import { LibraryStorage } from '../../shared/interfaces/library';
 
 
 @Injectable()
@@ -23,7 +23,7 @@ export class StorageProvider {
   constructor(public storage: Storage) { }
 
   /**
-   * Get all ingredient libraries from cache
+   * Get all ingredient libraries from storage
    *
    * @params: none
    *
@@ -49,12 +49,12 @@ export class StorageProvider {
    *
    * @return: Observable of storage set response
   **/
-  setLibrary(library: LibraryCache): Observable<any> {
+  setLibrary(library: LibraryStorage): Observable<any> {
     return fromPromise(this.storage.set(this.libraryStorageKey, JSON.stringify(library)));
   }
 
   /**
-   * Get all active batches from cache
+   * Get all active batches from storage
    *
    * @params: none
    *
@@ -74,7 +74,7 @@ export class StorageProvider {
   }
 
   /**
-   * Remove active batches from cache
+   * Remove active batches from storage
    *
    * @params: none
    * @return: none
@@ -96,7 +96,7 @@ export class StorageProvider {
   }
 
   /**
-   * Get list of recipe masters from cache
+   * Get all recipe masters from storage
    *
    * @params: none
    *
@@ -116,7 +116,7 @@ export class StorageProvider {
   }
 
   /**
-   * Remove all recipe masters from cache
+   * Remove all recipe masters from storage
    *
    * @params: none
    * @return: none
@@ -150,7 +150,7 @@ export class StorageProvider {
         map((_user: string) => {
           let parsed = JSON.parse(_user);
           if (_user === null) {
-            console.log('User data not found in cache');
+            console.log('User data not found in storage');
             parsed = {
               _id: 'offline',
               username: '',
@@ -163,7 +163,7 @@ export class StorageProvider {
   }
 
   /**
-   * Remove user data from cache
+   * Remove user data from storage
    *
    * @params: none
    * @return: none
