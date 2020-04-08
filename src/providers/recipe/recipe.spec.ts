@@ -1,8 +1,8 @@
 /* Module imports */
-import { TestBed, getTestBed, async } from '@angular/core/testing';
+import { TestBed, getTestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { IonicStorageModule } from '@ionic/storage';
-import { Events } from 'ionic-angular';
+import { Events, Platform } from 'ionic-angular';
 import { Network } from '@ionic-native/network/ngx';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { combineLatest } from 'rxjs/observable/combineLatest';
@@ -22,6 +22,11 @@ import { mockRecipeIncomplete } from '../../../test-config/mockmodels/mockRecipe
 import { mockUser } from '../../../test-config/mockmodels/mockUser';
 import { mockOtherIngredient } from '../../../test-config/mockmodels/mockOtherIngredient';
 import { mockGrainBill } from '../../../test-config/mockmodels/mockGrainBill';
+import { PlatformMock } from '../../../test-config/mocks-ionic';
+
+/* Default imports */
+import { defaultRecipeMaster } from '../../shared/defaults/default-recipe-master';
+import { defaultRecipe } from '../../shared/defaults/default-recipe';
 
 /* Interface imports */
 import { RecipeMaster } from '../../shared/interfaces/recipe-master';
@@ -56,7 +61,8 @@ describe('Recipe Service', () => {
         ConnectionProvider,
         UserProvider,
         Events,
-        { provide: Network, useValue: {} }
+        { provide: Network, useValue: {} },
+        { provide: Platform, useClass: PlatformMock }
       ]
     });
   })()
@@ -430,41 +436,24 @@ describe('Recipe Service', () => {
       recipeService.recipeMasterList$.next([]);
     });
 
-    test('should add a recipe master to the list [online]', done => {
-      connectionService.connection = true;
-      userService.user$ = new BehaviorSubject<User>(mockUser());
-      const _mockRecipeMasterActive = mockRecipeMasterActive();
-      recipeService.addRecipeMasterToList(_mockRecipeMasterActive)
-        .subscribe((newRecipeMaster: RecipeMaster) => {
-          expect(newRecipeMaster._id).toMatch(_mockRecipeMasterActive._id);
-          expect(newRecipeMaster._id).toMatch(recipeService.recipeMasterList$.value[0].value._id);
-          done();
-        });
-    }); // end 'should add a recipe master to the list [online]' test
+    test('should format a new recipe master', () => {
+      userService.user$.next(mockUser());
+      const _mockDefaultRecipeMaster = defaultRecipeMaster();
+      const _mockDefaultRecipe = defaultRecipe();
+      const formatted = recipeService.formatNewRecipeMaster({
+        master: _mockDefaultRecipeMaster,
+        recipe: _mockDefaultRecipe
+      });
+      expect(formatted.name).toMatch(_mockDefaultRecipeMaster.name);
+      expect(formatted.recipes[0].variantName).toMatch(_mockDefaultRecipe.variantName);
+    }); // end 'should format a new recipe master' test
 
-    test('should add a recipe master to the list [offline]', done => {
+    test('should fail to add a recipe master with missing user id', () => {
       connectionService.connection = false;
-      userService.user$ = new BehaviorSubject<User>(mockUser());
-      const _mockRecipeMasterActive = mockRecipeMasterActive();
-      recipeService.addRecipeMasterToList({ master: _mockRecipeMasterActive, recipe: mockRecipeComplete() })
-        .subscribe((newRecipeMaster: RecipeMaster) => {
-          expect(newRecipeMaster._id).toMatch(new RegExp('^[0-9]+$', 'g'));
-          expect(newRecipeMaster._id).toMatch(recipeService.recipeMasterList$.value[0].value._id);
-          done();
-        });
-    }); // end 'should add a recipe master to the list [offline]' test
-
-    test('should fail to add a recipe master with missing user id', done => {
-      connectionService.connection = false;
-      recipeService.addRecipeMasterToList({})
-        .subscribe(
-          () => { },
-          error => {
-            expect(error).toBeDefined();
-            expect(error).toMatch('Missing user id');
-            done();
-          }
-        );
+      expect(() => {
+        recipeService.formatNewRecipeMaster({})
+      })
+      .toThrowError('Client Validation Error: Missing User id');
     }); // end 'should fail to add a recipe master with missing user id' test
 
     test('should add a recipe to a master in the list [online]', done => {
@@ -682,7 +671,7 @@ describe('Recipe Service', () => {
         ]
       );
       const cacheSpy = jest.spyOn(recipeService.storageService, 'setRecipes');
-      recipeService.updateCache();
+      recipeService.updateStorage();
       expect(cacheSpy).toHaveBeenCalledWith(
         [
           _mockRecipeMasterActive,

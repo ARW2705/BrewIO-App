@@ -37,7 +37,8 @@ import { ConnectionProvider } from '../connection/connection';
 export class RecipeProvider {
   recipeMasterList$: BehaviorSubject<Array<BehaviorSubject<RecipeMaster>>> = new BehaviorSubject<Array<BehaviorSubject<RecipeMaster>>>([]);
 
-  constructor(public http: HttpClient,
+  constructor(
+    public http: HttpClient,
     public events: Events,
     public processHttpError: ProcessHttpErrorProvider,
     public storageService: StorageProvider,
@@ -106,7 +107,9 @@ export class RecipeProvider {
 
     if (this.connectionService.isConnected()) {
       return this.http.delete(`${baseURL}/${apiVersion}/recipes/private/master/${masterId}/recipe/${recipeId}`)
-        .flatMap(() => { return this.removeRecipeFromMasterInList(master$, recipeId); })
+        .flatMap(() => {
+          return this.removeRecipeFromMasterInList(master$, recipeId);
+        })
         .catch(error => this.processHttpError.handleError(error));
     }
     return this.removeRecipeFromMasterInList(master$, recipeId);
@@ -118,23 +121,25 @@ export class RecipeProvider {
    *
    * @params: masterId - recipe master id string to search and delete
    *
-   * @return: Observable success does not need data, but using for error throw/handling
+   * @return: Observable - success does not need data, but using for error throw/handling
   **/
   deleteRecipeMasterById(masterId: string): Observable<boolean> {
     if (this.connectionService.isConnected()) {
       return this.http.delete(`${baseURL}/${apiVersion}/recipes/private/master/${masterId}`)
-        .flatMap(() => { return this.removeRecipeMasterFromList(masterId); })
+        .flatMap(() => {
+          return this.removeRecipeMasterFromList(masterId);
+        })
         .catch(error => this.processHttpError.handleError(error));
     }
     return this.removeRecipeMasterFromList(masterId);
   }
 
   /**
-   * Http GET all recipe masters for user, create recipe master subject, then
-   * populate recipeMasterList$
-
-   * Get the recipe master list from cache as well as request list from server.
-   * If cache is present, load with this list first to help load the app faster,
+   * Get all recipe masters for user, create recipe master subjects, then
+   * populate recipeMasterList
+   *
+   * Get the recipe master list from storage as well as request list from server.
+   * If storage is present, load with this list first to help load the app faster,
    * or allow some functionality if offline. HTTP request the list from the
    * server and update the recipeMasterList subject when available
    *
@@ -144,8 +149,8 @@ export class RecipeProvider {
   initializeRecipeMasterList(): void {
     this.storageService.getRecipes()
       .subscribe(
-        (recipeMasterList: any) => {
-          console.log('recipes from cache');
+        (recipeMasterList: Array<RecipeMaster>) => {
+          console.log('recipes from storage');
           this.mapRecipeMasterArrayToSubjects(recipeMasterList);
         },
         (error: ErrorObservable) => console.log(`${error.error}: awaiting data from server`)
@@ -156,7 +161,7 @@ export class RecipeProvider {
         .subscribe((recipeMasterArrayResponse: Array<RecipeMaster>) => {
           console.log('recipes from server');
           this.mapRecipeMasterArrayToSubjects(recipeMasterArrayResponse);
-          this.updateCache();
+          this.updateStorage();
         });
     }
   }
@@ -203,43 +208,59 @@ export class RecipeProvider {
 
     if (this.connectionService.isConnected()) {
       return this.http.patch(`${baseURL}/${apiVersion}/recipes/private/master/${masterId}/recipe/${recipeId}`, update)
-        .flatMap((updatedRecipeResponse: Recipe) => { return this.updateRecipeOfMasterInList(master$, recipeId, updatedRecipeResponse); })
+        .flatMap((updatedRecipeResponse: Recipe) => {
+          return this.updateRecipeOfMasterInList(master$, recipeId, updatedRecipeResponse);
+        })
         .catch(error => this.processHttpError.handleError(error));
     }
     return this.updateRecipeOfMasterInList(master$, recipeId, update);
   }
 
   /**
-   * Create a new recipe master to user - update database if logged in and
-   * connected to internet
+   * Create a new recipe master and add to recipeMasterList - update database
+   * and ids if logged in and connected to internet
    *
-   * @params: master - object with master data as well as an initial recipe
+   * @params: newMasterValues - object with master data and an initial recipe,
+   * but is not yet formatted as a RecipeMaster
    *
    * @return: observable of new recipe master
   **/
-  postRecipeMaster(master: object): Observable<RecipeMaster> {
-    if (this.connectionService.isConnected()) {
-      const _master = clone(master);
-      const styleId = _master.master.style._id;
-      stripSharedProperties(_master);
-      _master.master.style = styleId;
-      return this.http.post(`${baseURL}/${apiVersion}/recipes/private/user`, _master)
-        .flatMap((newRecipeMaster: RecipeMaster) => {
-          return this.addRecipeMasterToList(newRecipeMaster);
-        })
-        .catch(error => this.processHttpError.handleError(error));
+  postRecipeMaster(newMasterValues: object): Observable<RecipeMaster> {
+    try {
+      const newMaster = this.formatNewRecipeMaster(newMasterValues);
+      const list = this.recipeMasterList$.value;
+
+      if (this.connectionService.isConnected()) {
+        stripSharedProperties(newMaster);
+        delete newMaster.recipes[0].owner;
+        return this.http.post<RecipeMaster>(`${baseURL}/${apiVersion}/recipes/private/user`, newMaster)
+          .map((newMasterResponse: RecipeMaster) => {
+            list.push(new BehaviorSubject<RecipeMaster>(newMasterResponse));
+            this.recipeMasterList$.next(list);
+            this.updateStorage();
+            return newMasterResponse;
+          })
+          .catch(error => this.processHttpError.handleError(error));
+      }
+
+      list.push(new BehaviorSubject<RecipeMaster>(newMaster));
+      this.recipeMasterList$.next(list);
+      this.updateStorage();
+      return Observable.of(newMaster);
+
+    } catch(error) {
+      return throwError(error);
     }
-    return this.addRecipeMasterToList(master);
   }
 
   /**
-   * Create a new recipe and add to its master's list - update database if
-   * logged in and connected to internet
+   * Create a new recipe - update database and update ids if logged in and
+   * connected to internet
    *
    * @params: masterId - recipe master id string to search
-   * @params: recipe - the new recipe to add
+   * @params: recipe - the new Recipe to add
    *
-   * @return: observable of server response with new recipe
+   * @return: observable of new recipe
   **/
   postRecipeToMasterById(masterId: string, recipe: Recipe): Observable<Recipe> {
     if (this.connectionService.isConnected()) {
@@ -260,68 +281,59 @@ export class RecipeProvider {
   /***** Utility methods *****/
 
   /**
-   * Apply new recipe master to behavior subject
+   * Format a new RecipeMaster
    *
-   * @params: newRecipeMaster - the new recipe master to add, will already be a
-   * properly formatted RecipeMaster if returned from server response, otherwise
-   * formatting is performed here
+   * @params: newMasterValues - object with recipe master and initial recipe values
    *
-   * @return: Observable of new recipe master
+   * @return: a new recipe master
   **/
-  addRecipeMasterToList(newRecipeMasterData: object): Observable<RecipeMaster> {
+  formatNewRecipeMaster(newMasterValues: object): RecipeMaster {
     const user = this.userService.getUser().value;
-    if (user._id === undefined) return throwError('Missing user id');
 
-    let recipeMasterSubject$;
+    if (user._id === undefined) throw new Error('Client Validation Error: Missing User id');
 
-    if (this.connectionService.isConnected() && RegExp('^[^0-9]+$', 'g').test(newRecipeMasterData['_id'])) {
-      recipeMasterSubject$ = new BehaviorSubject<RecipeMaster>(<RecipeMaster>newRecipeMasterData);
-    } else {
-      const now = Date.now();
-      const recipeMasterId = newRecipeMasterData['_id'] === undefined ? now.toString(): newRecipeMasterData['_id'];
+    const recipeMasterId = Date.now().toString();
+    const initialRecipe: Recipe = newMasterValues['recipe'];
 
-      const initialRecipe: Recipe = newRecipeMasterData['recipe'];
+    this.populateRecipeIds(initialRecipe);
 
-      if (newRecipeMasterData['_id'] === undefined) this.populateRecipeIds(initialRecipe);
+    initialRecipe.isMaster = true;
+    initialRecipe.owner = recipeMasterId;
 
-      initialRecipe.isMaster = true;
-      initialRecipe.owner = recipeMasterId;
+    const masterData = newMasterValues['master'];
+    const newMaster = {
+      _id: recipeMasterId,
+      name: masterData.name,
+      style: masterData.style,
+      notes: masterData.notes,
+      master: initialRecipe._id,
+      owner: user._id,
+      hasActiveBatch: false,
+      isPublic: false,
+      recipes: [initialRecipe]
+    };
 
-      const masterData = newRecipeMasterData['master'];
-      recipeMasterSubject$ = new BehaviorSubject<RecipeMaster>({
-        _id: recipeMasterId,
-        name: masterData.name,
-        style: masterData.style,
-        notes: masterData.notes,
-        master: initialRecipe._id,
-        owner: user._id,
-        hasActiveBatch: false,
-        isPublic: false,
-        recipes: [initialRecipe]
-      });
-    }
-
-    const list = this.recipeMasterList$.value;
-    list.push(recipeMasterSubject$);
-    this.recipeMasterList$.next(list);
-    this.updateCache();
-    return recipeMasterSubject$;
+    return newMaster;
   }
 
   /**
    * Add a recipe to the recipe master and update behavior subject
    *
    * @params: masterId - recipe's master's id
-   * @params: recipe - recipe to add, will already be a properly formatted Recipe
-   * if returned from server response, otherwise formatting is performed here
+   * @params: recipe - new Recipe to add to a master
    *
    * @return: Observable of new recipe
   **/
   addRecipeToMasterInList(masterId: string, recipe: Recipe): Observable<Recipe> {
     const master$ = this.getMasterById(masterId);
+
+    if (master$ === null) return throwError(`Recipe master with id ${masterId} not found`);
+
     const master = master$.value;
     recipe.owner = master._id;
+
     if (recipe._id === undefined || recipe._id === 'default') this.populateRecipeIds(recipe);
+
     master.recipes.push(recipe);
 
     if (recipe.isMaster) {
@@ -329,7 +341,7 @@ export class RecipeProvider {
     }
 
     master$.next(master);
-    this.updateCache();
+    this.updateStorage();
     return Observable.of(recipe);
   }
 
@@ -340,8 +352,8 @@ export class RecipeProvider {
    * @return: none
   **/
   clearRecipes(): void {
-    this.recipeMasterList$.value.forEach(recipe$ => {
-      recipe$.complete();
+    this.recipeMasterList$.value.forEach(recipeMaster$ => {
+      recipeMaster$.complete();
     });
     this.recipeMasterList$.next([]);
     this.storageService.removeRecipes();
@@ -352,7 +364,7 @@ export class RecipeProvider {
    *
    * @params: masterId - recipe master id string to search
    *
-   * @return: observable of recipe master
+   * @return: the recipe master subject if found, else null
   **/
   getMasterById(masterId: string): BehaviorSubject<RecipeMaster> {
     const master$ = this.recipeMasterList$.value.find(_recipeMaster$ => _recipeMaster$.value._id === masterId);
@@ -382,6 +394,9 @@ export class RecipeProvider {
     const master$ = this.recipeMasterList$.value.find(_master$ => {
       return _master$.value._id === masterId;
     });
+
+    if (master$ === undefined) return throwError(`Could not find the recipe master with id ${masterId}`);
+
     return Observable.of(master$.value.recipes.find(_recipe => _recipe._id === recipeId));
   }
 
@@ -394,8 +409,8 @@ export class RecipeProvider {
   **/
   isRecipeProcessPresent(recipe: Recipe): boolean {
     return  recipe
-            ? recipe.processSchedule.length > 0
-            : false;
+            && recipe.processSchedule !== undefined
+            && recipe.processSchedule.length > 0;
   }
 
   /**
@@ -415,8 +430,7 @@ export class RecipeProvider {
   }
 
   /**
-   * Populate recipe _id fields with current unix timestamps if connection to
-   * server is not present
+   * Populate recipe _id fields with current unix timestamps
    *
    * @params: recipe - Recipe object to update
    *
@@ -433,7 +447,6 @@ export class RecipeProvider {
 
   /**
    * Populate all _id fields of each object in array with current unix timestamps
-   * if connection to server is not present
    *
    * @params: innerArr - array of objects that require an _id field
    *
@@ -463,7 +476,7 @@ export class RecipeProvider {
     this.removeRecipeAsMaster(master, recipeIndex);
     master.recipes.splice(recipeIndex, 1);
     master$.next(master);
-    this.updateCache();
+    this.updateStorage();
     return Observable.of(true);
   }
 
@@ -483,7 +496,7 @@ export class RecipeProvider {
     masterList[indexToRemove].complete();
     masterList.splice(indexToRemove, 1);
     this.recipeMasterList$.next(masterList);
-    this.updateCache();
+    this.updateStorage();
     return Observable.of(true);
   }
 
@@ -493,7 +506,7 @@ export class RecipeProvider {
    *
    * @params: recipeMaster - the recipe master that the recipe variant belongs to
    * @params: changeIndex - the index of the recipe master's recipes array which
-   *                        needs to be changed
+   * needs to be changed
    *
    * @return: none
   **/
@@ -509,7 +522,7 @@ export class RecipeProvider {
    *
    * @params: recipeMaster - the recipe master that the recipe variant belongs to
    * @params: changeIndex - the index of the recipe master's recipes array which
-   *                        needs to be changed
+   * needs to be changed
    *
    * @return: none
   **/
@@ -521,12 +534,12 @@ export class RecipeProvider {
   }
 
   /**
-   * Store the current recipe master list in cache
+   * Store the current recipe master list in storage
    *
    * @params: none
    * @return: none
   **/
-  updateCache(): void {
+  updateStorage(): void {
     this.storageService.setRecipes(this.recipeMasterList$.value.map((recipeMaster$: BehaviorSubject<RecipeMaster>) => recipeMaster$.value))
       .subscribe(
         () => console.log('stored recipes'),
@@ -558,7 +571,7 @@ export class RecipeProvider {
 
     master$.next(master);
     this.recipeMasterList$.next(masterList);
-    this.updateCache();
+    this.updateStorage();
     return Observable.of(master);
   }
 
@@ -566,13 +579,14 @@ export class RecipeProvider {
    * Update a recipe in a recipe master in list and update the subject
    *
    * @params: master$ - recipe master subject the recipe belongs to
-   * @params: update - update may be either a complete or partial Recipe
+   * @params: update - may be either a complete or partial Recipe
    *
    * @return: Observable of updated recipe
   **/
   updateRecipeOfMasterInList(master$: BehaviorSubject<RecipeMaster>, recipeId: string, update: Recipe | object): Observable<Recipe> {
     const master = master$.value;
     const recipeIndex = getIndexById(recipeId, master.recipes);
+
     if (recipeIndex === -1) return throwError(`Recipe with id ${recipeId} not found`);
 
     const recipe = master.recipes[recipeIndex];
@@ -587,7 +601,7 @@ export class RecipeProvider {
     }
 
     master$.next(master);
-    this.updateCache();
+    this.updateStorage();
     return Observable.of(recipe);
   }
 
