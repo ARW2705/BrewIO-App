@@ -4,6 +4,7 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 /* Constants imports */
 import { sharedProperties } from '../constants/shared-properties';
+import { staticLibraryProperties } from '../constants/static-library-properties';
 
 
 export function toSubjectArray<T>(array: Array<T>): Array<BehaviorSubject<T>> {
@@ -60,6 +61,8 @@ export function stripSharedProperties(obj: any): void {
     }
   } else if (typeof obj === 'object' && obj !== null) {
     for (const key in obj) {
+      if (staticLibraryProperties.includes(key)) continue;
+
       if (sharedProperties.includes(key)) {
         delete obj[key];
       } else if (typeof obj[key] === 'object' && obj[key] !== null) {
