@@ -16,6 +16,7 @@ export class IngredientFormPage {
   showTextArea: boolean = false;
   notes: Array<string> = [];
   formType: string;
+  ingredientPlaceholder: string = '';
 
   constructor(
     public navCtrl: NavController,
@@ -75,6 +76,7 @@ export class IngredientFormPage {
     this.formType = data.update === undefined ? 'create': 'update';
 
     if (data.ingredientType === 'grains') {
+      if (data.update !== undefined) this.ingredientPlaceholder = data.update.grainType.name;
       this.ingredientForm.addControl('mill', new FormControl(null));
       if (data.update !== undefined) {
         this.ingredientForm.controls.type.setValue(data.update.grainType);
@@ -82,6 +84,7 @@ export class IngredientFormPage {
         this.ingredientForm.controls.mill.setValue(data.update.mill);
       }
     } else if (data.ingredientType === 'hops') {
+      if (data.update !== undefined) this.ingredientPlaceholder = data.update.hopsType.name;
       this.ingredientForm.addControl('addAt', new FormControl(null, [Validators.required]));
       this.ingredientForm.addControl('dryHop', new FormControl(false));
       if (data.update !== undefined) {
@@ -91,6 +94,7 @@ export class IngredientFormPage {
         this.ingredientForm.controls.dryHop.setValue(data.update.dryHop);
       }
     } else if (data.ingredientType === 'yeast') {
+      if (data.update !== undefined) this.ingredientPlaceholder = data.update.yeastType.name;
       this.ingredientForm.addControl('requiresStarter', new FormControl(false));
       if (data.update !== undefined) {
         this.ingredientForm.controls.type.setValue(data.update.yeastType);

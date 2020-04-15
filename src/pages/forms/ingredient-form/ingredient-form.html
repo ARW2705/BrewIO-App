@@ -18,7 +18,8 @@
             <ion-label floating>Select {{ ingredientType | titlecase }}</ion-label>
             <ion-select formControlName="type"
                         okText="Okay"
-                        cancelText="Dismiss">
+                        cancelText="Dismiss"
+                        [placeholder]="ingredientPlaceholder">
               <ion-option *ngFor="let ingredient of ingredientLibrary"
                           [value]="ingredient">
                 {{ ingredient.name }}
