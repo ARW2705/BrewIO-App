@@ -61,14 +61,8 @@ export class SignupPage {
    * @return: true if a control is dirty and has at least one error present
   **/
   hasFormError(control: string): boolean {
-    if (this.signupForm.controls[control].touched) {
-      for (const key in this.signupForm.controls[control].errors) {
-        if (this.signupForm.controls[control].errors.hasOwnProperty(key)) {
-          return true;
-        }
-      }
-    }
-    return false;
+    const formControl = this.signupForm.controls[control];
+    return formControl.touched && formControl.errors !== null;
   }
 
   /**
