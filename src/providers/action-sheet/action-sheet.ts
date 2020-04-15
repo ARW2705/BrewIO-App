@@ -5,6 +5,7 @@ import { ActionSheetController } from 'ionic-angular';
 /* Interface imports */
 import { ActionSheetButton } from '../../shared/interfaces/action-sheet-buttons';
 
+
 @Injectable()
 export class ActionSheetProvider {
 
@@ -52,7 +53,7 @@ export class ActionSheetProvider {
       title: title,
       buttons: this.generateActionSheetButtons(buttons),
       cssClass: customClass || 'main-action-sheet'
-    })
+    });
     actionSheet.present({keyboardClose: false});
   }
 
