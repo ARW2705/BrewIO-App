@@ -16,7 +16,7 @@ import { mockUser } from '../../../test-config/mockmodels/mockUser';
 import { mockBatch } from '../../../test-config/mockmodels/mockBatch';
 import { mockRecipeMasterActive } from '../../../test-config/mockmodels/mockRecipeMasterActive';
 import { mockRecipeComplete } from '../../../test-config/mockmodels/mockRecipeComplete';
-import { NavMock, StorageMock, SortPipeMock, ToastControllerMock, AppMock, ConfigMock, PlatformMock } from '../../../test-config/mocks-ionic';
+import { NavMock, StorageMock, SortPipeMock, ToastControllerMock, AppMock, ConfigMock, PlatformMockDev } from '../../../test-config/mocks-ionic';
 
 /* Interface imports */
 import { RecipeMaster } from '../../shared/interfaces/recipe-master';
@@ -69,7 +69,8 @@ describe('Active Batch Component', () => {
           { provide: NavController, useClass: NavMock },
           { provide: Storage, useClass: StorageMock },
           { provide: StorageProvider, useValue: {} },
-          { provide: ToastController, useClass: ToastControllerMock }
+          { provide: ToastController, useClass: ToastControllerMock },
+          { provide: Platform, useClass: PlatformMockDev }
         ]
       });
       await TestBed.compileComponents();
@@ -165,7 +166,7 @@ describe('Active Batch Component', () => {
           { provide: StorageProvider, useValue: {} },
           { provide: ToastController, useClass: ToastControllerMock },
           { provide: Config, useClass: ConfigMock },
-          { provide: Platform, useClass: PlatformMock },
+          { provide: Platform, useClass: PlatformMockDev },
           { provide: App, useClass: AppMock }
         ],
         schemas: [
