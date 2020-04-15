@@ -2,6 +2,8 @@
 import { TestBed, getTestBed, async } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { IonicStorageModule } from '@ionic/storage';
+import { Observable } from 'rxjs/Observable';
+import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 
 /* Constant imports */
 import { baseURL } from '../../shared/constants/base-url';
@@ -15,17 +17,20 @@ import { mockGrains } from '../../../test-config/mockmodels/mockGrains';
 import { mockHops } from '../../../test-config/mockmodels/mockHops';
 import { mockYeast } from '../../../test-config/mockmodels/mockYeast';
 import { mockStyles } from '../../../test-config/mockmodels/mockStyles';
+import { mockErrorResponse } from '../../../test-config/mockmodels/mockErrorResponse';
 
 /* Interface imports */
 import { Style } from '../../shared/interfaces/library';
 import { Grains } from '../../shared/interfaces/library';
 import { Hops } from '../../shared/interfaces/library';
 import { Yeast } from '../../shared/interfaces/library';
+import { LibraryStorage } from '../../shared/interfaces/library';
 
 /* Provider imports */
 import { LibraryProvider } from './library';
 import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
 import { StorageProvider } from '../storage/storage';
+
 
 describe('Library service', () => {
   let injector: TestBed;
@@ -33,7 +38,7 @@ describe('Library service', () => {
   let httpMock: HttpTestingController;
   configureTestBed();
 
-  beforeAll(done => (async() => {
+  beforeAll(async(() => {
     TestBed.configureTestingModule({
       imports: [
         HttpClientTestingModule,
@@ -45,9 +50,7 @@ describe('Library service', () => {
         StorageProvider
       ]
     });
-  })()
-  .then(done)
-  .catch(done.fail));
+  }));
 
   beforeEach(() => {
     injector = getTestBed();
@@ -160,8 +163,7 @@ describe('Library service', () => {
         const fetchHopsLibrarySpy = jest.spyOn(libraryService, 'fetchHopsLibrary');
         const fetchYeastLibrarySpy = jest.spyOn(libraryService, 'fetchYeastLibrary');
         const fetchStyleLibrarySpy = jest.spyOn(libraryService, 'fetchStyleLibrary');
-        const cacheGetSpy = jest.spyOn(libraryService.storageService, 'getLibrary');
-        const cacheSetSpy = jest.spyOn(libraryService.storageService, 'setLibrary');
+        const storageSpy = jest.spyOn(libraryService.storageService, 'getLibrary');
 
         libraryService.fetchAllLibraries();
 
@@ -170,8 +172,7 @@ describe('Library service', () => {
           expect(fetchHopsLibrarySpy).toHaveBeenCalled();
           expect(fetchYeastLibrarySpy).toHaveBeenCalled();
           expect(fetchStyleLibrarySpy).toHaveBeenCalled();
-          expect(cacheGetSpy).toHaveBeenCalled();
-          expect(cacheSetSpy).toHaveBeenCalled();
+          expect(storageSpy).toHaveBeenCalled();
           done();
         }, 10);
 
@@ -191,6 +192,148 @@ describe('Library service', () => {
         expect(reqStyles.request.method).toBe('GET');
         reqStyles.flush([]);
       }); // end 'should return an Observable with an array of each library' test
+
+      test('should load libraries from storage', done => {
+        const _mockGrains = mockGrains();
+        const _mockHops = mockHops();
+        const _mockYeast = mockYeast();
+        const _mockStyle = mockStyles();
+
+        expect(libraryService.grainsLibrary).toBeNull();
+        expect(libraryService.hopsLibrary).toBeNull();
+        expect(libraryService.yeastLibrary).toBeNull();
+        expect(libraryService.styleLibrary).toBeNull();
+
+        libraryService.storageService.getLibrary = jest
+          .fn()
+          .mockReturnValue(
+            Observable.of({
+              grains: _mockGrains,
+              hops: _mockHops,
+              yeast: _mockYeast,
+              style: _mockStyle
+            })
+          );
+
+        libraryService.fetchGrainsLibrary = jest
+          .fn()
+          .mockReturnValue(new ErrorObservable('short-circuit'));
+        libraryService.fetchHopsLibrary = jest
+          .fn()
+          .mockReturnValue(new ErrorObservable('short-circuit'));
+        libraryService.fetchYeastLibrary = jest
+          .fn()
+          .mockReturnValue(new ErrorObservable('short-circuit'));
+        libraryService.fetchStyleLibrary = jest
+          .fn()
+          .mockReturnValue(new ErrorObservable('short-circuit'));
+
+        libraryService.fetchAllLibraries();
+
+        setTimeout(() => {
+          expect(libraryService.grainsLibrary).not.toBeNull();
+          expect(libraryService.hopsLibrary).not.toBeNull();
+          expect(libraryService.yeastLibrary).not.toBeNull();
+          expect(libraryService.styleLibrary).not.toBeNull();
+          done();
+        }, 10);
+      }); // end 'should load libraries from storage' test
+
+      test('should fail to load libraries from storage', done => {
+        libraryService.storageService.getLibrary = jest
+          .fn()
+          .mockReturnValue(new ErrorObservable('load error'));
+
+        const consoleSpy = jest.spyOn(console, 'log');
+
+        libraryService.fetchGrainsLibrary = jest
+          .fn()
+          .mockReturnValue(new ErrorObservable('short-circuit'));
+        libraryService.fetchHopsLibrary = jest
+          .fn()
+          .mockReturnValue(new ErrorObservable('short-circuit'));
+        libraryService.fetchYeastLibrary = jest
+          .fn()
+          .mockReturnValue(new ErrorObservable('short-circuit'));
+        libraryService.fetchStyleLibrary = jest
+          .fn()
+          .mockReturnValue(new ErrorObservable('short-circuit'));
+
+        libraryService.fetchAllLibraries();
+
+        setTimeout(() => {
+          expect(consoleSpy.mock.calls[0][0]).toMatch('load error: awaiting data from server');
+          done();
+        }, 10);
+      }); // end 'should fail to load libraries from storage' test
+
+      test('should get error response on grains library get request', done => {
+        libraryService.fetchGrainsLibrary()
+          .subscribe(
+            response => {
+              console.log('Should not get a response', response);
+              expect(true).toBe(false);
+            },
+            error => {
+              expect(error).toMatch('<500> Internal Server Error');
+              done();
+            }
+          );
+
+        const getReq = httpMock.expectOne(`${baseURL}/${apiVersion}/library/grains`);
+        getReq.flush(null, mockErrorResponse(500, 'Internal Server Error'));
+      }); // end 'should get error response on grains library get request' test
+
+      test('should get error response on hops library get request', done => {
+        libraryService.fetchHopsLibrary()
+          .subscribe(
+            response => {
+              console.log('Should not get a response', response);
+              expect(true).toBe(false);
+            },
+            error => {
+              expect(error).toMatch('<500> Internal Server Error');
+              done();
+            }
+          );
+
+        const getReq = httpMock.expectOne(`${baseURL}/${apiVersion}/library/hops`);
+        getReq.flush(null, mockErrorResponse(500, 'Internal Server Error'));
+      }); // end 'should get error response on hops library get request' test
+
+      test('should get error response on yeast library get request', done => {
+        libraryService.fetchYeastLibrary()
+          .subscribe(
+            response => {
+              console.log('Should not get a response', response);
+              expect(true).toBe(false);
+            },
+            error => {
+              expect(error).toMatch('<500> Internal Server Error');
+              done();
+            }
+          );
+
+        const getReq = httpMock.expectOne(`${baseURL}/${apiVersion}/library/yeast`);
+        getReq.flush(null, mockErrorResponse(500, 'Internal Server Error'));
+      }); // end 'should get error response on yeast library get request' test
+
+      test('should get error response on style library get request', done => {
+        libraryService.fetchStyleLibrary()
+          .subscribe(
+            response => {
+              console.log('Should not get a response', response);
+              expect(true).toBe(false);
+            },
+            error => {
+              expect(error).toMatch('<500> Internal Server Error');
+              done();
+            }
+          );
+
+        const getReq = httpMock.expectOne(`${baseURL}/${apiVersion}/library/style`);
+        getReq.flush(null, mockErrorResponse(500, 'Internal Server Error'));
+      }); // end 'should get error response on style library get request' test
 
     }); // end 'fetch library entries' section
 
@@ -333,7 +476,7 @@ describe('Library service', () => {
           });
       }); // end 'should return an Observable<Yeast>' test
 
-      test('should return an Observable<Style>', done => {
+      test('should return an Observable<Style> from in memory style library', done => {
         const _mockStyle = mockStyles();
         const _mockSelected = _mockStyle[0];
         libraryService.styleLibrary = _mockStyle;
@@ -344,6 +487,18 @@ describe('Library service', () => {
             done();
           });
       }); // end 'should return an Observable<Style>' test
+
+      test('should fetch style library, then return an Observable<Style>', done => {
+        const _mockStyles = mockStyles();
+        libraryService.getStyleById(_mockStyles[0]._id)
+          .subscribe((style: Style) => {
+            expect(style).toStrictEqual(_mockStyles[0]);
+            done();
+          });
+
+        const getReq = httpMock.expectOne(`${baseURL}/${apiVersion}/library/style`);
+        getReq.flush(_mockStyles);
+      }); // end 'should fetch style library, then return an Observable<Style>' test
 
     }); // end 'fetch Library entries by id with entries stored' section
 
@@ -363,6 +518,51 @@ describe('Library service', () => {
       expect(testRight).toBe(1);
       expect(testEqual).toBe(0);
     }); // end 'should sort objects alphabetically by name' test
+
+    test('should update library storage', done => {
+      const _mockGrains = mockGrains();
+      const _mockHops = mockHops();
+      const _mockYeast = mockYeast();
+      const _mockStyle = mockStyles();
+
+      libraryService.grainsLibrary = _mockGrains;
+      libraryService.hopsLibrary = _mockHops;
+      libraryService.yeastLibrary = _mockYeast;
+      libraryService.styleLibrary = _mockStyle;
+
+      const _mockLibrary: LibraryStorage = {
+        grains: _mockGrains,
+        hops: _mockHops,
+        yeast: _mockYeast,
+        style: _mockStyle
+      };
+
+      const storageSpy = jest.spyOn(libraryService.storageService, 'setLibrary');
+
+      libraryService.updateStorage();
+
+      setTimeout(() => {
+        expect(storageSpy).toHaveBeenCalledWith(_mockLibrary);
+        done();
+      }, 10);
+    }); // end 'should update library storage' test
+
+    test('should fail to store library', done => {
+      libraryService.storageService.setLibrary = jest
+        .fn()
+        .mockReturnValue(new ErrorObservable('store error'));
+
+      const consoleSpy = jest.spyOn(console, 'log');
+
+      libraryService.updateStorage();
+
+      setTimeout(() => {
+        const callCount = consoleSpy.mock.calls.length;
+        expect(consoleSpy.mock.calls[callCount - 1][0]).toMatch('Error storing library');
+        expect(consoleSpy.mock.calls[callCount - 1][1]).toMatch('store error');
+        done();
+      });
+    }); // end 'should fail to store library' test
 
   }); // end 'Utility functions' section
 
