@@ -11,7 +11,7 @@ import { Network } from '@ionic-native/network/ngx';
 import { configureTestBed } from '../../test-config/configureTestBed';
 
 /* Mock imports */
-import { PlatformMock, StatusBarMock, SplashScreenMock, StorageMock } from '../../test-config/mocks-ionic';
+import { PlatformMockDev, StatusBarMock, SplashScreenMock, StorageMock } from '../../test-config/mocks-ionic';
 
 /* Component imports */
 import { MyApp } from './app.component';
@@ -50,7 +50,7 @@ describe('MyApp Component', () => {
         { provide: ProcessHttpErrorProvider, useValue: {} },
         { provide: StatusBar, useClass: StatusBarMock },
         { provide: SplashScreen, useClass: SplashScreenMock },
-        { provide: Platform, useClass: PlatformMock },
+        { provide: Platform, useClass: PlatformMockDev },
         { provide: Storage, useClass: StorageMock }
       ]
     });
