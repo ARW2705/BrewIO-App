@@ -5,6 +5,7 @@ import { IonicModule, NavController, NavParams, ModalController, ActionSheetCont
 import { IonicStorageModule } from '@ionic/storage';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Network } from '@ionic-native/network/ngx';
+import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 
 /* Constants imports */
 import { baseURL } from '../../../shared/constants/base-url';
@@ -31,7 +32,6 @@ import { mockStyles } from '../../../../test-config/mockmodels/mockStyles';
 import { mockGrains } from '../../../../test-config/mockmodels/mockGrains';
 import { mockHops } from '../../../../test-config/mockmodels/mockHops';
 import { mockYeast } from '../../../../test-config/mockmodels/mockYeast';
-import { mockProcessSchedule } from '../../../../test-config/mockmodels/mockProcessSchedule';
 import { mockGrainBill } from '../../../../test-config/mockmodels/mockGrainBill';
 import { mockHopsSchedule } from '../../../../test-config/mockmodels/mockHopsSchedule';
 import { mockYeastGroup } from '../../../../test-config/mockmodels/mockYeastGroup';
@@ -236,13 +236,13 @@ describe('Recipe Form', () => {
         providers: [
           LibraryProvider,
           Events,
+          ActionSheetProvider,
           { provide: RecipeProvider, useValue: {} },
           { provide: UserProvider, useValue: {} },
           { provide: ConnectionProvider, useValue: {} },
           { provide: CalculationsProvider, useValue: {} },
           { provide: ToastProvider, useValue: {} },
           { provide: ProcessHttpErrorProvider, useValue: {} },
-          { provide: ActionSheetProvider, useValue: {} },
           { provide: StorageProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
@@ -362,14 +362,53 @@ describe('Recipe Form', () => {
     test('should open ingredient form modal', () => {
       fixture.detectChanges();
       const modalSpy = jest.spyOn(recipePage.modalCtrl, 'create');
+
       const _mockGrains = mockGrains();
       recipePage.grainsLibrary = _mockGrains;
       recipePage.openIngredientFormModal('grains', {updateObj: 1});
+
       expect(modalSpy.mock.calls[0][0]).toBe(IngredientFormPage);
       expect(modalSpy.mock.calls[0][1].data.ingredientType).toMatch('grains');
       expect(modalSpy.mock.calls[0][1].data.update).toStrictEqual({updateObj: 1});
       expect(modalSpy.mock.calls[0][1].data.library).toStrictEqual(_mockGrains);
+
+      const _mockHops = mockHops();
+      recipePage.hopsLibrary = _mockHops;
+      recipePage.openIngredientFormModal('hops', {updateObj: 1});
+
+      expect(modalSpy.mock.calls[1][0]).toBe(IngredientFormPage);
+      expect(modalSpy.mock.calls[1][1].data.ingredientType).toMatch('hops');
+      expect(modalSpy.mock.calls[1][1].data.update).toStrictEqual({updateObj: 1});
+      expect(modalSpy.mock.calls[1][1].data.library).toStrictEqual(_mockHops);
+
+      const _mockYeast = mockYeast();
+      recipePage.yeastLibrary = _mockYeast;
+      recipePage.openIngredientFormModal('yeast', {updateObj: 1});
+
+      expect(modalSpy.mock.calls[2][0]).toBe(IngredientFormPage);
+      expect(modalSpy.mock.calls[2][1].data.ingredientType).toMatch('yeast');
+      expect(modalSpy.mock.calls[2][1].data.update).toStrictEqual({updateObj: 1});
+      expect(modalSpy.mock.calls[2][1].data.library).toStrictEqual(_mockYeast);
     }); // end 'should open ingredient form modal' test
+
+    test('should call open ingredient modal', () => {
+      fixture.detectChanges();
+      recipePage.openIngredientFormModal = jest.fn();
+      const modalSpy = jest.spyOn(recipePage, 'openIngredientFormModal');
+      console.log(recipePage);
+      const sheetSpy = jest.spyOn(recipePage.actionService, 'openActionSheet');
+
+      recipePage.openIngredientActionSheet();
+
+      const handlers = sheetSpy.mock.calls[0][1].map(button => button.handler);
+      handlers.forEach(handler => handler());
+
+      const modalCalls = modalSpy.mock.calls;
+      expect(modalCalls[0][0]).toMatch('grains');
+      expect(modalCalls[1][0]).toMatch('hops');
+      expect(modalCalls[2][0]).toMatch('yeast');
+      expect(modalCalls[3][0]).toMatch('otherIngredients');
+    }); // end 'should call open ingredient modal' test
 
     test('should open note form modal for a recipe in creation mode', () => {
       fixture.detectChanges();
@@ -432,6 +471,7 @@ describe('Recipe Form', () => {
     test('should open process form modal for a new process', () => {
       fixture.detectChanges();
       const modalSpy = jest.spyOn(recipePage.modalCtrl, 'create');
+      console.log(recipePage.modalCtrl);
       recipePage.openProcessModal('manual');
       expect(modalSpy).toHaveBeenCalledWith(
         ProcessFormPage,
@@ -440,7 +480,8 @@ describe('Recipe Form', () => {
           update: undefined,
           formMode: 'create'
         }
-      )
+      );
+
     }); // end 'should open process form modal for a new process' test
 
     test('should open process form modal to update a process', () => {
@@ -524,7 +565,25 @@ describe('Recipe Form', () => {
       expect(sheetSpy.mock.calls[0][0]).toMatch('Add a process step');
       expect(sheetSpy.mock.calls[0][1].length).toBe(3);
       expect(sheetSpy.mock.calls[0][1][0].text).toMatch('Manual');
+      expect(typeof sheetSpy.mock.calls[0][1][0].handler).toMatch('function');
     }); // end 'should open process selection action sheet' test
+
+    test('should call open process modal', () => {
+      fixture.detectChanges();
+      recipePage.openProcessModal = jest.fn();
+      const modalSpy = jest.spyOn(recipePage, 'openProcessModal');
+      const sheetSpy = jest.spyOn(recipePage.actionService, 'openActionSheet');
+
+      recipePage.openProcessActionSheet();
+
+      const handlers = sheetSpy.mock.calls[0][1].map(button => button.handler);
+      handlers.forEach(handler => handler());
+
+      const modalCalls = modalSpy.mock.calls;
+      expect(modalCalls[0][0]).toMatch('manual');
+      expect(modalCalls[1][0]).toMatch('timer');
+      expect(modalCalls[2][0]).toMatch('calendar');
+    }); // end 'should call open process modal' test
 
   }); // end 'Action sheet handlers' section
 
@@ -589,9 +648,36 @@ describe('Recipe Form', () => {
       expect(recipePage.recipe.processSchedule[1].name).toMatch('Boil');
     }); // end 'should auto-add boil and mash processes' test
 
+    test('should not add boil and/or mash processes if they already exist', () => {
+      fixture.detectChanges();
+      recipePage.recipe.processSchedule = [];
+      recipePage.recipe.processSchedule.push({
+        _id: Date.now().toString(),
+        type: 'timer',
+        name: 'Mash',
+        description: 'Mash grains',
+        duration: 60,
+        concurrent: false,
+        splitInterval: 1
+      });
+      recipePage.recipe.processSchedule.push({
+        _id: Date.now().toString(),
+        type: 'timer',
+        name: 'Boil',
+        description: 'Boil wort',
+        duration: 60,
+        concurrent: true,
+        splitInterval: 1
+      });
+
+      recipePage.autoSetBoilMashDuration({});
+
+      expect(recipePage.recipe.processSchedule.length).toBe(2);
+    }); // end 'should not add boil and/or mash processes if they already exist' test
+
     test('should add a hops addition timer and adjust concurrent timers accordingly', () => {
       fixture.detectChanges();
-      recipePage.recipe.processSchedule = mockProcessSchedule();
+      recipePage.recipe.processSchedule = [];
 
       const _mockHopsSchedule = mockHopsSchedule();
       const _mockHopsInstance30 = _mockHopsSchedule[0];
@@ -602,12 +688,45 @@ describe('Recipe Form', () => {
       _mockHopsInstance45.addAt = 45;
       recipePage.recipe.hops.push(_mockHopsInstance45);
 
+      const _mockHopsToSortBefore = _mockHopsSchedule[2];
+      _mockHopsToSortBefore.addAt = 20;
+      recipePage.recipe.hops.push(_mockHopsToSortBefore);
+
+      const _mockHopsToSortAfter = _mockHopsSchedule[3];
+      _mockHopsToSortAfter.addAt = 15;
+      _mockHopsToSortAfter.dryHop = false;
+      recipePage.recipe.hops.push(_mockHopsToSortAfter);
+
+      const _additionalHops = mockHopsSchedule();
+      const _mockHopsSame1 = _additionalHops[0];
+      _mockHopsSame1.addAt = 10;
+      recipePage.recipe.hops.push(_mockHopsSame1);
+
+      const _mockHopsSame2 = _additionalHops[1];
+      _mockHopsSame2.addAt = 10;
+      recipePage.recipe.hops.push(_mockHopsSame2);
+
+      // make a pre-existing hops timer to clear
+      recipePage.recipe.processSchedule.push({
+        _id: '',
+        type: 'timer',
+        name: 'Add x hops',
+        concurrent: true,
+        description: 'Hops addition: x oz',
+        duration: 0
+      });
+
       recipePage.autoSetHopsAddition();
 
-      const hopsAdditionStartIndex = recipePage.recipe.processSchedule.length - 2;
+      const schedule = recipePage.recipe.processSchedule;
 
-      expect(recipePage.recipe.processSchedule[hopsAdditionStartIndex + 1].description).toMatch(`Hops addition: ${_mockHopsInstance30.quantity} oz`);
-      expect(recipePage.recipe.processSchedule[hopsAdditionStartIndex].name).toMatch(`Add ${_mockHopsInstance45.hopsType.name} hops`);
+      expect(schedule.length).toBeLessThan(7);
+      expect(schedule[1].description).toMatch(`Hops addition: ${_mockHopsInstance30.quantity} oz`);
+      expect(schedule[0].name).toMatch(`Add ${_mockHopsInstance45.hopsType.name} hops`);
+      expect(schedule[2].description).toMatch(_mockHopsToSortBefore.quantity.toString());
+      expect(schedule[3].description).toMatch(_mockHopsToSortAfter.quantity.toString());
+      expect(schedule[4].name).toMatch(_mockHopsSame1.hopsType.name);
+      expect(schedule[5].name).toMatch(_mockHopsSame2.hopsType.name);
     }); // end 'should add a hops addition timer and adjust concurrent timers accordingly' test
 
   }); // end 'Form auto-generated values' section
@@ -719,6 +838,7 @@ describe('Recipe Form', () => {
     let libraryService: LibraryProvider;
     let recipeService: RecipeProvider;
     let userService: UserProvider;
+    let connectionService: ConnectionProvider;
     configureTestBed();
 
     beforeAll(async(() => {
@@ -770,6 +890,7 @@ describe('Recipe Form', () => {
       libraryService.yeastLibrary = mockYeast();
       libraryService.styleLibrary = mockStyles();
       userService = injector.get(UserProvider);
+      connectionService = injector.get(ConnectionProvider);
     }));
 
     beforeEach(() => {
@@ -830,11 +951,13 @@ describe('Recipe Form', () => {
       expect(modalSpy).not.toHaveBeenCalled();
     }); // end 'should handle missing additional form options' test
 
-    test('should submit the form for a new creation', () => {
+    test('should submit the form for a new recipe master creation', () => {
       fixture.detectChanges();
+      connectionService.connection = true;
       const _mockRecipeMaster = mockRecipeMasterInactive();
       recipePage.master = _mockRecipeMaster
       recipePage.recipe = _mockRecipeMaster.recipes[0];
+      recipePage.formType = 'master';
       const formSpy = jest.spyOn(recipePage, 'submitCreationPost');
       recipePage.onSubmit();
       expect(formSpy.mock.calls[0][0]).toStrictEqual({
@@ -847,10 +970,7 @@ describe('Recipe Form', () => {
         recipe: _mockRecipeMaster.recipes[0]
       });
       expect(formSpy.mock.calls[0][1]).toMatch('Master Create Successful!');
-
-      const recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/user`);
-      recipeReq.flush(_mockRecipeMaster);
-    }); // end 'should submit the form for a new creation' test
+    }); // end 'should submit the form for a new recipe master creation' test
 
     test('should submit the form for an update', () => {
       fixture.detectChanges();
@@ -905,6 +1025,7 @@ describe('Recipe Form', () => {
 
     test('should get an error submitting a recipe master creation post', done => {
       fixture.detectChanges();
+      connectionService.connection = true;
       const postSpy = jest.spyOn(recipePage.recipeService, 'postRecipeMaster');
       const toastSpy = jest.spyOn(recipePage.toastService, 'presentToast');
       const _mockRecipeMaster = mockRecipeMasterInactive();
@@ -913,13 +1034,33 @@ describe('Recipe Form', () => {
         const postCall = postSpy.mock.calls[0][0]
         expect(postCall.master._id).toMatch(_mockRecipeMaster._id);
         expect(postCall.recipe._id).toMatch(_mockRecipeMaster.recipes[0]._id);
-        expect(toastSpy).toHaveBeenCalledWith('<400> Invalid Recipe: ');
+        expect(toastSpy).toHaveBeenCalledWith('Client Validation Error: Missing User id');
         done();
       }, 10);
-
-      const recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/user`);
-      recipeReq.error(new ErrorEvent('Post Error'), {status: 400, statusText: 'Invalid Recipe'});
     }); // end 'should get an error submitting a recipe master creation post' test
+
+    test('should get an error response after submitting a recipe master creation post', done => {
+      fixture.detectChanges();
+      connectionService.connection = true;
+      const toastSpy = jest.spyOn(recipePage.toastService, 'presentToast');
+      const eventSpy = jest.spyOn(recipePage.events, 'publish');
+      recipePage.recipeService.postRecipeMaster = jest
+        .fn()
+        .mockReturnValue(new ErrorObservable('Non-client error'));
+
+      recipePage.submitCreationPost({}, '');
+
+      setTimeout(() => {
+        expect(toastSpy).toHaveBeenCalledWith('Non-client error');
+        const eventCalls = eventSpy.mock.calls[0];
+        expect(eventCalls[0]).toMatch('update-nav-header');
+        expect(eventCalls[1]).toStrictEqual({
+          caller: 'recipe form page',
+          other: 'form-submit-complete'
+        });
+        done();
+      }, 10);
+    }); // end 'should get an error response after submitting a recipe master creation post' test
 
     test('should submit a recipe creation post', done => {
       fixture.detectChanges();
@@ -959,7 +1100,7 @@ describe('Recipe Form', () => {
       setTimeout(() => {
         expect(postSpy.mock.calls[0][0]).toMatch(_mockRecipeMaster._id);
         expect(postSpy.mock.calls[0][1]).toStrictEqual({});
-        expect(toastSpy).toHaveBeenCalledWith('<400> Invalid Recipe: ');
+        expect(toastSpy).toHaveBeenCalledWith('<400> Invalid Recipe');
         done();
       }, 10);
 
@@ -1011,7 +1152,7 @@ describe('Recipe Form', () => {
       setTimeout(() => {
         expect(patchSpy.mock.calls[0][0]).toMatch(_mockRecipeMaster._id);
         expect(patchSpy.mock.calls[0][1]).toStrictEqual({});
-        expect(toastSpy).toHaveBeenCalledWith('<400> Invalid Recipe: ');
+        expect(toastSpy).toHaveBeenCalledWith('<400> Invalid Recipe');
         done();
       }, 10);
 
@@ -1062,7 +1203,7 @@ describe('Recipe Form', () => {
       setTimeout(() => {
         expect(patchSpy.mock.calls[0][0]).toMatch(_mockRecipeMaster._id);
         expect(patchSpy.mock.calls[0][1]).toMatch(_mockRecipe._id);
-        expect(toastSpy).toHaveBeenCalledWith('<400> Invalid Recipe: ');
+        expect(toastSpy).toHaveBeenCalledWith('<400> Invalid Recipe');
         done();
       }, 10);
 
@@ -1153,6 +1294,37 @@ describe('Recipe Form', () => {
       recipePage.sortIngredients('yeast');
       expect(recipePage.recipe.yeast).toStrictEqual([_mockYeastGroup[1], _mockYeastGroup[0]]);
     }); // end 'should sort yeast by quantity' test
+
+    test('should not change orders', () => {
+      fixture.detectChanges();
+
+      const _mockGrainBill = mockGrainBill();
+      _mockGrainBill[0].quantity = 1;
+      _mockGrainBill[1].quantity = 1;
+      const testBill = [_mockGrainBill[1], _mockGrainBill[0]];
+      recipePage.recipe.grains = testBill;
+      recipePage.sortIngredients('grains');
+      expect(recipePage.recipe.grains[0]).toStrictEqual(testBill[0]);
+      expect(recipePage.recipe.grains[1]).toStrictEqual(testBill[1]);
+
+      const _mockHopsSchedule = mockHopsSchedule();
+      _mockHopsSchedule[0].addAt = 60;
+      _mockHopsSchedule[1].addAt = 60;
+      const testSchedule = [_mockHopsSchedule[1], _mockHopsSchedule[0]];
+      recipePage.recipe.hops = testSchedule;
+      recipePage.sortIngredients('hops');
+      expect(recipePage.recipe.hops[0]).toStrictEqual(testSchedule[0]);
+      expect(recipePage.recipe.hops[1]).toStrictEqual(testSchedule[1]);
+
+      const _mockYeastGroup = mockYeastGroup();
+      _mockYeastGroup[0].quantity = 1;
+      _mockYeastGroup[1].quantity = 1;
+      const testGroup = [_mockYeastGroup[1], _mockYeastGroup[0]];
+      recipePage.recipe.yeast = testGroup;
+      recipePage.sortIngredients('yeast');
+      expect(recipePage.recipe.yeast[0]).toStrictEqual(testGroup[0]);
+      expect(recipePage.recipe.yeast[1]).toStrictEqual(testGroup[1]);
+    }); // end 'should not change orders' test
 
     test('should add grains instance in grain bill', () => {
       fixture.detectChanges();
@@ -1257,6 +1429,16 @@ describe('Recipe Form', () => {
       recipePage.updateIngredientList(undefined, 'otherIngredients', _mockOtherIngredient, true);
       expect(recipePage.recipe.otherIngredients.length).toBe(0);
     }); // end 'should delete yeast instance from group' test
+
+    test('should not update an ingredient with an unknown type', () => {
+      fixture.detectChanges();
+      const toastSpy = jest.spyOn(recipePage.toastService, 'presentToast');
+      recipePage.updateIngredientList({}, 'unknown');
+      const toastCalls = toastSpy.mock.calls[0];
+      expect(toastCalls[0]).toMatch('Unknown ingredient type \'unknown\'');
+      expect(toastCalls[1]).toBe(2000);
+      expect(toastCalls[2]).toMatch('middle');
+    }); // end 'should not update an ingredient with an unknown type' test
 
   }); // end 'Ingredient List' section
 
