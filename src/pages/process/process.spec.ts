@@ -6,6 +6,8 @@ import { IonicStorageModule } from '@ionic/storage';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Network } from '@ionic-native/network/ngx';
+import { Observable } from 'rxjs/Observable';
+import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 
 /* Constant imports */
 import { baseURL } from '../../shared/constants/base-url';
@@ -25,10 +27,14 @@ import { mockAlert, mockAlertPast, mockAlertFuture, mockAlertCurrent } from '../
 import { mockBatch } from '../../../test-config/mockmodels/mockBatch';
 import { mockUser } from '../../../test-config/mockmodels/mockUser';
 import { mockTimer } from '../../../test-config/mockmodels/mockTimer';
-import { NavMock, NavParamsMock, PlatformMock, ToastControllerMock, SortPipeMock } from '../../../test-config/mocks-ionic';
+import { mockErrorResponse } from '../../../test-config/mockmodels/mockErrorResponse';
+import { NavMock, NavParamsMock, PlatformMockDev, ToastControllerMock, SortPipeMock } from '../../../test-config/mocks-ionic';
 
 /* Page imports */
 import { ProcessPage } from './process';
+
+/* Component imports */
+import { CalendarComponent } from '../../components/calendar/calendar';
 
 /* Provider imports */
 import { ProcessProvider } from '../../providers/process/process';
@@ -79,7 +85,7 @@ describe('Process Page', () => {
           ConnectionProvider,
           UserProvider,
           ProcessHttpErrorProvider,
-          { provide: Platform, useClass: PlatformMock },
+          { provide: Platform, useClass: PlatformMockDev },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ToastController, useClass: ToastControllerMock }
@@ -186,6 +192,56 @@ describe('Process Page', () => {
       recipeMasterReq.flush(mockRecipeMasterActive());
     }); // end 'should start a new batch' test
 
+    test('should fail to start a new batch due to error response', done => {
+      fixture.detectChanges();
+      const toastSpy = jest.spyOn(processPage.toastService, 'presentToast');
+      const eventSpy = jest.spyOn(processPage.events, 'publish');
+
+      setTimeout(() => {
+        expect(toastSpy).toHaveBeenCalledWith('<404> User with id not found');
+        expect(eventSpy.mock.calls[0][0]).toMatch('update-nav-header');
+        expect(eventSpy.mock.calls[0][1]).toStrictEqual({
+          caller: 'process page',
+          other: 'batch-end'
+        });
+        done();
+      }, 10);
+
+      const _mockBatch = mockBatch();
+      _mockBatch.owner = processPage.master._id
+      const batchReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/user/${processPage.requestedUserId}/master/${processPage.master._id}/recipe/${processPage.recipe._id}`);
+      batchReq.flush(null, mockErrorResponse(404, 'User with id not found'));
+    }); // end 'should fail to start a new batch due to error response' test
+
+    test('should encounter an internal error after starting the batch, but not able to find batch', done => {
+      fixture.detectChanges();
+      processPage.processService.getActiveBatchById = jest
+        .fn()
+        .mockReturnValue(null);
+      const toastSpy = jest.spyOn(processPage.toastService, 'presentToast');
+      const eventSpy = jest.spyOn(processPage.events, 'publish');
+
+      setTimeout(() => {
+        const toastCalls = toastSpy.mock.calls[0];
+        expect(toastCalls[0]).toMatch('Internal error: Batch not found');
+        expect(toastCalls[1]).toBe(3000);
+        expect(toastCalls[2]).toMatch('bottom');
+
+        const eventCalls = eventSpy.mock.calls[0];
+        expect(eventCalls[0]).toMatch('update-nav-header');
+        expect(eventCalls[1]).toStrictEqual({
+          caller: 'process page',
+          other: 'batch-end'
+        });
+        done();
+      }, 3010);
+
+      const _mockBatch = mockBatch();
+      _mockBatch.owner = processPage.master._id
+      const batchReq = httpMock.expectOne(`${baseURL}/${apiVersion}/process/user/${processPage.requestedUserId}/master/${processPage.master._id}/recipe/${processPage.recipe._id}`);
+      batchReq.flush(_mockBatch);
+    }); // end 'should encounter an internal error after starting the batch, but not able to find batch' test
+
     test('should configure timer values for 360px wide screen', () => {
       fixture.detectChanges();
 
@@ -244,7 +300,7 @@ describe('Process Page', () => {
           ConnectionProvider,
           UserProvider,
           ProcessHttpErrorProvider,
-          { provide: Platform, useClass: PlatformMock },
+          { provide: Platform, useClass: PlatformMockDev },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ToastController, useClass: ToastControllerMock }
@@ -557,7 +613,7 @@ describe('Process Page', () => {
           ProcessHttpErrorProvider,
           { provide: RecipeProvider, useValue: {} },
           { provide: ToastProvider, useValue: {} },
-          { provide: Platform, useClass: PlatformMock },
+          { provide: Platform, useClass: PlatformMockDev },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ToastController, useClass: ToastControllerMock },
@@ -641,6 +697,7 @@ describe('Process Page', () => {
     beforeAll(done => (async() => {
       TestBed.configureTestingModule({
         declarations: [
+          CalendarComponent,
           ProcessPage,
           SortPipeMock
         ],
@@ -658,7 +715,7 @@ describe('Process Page', () => {
           UserProvider,
           ProcessHttpErrorProvider,
           { provide: RecipeProvider, useValue: {} },
-          { provide: Platform, useClass: PlatformMock },
+          { provide: Platform, useClass: PlatformMockDev },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ToastController, useClass: ToastControllerMock },
@@ -721,6 +778,32 @@ describe('Process Page', () => {
       expect(processPage.getNextDateSummary()).toMatch(processPage.selectedBatch.schedule[13].description);
     }); // end 'should get the description of the current calendar step' test
 
+    test('should start a calendar step', done => {
+      fixture.detectChanges();
+
+      processPage.calendarRef = new CalendarComponent();
+      processPage.calendarRef.getFinal = jest
+        .fn()
+        .mockReturnValue({
+          _id: 'test-id',
+          startDatetime: (new Date()).toISOString(),
+          alerts: []
+        });
+
+      processPage.processService.patchBatchStepById = jest
+        .fn()
+        .mockReturnValue(Observable.of({}));
+
+      const consoleSpy = jest.spyOn(console, 'log');
+
+      processPage.startCalendar();
+
+      setTimeout(() => {
+        expect(consoleSpy).toHaveBeenCalledWith('Started calendar');
+        done();
+      }, 10);
+    }); // end 'should start a calendar step' test
+
   }); // end Calendar functions section
 
 
@@ -758,7 +841,7 @@ describe('Process Page', () => {
           UserProvider,
           ProcessHttpErrorProvider,
           { provide: RecipeProvider, useValue: {} },
-          { provide: Platform, useClass: PlatformMock },
+          { provide: Platform, useClass: PlatformMockDev },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ToastController, useClass: ToastControllerMock },
@@ -794,9 +877,12 @@ describe('Process Page', () => {
 
     test('should set up timers in the selected batch', () => {
       fixture.detectChanges();
+      const _mockBatch = mockBatch();
+      processPage.selectedBatch.schedule.push(_mockBatch.schedule[2]);
+      processPage.selectedBatch.schedule.push(_mockBatch.schedule[3]);
       processPage.timers = [];
       processPage.composeTimers();
-      expect(processPage.timers.length).toBe(4);
+      expect(processPage.timers.length).toBe(5);
     }); // end 'should set up timers in the selected batch' test
 
     test('should format timer text', () => {
@@ -905,13 +991,18 @@ describe('Process Page', () => {
       expect(_mockTimer.timeRemaining).toBe(_mockTimer.timer.duration * 60);
     }); // end 'should reset a single timer' test
 
-    test('should start all timers of a step', () => {
+    test('should start all timers of a step', done => {
       fixture.detectChanges();
       processPage.selectedBatch.currentStep = 2;
+      console.log(processPage.timers[processPage.currentTimers]);
       processPage.startAllTimers();
-      for (let timer of processPage.timers[processPage.currentTimers]) {
-        expect(timer.interval).not.toBeNull();
-      }
+
+      setTimeout(() => {
+        processPage.timers[processPage.currentTimers].forEach(timer => {
+          expect(timer.interval).not.toBeNull();
+        });
+        done();
+      }, 1000);
     }); // end 'should start all timers of a step' test
 
     test('should stop all timers of a step', () => {
@@ -943,6 +1034,25 @@ describe('Process Page', () => {
         expect(timers[i].timeRemaining).toBe(remainings[i] + 60);
       }
     }); // end 'should add a minute to all timers of a step' test
+
+    test('should reset timers', () => {
+      fixture.detectChanges();
+      processPage.selectedBatch.currentStep = 2;
+      const originalTimers = processPage.timers[processPage.currentTimers];
+      const timers = originalTimers
+        .map(timer => {
+          timer.timeRemaining = 0;
+          return timer;
+        });
+
+      processPage.timers[processPage.currentTimers] = timers;
+
+      processPage.resetAllTimers();
+
+      timers.forEach(timer => {
+        expect(timer.timeRemaining).toBeGreaterThan(0);
+      });
+    }); // end 'should reset timers' test
 
     test('should toggle timer controls visible', () => {
       fixture.detectChanges();
@@ -994,7 +1104,7 @@ describe('Process Page', () => {
           ConnectionProvider,
           UserProvider,
           ProcessHttpErrorProvider,
-          { provide: Platform, useClass: PlatformMock },
+          { provide: Platform, useClass: PlatformMockDev },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
           { provide: ToastController, useClass: ToastControllerMock }
