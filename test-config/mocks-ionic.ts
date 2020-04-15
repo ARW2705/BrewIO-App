@@ -2,18 +2,61 @@ import { Injectable } from '@angular/core';
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable } from 'rxjs/Observable';
 import { Pipe, PipeTransform } from '@angular/core';
 
 import { baseURL } from '../src/shared/constants/base-url';
 import { apiVersion } from '../src/shared/constants/api-version';
 
-export class PlatformMock {
-  _platformMock = '';
-
-  public _setPlatform(platform: string): void {
-    this._platformMock = platform;
+export class NetworkMock {
+  public onConnect(): Observable<any> {
+    return Observable.of();
   }
+
+  public onDisconnect(): Observable<any> {
+    return Observable.of();
+  }
+}
+
+export class NetworkMockDev extends NetworkMock {
+  constructor() {
+    super();
+  }
+
+  public get type(): string {
+    return 'none';
+  }
+}
+
+export class NetworkMockCordova extends NetworkMock {
+  constructor() {
+    super();
+  }
+
+  public get type(): string {
+    return 'cordova';
+  }
+
+  public onConnect(): Observable<any> {
+    let emitter;
+    const obs = Observable.create(e => emitter = e);
+    setTimeout(() => {
+      emitter.next(true);
+    }, 10);
+    return obs;
+  }
+
+  public onDisconnect(): Observable<any> {
+    let emitter;
+    const obs = Observable.create(e => emitter = e);
+    setTimeout(() => {
+      emitter.next(true);
+    }, 30);
+    return obs;
+  }
+}
+
+export class PlatformMock {
 
   public Css = {
     transition: ''
@@ -43,10 +86,6 @@ export class PlatformMock {
 
   public doc(): HTMLDocument {
     return document;
-  }
-
-  public is(platform: string): boolean {
-    return this._platformMock === platform;
   }
 
   public getElementComputedStyle(container: any): any {
@@ -84,6 +123,30 @@ export class PlatformMock {
 
   public getActiveElement(): any {
     return document['activeElement'];
+  }
+}
+
+export class PlatformMockDev extends PlatformMock {
+  _platformMock: string = '';
+
+  constructor() {
+    super();
+  }
+
+  public is(platform: string): boolean {
+    return this._platformMock === platform;
+  }
+}
+
+export class PlatformMockCordova extends PlatformMock {
+  _platformMock: string = 'cordova';
+
+  constructor() {
+    super();
+  }
+
+  public is(platform: string): boolean {
+    return this._platformMock === platform;
   }
 }
 
@@ -165,6 +228,7 @@ export class NavParamsMock {
 
 export class DeepLinkerMock { }
 
+@Injectable()
 export class StorageMock {
   storage: any = {};
 
@@ -174,10 +238,9 @@ export class StorageMock {
     this.storage = {};
   }
 
-  public get(key: string) {
+  public get(key: string): Promise<any> {
     return new Promise<any>((resolve, reject) => {
       const result = this.storage[key];
-      console.log(result);
       if (result !== undefined) {
         resolve(result);
       } else {
@@ -186,15 +249,16 @@ export class StorageMock {
     });
   }
 
-  public set(key: string, value: any): void {
-    this.storage[key] = value;
+  public set(key: string, value: any): Promise<any> {
+    return new Promise<any>((resolve, reject) => {
+      this.storage[key] = value;
+      resolve(value);
+    });
   }
 
   public remove(key: string): Promise<any> {
-    console.log('remove!!', this.storage[key]);
     return new Promise<any>((resolve, reject) => {
       delete this.storage[key];
-      console.log('removed', this.storage[key])
       resolve();
     });
   }
