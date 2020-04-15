@@ -1,5 +1,5 @@
 /* Module imports */
-import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/testing';
+import { ComponentFixture, TestBed, getTestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { IonicModule, NavController, Events } from 'ionic-angular';
 
@@ -89,23 +89,40 @@ describe('Tabs page', () => {
 
     test('should change the tab index', () => {
       fixture.detectChanges();
-      const tabSpy = jest.spyOn(tabsPage.navTabs, 'select');
+      tabsPage.navTabs.select = jest.fn();
+      tabsPage.slides.slideTo = jest.fn();
+
+      tabsPage.setIndex(1);
+
       setTimeout(() => {
-        tabsPage.setIndex(1);
-        expect(tabSpy).toHaveBeenCalled();
         expect(tabsPage.currentIndex).toBe(1);
       }, 10);
     }); // end 'should change the tab index' test
 
-    test('should change tab navigation index', () => {
+    test('shoul set the tab index', () => {
+      fixture.detectChanges();
+      tabsPage.navTabs.select = jest.fn();
+      tabsPage.slides.slideTo = jest.fn();
+
+      tabsPage.setIndex(1);
+
+      expect(tabsPage.currentIndex).toBe(1);
+    }); // end 'shoul set the tab index' test
+
+    test('should change tab navigation index', done => {
       fixture.detectChanges();
       const tabSpy = jest.spyOn(tabsPage, 'setIndex');
       const updateSpy = jest.spyOn(tabsPage, 'updateHeader');
+      tabsPage.navTabs.select = jest.fn();
+      tabsPage.slides.slideTo = jest.fn();
+
+      tabsPage.onTabNavigation({index: 1});
+
       setTimeout(() => {
-        tabsPage.onTabNavigation({index: 1});
         expect(tabSpy).toHaveBeenCalledWith(1);
         expect(updateSpy).toHaveBeenCalled();
         expect(tabsPage.currentIndex).toBe(1);
+        done();
       }, 10);
     }); // end 'should change tab navigation index' test
 
