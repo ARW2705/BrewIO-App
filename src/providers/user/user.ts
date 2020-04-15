@@ -62,7 +62,8 @@ export class UserProvider {
   }
 
   /**
-   * Set user subject data to undefined values and clear ionic storage
+   * Set user subject data to undefined values, clear user from ionic storage,
+   * and emit event to call any other stored values to be cleared
    *
    * @params: none
    * @return: none
@@ -88,7 +89,8 @@ export class UserProvider {
    * Retrieve user authentication json web token
    *
    * @params: none
-   * @return: none
+   *
+   * @return: user's auth token
   **/
   getToken(): string {
     return this.user$.value.token;
@@ -117,9 +119,9 @@ export class UserProvider {
   }
 
   /**
-   * Load user data ionic storage. If user id is not 'offline', check if the
-   * json web token is still valid before continuing. On success, publish event
-   * to trigger data requests
+   * Load user data from ionic storage. If user id is 'offline', set app for
+   * offline mode. Otherwise, check if json web token is valid. Remove stored
+   * token if no longer valid. Finally, emit event to request other data
    *
    * @params: none
    * @return: none
@@ -137,15 +139,20 @@ export class UserProvider {
                 (jwtResponse: JWTResponse) => {
                   console.log(jwtResponse.status);
                 },
-                (error: HttpErrorResponse) => {
+                (error: string) => {
+                  // TODO: feedback to login again
                   console.log(error);
-                  this.clearUserData();
+                  if (error.includes('401')) {
+                    const removedToken = this.user$.value;
+                    removedToken.token = undefined;
+                    this.user$.next(removedToken);
+                  }
                 }
               );
           }
           this.events.publish('init-data');
         },
-        error => console.log('user load error', error.error)
+        error => console.log('user load error', error)
       );
   }
 
@@ -155,30 +162,28 @@ export class UserProvider {
    *
    * @params: user - contains username string, password string, and remember boolean
    *
-   * @return: observable with login response data
+   * @return: observable with login response user data
   **/
-  logIn(user: any): Observable<any> {
+  logIn(user: any): Observable<User> {
     return this.http.post(`${baseURL}/${apiVersion}/users/login`, user)
       .map((response: any) => {
-        if (response.success) {
-          this.user$.next(response.user);
-          this.connectionService.setOfflineMode(false);
-          this.events.publish('init-data');
-          if (user.remember) {
-            this.storageService.setUser(response.user)
-              .subscribe(
-                () => console.log('stored user data'),
-                (error: ErrorObservable) => console.log('user store error', error)
-              );
-          }
+        this.user$.next(response.user);
+        this.connectionService.setOfflineMode(false);
+        this.events.publish('init-data');
+        if (user.remember) {
+          this.storageService.setUser(response.user)
+            .subscribe(
+              () => console.log('stored user data'),
+              (error: ErrorObservable) => console.log('user store error', error)
+            );
         }
-        return response;
+        return response.user;
       })
       .catch(error => this.processHttpError.handleError(error));
   }
 
   /**
-   * Clear stored user data on logout
+   * Clear stored user data on logout and set connection to offline
    *
    * @params: none
    * @return: none
@@ -198,12 +203,10 @@ export class UserProvider {
   signUp(user: any): Observable<any> {
     return this.http.post(`${baseURL}/${apiVersion}/users/signup`, user)
       .map((response: any) => {
-        if (response.success) {
-          this.logIn({username: user.username, password: user.password})
-            .subscribe(user => {
-              console.log('Signup successful, logging in', user.username);
-            });
-        }
+        this.logIn({username: user.username, password: user.password})
+          .subscribe(_user => {
+            console.log('Signup successful; log in successful', user.username);
+          });
         return response;
       })
       .catch(error => this.processHttpError.handleError(error));
@@ -212,7 +215,7 @@ export class UserProvider {
   /**
    * Update user profile
    *
-   * @params: user - object with user profile data
+   * @params: user - object with new user profile data
    *
    * @return: Observable of user data from server
   **/
