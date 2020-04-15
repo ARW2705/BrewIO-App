@@ -25,10 +25,12 @@ describe('Shared: utility functions', () => {
     expect(cloned.a).toBe(_mockNestedObject['a']);
     expect(cloned.b.e.f).toBe(_mockNestedObject['b']['e']['f']);
     expect(cloned.g[0].h).toBe(_mockNestedObject['g'][0]['h']);
+    expect(cloned.j.length).toBe(3);
   }); // end 'should deep copy an object' test
 
   test('should remove "shared properties"', () => {
     const _mockNestedObject = mockNestedObject();
+    _mockNestedObject['grainType'] = {};
     utils.stripSharedProperties(_mockNestedObject);
     expect(_mockNestedObject.hasOwnProperty('_id')).toBe(false);
   }); // end 'should remove "shared properties"' test
