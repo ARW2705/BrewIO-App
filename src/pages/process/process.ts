@@ -113,14 +113,22 @@ export class ProcessPage implements OnInit, OnDestroy {
         .subscribe(
           newBatch => {
             this.selectedBatch$ = this.processService.getActiveBatchById(newBatch._id);
-            this.selectedBatch$
-              .takeUntil(this.destroy$)
-              .subscribe((selectedBatch: Batch) => {
-                this.selectedBatch = selectedBatch;
-                this.batchId = selectedBatch._id;
-                this.updateRecipeMasterActive(true);
-                if (this.timers.length === 0) this.composeTimers();
-              });
+
+            if (this.selectedBatch$ === null) {
+              this.toastService.presentToast('Internal error: Batch not found', 3000, 'bottom');
+              setTimeout(() => {
+                this.events.publish('update-nav-header', {caller: 'process page', other: 'batch-end'});
+              }, 3000);
+            } else {
+              this.selectedBatch$
+                .takeUntil(this.destroy$)
+                .subscribe((selectedBatch: Batch) => {
+                  this.selectedBatch = selectedBatch;
+                  this.batchId = selectedBatch._id;
+                  this.updateRecipeMasterActive(true);
+                  if (this.timers.length === 0) this.composeTimers();
+                });
+            }
           },
           error => {
             // TODO change toast to error message in view, then call go back
@@ -429,7 +437,6 @@ export class ProcessPage implements OnInit, OnDestroy {
       startDatetime: calendarValues.startDatetime,
       alerts: calendarValues.alerts
     };
-    // this.processService.patchStepById(this.batchId, calendarValues._id, update)
     this.processService.patchBatchStepById(this.selectedBatch, calendarValues._id, update)
       .subscribe(() => {
         console.log('Started calendar');
@@ -493,10 +500,6 @@ export class ProcessPage implements OnInit, OnDestroy {
             settings: this.initTimerSettings(i, timeRemaining)
           }]);
         }
-      } else if (concurrent.length) {
-        this.timers.push(concurrent);
-        concurrent = [];
-        first = null;
       }
     }
   }
