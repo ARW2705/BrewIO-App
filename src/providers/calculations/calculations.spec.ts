@@ -19,7 +19,7 @@ describe('Calculations service', () => {
   let calculationService: CalculationsProvider;
   configureTestBed();
 
-  beforeAll(done => (async() => {
+  beforeAll(async(() => {
     TestBed.configureTestingModule({
       providers: [
         CalculationsProvider
@@ -27,9 +27,7 @@ describe('Calculations service', () => {
     });
     injector = getTestBed();
     calculationService = injector.get(CalculationsProvider);
-  })()
-  .then(done)
-  .catch(done.fail));
+  }));
 
   describe('\nCalculates with provided values', () => {
 
