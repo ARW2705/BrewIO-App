@@ -167,7 +167,7 @@ export class UserPage implements OnInit, OnDestroy {
           this.toastService.presentToast('Profile Updated');
         },
         error => {
-          this.toastService.presentToast(error.message);
+          this.toastService.presentToast(error);
         }
       );
   }

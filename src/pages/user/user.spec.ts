@@ -4,6 +4,7 @@ import { IonicModule, NavController, ToastController, ModalController } from 'io
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { IonicStorageModule } from '@ionic/storage';
+import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 
 /* Constants imports */
 import { baseURL } from '../../shared/constants/base-url';
@@ -204,6 +205,18 @@ describe('User Page', () => {
 
       expect(onUpdateSpy).toHaveBeenCalled();
     }); // end 'should submit an update' test
+
+    test('should fail to update user profile on error response', () => {
+      fixture.detectChanges();
+      userService.updateUserProfile = jest
+        .fn()
+        .mockReturnValue(new ErrorObservable('update error'));
+      const toastSpy = jest.spyOn(userPage.toastService, 'presentToast');
+
+      userPage.onUpdate();
+
+      expect(toastSpy).toHaveBeenCalledWith('update error');
+    }); // end 'should fail to update user profile on error response' test
 
   }); // end 'Page with user' section
 
