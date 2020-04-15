@@ -7,10 +7,6 @@ import { sharedProperties } from '../constants/shared-properties';
 import { staticLibraryProperties } from '../constants/static-library-properties';
 
 
-export function toSubjectArray<T>(array: Array<T>): Array<BehaviorSubject<T>> {
-  return array.map(item => new BehaviorSubject<T>(item));
-}
-
 /**
  * Deep copy an object - use with objects whose values follow the types
  *  Object, Array, string, number, boolean, or Date
@@ -46,6 +42,51 @@ export function clone(obj: any): any {
 }
 
 /**
+ * Convert an array of observables to an array of the current value of those observables
+ *
+ * @params: obsArr - an array of observables of an object
+ *
+ * @return: array of the current values of each observable
+**/
+export function getArrayFromObservables(obsArr: Array<Observable<any>>): Array<any> {
+  return obsArr.map(obs => {
+    let object = null;
+    obs.subscribe(data => object = data);
+    return object;
+  });
+}
+
+/**
+ * Get the index of an array of objects that has a specific id string
+ *
+ * @params: id - id string to search
+ * @params: arr - array of objects with an _id property
+ *
+ * @return: index of object with matching id or -1 if none found
+**/
+export function getIndexById(id: string, arr: Array<any>): number {
+  for (let i=0; i < arr.length; i++) {
+    if (arr[i]._id == id) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+/**
+ * Round a number to a given decimal place
+ *
+ * @params: numToRound - source number to round off
+ * @params: places - number of places to round to
+ *
+ * @return: rounded off number
+**/
+export function roundToDecimalPlace(numToRound: number, places: number): number {
+  if (places < 0) return -1;
+  return Math.round(numToRound * Math.pow(10, places)) / Math.pow(10, places);
+}
+
+/**
  * Remove database specific shared properties from object
  *
  * @params: obj - object to modify
@@ -73,48 +114,14 @@ export function stripSharedProperties(obj: any): void {
 }
 
 /**
- * Get the index of an array of objects that has a specific id string
+ * Convert an array into an array of behavior subjects
  *
- * @params: id - id string to search
- * @params: arr - array of objects with an _id property
+ * @params: array - array to convert
  *
- * @return: index of object with matching id or -1 if none found
+ * @return: array of behavior subjects
 **/
-export function getIndexById(id: string, arr: Array<any>): number {
-  for (let i=0; i < arr.length; i++) {
-    if (arr[i]._id == id) {
-      return i;
-    }
-  }
-  return -1;
-}
-
-/**
- * Convert an array of observables to an array of the current value of those observables
- *
- * @params: obsArr - an array of observables of an object
- *
- * @return: array of the current values of each observable
-**/
-export function getArrayFromObservables(obsArr: Array<Observable<any>>): Array<any> {
-  return obsArr.map(obs => {
-    let object = null;
-    obs.subscribe(data => object = data);
-    return object;
-  });
-}
-
-/**
- * Round a number to a given decimal place
- *
- * @params: numToRound - source number to round off
- * @params: places - number of places to round to
- *
- * @return: rounded off number
-**/
-export function roundToDecimalPlace(numToRound: number, places: number): number {
-  if (places < 0) return -1;
-  return Math.round(numToRound * Math.pow(10, places)) / Math.pow(10, places);
+export function toSubjectArray<T>(array: Array<T>): Array<BehaviorSubject<T>> {
+  return array.map(item => new BehaviorSubject<T>(item));
 }
 
 /**
