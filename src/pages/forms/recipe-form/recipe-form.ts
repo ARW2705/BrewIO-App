@@ -638,6 +638,9 @@ export class RecipeFormPage implements AfterViewInit {
           },
           error => {
             this.toastService.presentToast(error);
+            if (!RegExp('Client Validation Error', 'g').test(error)) {
+              this.events.publish('update-nav-header', {caller: 'recipe form page', other: 'form-submit-complete'});
+            }
           }
         );
     } else if (this.formType === 'recipe') {
@@ -745,6 +748,7 @@ export class RecipeFormPage implements AfterViewInit {
         });
         break;
       default:
+        // do not sort on unknown ingredient type
         break;
     }
   }
@@ -821,6 +825,7 @@ export class RecipeFormPage implements AfterViewInit {
         }
         break;
       default:
+        this.toastService.presentToast(`Unknown ingredient type '${type}'`, 2000, 'middle');
         break;
     }
     this.cdRef.detectChanges();
