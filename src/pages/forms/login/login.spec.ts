@@ -129,7 +129,7 @@ describe('Login Form', () => {
     };
     setTimeout(() => {
       expect(toastSpy).toHaveBeenCalledWith(`Welcome ${response.user.username}!`, 1000, 'middle', 'bright-toast');
-      expect(viewSpy).toHaveBeenCalledWith(response);
+      expect(viewSpy).toHaveBeenCalledWith({username: response.user.username});
       done();
     }, 10);
 
@@ -147,7 +147,7 @@ describe('Login Form', () => {
     loginPage.onSubmit();
 
     setTimeout(() => {
-      expect(toastSpy).toHaveBeenCalledWith('<401> Username or Password is incorrect: ', 5000, 'bottom');
+      expect(toastSpy).toHaveBeenCalledWith('<401> Username or Password is incorrect', 5000, 'bottom');
       done();
     }, 10);
 
