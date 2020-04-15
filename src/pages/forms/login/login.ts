@@ -63,10 +63,11 @@ export class LoginPage {
   onSubmit() {
     this.userService.logIn(this.loginForm.value)
       .subscribe(
-        response => {
-          if (response.success) {
-            this.toastService.presentToast(`Welcome ${response.user.username}!`, 1000, 'middle', 'bright-toast');
-            this.viewCtrl.dismiss(response);
+        user => {
+          console.log(user);
+          if (user) {
+            this.toastService.presentToast(`Welcome ${user.username}!`, 1000, 'middle', 'bright-toast');
+            this.viewCtrl.dismiss(user);
           }
         },
         error => {
