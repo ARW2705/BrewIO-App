@@ -14,6 +14,7 @@ import { Recipe } from '../../shared/interfaces/recipe';
 /* Utility function imports */
 import { roundToDecimalPlace } from '../../shared/utility-functions/utilities';
 
+
 @Injectable()
 export class CalculationsProvider {
 
@@ -22,7 +23,7 @@ export class CalculationsProvider {
   /**
    * Calculate original gravity, final gravity, IBU, SRM, and ABV for a given recipe
    *
-   * @params: recipe - recipe to base values
+   * @params: recipe - recipe values to calculate with
    *
    * @return: none
   **/
@@ -163,10 +164,7 @@ export class CalculationsProvider {
    *
    * @example: (1.037, 10, 5, 0.7) => 1.052
   **/
-  getOriginalGravity(pps: number,
-    quantity: number,
-    batchVolume: number,
-    efficiency: number): number {
+  getOriginalGravity(pps: number, quantity: number, batchVolume: number, efficiency: number): number {
       return roundToDecimalPlace(1 + ((pps - 1) * quantity * efficiency / batchVolume), 3);
   }
 
