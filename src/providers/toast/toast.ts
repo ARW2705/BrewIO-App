@@ -2,13 +2,14 @@
 import { Injectable } from '@angular/core';
 import { ToastController } from 'ionic-angular';
 
+
 @Injectable()
 export class ToastProvider {
 
   constructor(private toastCtrl: ToastController) { }
 
   /**
-   * Show toast
+   * Construct and present toast
    *
    * @params: message - message text
    * @params: [duration] - time toast is shown in ms
