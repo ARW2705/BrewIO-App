@@ -25,15 +25,17 @@ export class LibraryProvider {
   yeastLibrary: Array<Yeast> = null;
   styleLibrary: Array<Style> = null;
 
-  constructor(public http: HttpClient,
+  constructor(
+    public http: HttpClient,
     public processHttpError: ProcessHttpErrorProvider,
-    public storageService: StorageProvider) { }
+    public storageService: StorageProvider
+  ) { }
 
   /***** API access methods *****/
 
   /**
-   * Call server API get methods for each library type to pre-load into
-   * memory, not to be used to return the observables
+   * Fetch each library type to pre-load into memory, not to be used to return
+   * the observables
    *
    * @params: none
    * @return: none
@@ -48,7 +50,7 @@ export class LibraryProvider {
           this.styleLibrary = libraries.style;
         },
         (error: ErrorObservable) => {
-          console.log(`${error.error}: awaiting data from server`);
+          console.log(`${error}: awaiting data from server`);
         }
       );
     Observable.forkJoin(
@@ -57,28 +59,22 @@ export class LibraryProvider {
       this.fetchYeastLibrary(),
       this.fetchStyleLibrary()
     )
-    .subscribe(([grainsLibrary, hopsLibrary, yeastLibrary, styleLibrary]) => {
-      this.grainsLibrary = grainsLibrary;
-      this.hopsLibrary = hopsLibrary;
-      this.yeastLibrary = yeastLibrary;
-      this.styleLibrary = styleLibrary;
-      this.storageService.setLibrary({
-        grains: grainsLibrary,
-        hops: hopsLibrary,
-        yeast: yeastLibrary,
-        style: styleLibrary
-      })
-      .subscribe(
-        () => {},
-        error => {
-          console.log('Error storing library', error);
-        }
-      );
-    });
+    .subscribe(
+      ([grainsLibrary, hopsLibrary, yeastLibrary, styleLibrary]) => {
+        this.grainsLibrary = grainsLibrary;
+        this.hopsLibrary = hopsLibrary;
+        this.yeastLibrary = yeastLibrary;
+        this.styleLibrary = styleLibrary;
+        this.updateStorage();
+      },
+      error => {
+        // TODO error handle forkjoin
+        console.log(error);
+      });
   }
 
   /**
-   * Http GET grains library
+   * Fetch grains library
    *
    * @params: none
    *
@@ -86,12 +82,16 @@ export class LibraryProvider {
   **/
   fetchGrainsLibrary(): Observable<Array<Grains>> {
     return this.http.get(`${baseURL}/${apiVersion}/library/grains`)
-      .map((grains: Array<Grains>) => this.grainsLibrary = grains.sort(this.sortAlpha))
+      .map((grains: Array<Grains>) => {
+        this.grainsLibrary = grains.sort(this.sortAlpha);
+        this.updateStorage();
+        return grains;
+      })
       .catch(error => this.processHttpError.handleError(error));
   }
 
   /**
-   * Http GET hops library
+   * Fetch hops library
    *
    * @params: none
    *
@@ -99,12 +99,16 @@ export class LibraryProvider {
   **/
   fetchHopsLibrary(): Observable<Array<Hops>> {
     return this.http.get(`${baseURL}/${apiVersion}/library/hops`)
-      .map((hops: Array<Hops>) => this.hopsLibrary = hops.sort(this.sortAlpha))
+      .map((hops: Array<Hops>) => {
+        this.hopsLibrary = hops.sort(this.sortAlpha);
+        this.updateStorage();
+        return hops;
+      })
       .catch(error => this.processHttpError.handleError(error));
   }
 
   /**
-   * Http GET yeast library
+   * Fetch yeast library
    *
    * @params: none
    *
@@ -112,12 +116,16 @@ export class LibraryProvider {
   **/
   fetchYeastLibrary(): Observable<Array<Yeast>> {
     return this.http.get(`${baseURL}/${apiVersion}/library/yeast`)
-      .map((yeast: Array<Yeast>) => this.yeastLibrary = yeast.sort(this.sortAlpha))
+      .map((yeast: Array<Yeast>) => {
+        this.yeastLibrary = yeast.sort(this.sortAlpha);
+        this.updateStorage();
+        return yeast;
+      })
       .catch(error => this.processHttpError.handleError(error));
   }
 
   /**
-   * Http GET style library
+   * Fetch style library
    *
    * @params: none
    *
@@ -125,7 +133,11 @@ export class LibraryProvider {
   **/
   fetchStyleLibrary(): Observable<Array<Style>> {
     return this.http.get(`${baseURL}/${apiVersion}/library/style`)
-      .map((style: Array<Style>) => this.styleLibrary = style.sort(this.sortAlpha))
+      .map((style: Array<Style>) => {
+        this.styleLibrary = style.sort(this.sortAlpha);
+        this.updateStorage();
+        return style;
+      })
       .catch(error => this.processHttpError.handleError(error));
   }
 
@@ -141,7 +153,7 @@ export class LibraryProvider {
    *
    * @return: combined observable of all library requests
   **/
-  getAllLibraries(): Observable<any> {
+  getAllLibraries(): Observable<Array<Array<any>>> {
     return Observable.forkJoin(
       this.getGrainsLibrary(),
       this.getHopsLibrary(),
@@ -151,7 +163,7 @@ export class LibraryProvider {
   }
 
   /**
-   * Get grains library from memory or fetch if not present
+   * Get grains library from memory or fetch from server if not present
    *
    * @params: none
    *
@@ -164,13 +176,13 @@ export class LibraryProvider {
   }
 
   /**
-   * Get grains document by id
+   * Get grains by id, fetch the library if one is not present
    *
    * @params: grainId - id of grains document to retrieve
    *
    * @return: observable of grains document
   **/
-  getGrainsById(grainId: string): Observable<any> {
+  getGrainsById(grainId: string): Observable<Grains> {
     let grains;
     if (this.grainsLibrary !== null) {
       grains = this.grainsLibrary.find(entry => entry._id === grainId);
@@ -182,26 +194,26 @@ export class LibraryProvider {
   }
 
   /**
-   * Get hops library from memory or fetch if not present
+   * Get hops library from memory or fetch from server if not present
    *
    * @params: none
    *
    * @return: observable of array of hops
   **/
-  getHopsLibrary(): Observable<any> {
+  getHopsLibrary(): Observable<Array<Hops>> {
     return this.hopsLibrary === null
             ? this.fetchHopsLibrary()
             : Observable.of(this.hopsLibrary);
   }
 
   /**
-   * Get hops document by id
+   * Get hops by id, fetch the library if one is not present
    *
    * @params: hopsId - id of hops document to retrieve
    *
    * @return: observable of hops document
   **/
-  getHopsById(hopsId: string): Observable<any> {
+  getHopsById(hopsId: string): Observable<Hops> {
     let hops;
     if (this.hopsLibrary !== null) {
       hops = this.hopsLibrary.find(entry => entry._id === hopsId);
@@ -213,26 +225,26 @@ export class LibraryProvider {
   }
 
   /**
-   * Get yeast library from memory or fetch if not present
+   * Get yeast library from memory or fetch from server if not present
    *
    * @params: none
    *
    * @return: observable of array of yeast
   **/
-  getYeastLibrary(): Observable<any> {
+  getYeastLibrary(): Observable<Array<Yeast>> {
     return this.yeastLibrary === null
             ? this.fetchYeastLibrary()
             : Observable.of(this.yeastLibrary);
   }
 
   /**
-   * Get yeast document by id
+   *Get yeast by id, fetch the library if one is not present
    *
    * @params: yeastId - id of yeast document to retrieve
    *
    * @return: observable of yeast document
   **/
-  getYeastById(yeastId: string): Observable<any> {
+  getYeastById(yeastId: string): Observable<Yeast> {
     let yeast;
     if (this.yeastLibrary !== null) {
       yeast = this.yeastLibrary.find(entry => entry._id === yeastId);
@@ -244,26 +256,26 @@ export class LibraryProvider {
   }
 
   /**
-   * Get style library from memory or fetch if not present
+   * Get style library from memory or fetch from server if not present
    *
    * @params: none
    *
    * @return: observable of array of style
   **/
-  getStyleLibrary(): Observable<any> {
+  getStyleLibrary(): Observable<Array<Style>> {
     return this.styleLibrary === null
             ? this.fetchStyleLibrary()
             : Observable.of(this.styleLibrary);
   }
 
   /**
-   * Get style document by id
+   * Get style by id, fetch the library if one is not present
    *
    * @params: styleId - id of yeast document to retrieve
    *
-   * @return: observable of style document
+   * @return: observable of style
   **/
-  getStyleById(styleId: string): Observable<any> {
+  getStyleById(styleId: string): Observable<Style> {
     let style;
     if (this.styleLibrary !== null) {
       style = this.styleLibrary.find(entry => entry._id === styleId);
@@ -286,6 +298,27 @@ export class LibraryProvider {
     if (a.name < b.name) return -1;
     if (a.name > b.name) return 1;
     return 0;
+  }
+
+  /**
+   * Update library storage
+   *
+   * @params: none
+   * @return: none
+  **/
+  updateStorage(): void {
+    this.storageService.setLibrary({
+      grains: this.grainsLibrary,
+      hops: this.hopsLibrary,
+      yeast: this.yeastLibrary,
+      style: this.styleLibrary
+    })
+    .subscribe(
+      () => {},
+      error => {
+        console.log('Error storing library', error);
+      }
+    );
   }
 
   /***** End utility methods *****/
