@@ -6,12 +6,13 @@ import 'rxjs/add/operator/do';
 
 /* Provider imports */
 import { UserProvider } from '../user/user';
+import { ToastProvider } from '../toast/toast';
 
 
 @Injectable()
 export class AuthorizedInterceptor implements HttpInterceptor {
 
-  constructor(private injector: Injector) { }
+  constructor(public injector: Injector) { }
 
   /**
    * Add authorization header with json web token
@@ -33,7 +34,10 @@ export class AuthorizedInterceptor implements HttpInterceptor {
 @Injectable()
 export class UnauthorizedInterceptor implements HttpInterceptor {
 
-  constructor(private injector: Injector) { }
+  constructor(
+    public injector: Injector,
+    public toastService: ToastProvider
+  ) { }
 
   /**
    * Handle unauthorized response
@@ -44,20 +48,29 @@ export class UnauthorizedInterceptor implements HttpInterceptor {
    * @return: observable of http event to pass response back to origin
   **/
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    const userService = this.injector.get(UserProvider);
-    const authToken = userService.getToken();
-
     return next
       .handle(req)
-      .do((event: HttpEvent<any>) => {
-        // do nothing - only handle errors
-      }, (error: any) => {
-        if (error instanceof HttpErrorResponse) {
-          if (error.status == 401 && authToken) {
-            console.log('UnauthorizedInterceptor: ', error);
-            userService.checkJWToken();
+      .do(
+        () => {},
+        (error: any) => {
+          if (error instanceof HttpErrorResponse && error.status === 401) {
+            // TODO clear data and open login modal
+            this.toastService.presentToast(
+              'Not Authorized. Please log in',
+              3000,
+              'bottom',
+              'error-toast'
+            );
+          } else {
+            this.toastService.presentToast(
+              `An unexpected error occured: <${error.status}> ${error.statusText}`,
+              null,
+              'bottom',
+              'error-toast',
+              true
+            )
           }
         }
-      });
+      );
   }
 }
