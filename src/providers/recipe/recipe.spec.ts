@@ -1,10 +1,11 @@
 /* Module imports */
-import { TestBed, getTestBed } from '@angular/core/testing';
+import { TestBed, getTestBed, async } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { IonicStorageModule } from '@ionic/storage';
 import { Events, Platform } from 'ionic-angular';
 import { Network } from '@ionic-native/network/ngx';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 import { combineLatest } from 'rxjs/observable/combineLatest';
 
 /* Constants imports */
@@ -22,7 +23,8 @@ import { mockRecipeIncomplete } from '../../../test-config/mockmodels/mockRecipe
 import { mockUser } from '../../../test-config/mockmodels/mockUser';
 import { mockOtherIngredient } from '../../../test-config/mockmodels/mockOtherIngredient';
 import { mockGrainBill } from '../../../test-config/mockmodels/mockGrainBill';
-import { PlatformMock } from '../../../test-config/mocks-ionic';
+import { mockErrorResponse } from '../../../test-config/mockmodels/mockErrorResponse';
+import { PlatformMockDev } from '../../../test-config/mocks-ionic';
 
 /* Default imports */
 import { defaultRecipeMaster } from '../../shared/defaults/default-recipe-master';
@@ -48,7 +50,7 @@ describe('Recipe Service', () => {
   let httpMock: HttpTestingController;
   configureTestBed();
 
-  beforeAll(done => (async() => {
+  beforeAll(async(() => {
     TestBed.configureTestingModule({
       imports: [
         HttpClientTestingModule,
@@ -62,12 +64,10 @@ describe('Recipe Service', () => {
         UserProvider,
         Events,
         { provide: Network, useValue: {} },
-        { provide: Platform, useClass: PlatformMock }
+        { provide: Platform, useClass: PlatformMockDev }
       ]
     });
-  })()
-  .then(done)
-  .catch(done.fail));
+  }));
 
   beforeEach(() => {
     injector = getTestBed();
@@ -96,6 +96,24 @@ describe('Recipe Service', () => {
       recipeReq.flush(_mockRecipeMasterActive);
     }); // end 'should get a recipe master by id' test
 
+    test('should fail to get a recipe master by user id due to error response', done => {
+      recipeService.getPublicMasterById('masterId')
+        .subscribe(
+          () => {
+            console.log('Should not get a response');
+            expect(true).toBe(false);
+          },
+          error => {
+            expect(error).toMatch('<404> Recipe master not found');
+            done();
+          }
+        );
+
+      const getReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/public/master/masterId`);
+      expect(getReq.request.method).toMatch('GET');
+      getReq.flush(null, mockErrorResponse(404, 'Recipe master not found'));
+    }); // end 'should fail to get a recipe master by user id due to error response' test
+
     test('should get a list of recipe masters by user id', done => {
       const _mockRecipeMasterActive = mockRecipeMasterActive();
       recipeService.getPublicMasterListByUser(_mockRecipeMasterActive.owner)
@@ -110,6 +128,24 @@ describe('Recipe Service', () => {
       masterListReq.flush([_mockRecipeMasterActive, mockRecipeMasterInactive()]);
     }); // end 'should get a list of recipe masters by user id' test
 
+    test('should fail to get a list of recipe masters by user id due to error response', done => {
+      recipeService.getPublicMasterListByUser('userId')
+        .subscribe(
+          () => {
+            console.log('Should not get a response');
+            expect(true).toBe(false);
+          },
+          error => {
+            expect(error).toMatch('<404> User not found');
+            done();
+          }
+        );
+
+      const recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/public/userId`);
+      expect(recipeReq.request.method).toMatch('GET');
+      recipeReq.flush(null, mockErrorResponse(404, 'User not found'));
+    }); // end 'should fail to get a list of recipe masters by user id due to error response' test
+
     test('should get a public recipe by id', done => {
       const _mockRecipeMasterActive = mockRecipeMasterActive();
       const _mockRecipeComplete = mockRecipeComplete();
@@ -123,6 +159,24 @@ describe('Recipe Service', () => {
       expect(recipeReq.request.method).toMatch('GET');
       recipeReq.flush(_mockRecipeComplete);
     }); // end 'should get a public recipe by id' test
+
+    test('should fail to get a public recipe due to error response', done => {
+      recipeService.getPublicRecipeById('masterId', 'recipeId')
+        .subscribe(
+          () => {
+            console.log('Should not get a response');
+            expect(true).toBe(false);
+          },
+          error => {
+            expect(error).toMatch('<404> Recipe not found');
+            done();
+          }
+        );
+
+      const recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/public/master/masterId/recipe/recipeId`);
+      expect(recipeReq.request.method).toMatch('GET');
+      recipeReq.flush(null, mockErrorResponse(404, 'Recipe not found'));
+    }); // end 'should fail to get a public recipe due to error response' test
 
   }); // end 'Public API requests' section
 
@@ -178,6 +232,41 @@ describe('Recipe Service', () => {
           );
       }); // end 'should fail to delete a recipe due to recipe count' test
 
+      test('should fail to delete a recipe due to recipe master not found', done => {
+        const _mockRecipeMasterInactive = mockRecipeMasterInactive()
+        recipeService.recipeMasterList$.next([]);
+        recipeService.deleteRecipeById(_mockRecipeMasterInactive._id, mockRecipeComplete()._id)
+          .subscribe(
+            () => { },
+            error => {
+              expect(error).toBeDefined();
+              expect(error).toMatch(`Recipe master with id ${_mockRecipeMasterInactive._id} not found`);
+              done();
+            }
+          );
+      }); // end 'should fail to delete a recipe due to recipe master not found' test
+
+      test('should fail to delete a recipe due to error response', done => {
+        connectionService.connection = true;
+        const _mockRecipeMasterActive = mockRecipeMasterActive();
+
+        recipeService.deleteRecipeById(_mockRecipeMasterActive._id, 'recipeId')
+          .subscribe(
+            () => {
+              console.log('Should not get a response');
+              expect(true).toBe(false);
+            },
+            error => {
+              expect(error).toMatch('<404> Recipe with id: recipeId not found');
+              done();
+            }
+          );
+
+        const deleteReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${_mockRecipeMasterActive._id}/recipe/recipeId`);
+        expect(deleteReq.request.method).toMatch('DELETE');
+        deleteReq.flush(null, mockErrorResponse(404, 'Recipe with id: recipeId not found'));
+      }); // end 'should fail to delete a recipe due to error response' test
+
       test('should delete a recipe master using its id [online]', done => {
         connectionService.connection = true;
         const _mockRecipeMasterActive = mockRecipeMasterActive();
@@ -204,18 +293,38 @@ describe('Recipe Service', () => {
           });
       }); // end 'should delete a recipe master using its id [offline]' test
 
+      test('should fail to delete a recipe master due to error response', done => {
+        connectionService.connection = true;
+
+        recipeService.deleteRecipeMasterById('masterId')
+          .subscribe(
+            () => {
+              console.log('Should not get a response');
+              expect(true).toBe(false);
+            },
+            error => {
+              expect(error).toMatch('<404> Recipe master with id: masterId not found');
+              done();
+            }
+          );
+
+        const deleteReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/masterId`);
+        expect(deleteReq.request.method).toMatch('DELETE');
+        deleteReq.flush(null, mockErrorResponse(404, 'Recipe master with id: masterId not found'));
+      }); // end 'should fail to delete a recipe master due to error response' test
+
     }); // end 'DELETE requests' section
 
     describe('GET requests', () => {
 
       test('should get recipe master list [online]', done => {
         connectionService.connection = true;
-        const cacheSpy = jest.spyOn(recipeService.storageService, 'getRecipes');
+        const storageSpy = jest.spyOn(recipeService.storageService, 'getRecipes');
         expect(recipeService.recipeMasterList$.value.length).toBe(0);
         recipeService.initializeRecipeMasterList();
         setTimeout(() => {
           expect(recipeService.recipeMasterList$.value.length).toBe(2);
-          expect(cacheSpy).toHaveBeenCalled();
+          expect(storageSpy).toHaveBeenCalled();
           done();
         }, 10);
 
@@ -226,15 +335,30 @@ describe('Recipe Service', () => {
 
       test('should get recipe master list [offline]', done => {
         connectionService.connection = false;
-        const cacheSpy = jest.spyOn(recipeService.storageService, 'getRecipes');
+        const storageSpy = jest.spyOn(recipeService.storageService, 'getRecipes');
         expect(recipeService.recipeMasterList$.value.length).toBe(0);
         recipeService.initializeRecipeMasterList();
         setTimeout(() => {
           expect(recipeService.recipeMasterList$.value.length).toBe(2);
-          expect(cacheSpy).toHaveBeenCalled();
+          expect(storageSpy).toHaveBeenCalled();
           done();
         }, 10);
       }); // end 'should get recipe master list [offline]' test
+
+      test('should fail to get recipe master list due to error response', () => {
+        connectionService.connection = true;
+        const consoleSpy = jest.spyOn(console, 'log');
+
+        recipeService.initializeRecipeMasterList();
+
+        setTimeout(() => {
+          expect(consoleSpy.mock.calls[0][0]).toMatch('<404> User not found');
+        }, 10);
+
+        const getReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/user`);
+        expect(getReq.request.method).toMatch('GET');
+        getReq.flush(null, mockErrorResponse(404, 'User not found'));
+      }); // end 'should fail to get recipe master list due to error response' test
 
     }); // end 'GET requests' section
 
@@ -287,6 +411,26 @@ describe('Recipe Service', () => {
         });
       }); // end 'should update a recipe master by its id [offline]' test
 
+      test('should fail to update a recipe master due to error response', done => {
+        connectionService.connection = true;
+
+        recipeService.patchRecipeMasterById('masterId', {})
+          .subscribe(
+            response => {
+              console.log('Should not get a response', response);
+              expect(true).toBe(false);
+            },
+            error => {
+              expect(error).toMatch('<404> Error message');
+              done();
+            }
+          );
+
+        const patchReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/masterId`);
+        expect(patchReq.request.method).toMatch('PATCH');
+        patchReq.flush(null, mockErrorResponse(404, 'Error message'));
+      }); //  end 'should fail to update a recipe master due to error response' test
+
       test('should update a recipe by its id [online]', done => {
         connectionService.connection = true;
         const _mockRecipeMasterActive = mockRecipeMasterActive();
@@ -328,6 +472,27 @@ describe('Recipe Service', () => {
         });
       }); // end 'should update a recipe by its id [offline]' test
 
+      test('should fail to update a recipe due to error response', done => {
+        connectionService.connection = true;
+        const _mockRecipeMasterActive = mockRecipeMasterActive();
+
+        recipeService.patchRecipeById(_mockRecipeMasterActive._id, 'recipeId', {})
+          .subscribe(
+            response => {
+              console.log('Should not get a response', response);
+              expect(true).toBe(false);
+            },
+            error => {
+              expect(error).toMatch('<404> Error message');
+              done();
+            }
+          );
+
+        const patchReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${_mockRecipeMasterActive._id}/recipe/recipeId`);
+        expect(patchReq.request.method).toMatch('PATCH');
+        patchReq.flush(null, mockErrorResponse(404, 'Error message'));
+      }); // end 'should fail to update a recipe due to error response' test
+
       test('should fail to change a recipe\'s isMaster property to false due to recipe count', done => {
         const _mockRecipeMasterInactive = mockRecipeMasterInactive()
         recipeService.recipeMasterList$.next([new BehaviorSubject<RecipeMaster>(_mockRecipeMasterInactive)]);
@@ -341,6 +506,20 @@ describe('Recipe Service', () => {
             }
           );
       }); // end 'should fail to change a recipe\'s isMaster property to false due to recipe count' test
+
+      test('should fail to update recipe due to recipe master not found', done => {
+        const _mockRecipeMasterInactive = mockRecipeMasterInactive()
+        recipeService.recipeMasterList$.next([]);
+        recipeService.patchRecipeById(_mockRecipeMasterInactive._id, mockRecipeComplete()._id, { isMaster: false })
+          .subscribe(
+            () => { },
+            error => {
+              expect(error).toBeDefined();
+              expect(error).toMatch(`Recipe master with id ${_mockRecipeMasterInactive._id} not found`);
+              done();
+            }
+          );
+      }); // end 'should fail to update recipe due to recipe master not found' test
 
     }); // end 'PATCH requests' section
 
@@ -386,6 +565,44 @@ describe('Recipe Service', () => {
         });
       }); // end 'should post a new recipe master [offline]' test
 
+      test('should fail to post a new recipe master due to missing user id', done => {
+        recipeService.postRecipeMaster({})
+          .subscribe(
+            response => {
+              console.log('Should not get a response', response);
+              expect(true).toBe(false);
+            },
+            error => {
+              expect(error).toMatch('Client Validation Error: Missing User id');
+              done();
+            }
+          );
+      }); // end 'should fail to post a new recipe master due to missing user id' test
+
+      test('should fail to post a new recipe master due to error response', done => {
+        connectionService.connection = true;
+        userService.user$ = new BehaviorSubject<User>(mockUser());
+
+        recipeService.postRecipeMaster({
+          master: mockRecipeMasterInactive(),
+          recipe: mockRecipeComplete()
+        })
+        .subscribe(
+          response => {
+            console.log('Should not get a response', response);
+            expect(true).toBe(false);
+          },
+          error => {
+            expect(error).toMatch(`<404> User with id ${userService.getUser().value._id} not found`)
+            done();
+          }
+        );
+
+        const postReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/user`);
+        expect(postReq.request.method).toMatch('POST');
+        postReq.flush(null, mockErrorResponse(404, `User with id ${userService.getUser().value._id} not found`));
+      }); // end 'should fail to post a new recipe master due to error response' test
+
       test('should post a new recipe to a recipe master [online]', done => {
         connectionService.connection = true;
         const _mockRecipeMasterInactive = mockRecipeMasterInactive();
@@ -425,6 +642,26 @@ describe('Recipe Service', () => {
           done();
         });
       }); // end 'should post a new recipe to a recipe master [offline]' test
+
+      test('should get error response when posting a recipe to a recipe master', done => {
+        connectionService.connection = true;
+
+        recipeService.postRecipeToMasterById('missingId', mockRecipeComplete())
+          .subscribe(
+            response => {
+              console.log('Should not get a response', response);
+              expect(true).toBe(false);
+            },
+            error => {
+              expect(error).toMatch('<404> Recipe Master with id: missingId not found');
+              done();
+            }
+          )
+
+        const postReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/missingId`);
+        expect(postReq.request.method).toMatch('POST');
+        postReq.flush(null, mockErrorResponse(404, 'Recipe Master with id: missingId not found'));
+      }); // end 'should get error response when posting a recipe to a recipe master' test
 
     }); // end 'POST requests' section
 
@@ -492,6 +729,20 @@ describe('Recipe Service', () => {
         });
     }); // end 'should add a recipe to a master in the list [offline]' test
 
+    test('should fail to add recipe to a recipe master with invalid id', done => {
+      recipeService.addRecipeToMasterInList('masterId', mockRecipeComplete())
+        .subscribe(
+          () => {
+            console.log('Should not get a response');
+            expect(true).toBe(false);
+          },
+          error => {
+            expect(error).toMatch('Recipe master with id masterId not found');
+            done();
+          }
+        );
+    }); // end 'should fail to add recipe to a recipe master with invalid id' test
+
     test('should clear all recipe masters in list', done => {
       recipeService.recipeMasterList$.next([
         new BehaviorSubject<RecipeMaster>(mockRecipeMasterActive()),
@@ -540,6 +791,20 @@ describe('Recipe Service', () => {
           done();
         });
     }); // end 'should get a recipe by its id' test
+
+    test('should fail to get a recipe with invalid id', done => {
+      recipeService.getRecipeById('masterId', 'recipeId')
+        .subscribe(
+          () => {
+            console.log('Should not get a response');
+            expect(true).toBe(false);
+          },
+          error => {
+            expect(error).toMatch('Recipe master with id masterId not found');
+            done();
+          }
+        );
+    }); // end 'should fail to get a recipe with invalid id' test
 
     test('should check if a recipe has a process list', () => {
       expect(recipeService.isRecipeProcessPresent(mockRecipeComplete())).toBe(true);
@@ -661,7 +926,7 @@ describe('Recipe Service', () => {
       expect(_mockRecipeIncomplete.isMaster).toBe(true);
     });
 
-    test('should call to update recipe cache', () => {
+    test('should call to update recipe storage', () => {
       const _mockRecipeMasterActive = mockRecipeMasterActive();
       const _mockRecipeMasterInactive = mockRecipeMasterInactive();
       recipeService.recipeMasterList$.next(
@@ -670,19 +935,34 @@ describe('Recipe Service', () => {
           new BehaviorSubject<RecipeMaster>(_mockRecipeMasterInactive)
         ]
       );
-      const cacheSpy = jest.spyOn(recipeService.storageService, 'setRecipes');
+      const storageSpy = jest.spyOn(recipeService.storageService, 'setRecipes');
       recipeService.updateStorage();
-      expect(cacheSpy).toHaveBeenCalledWith(
+      expect(storageSpy).toHaveBeenCalledWith(
         [
           _mockRecipeMasterActive,
           _mockRecipeMasterInactive
         ]
       );
-    }); // 'should call to update recipe cache' test
+    }); // 'should call to update recipe storage' test
+
+    test('should get error response when update storage fails', () => {
+      recipeService.storageService.setRecipes = jest
+        .fn()
+        .mockReturnValue(new ErrorObservable('error'));
+
+      const consoleSpy = jest.spyOn(console, 'log');
+
+      recipeService.updateStorage();
+
+      const callCount = consoleSpy.mock.calls.length;
+      expect(consoleSpy.mock.calls[callCount - 1][0]).toMatch('recipe store error');
+      expect(consoleSpy.mock.calls[callCount - 1][1]).toMatch('error');
+    }); // end 'should get error response when update storage fails' test
 
     test('should update a recipe master in the list', done => {
       const _updatedMockRecipeMasterInactive = mockRecipeMasterInactive();
       _updatedMockRecipeMasterInactive.name = 'updated-name';
+      _updatedMockRecipeMasterInactive['ignoreProp'] = 0;
 
       recipeService.recipeMasterList$.next([
         new BehaviorSubject<RecipeMaster>(mockRecipeMasterActive()),
@@ -693,6 +973,7 @@ describe('Recipe Service', () => {
         .subscribe((updated: RecipeMaster) => {
           expect(updated.name).toMatch(_updatedMockRecipeMasterInactive.name);
           expect(recipeService.recipeMasterList$.value[1].value._id).toMatch(updated._id);
+          expect(updated['ignoreProp']).toBeUndefined();
           done();
         });
     }); // end 'should update a recipe master in the list' test
@@ -718,6 +999,7 @@ describe('Recipe Service', () => {
     test('should update a recipe of a recipe master in list', done => {
       const _updatedMockRecipeIncomplete = mockRecipeIncomplete();
       _updatedMockRecipeIncomplete.isMaster = true;
+      _updatedMockRecipeIncomplete['ignoreProp'] = 0;
 
       recipeService.recipeMasterList$.next([
         new BehaviorSubject<RecipeMaster>(mockRecipeMasterActive()),
@@ -728,6 +1010,7 @@ describe('Recipe Service', () => {
         .subscribe((updated: Recipe) => {
           expect(updated._id).toMatch(recipeService.recipeMasterList$.value[0].value.recipes[1]._id);
           expect(updated.isMaster).toBe(true);
+          expect(updated['ignoreProp']).toBeUndefined();
           done();
         });
     }); // end 'should update a recipe of a recipe master in list' test
