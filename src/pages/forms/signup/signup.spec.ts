@@ -13,6 +13,8 @@ import { apiVersion } from '../../../shared/constants/api-version';
 import { configureTestBed } from '../../../../test-config/configureTestBed';
 
 /* Mock imports */
+import { mockUser } from '../../../../test-config/mockmodels/mockUser';
+import { mockErrorResponse } from '../../../../test-config/mockmodels/mockErrorResponse';
 import { NavMock, NavParamsMock, StorageMock, ViewControllerMock, ToastControllerMock } from '../../../../test-config/mocks-ionic';
 
 /* Page imports */
@@ -165,7 +167,7 @@ describe('Signup Form', () => {
 
   test('should check for a form control error', () => {
     fixture.detectChanges();
-    const usernameControl = signupPage.signupForm.controls.username;
+    const usernameControl = signupPage.signupForm.controls['username'];
     usernameControl.markAsTouched();
     expect(signupPage.hasFormError('username')).toBe(true);
     usernameControl.setValue('username');
@@ -184,8 +186,9 @@ describe('Signup Form', () => {
 
   test('should submit a signup form and get a success response', done => {
     fixture.detectChanges();
+    const _mockUser = mockUser();
     const formControls = signupPage.signupForm.controls;
-    formControls.username.setValue('test-user');
+    formControls.username.setValue(_mockUser.username);
     formControls.password.setValue('abcdefghij1K%');
     formControls.passwordConfirmation.setValue('abcdefghij1K%');
     formControls.email.setValue('test@email.com');
@@ -196,15 +199,15 @@ describe('Signup Form', () => {
 
     setTimeout(() => {
       expect(toastSpy).toHaveBeenCalledWith('Sign up complete!', 1500, 'bright-toast');
-      expect(viewSpy).toHaveBeenCalledWith({success: true});
+      expect(viewSpy).toHaveBeenCalledWith(_mockUser);
       done();
     }, 10);
 
     const signupReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/signup`);
-    signupReq.flush({success: true});
+    signupReq.flush(_mockUser);
 
     const loginReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/login`);
-    loginReq.flush({});
+    loginReq.flush(_mockUser);
   }); // end 'should submit a signup form and get a success response' test
 
   test('should submit a signup form and get an error response', done => {
@@ -219,12 +222,12 @@ describe('Signup Form', () => {
     signupPage.onSubmit();
 
     setTimeout(() => {
-      expect(toastSpy).toHaveBeenCalledWith('<400> Username already exists: ', 2000);
+      expect(toastSpy).toHaveBeenCalledWith('<400> Username already exists', 2000);
       done();
     }, 10);
 
     const signupReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/signup`);
-    signupReq.error(new ErrorEvent('Signup Error'), {status: 400, statusText: 'Username already exists'});
+    signupReq.flush(null, mockErrorResponse(400, 'Username already exists'));
   }); // end 'should submit a signup form and get an error response' test
 
   test('should toggle password visibility', () => {
