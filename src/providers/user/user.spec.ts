@@ -2,8 +2,11 @@
 import { TestBed, getTestBed, async } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { Events, Platform } from 'ionic-angular';
+import { HttpErrorResponse } from '@angular/common/http';
 import { IonicStorageModule } from '@ionic/storage';
 import { Network } from '@ionic-native/network/ngx';
+import { Observable } from 'rxjs/Observable';
+import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 
 /* Constants imports */
 import { baseURL } from '../../shared/constants/base-url';
@@ -16,8 +19,9 @@ import { configureTestBed } from '../../../test-config/configureTestBed';
 import { mockUser } from '../../../test-config/mockmodels/mockUser';
 import { mockUserLogin } from '../../../test-config/mockmodels/mockUserLogin';
 import { mockLoginResponse } from '../../../test-config/mockmodels/mockLoginResponse';
+import { mockErrorResponse } from '../../../test-config/mockmodels/mockErrorResponse';
 import { mockJWTSuccess, mockJWTFailed } from '../../../test-config/mockmodels/mockJWTResponse';
-import { PlatformMock } from '../../../test-config/mocks-ionic';
+import { PlatformMockDev } from '../../../test-config/mocks-ionic';
 
 /* Provider imports */
 import { UserProvider } from './user';
@@ -34,7 +38,7 @@ describe('User Service', () => {
   let httpMock: HttpTestingController;
   configureTestBed();
 
-  beforeAll(done => (async() => {
+  beforeAll(async(() => {
     TestBed.configureTestingModule({
       imports: [
         HttpClientTestingModule,
@@ -49,12 +53,10 @@ describe('User Service', () => {
         ProcessHttpErrorProvider,
         StorageProvider,
         ConnectionProvider,
-        { provide: Platform, useClass: PlatformMock }
+        { provide: Platform, useClass: PlatformMockDev }
       ]
     });
-  })()
-  .then(done)
-  .catch(done.fail));
+  }));
 
   beforeEach(() => {
     injector = getTestBed();
@@ -103,6 +105,109 @@ describe('User Service', () => {
       loginReq.flush(mockLoginResponse());
     }); // end 'should log out' test
 
+    test('should fail to log in', done => {
+      userService.logIn({})
+        .subscribe(
+          response => {
+            console.log('Should not get a response', response);
+            expect(true).toBe(false);
+            done();
+          },
+          error => {
+            expect(error).toMatch(`<401> Not Authorized`)
+            done();
+          }
+        );
+
+        const additionalErrorData = {
+          error: {
+            name: 'Authentication Error',
+            message: 'Unauthorized'
+          }
+        }
+
+        const loginReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/login`);
+        expect(loginReq.request.method).toMatch('POST');
+        loginReq.flush(null, mockErrorResponse(401, 'Not Authorized', additionalErrorData));
+    }); //  end 'should fail to log in' test
+
+    test('should load a registered user with valid token from storage', done => {
+      const _mockUser = mockUser();
+
+      userService.storageService.getUser = jest
+        .fn()
+        .mockReturnValue(Observable.of(_mockUser));
+
+      const checkSpy = jest.spyOn(userService, 'checkJWToken');
+      const consoleSpy = jest.spyOn(console, 'log');
+
+      userService.loadUserFromStorage();
+
+      setTimeout(() => {
+        expect(checkSpy).toHaveBeenCalled();
+        expect(consoleSpy.mock.calls[consoleSpy.mock.calls.length - 1][0]).toMatch('success');
+        done();
+      }, 10);
+
+      const jwtReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/checkJWToken`);
+      jwtReq.flush({status: 'success', success: true, user: _mockUser});
+    }); // end 'should load a registered user with valid token from storage' test
+
+    test('should load a registered user with invalid token from storage', done => {
+      userService.storageService.getUser = jest
+        .fn()
+        .mockReturnValue(Observable.of(mockUser()));
+
+      const checkSpy = jest.spyOn(userService, 'checkJWToken');
+      const consoleSpy = jest.spyOn(console, 'log');
+
+      userService.loadUserFromStorage();
+
+      setTimeout(() => {
+        expect(checkSpy).toHaveBeenCalled();
+        expect(consoleSpy.mock.calls[consoleSpy.mock.calls.length - 1][0]).toMatch('<401> Not Authorized');
+        expect(userService.user$.value.token).toBeUndefined();
+        done();
+      }, 10);
+
+      const jwtReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/checkJWToken`);
+      jwtReq.flush(null, mockErrorResponse(401, 'Not Authorized'));
+    }); // end 'should load a registered user with invalid token from storage' test
+
+    test('should load an offline user from storage', done => {
+      const _mockUser = mockUser();
+      _mockUser._id = 'offline';
+
+      userService.storageService.getUser = jest
+        .fn()
+        .mockReturnValue(Observable.of(_mockUser));
+
+      const setOfflineSpy = jest.spyOn(userService.connectionService, 'setOfflineMode');
+
+      userService.loadUserFromStorage();
+
+      setTimeout(() => {
+        expect(setOfflineSpy).toHaveBeenCalledWith(true);
+        done();
+      }, 10);
+    }); // end 'should load an offline user from storage' test
+
+    test('should fail to load a user from storage', done => {
+      userService.storageService.getUser = jest
+        .fn()
+        .mockReturnValue(new ErrorObservable('error'));
+
+      const consoleSpy = jest.spyOn(console, 'log');
+
+      userService.loadUserFromStorage();
+
+      setTimeout(() => {
+        expect(consoleSpy.mock.calls[consoleSpy.mock.calls.length - 1][0]).toMatch('user load error');
+        expect(consoleSpy.mock.calls[consoleSpy.mock.calls.length - 1][1]).toMatch('error');
+        done();
+      }, 10);
+    }); // end 'should fail to load a user from storage' test
+
   }); // end 'User is not logged in' section
 
   describe('User is logged in', () => {
@@ -118,6 +223,51 @@ describe('User Service', () => {
       expect(loginReq.request.method).toMatch('POST');
       loginReq.flush(mockLoginResponse());
     }); // end 'should log in' test
+
+    test('should successfully store a user on login', done => {
+      const _mockUserLogin = mockUserLogin();
+      _mockUserLogin.remember = true;
+
+      const consoleSpy = jest.spyOn(console, 'log');
+
+      userService.logIn(_mockUserLogin)
+        .subscribe(_response => {
+          setTimeout(() => {
+            expect(userService.isLoggedIn()).toBe(true);
+            expect(consoleSpy.mock.calls[consoleSpy.mock.calls.length - 1][0]).toMatch('stored user data');
+            done();
+          }, 10);
+        });
+
+      const loginReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/login`);
+      expect(loginReq.request.method).toMatch('POST');
+      loginReq.flush(mockLoginResponse());
+    }); // end 'should successfully store a user on login' test
+
+    test('should fail to store a user on login', done => {
+      const _mockUserLogin = mockUserLogin();
+      _mockUserLogin.remember = true;
+
+      userService.storageService.setUser = jest
+        .fn()
+        .mockReturnValue(new ErrorObservable('Failed to store user'));
+
+      const consoleSpy = jest.spyOn(console, 'log');
+
+      userService.logIn(_mockUserLogin)
+        .subscribe(response => {
+          setTimeout(() => {
+            expect(userService.isLoggedIn()).toBe(true);
+            expect(consoleSpy.mock.calls[consoleSpy.mock.calls.length - 1][0]).toMatch('user store error');
+            expect(consoleSpy.mock.calls[consoleSpy.mock.calls.length - 1][1]).toMatch('Failed to store user');
+            done();
+          }, 10);
+        });
+
+      const loginReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/login`);
+      expect(loginReq.request.method).toMatch('POST');
+      loginReq.flush(mockLoginResponse());
+    }); // end 'should fail to store a user on login' test
 
     test('should have token', done => {
       userService.logIn(mockUserLogin())
@@ -216,14 +366,26 @@ describe('User Service', () => {
     }); // end 'should sign up' test
 
     test('should fail signup', done => {
+      const mockErrorResponse = new HttpErrorResponse({
+        status: 404,
+        statusText: 'User not found'
+      });
+
       userService.signUp(mockUserLogin())
-        .subscribe(signup => {
-          expect(signup.success).toBe(false);
-          done();
-        });
+        .subscribe(
+          response => {
+            console.log('Should not get a response', response);
+            expect(true).toBe(false);
+            done();
+          },
+          error => {
+            expect(error).toMatch(`<${mockErrorResponse.status}> ${mockErrorResponse.statusText}`)
+            done();
+          }
+        );
 
       const signupReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/signup`);
-      signupReq.flush({success: false});
+      signupReq.flush(null, mockErrorResponse);
     }); // end 'should fail signup' test
 
   }); // end 'User sign up' section
@@ -235,6 +397,7 @@ describe('User Service', () => {
         .skip(2)
         .subscribe(user => {
           expect(user.username).toMatch('mock');
+          expect(user['shouldIgnore']).toBeUndefined();
           done();
         });
 
@@ -251,8 +414,32 @@ describe('User Service', () => {
       const updateReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/profile`);
       const _updatedMockUser = mockUser();
       _updatedMockUser.username = 'mock';
+      _updatedMockUser['shouldIgnore'] = true;
       updateReq.flush(_updatedMockUser);
     }); // end 'should update profile' test
+
+    test('should get error response on profile update', done => {
+      const mockErrorResponse = new HttpErrorResponse({
+        status: 404,
+        statusText: 'User not found'
+      });
+
+      userService.updateUserProfile({})
+        .subscribe(
+          response => {
+            console.log('Should not get a response', response);
+            expect(true).toBe(false);
+            done();
+          },
+          error => {
+            expect(error).toMatch(`<${mockErrorResponse.status}> ${mockErrorResponse.statusText}`)
+            done();
+          }
+        );
+
+      const updateReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/profile`);
+      updateReq.flush(null, mockErrorResponse);
+    });
 
   }); // end 'Profile update' section
 
