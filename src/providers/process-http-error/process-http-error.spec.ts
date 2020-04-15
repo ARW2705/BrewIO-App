@@ -13,15 +13,13 @@ describe('Process HTTP Error Service', () => {
   let processHttpService: ProcessHttpErrorProvider;
   configureTestBed();
 
-  beforeAll(done => (async() => {
+  beforeAll(async(() => {
     TestBed.configureTestingModule({
       providers: [
         ProcessHttpErrorProvider
       ]
     });
-  })()
-  .then(done)
-  .catch(done.fail));
+  }));
 
   beforeEach(() => {
     injector = getTestBed();
