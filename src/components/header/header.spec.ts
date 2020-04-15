@@ -1,6 +1,6 @@
 /* Module imports */
 import { TestBed, getTestBed, async, ComponentFixture } from '@angular/core/testing';
-import { IonicModule, NavController, ModalController, Events, Config, App } from 'ionic-angular';
+import { IonicModule, NavController, ModalController, Events, Config, App, Platform } from 'ionic-angular';
 import { IonicStorageModule } from '@ionic/storage';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { By } from '@angular/platform-browser';
@@ -11,7 +11,7 @@ import { configureTestBed } from '../../../test-config/configureTestBed';
 
 /* Mock imports */
 import { mockUser } from '../../../test-config/mockmodels/mockUser';
-import { NavMock, ModalControllerMock, StorageMock, ConfigMock, AppMock } from '../../../test-config/mocks-ionic';
+import { NavMock, ModalControllerMock, StorageMock, ConfigMock, AppMock, PlatformMockDev } from '../../../test-config/mocks-ionic';
 
 /* Component imports */
 import { HeaderComponent } from './header';
@@ -58,7 +58,8 @@ describe('Header Component', () => {
           { provide: NavController, useClass: NavMock },
           { provide: ModalController, useClass: ModalControllerMock },
           { provide: Config, useClass: ConfigMock },
-          { provide: App, useClass: AppMock }
+          { provide: App, useClass: AppMock },
+          { provide: Platform, useClass: PlatformMockDev }
         ]
       });
       await TestBed.compileComponents();
@@ -238,7 +239,8 @@ describe('Header Component', () => {
           { provide: ModalController, useClass: ModalControllerMock },
           { provide: Storage, useClass: StorageMock },
           { provide: Config, useClass: ConfigMock },
-          { provide: App, useClass: AppMock }
+          { provide: App, useClass: AppMock },
+          { provide: Platform, useClass: PlatformMockDev }
         ]
       });
       await TestBed.compileComponents();
