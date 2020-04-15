@@ -13,6 +13,11 @@ export const mockActionSheetButtons = () => {
     {
       text: 'Choice 3',
       handler: () => { }
+    },
+    {
+      text: 'With Role',
+      role: 'role',
+      handler: () => { }
     }
   ];
   return mock;

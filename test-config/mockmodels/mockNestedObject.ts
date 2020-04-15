@@ -16,7 +16,13 @@ export const mockNestedObject = () => {
       {
         i: 6
       }
-    ]
+    ],
+    j: [
+      1,
+      2,
+      3
+    ],
+    k: null
   };
   return mock;
 };
