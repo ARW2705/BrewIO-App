@@ -85,9 +85,24 @@ describe('Ingredient Form', () => {
     }); // end 'should submit a grains instance' test
 
     test('should convert a string to a number', () => {
+      fixture.detectChanges();
       expect(ingredientPage.toNumber('1')).toBe(1);
       expect(ingredientPage.toNumber('0.9')).toBe(0.9);
     }); // end 'should convert a string to a number' test
+
+    test('should call dismiss without sending data', () => {
+      fixture.detectChanges();
+      const viewSpy = jest.spyOn(ingredientPage.viewCtrl, 'dismiss');
+      ingredientPage.dismiss();
+      expect(viewSpy).toHaveBeenCalled();
+    }); // end 'should call dismiss without sending data' test
+
+    test('should call dismiss with error', () => {
+      fixture.detectChanges();
+      const viewSpy = jest.spyOn(ingredientPage.viewCtrl, 'dismiss');
+      ingredientPage.dismissOnError('error message');
+      expect(viewSpy).toHaveBeenCalledWith({error: 'error message'});
+    }); // end 'should call dismiss with error' test
 
   }); // end 'New instance' section
 
