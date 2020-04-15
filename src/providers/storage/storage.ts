@@ -2,8 +2,8 @@
 import { Injectable } from '@angular/core';
 import { Storage } from '@ionic/storage';
 import { Observable } from 'rxjs/Observable';
+import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 import { fromPromise } from 'rxjs/observable/fromPromise';
-import { map } from 'rxjs/operators';
 import { _throw as throwError } from 'rxjs/observable/throw';
 
 /* Interface imports */
@@ -17,41 +17,10 @@ import { LibraryStorage } from '../../shared/interfaces/library';
 export class StorageProvider {
   userStorageKey = 'user';
   recipeStorageKey = 'recipe';
-  processStorageKey = 'process';
+  batchStorageKey = 'batch';
   libraryStorageKey = 'library';
 
   constructor(public storage: Storage) { }
-
-  /**
-   * Get all ingredient libraries from storage
-   *
-   * @params: none
-   *
-   * @return: Observable of array of each library
-  **/
-  getLibrary(): Observable<any> {
-    return fromPromise(this.storage.get(this.libraryStorageKey))
-      .pipe(
-        map((libraries: string) => {
-          const parsed = JSON.parse(libraries);
-          if (parsed === null) {
-            throw throwError('Library data not found');
-          }
-          return parsed;
-        })
-      );
-  }
-
-  /**
-   * Store ingredient libraries
-   *
-   * @params: library - object containing libraries of each type
-   *
-   * @return: Observable of storage set response
-  **/
-  setLibrary(library: LibraryStorage): Observable<any> {
-    return fromPromise(this.storage.set(this.libraryStorageKey, JSON.stringify(library)));
-  }
 
   /**
    * Get all active batches from storage
@@ -60,17 +29,22 @@ export class StorageProvider {
    *
    * @return: Observable of array of active batches
   **/
-  getProcesses(): Observable<Array<Batch>> {
-    return fromPromise(this.storage.get(this.processStorageKey))
-      .pipe(
-        map((activeBatchList: string) => {
-          const parsed = JSON.parse(activeBatchList);
-          if (parsed === null || parsed.length === 0) {
-            throw throwError('Active batch data not found');
-          }
+  getBatches(): Observable<Array<Batch>> {
+    return fromPromise(
+      this.storage.get(this.batchStorageKey)
+        .then(batches => {
+          if (batches === null) throw throwError('Active batch data not found');
+          const parsed = JSON.parse(batches);
+          if (parsed.length === 0) throw throwError('No active batch data in storage');
           return parsed;
         })
-      );
+        .catch(error => {
+          if (error instanceof ErrorObservable) {
+            throw error;
+          }
+          throw throwError(`Active batch storage error: ${error}`);
+        })
+    );
   }
 
   /**
@@ -79,8 +53,8 @@ export class StorageProvider {
    * @params: none
    * @return: none
   **/
-  removeProcesses(): void {
-    this.storage.remove(this.processStorageKey)
+  removeBatches(): void {
+    this.storage.remove(this.batchStorageKey)
       .then(() => console.log('Active batch data cleared'));
   }
 
@@ -91,8 +65,54 @@ export class StorageProvider {
    *
    * @return: Observable of storage set response
   **/
-  setProcesses(activeBatchList: Array<Batch>): Observable<any> {
-    return fromPromise(this.storage.set(this.processStorageKey, JSON.stringify(activeBatchList)));
+  setBatches(activeBatchList: Array<Batch>): Observable<any> {
+    return fromPromise(
+      this.storage.set(
+        this.batchStorageKey,
+        JSON.stringify(activeBatchList)
+      )
+    );
+  }
+
+  /**
+   * Get all ingredient/style libraries from storage
+   *
+   * @params: none
+   *
+   * @return: Observable of object with each library type
+  **/
+  getLibrary(): Observable<LibraryStorage> {
+    return fromPromise(
+      this.storage.get(this.libraryStorageKey)
+        .then(libraries => {
+          if (libraries === null) throw throwError('Library data not found');
+          const parsed = JSON.parse(libraries);
+          if (Object.keys(parsed).length === 0) throw throwError('No library data in storage');
+          return parsed;
+        })
+        .catch(error => {
+          if (error instanceof ErrorObservable) {
+            throw error;
+          }
+          throw throwError(`Library storage error: ${error}`);
+        })
+    );
+  }
+
+  /**
+   * Store ingredient libraries
+   *
+   * @params: library - object containing libraries of each type
+   *
+   * @return: Observable of storage set response
+  **/
+  setLibrary(library: LibraryStorage): Observable<any> {
+    return fromPromise(
+      this.storage.set(
+        this.libraryStorageKey,
+        JSON.stringify(library)
+      )
+    );
   }
 
   /**
@@ -103,16 +123,21 @@ export class StorageProvider {
    * @return: Observable of array of recipe masters
   **/
   getRecipes(): Observable<Array<RecipeMaster>> {
-    return fromPromise(this.storage.get(this.recipeStorageKey))
-      .pipe(
-        map((recipeMasterList: string) => {
-          const parsed = JSON.parse(recipeMasterList);
-          if (parsed === null || parsed.length === 0) {
-            throw throwError('Recipe data not found');
-          }
+    return fromPromise(
+      this.storage.get(this.recipeStorageKey)
+        .then(recipes => {
+          if (recipes === null) throw throwError('Recipe data not found');
+          const parsed = JSON.parse(recipes);
+          if (parsed.length === 0) throw throwError('No recipe data in storage');
           return parsed;
         })
-      );
+        .catch(error => {
+          if (error instanceof ErrorObservable) {
+            throw error;
+          }
+          throw throwError(`Recipe storage error: ${error}`);
+        })
+    );
   }
 
   /**
@@ -134,7 +159,12 @@ export class StorageProvider {
    * @return: Observable of storage set response
   **/
   setRecipes(recipeMasterList: Array<RecipeMaster>): Observable<any> {
-    return fromPromise(this.storage.set(this.recipeStorageKey, JSON.stringify(recipeMasterList)));
+    return fromPromise(
+      this.storage.set(
+        this.recipeStorageKey,
+        JSON.stringify(recipeMasterList)
+      )
+    );
   }
 
   /**
@@ -145,21 +175,20 @@ export class StorageProvider {
    * @return: Observable of user data
   **/
   getUser(): Observable<User> {
-    return fromPromise(this.storage.get(this.userStorageKey))
-      .pipe(
-        map((_user: string) => {
-          let parsed = JSON.parse(_user);
-          if (_user === null) {
-            console.log('User data not found in storage');
-            parsed = {
-              _id: 'offline',
-              username: '',
-              token: ''
-            };
-          }
-          return parsed;
+    return fromPromise(
+      this.storage.get(this.userStorageKey)
+        .then(user => {
+          if (user === null) throw new Error('No user data');
+          return JSON.parse(user);
         })
-      );
+        .catch(() => {
+          return {
+            _id: 'offline',
+            username: '',
+            token: ''
+          };
+        })
+    );
   }
 
   /**
@@ -181,7 +210,12 @@ export class StorageProvider {
    * @return: Observable of storage set response
   **/
   setUser(user: User): Observable<any> {
-    return fromPromise(this.storage.set(this.userStorageKey, JSON.stringify(user)));
+    return fromPromise(
+      this.storage.set(
+        this.userStorageKey,
+        JSON.stringify(user)
+      )
+    );
   }
 
 }
