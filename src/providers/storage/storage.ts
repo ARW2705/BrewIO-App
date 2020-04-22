@@ -185,7 +185,8 @@ export class StorageProvider {
           return {
             _id: 'offline',
             username: '',
-            token: ''
+            token: '',
+            preferredUnits: 'e'
           };
         })
     );
