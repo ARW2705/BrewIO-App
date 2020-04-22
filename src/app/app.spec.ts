@@ -24,6 +24,7 @@ import { RecipeProvider } from '../providers/recipe/recipe';
 import { ProcessHttpErrorProvider } from '../providers/process-http-error/process-http-error';
 import { StorageProvider } from '../providers/storage/storage';
 import { ConnectionProvider } from '../providers/connection/connection';
+import { PreferencesProvider } from '../providers/preferences/preferences';
 
 
 describe('MyApp Component', () => {
@@ -45,6 +46,7 @@ describe('MyApp Component', () => {
         StorageProvider,
         Network,
         ConnectionProvider,
+        { provide: PreferencesProvider, useValue: {} },
         { provide: ProcessProvider, useValue: {} },
         { provide: RecipeProvider, useValue: {} },
         { provide: ProcessHttpErrorProvider, useValue: {} },
