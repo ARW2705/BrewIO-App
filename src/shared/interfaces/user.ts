@@ -8,4 +8,5 @@ export interface User {
   email?: string;
   friendList?: Array<string>;
   token: string;
+  preferredUnits: string;
 };

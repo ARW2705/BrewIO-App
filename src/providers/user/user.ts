@@ -1,5 +1,5 @@
 /* Module imports */
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Events } from 'ionic-angular';
 import { Observable } from 'rxjs/Observable';
@@ -17,6 +17,7 @@ import { User } from '../../shared/interfaces/user';
 import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
 import { StorageProvider } from '../storage/storage';
 import { ConnectionProvider } from '../connection/connection';
+import { PreferencesProvider } from '../preferences/preferences';
 
 /* Local Interfaces */
 interface JWTResponse {
@@ -37,7 +38,8 @@ export class UserProvider {
     lastname: undefined,
     email: undefined,
     friendList: [],
-    token: undefined
+    token: undefined,
+    preferredUnits: undefined
   });
   userStorageKey: string = 'user';
 
@@ -46,7 +48,8 @@ export class UserProvider {
     public events: Events,
     public processHttpError: ProcessHttpErrorProvider,
     public storageService: StorageProvider,
-    public connectionService: ConnectionProvider
+    public connectionService: ConnectionProvider,
+    public preferenceService: PreferencesProvider
   ) { }
 
   /**
@@ -78,7 +81,8 @@ export class UserProvider {
       lastname: undefined,
       email: undefined,
       friendList: [],
-      token: undefined
+      token: undefined,
+      preferredUnits: undefined
     });
 
     this.storageService.removeUser();
@@ -115,7 +119,7 @@ export class UserProvider {
    * @return: true if an auth token is present in user subject
   **/
   isLoggedIn(): boolean {
-    return this.user$.value.token !== undefined;
+    return this.user$.value.token !== undefined && this.user$.value.token !== '';
   }
 
   /**
@@ -133,6 +137,7 @@ export class UserProvider {
           this.user$.next(user);
           if (user._id === 'offline') {
             this.connectionService.setOfflineMode(true);
+            this.preferenceService.setUnits('e');
           } else {
             this.checkJWToken()
               .subscribe(
@@ -151,6 +156,7 @@ export class UserProvider {
               );
           }
           this.events.publish('init-data');
+          this.preferenceService.setUnits(user.preferredUnits);
         },
         error => console.log('user load error', error)
       );
@@ -170,6 +176,7 @@ export class UserProvider {
         this.user$.next(response.user);
         this.connectionService.setOfflineMode(false);
         this.events.publish('init-data');
+        this.preferenceService.setUnits(response.user.preferredUnits);
         if (user.remember) {
           this.storageService.setUser(response.user)
             .subscribe(
@@ -229,6 +236,7 @@ export class UserProvider {
           }
         }
         this.user$.next(userData);
+        this.preferenceService.setUnits(userData.preferredUnits);
         return updatedUser;
       })
       .catch(error => this.processHttpError.handleError(error));

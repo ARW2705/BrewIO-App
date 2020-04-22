@@ -10,7 +10,8 @@ export const mockUser = () => {
     lastname: 'user',
     email: 'test@user.com',
     friendList: ['userId1', 'userId2'],
-    token: 'testtoken'
+    token: 'testtoken',
+    preferredUnits: 'e'
   };
   return mock;
 };
