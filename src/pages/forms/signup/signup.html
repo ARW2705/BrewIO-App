@@ -114,6 +114,15 @@
       </div>
     </ng-container>
 
+    <!-- Preferred units toggle -->
+    <ion-item>
+      <ion-label position="floating">Preferred Units</ion-label>
+      <ion-toggle formControlName="preferredUnits"
+                  color="primary">
+        {{ preferredUnits }}
+      </ion-toggle>
+    </ion-item>
+
   </form>
 
   <ion-grid>
@@ -139,7 +148,7 @@
           Sign Up
         </button>
       </ion-col>
-      
+
     </ion-row>
   </ion-grid>
 

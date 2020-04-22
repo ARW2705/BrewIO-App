@@ -15,6 +15,7 @@ import { ToastProvider } from '../../../providers/toast/toast';
 export class SignupPage {
   signupForm: FormGroup;
   showPassword: boolean = false;
+  preferredUnits: string = 'EN';
 
   constructor(
     public navCtrl: NavController,
@@ -79,10 +80,15 @@ export class SignupPage {
       passwordConfirmation: ['', [Validators.required]],
       email: ['', [Validators.email, Validators.required]],
       firstname: ['', [Validators.maxLength(25)]],
-      lastname: ['', [Validators.maxLength(25)]]
+      lastname: ['', [Validators.maxLength(25)]],
+      preferredUnits: true
     }, {
       validator: FormValidatorProvider.PasswordMatch()
     });
+    this.signupForm.valueChanges
+      .subscribe(value => {
+        this.preferredUnits = value.preferredUnits ? 'EN': 'M';
+      });
   }
 
   /**
@@ -92,7 +98,9 @@ export class SignupPage {
    * @return: none
   **/
   onSubmit(): void {
-    this.userService.signUp(this.signupForm.value)
+    const signupData = this.signupForm.value;
+    signupData.preferredUnits = signupData.preferredUnits ? 'm': 'e';
+    this.userService.signUp(signupData)
       .subscribe(
         response => {
           this.toastService.presentToast('Sign up complete!', 1500, 'bright-toast');

@@ -4,6 +4,7 @@ import { HttpTestingController, HttpClientTestingModule } from '@angular/common/
 import { IonicModule, NavController, NavParams, ViewController, ToastController } from 'ionic-angular';
 import { IonicStorageModule } from '@ionic/storage';
 import { Network } from '@ionic-native/network/ngx';
+import { Observable } from 'rxjs/Observable';
 
 /* Constants imports */
 import { baseURL } from '../../../shared/constants/base-url';
@@ -29,6 +30,7 @@ import { RecipeProvider } from '../../../providers/recipe/recipe';
 import { ProcessHttpErrorProvider } from '../../../providers/process-http-error/process-http-error';
 import { StorageProvider } from '../../../providers/storage/storage';
 import { ConnectionProvider } from '../../../providers/connection/connection';
+import { PreferencesProvider } from '../../../providers/preferences/preferences';
 
 
 describe('Signup Form', () => {
@@ -55,6 +57,7 @@ describe('Signup Form', () => {
         ProcessHttpErrorProvider,
         Network,
         ConnectionProvider,
+        PreferencesProvider,
         { provide: ProcessProvider, useValue: {} },
         { provide: RecipeProvider, useValue: {} },
         { provide: StorageProvider, useValue: {} },
@@ -94,6 +97,15 @@ describe('Signup Form', () => {
     fixture.detectChanges();
     expect(signupPage.signupForm).toBeDefined();
   }); // end 'should initialize the form' test
+
+  test('should detect changes in the form', () => {
+    fixture.detectChanges();
+    expect(signupPage.preferredUnits).toMatch('EN');
+    signupPage.signupForm.controls.preferredUnits.setValue(false);
+    expect(signupPage.preferredUnits).toMatch('M');
+    signupPage.signupForm.controls.preferredUnits.setValue(true);
+    expect(signupPage.preferredUnits).toMatch('EN');
+  }); // end 'should detect changes in the form' test
 
   test('should be invalid when form is empty', () => {
     fixture.detectChanges();
@@ -192,9 +204,16 @@ describe('Signup Form', () => {
     formControls.password.setValue('abcdefghij1K%');
     formControls.passwordConfirmation.setValue('abcdefghij1K%');
     formControls.email.setValue('test@email.com');
+
+    signupPage.userService.signUp = jest
+      .fn()
+      .mockReturnValue(Observable.of(_mockUser));
+
     expect(signupPage.signupForm.valid).toBe(true);
+
     const toastSpy = jest.spyOn(signupPage.toastService, 'presentToast');
     const viewSpy = jest.spyOn(signupPage.viewCtrl, 'dismiss');
+
     signupPage.onSubmit();
 
     setTimeout(() => {
@@ -202,12 +221,6 @@ describe('Signup Form', () => {
       expect(viewSpy).toHaveBeenCalledWith(_mockUser);
       done();
     }, 10);
-
-    const signupReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/signup`);
-    signupReq.flush(_mockUser);
-
-    const loginReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/login`);
-    loginReq.flush(_mockUser);
   }); // end 'should submit a signup form and get a success response' test
 
   test('should submit a signup form and get an error response', done => {
