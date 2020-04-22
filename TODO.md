@@ -7,10 +7,10 @@
 ### Feature additions
 
 * Inventory tracking
-* Implement storage and no-login/offline usage
+* Add system to sync client-server
 * Export calendar to external calendar
 * Notification system
-* Implement standard/metric units
+* Implement standard/metric units (in progress)
 * Add process batch notes - append to its recipe on completion in a separate section
 
 ### Quality of life updates
@@ -27,8 +27,6 @@
 
 ---
 
-* Show pre-selected option in select/option dropdowns
 * Calendar button reads 'start' instead of 'update' when changing a calendar start date
 * Select/option dropdown background color
-* Long recipe master names overflow header - need to truncate
 * Completing process step needs intermediate view while states change
