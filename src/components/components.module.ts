@@ -5,6 +5,8 @@ import { HeaderComponent } from './header/header';
 import { ProgressCircleComponent } from './progress-circle/progress-circle';
 import { CalendarComponent } from './calendar/calendar';
 import { ActiveBatchesComponent } from './active-batches/active-batches';
+
+
 @NgModule({
 	declarations: [AccordionComponent,
     HeaderComponent,

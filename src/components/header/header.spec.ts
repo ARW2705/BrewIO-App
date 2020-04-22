@@ -24,6 +24,7 @@ import { RecipeProvider } from '../../providers/recipe/recipe';
 import { ProcessHttpErrorProvider } from '../../providers/process-http-error/process-http-error';
 import { StorageProvider } from '../../providers/storage/storage';
 import { ConnectionProvider } from '../../providers/connection/connection';
+import { PreferencesProvider } from '../../providers/preferences/preferences';
 
 
 describe('Header Component', () => {
@@ -54,6 +55,7 @@ describe('Header Component', () => {
           Events,
           Network,
           ConnectionProvider,
+          { provide: PreferencesProvider, useValue: {} },
           { provide: ProcessHttpErrorProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },
           { provide: ModalController, useClass: ModalControllerMock },
@@ -234,6 +236,7 @@ describe('Header Component', () => {
           Events,
           Network,
           ConnectionProvider,
+          { provide: PreferencesProvider, useValue: {} },
           { provide: ProcessHttpErrorProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },
           { provide: ModalController, useClass: ModalControllerMock },
