@@ -18,7 +18,7 @@ export class TabsPage implements OnInit, OnDestroy {
   tabs = [
     { component: HomePage,   title: 'Home',    header: 'BrewIO',  icon: 'home'    },
     { component: RecipePage, title: 'Recipes', header: 'Recipes', icon: 'beer'    },
-    { component: UserPage,   title: 'User',    header: 'User',    icon: 'contact' }
+    { component: UserPage,   title: 'User',    header: 'User',    icon: 'settings' }
   ];
 
   constructor(public events: Events) {
