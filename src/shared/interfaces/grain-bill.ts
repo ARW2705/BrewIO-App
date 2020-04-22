@@ -5,7 +5,7 @@ export interface GrainBill {
   createdAt?: string;
   updatedAt?: string;
   grainType: Grains;
-  quantity: number;
-  mill: number;
+  quantity: number; // lbs or kg
+  mill: number; // 1/1000th in or mm
   notes: Array<string>;
 };

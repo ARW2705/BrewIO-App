@@ -5,7 +5,7 @@ export interface YeastBatch {
   createdAt?: string;
   updatedAt?: string;
   yeastType: Yeast;
-  quantity: number;
+  quantity: number; // packs/vials
   requiresStarter: boolean;
   notes: Array<string>;
 };

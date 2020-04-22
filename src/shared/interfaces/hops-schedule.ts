@@ -5,8 +5,8 @@ export interface HopsSchedule {
   createdAt?: string;
   updatedAt?: string;
   hopsType: Hops;
-  quantity: number;
-  addAt: number;
+  quantity: number; // oz or g
+  addAt: number; // minutes
   dryHop: boolean;
   notes: Array<string>;
 };
