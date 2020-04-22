@@ -33,6 +33,7 @@ import { ToastProvider } from '../../providers/toast/toast';
 import { ProcessHttpErrorProvider } from '../../providers/process-http-error/process-http-error';
 import { StorageProvider } from '../../providers/storage/storage';
 import { ConnectionProvider } from '../../providers/connection/connection';
+import { PreferencesProvider } from '../../providers/preferences/preferences';
 
 
 describe('Recipe Page', () => {
@@ -67,6 +68,7 @@ describe('Recipe Page', () => {
           StorageProvider,
           Network,
           ConnectionProvider,
+          { provide: PreferencesProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },
           { provide: ToastController, useClass: ToastControllerMock },
           { provide: ProcessHttpErrorProvider, useValue: {} },
@@ -143,6 +145,7 @@ describe('Recipe Page', () => {
           StorageProvider,
           Network,
           ConnectionProvider,
+          { provide: PreferencesProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },
           { provide: ToastController, useClass: ToastControllerMock },
           { provide: ProcessHttpErrorProvider, useValue: {} },
@@ -295,6 +298,7 @@ describe('Recipe Page', () => {
           StorageProvider,
           Network,
           ConnectionProvider,
+          { provide: PreferencesProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },
           { provide: ToastController, useClass: ToastControllerMock },
           { provide: ProcessHttpErrorProvider, useValue: {} },

@@ -27,6 +27,7 @@ import { RecipeProvider } from '../../../providers/recipe/recipe';
 import { ProcessHttpErrorProvider } from '../../../providers/process-http-error/process-http-error';
 import { StorageProvider } from '../../../providers/storage/storage';
 import { ConnectionProvider } from '../../../providers/connection/connection';
+import { PreferencesProvider } from '../../../providers/preferences/preferences';
 
 
 describe('Login Form', () => {
@@ -56,6 +57,7 @@ describe('Login Form', () => {
         FormValidatorProvider,
         ProcessHttpErrorProvider,
         StorageProvider,
+        PreferencesProvider,
         { provide: NavController, useClass: NavMock },
         { provide: NavParams, useClass: NavParamsMock },
         { provide: ViewController, useClass: ViewControllerMock },

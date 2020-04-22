@@ -31,6 +31,7 @@ import { ProcessProvider } from '../../providers/process/process';
 import { ProcessHttpErrorProvider } from '../../providers/process-http-error/process-http-error';
 import { StorageProvider } from '../../providers/storage/storage';
 import { ConnectionProvider } from '../../providers/connection/connection';
+import { PreferencesProvider } from '../../providers/preferences/preferences';
 
 
 describe('Home Page', () => {
@@ -56,6 +57,7 @@ describe('Home Page', () => {
           ModalProvider,
           StorageProvider,
           ConnectionProvider,
+          PreferencesProvider,
           Network,
           { provide: ProcessProvider, useValue: {} },
           { provide: ProcessHttpErrorProvider, useValue: {} },
@@ -123,6 +125,7 @@ describe('Home Page', () => {
           ModalProvider,
           StorageProvider,
           ConnectionProvider,
+          PreferencesProvider,
           Network,
           { provide: ProcessProvider, useValue: {} },
           { provide: ProcessHttpErrorProvider, useValue: {} },

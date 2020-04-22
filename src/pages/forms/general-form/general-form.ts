@@ -96,7 +96,7 @@ export class GeneralFormPage {
     // Set form control name based on formType
     this.generalForm.addControl(
       this.formType === 'master' ? 'name': 'variantName',
-      new FormControl('', [Validators.minLength(2), Validators.maxLength(20), Validators.required])
+      new FormControl('', [Validators.minLength(2), Validators.maxLength(30), Validators.required])
     );
 
     // If form data was passed to page, map that data to form

@@ -44,6 +44,7 @@ import { ToastProvider } from '../../providers/toast/toast';
 import { ProcessHttpErrorProvider } from '../../providers/process-http-error/process-http-error';
 import { StorageProvider } from '../../providers/storage/storage';
 import { ConnectionProvider } from '../../providers/connection/connection';
+import { PreferencesProvider } from '../../providers/preferences/preferences';
 
 
 describe('Process Page', () => {
@@ -85,6 +86,7 @@ describe('Process Page', () => {
           ConnectionProvider,
           UserProvider,
           ProcessHttpErrorProvider,
+          PreferencesProvider,
           { provide: Platform, useClass: PlatformMockDev },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
@@ -300,6 +302,7 @@ describe('Process Page', () => {
           ConnectionProvider,
           UserProvider,
           ProcessHttpErrorProvider,
+          PreferencesProvider,
           { provide: Platform, useClass: PlatformMockDev },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
@@ -611,6 +614,7 @@ describe('Process Page', () => {
           ConnectionProvider,
           UserProvider,
           ProcessHttpErrorProvider,
+          PreferencesProvider,
           { provide: RecipeProvider, useValue: {} },
           { provide: ToastProvider, useValue: {} },
           { provide: Platform, useClass: PlatformMockDev },
@@ -714,6 +718,7 @@ describe('Process Page', () => {
           ConnectionProvider,
           UserProvider,
           ProcessHttpErrorProvider,
+          PreferencesProvider,
           { provide: RecipeProvider, useValue: {} },
           { provide: Platform, useClass: PlatformMockDev },
           { provide: NavController, useClass: NavMock },
@@ -840,6 +845,7 @@ describe('Process Page', () => {
           ConnectionProvider,
           UserProvider,
           ProcessHttpErrorProvider,
+          PreferencesProvider,
           { provide: RecipeProvider, useValue: {} },
           { provide: Platform, useClass: PlatformMockDev },
           { provide: NavController, useClass: NavMock },
@@ -1104,6 +1110,7 @@ describe('Process Page', () => {
           ConnectionProvider,
           UserProvider,
           ProcessHttpErrorProvider,
+          PreferencesProvider,
           { provide: Platform, useClass: PlatformMockDev },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },

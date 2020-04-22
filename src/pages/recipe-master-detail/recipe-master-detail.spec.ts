@@ -33,6 +33,7 @@ import { ProcessHttpErrorProvider } from '../../providers/process-http-error/pro
 import { StorageProvider } from '../../providers/storage/storage';
 import { UserProvider } from '../../providers/user/user';
 import { ConnectionProvider } from '../../providers/connection/connection';
+import { PreferencesProvider } from '../../providers/preferences/preferences';
 
 
 describe('Recipe Master Details Page', () => {
@@ -66,6 +67,7 @@ describe('Recipe Master Details Page', () => {
           StorageProvider,
           ConnectionProvider,
           Network,
+          { provide: PreferencesProvider, useValue: {} },
           { provide: UserProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },
           { provide: NavParams, useClass: NavParamsMock },
@@ -146,6 +148,7 @@ describe('Recipe Master Details Page', () => {
           StorageProvider,
           ConnectionProvider,
           Network,
+          { provide: PreferencesProvider, useValue: {} },
           { provide: UserProvider, useValue: {} },
           { provide: ToastController, useClass: ToastControllerMock },
           { provide: NavController, useClass: NavMock },
@@ -325,6 +328,7 @@ describe('Recipe Master Details Page', () => {
           StorageProvider,
           ConnectionProvider,
           Network,
+          { provide: PreferencesProvider, useValue: {} },
           { provide: UserProvider, useValue: {} },
           { provide: ToastController, useClass: ToastControllerMock },
           { provide: NavController, useClass: NavMock },
@@ -432,6 +436,7 @@ describe('Recipe Master Details Page', () => {
           StorageProvider,
           ConnectionProvider,
           Network,
+          { provide: PreferencesProvider, useValue: {} },
           { provide: UserProvider, useValue: {} },
           { provide: ToastController, useClass: ToastControllerMock },
           { provide: NavController, useClass: NavMock },
@@ -533,6 +538,7 @@ describe('Recipe Master Details Page', () => {
           StorageProvider,
           ConnectionProvider,
           Network,
+          { provide: PreferencesProvider, useValue: {} },
           { provide: UserProvider, useValue: {} },
           { provide: ToastController, useClass: ToastControllerMock },
           { provide: NavController, useClass: NavMock },

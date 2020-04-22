@@ -56,6 +56,7 @@ import { ProcessHttpErrorProvider } from '../../../providers/process-http-error/
 import { StorageProvider } from '../../../providers/storage/storage';
 import { UserProvider } from '../../../providers/user/user';
 import { ConnectionProvider } from '../../../providers/connection/connection';
+import { PreferencesProvider } from '../../../providers/preferences/preferences';
 
 
 describe('Recipe Form', () => {
@@ -85,6 +86,7 @@ describe('Recipe Form', () => {
         providers: [
           LibraryProvider,
           Events,
+          { provide: PreferencesProvider, useValue: {} },
           { provide: RecipeProvider, useValue: {} },
           { provide: UserProvider, useValue: {} },
           { provide: ConnectionProvider, useValue: {} },
@@ -237,6 +239,7 @@ describe('Recipe Form', () => {
           LibraryProvider,
           Events,
           ActionSheetProvider,
+          { provide: PreferencesProvider, useValue: {} },
           { provide: RecipeProvider, useValue: {} },
           { provide: UserProvider, useValue: {} },
           { provide: ConnectionProvider, useValue: {} },
@@ -525,6 +528,7 @@ describe('Recipe Form', () => {
           ActionSheetProvider,
           LibraryProvider,
           Events,
+          { provide: PreferencesProvider, useValue: {} },
           { provide: RecipeProvider, useValue: {} },
           { provide: UserProvider, useValue: {} },
           { provide: ConnectionProvider, useValue: {} },
@@ -611,6 +615,7 @@ describe('Recipe Form', () => {
         providers: [
           LibraryProvider,
           Events,
+          { provide: PreferencesProvider, useValue: {} },
           { provide: RecipeProvider, useValue: {} },
           { provide: UserProvider, useValue: {} },
           { provide: ConnectionProvider, useValue: {} },
@@ -758,6 +763,7 @@ describe('Recipe Form', () => {
           LibraryProvider,
           CalculationsProvider,
           Events,
+          { provide: PreferencesProvider, useValue: {} },
           { provide: RecipeProvider, useValue: {} },
           { provide: ToastProvider, useValue: {} },
           { provide: UserProvider, useValue: {} },
@@ -866,6 +872,7 @@ describe('Recipe Form', () => {
           UserProvider,
           ConnectionProvider,
           Network,
+          { provide: PreferencesProvider, useValue: {} },
           { provide: CalculationsProvider, useValue: {} },
           { provide: ActionSheetProvider, useValue: {} },
           { provide: NavController, useClass: NavMock },
@@ -1241,6 +1248,7 @@ describe('Recipe Form', () => {
           ProcessHttpErrorProvider,
           Events,
           StorageProvider,
+          { provide: PreferencesProvider, useValue: {} },
           { provide: CalculationsProvider, useValue: {} },
           { provide: UserProvider, useValue: {} },
           { provide: ConnectionProvider, useValue: {} },
@@ -1465,6 +1473,7 @@ describe('Recipe Form', () => {
         providers: [
           LibraryProvider,
           Events,
+          { provide: PreferencesProvider, useValue: {} },
           { provide: RecipeProvider, useValue: {} },
           { provide: UserProvider, useValue: {} },
           { provide: ConnectionProvider, useValue: {} },
