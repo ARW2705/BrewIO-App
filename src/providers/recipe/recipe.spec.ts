@@ -41,6 +41,7 @@ import { ProcessHttpErrorProvider } from '../process-http-error/process-http-err
 import { StorageProvider } from '../storage/storage';
 import { UserProvider } from '../user/user';
 import { ConnectionProvider } from '../connection/connection';
+import { PreferencesProvider } from '../preferences/preferences';
 
 describe('Recipe Service', () => {
   let injector: TestBed;
@@ -62,6 +63,7 @@ describe('Recipe Service', () => {
         StorageProvider,
         ConnectionProvider,
         UserProvider,
+        PreferencesProvider,
         Events,
         { provide: Network, useValue: {} },
         { provide: Platform, useClass: PlatformMockDev }

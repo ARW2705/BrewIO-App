@@ -34,6 +34,8 @@ import { StorageProvider } from '../storage/storage';
 import { ConnectionProvider } from '../connection/connection';
 import { UserProvider } from '../user/user';
 import { RecipeProvider } from '../recipe/recipe';
+import { PreferencesProvider } from '../preferences/preferences';
+
 
 describe('Process Service', () => {
   let injector: TestBed;
@@ -56,6 +58,7 @@ describe('Process Service', () => {
         ConnectionProvider,
         UserProvider,
         RecipeProvider,
+        PreferencesProvider,
         Events,
         { provide: Network, useValue: {} },
         { provide: Platform, useClass: PlatformMockDev }

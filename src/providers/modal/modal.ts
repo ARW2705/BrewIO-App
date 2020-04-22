@@ -1,6 +1,6 @@
 /* Module imports */
 import { Injectable } from '@angular/core';
-import { Events, ModalController } from 'ionic-angular';
+import { ModalController } from 'ionic-angular';
 
 /* Page imports */
 import { LoginPage } from '../../pages/forms/login/login';
@@ -9,8 +9,7 @@ import { SignupPage } from '../../pages/forms/signup/signup';
 @Injectable()
 export class ModalProvider {
 
-  constructor(public events: Events,
-    public modalCtrl: ModalController) { }
+  constructor(public modalCtrl: ModalController) { }
 
   /**
    * Open the login modal

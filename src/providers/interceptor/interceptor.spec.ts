@@ -25,6 +25,8 @@ import { ProcessHttpErrorProvider } from '../process-http-error/process-http-err
 import { StorageProvider } from '../storage/storage';
 import { ConnectionProvider } from '../connection/connection';
 import { ToastProvider } from '../toast/toast';
+import { PreferencesProvider } from '../preferences/preferences';
+
 
 describe('HTTP Interceptor service', () => {
   let injector: TestBed;
@@ -50,6 +52,7 @@ describe('HTTP Interceptor service', () => {
         { provide: ProcessHttpErrorProvider, useValue: {} },
         { provide: StorageProvider, useValue: {} },
         { provide: ConnectionProvider, useValue: {} },
+        { provide: PreferencesProvider, useValue: {} },
         { provide: ToastController, useClass: ToastControllerMock },
         { provide: HTTP_INTERCEPTORS, useClass: AuthorizedInterceptor, multi: true },
         { provide: HTTP_INTERCEPTORS, useClass: UnauthorizedInterceptor, multi: true}
