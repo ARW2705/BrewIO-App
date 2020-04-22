@@ -1,146 +1,94 @@
 <ion-content class="content">
-  <!--
-    show login/signup if not logged in
-    show user profile
-    user profile update form
-  -->
 
   <ion-grid>
 
-    <ng-container *ngIf="isLoggedIn()">
+    <ion-list no-lines>
 
-      <ion-row id="user-router-nav">
+      <!-- Preferences section -->
 
-        <!-- TODO: implmement separate 'about' and 'friends' section cards -->
-        <ion-col>
-          About
-        </ion-col>
-        <ion-col>
-          Friends
-        </ion-col>
-      </ion-row>
-      <ion-row>
-
-        <!-- User profile form -->
-        <form id="form" [formGroup]="userForm">
-
-          <!-- Email field (not form) -->
-          <ion-item *ngIf="!isEditing('email', undefined)">
-
-            <!-- Toggle editing mode for email -->
-            <button class="profile-field-button"
-                    (click)="changeEdit('email')">
-              Email: <span>{{ userForm.value.email || 'NONE' }}</span>
-            </button>
-          </ion-item>
-
-          <!-- Email field (form) -->
-          <ion-item *ngIf="isEditing('email')">
-            <ion-label floating>Email</ion-label>
-            <ion-input  type="text"
-                        #email
-                        formControlName="email"
-                        autocapitalize="off"
-                        (keyup.enter)="changeEdit('email', email)"
-                        (ionBlur)="changeEdit('email', email)">
-            </ion-input>
-          </ion-item>
-
-          <!-- First name field (not form) -->
-          <ion-item *ngIf="!isEditing('firstname')">
-
-            <!-- Toggle editing mode for first name -->
-            <button class="profile-field-button"
-                    (click)="changeEdit('firstname', undefined)">
-              First name: <span>{{ userForm.value.firstname }}</span>
-            </button>
-          </ion-item>
-
-          <!-- First name field (form) -->
-          <ion-item *ngIf="isEditing('firstname')">
-            <ion-label floating>First name</ion-label>
-            <ion-input type="text"
-                        #firstname
-                       formControlName="firstname"
-                       autocapitalize="off"
-                       (keyup.enter)="changeEdit('firstname', firstname)"
-                       (ionBlur)="changeEdit('firstname', firstname)">
-            </ion-input>
-          </ion-item>
-
-          <!-- Last name field (not form) -->
-          <ion-item *ngIf="!isEditing('lastname')">
-
-            <!-- Toggle editing mode for last name -->
-            <button class="profile-field-button"
-                    (click)="changeEdit('lastname', undefined)">
-              Last name: <span>{{ userForm.value.lastname }}</span>
-            </button>
-          </ion-item>
-
-          <!-- Last name field (form) -->
-          <ion-item *ngIf="isEditing('lastname')">
-            <ion-label floating>Last name</ion-label>
-            <ion-input type="text"
-                        #lastname
-                       formControlName="lastname"
-                       autocapitalize="off"
-                       (keyup.enter)="changeEdit('lastname', lastname)"
-                       (ionBlur)="changeEdit('lastname', lastname)">
-            </ion-input>
-          </ion-item>
-
-        </form>
+      <ion-row class="section-row">
+        <button ion-item
+                class="dropdown-button"
+                (click)="toggleExpandContent('preferences')">
+          <ion-row  justify-content-center
+                    class="expand-header">
+            <h2>Preferences</h2>
+          </ion-row>
+          <ion-row  justify-content-center
+                    class="expand-hint">
+            <ion-icon name="arrow-dropdown"></ion-icon>
+          </ion-row>
+        </button>
       </ion-row>
 
-      <ion-row>
-        <!-- TODO friends list -->
+      <accordion [expanded]="showExpandedContent('preferences')">
+        <preferences></preferences>
+      </accordion>
+
+      <!-- Profile section -->
+
+      <ion-row class="section-row">
+        <button ion-item
+                class="dropdown-button"
+                (click)="toggleExpandContent('profile')">
+          <ion-row  justify-content-center
+                    class="expand-header">
+            <h2>Profile</h2>
+          </ion-row>
+          <ion-row  justify-content-center
+                    class="expand-hint">
+            <ion-icon name="arrow-dropdown"></ion-icon>
+          </ion-row>
+        </button>
       </ion-row>
 
-      <!-- Submit changes to user profile -->
-      <ion-row *ngIf="hasValuesToUpdate()">
-        <ion-col class="user-button-container">
+      <accordion [expanded]="showExpandedContent('profile')">
+        <profile></profile>
+      </accordion>
 
-          <!-- Button is disabled if data has not been changed -->
-          <button ion-button
-                  color="primary"
-                  [disabled]="!userForm.valid"
-                  (click)="onUpdate()">
-            Update profile
-          </button>
-        </ion-col>
+      <!-- Friends section -->
+
+      <ion-row class="section-row">
+        <button ion-item
+                class="dropdown-button"
+                (click)="toggleExpandContent('friends')">
+          <ion-row  justify-content-center
+                    class="expand-header">
+            <h2>Friends</h2>
+          </ion-row>
+          <ion-row  justify-content-center
+                    class="expand-hint">
+            <ion-icon name="arrow-dropdown"></ion-icon>
+          </ion-row>
+        </button>
       </ion-row>
 
-    </ng-container>
+      <accordion [expanded]="showExpandedContent('friends')">
+        <friends></friends>
+      </accordion>
 
-    <!-- Prompt user to login or signup if not logged in -->
-    <ng-container *ngIf="!isLoggedIn()">
+      <!-- About section -->
 
-      <ion-row justify-content-center>
-        <h2>Not logged in...</h2>
+      <ion-row class="section-row">
+        <button ion-item
+                class="dropdown-button"
+                (click)="toggleExpandContent('about')">
+          <ion-row  justify-content-center
+                    class="expand-header">
+            <h2>About</h2>
+          </ion-row>
+          <ion-row  justify-content-center
+                    class="expand-hint">
+            <ion-icon name="arrow-dropdown"></ion-icon>
+          </ion-row>
+        </button>
       </ion-row>
 
-      <ion-row justify-content-around>
-        <!-- Open login form modal button -->
-        <ion-col col-4 class="user-button-container">
-          <button ion-button
-                  color="primary"
-                  (click)="openLogin()">
-            Log In
-          </button>
-        </ion-col>
+      <accordion [expanded]="showExpandedContent('about')">
+        <about></about>
+      </accordion>
 
-        <!-- Open signup form modal button -->
-        <ion-col col-4 class="user-button-container">
-          <button ion-button
-                  color="primary"
-                  (click)="openSignup()">
-            Sign Up
-          </button>
-        </ion-col>
-
-      </ion-row>
-    </ng-container>
+    </ion-list>
 
   </ion-grid>
 
