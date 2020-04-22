@@ -6,14 +6,14 @@ import { MyApp } from './app.component';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { IonicStorageModule } from '@ionic/storage';
 import { CommonModule } from '@angular/common';
+import { Network } from '@ionic-native/network/ngx';
 import { ComponentsModule } from '../components/components.module';
+import { PipesModule } from '../pipes/pipes.module';
 
-import { AboutPage } from '../pages/about/about';
 import { HomePage } from '../pages/home/home';
 import { TabsPage } from '../pages/tabs/tabs';
 import { RecipePage } from '../pages/recipe/recipe';
 import { RecipeMasterDetailPage } from '../pages/recipe-master-detail/recipe-master-detail';
-import { UserPage } from '../pages/user/user';
 import { RecipeFormPage } from '../pages/forms/recipe-form/recipe-form';
 import { GeneralFormPage } from '../pages/forms/general-form/general-form';
 import { ProcessFormPage } from '../pages/forms/process-form/process-form';
@@ -22,12 +22,12 @@ import { LoginPage } from '../pages/forms/login/login';
 import { ProcessPage } from '../pages/process/process';
 import { SignupPage } from '../pages/forms/signup/signup';
 import { NoteFormPage } from '../pages/forms/note-form/note-form';
+import { InventoryPage } from '../pages/inventory/inventory';
 
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 import { UserProvider } from '../providers/user/user';
 import { RecipeProvider } from '../providers/recipe/recipe';
-import { AuthenticationProvider } from '../providers/authentication/authentication';
 import { AuthorizedInterceptor, UnauthorizedInterceptor } from '../providers/interceptor/interceptor';
 import { ProcessHttpErrorProvider } from '../providers/process-http-error/process-http-error';
 import { LibraryProvider } from '../providers/library/library';
@@ -37,15 +37,20 @@ import { ModalProvider } from '../providers/modal/modal';
 import { FormValidatorProvider } from '../providers/form-validator/form-validator';
 import { ToastProvider } from '../providers/toast/toast';
 import { ActionSheetProvider } from '../providers/action-sheet/action-sheet';
+import { InventoryProvider } from '../providers/inventory/inventory';
+import { StorageProvider } from '../providers/storage/storage';
+import { SyncProvider } from '../providers/sync/sync';
+import { ConnectionProvider } from '../providers/connection/connection';
+
+import { UserPageModule } from '../pages/user/user.module';
+import { PreferencesProvider } from '../providers/preferences/preferences';
 
 @NgModule({
   declarations: [
     MyApp,
-    AboutPage,
     HomePage,
     TabsPage,
     RecipePage,
-    UserPage,
     RecipeMasterDetailPage,
     RecipeFormPage,
     GeneralFormPage,
@@ -54,7 +59,8 @@ import { ActionSheetProvider } from '../providers/action-sheet/action-sheet';
     ProcessFormPage,
     ProcessPage,
     SignupPage,
-    NoteFormPage
+    NoteFormPage,
+    InventoryPage
   ],
   imports: [
     BrowserModule,
@@ -66,17 +72,17 @@ import { ActionSheetProvider } from '../providers/action-sheet/action-sheet';
     HttpClientModule,
     IonicStorageModule.forRoot(),
     ComponentsModule,
-    CommonModule
+    CommonModule,
+    PipesModule,
+    UserPageModule
   ],
   bootstrap: [IonicApp],
   entryComponents: [
     MyApp,
-    AboutPage,
     HomePage,
     TabsPage,
     RecipePage,
     RecipeMasterDetailPage,
-    UserPage,
     RecipeFormPage,
     GeneralFormPage,
     IngredientFormPage,
@@ -84,15 +90,19 @@ import { ActionSheetProvider } from '../providers/action-sheet/action-sheet';
     ProcessFormPage,
     ProcessPage,
     SignupPage,
-    NoteFormPage
+    NoteFormPage,
+    InventoryPage
   ],
   providers: [
     StatusBar,
     SplashScreen,
-    {provide: ErrorHandler, useClass: IonicErrorHandler},
+    Network,
+    {
+      provide: ErrorHandler,
+      useClass: IonicErrorHandler
+    },
     UserProvider,
     RecipeProvider,
-    AuthenticationProvider,
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthorizedInterceptor,
@@ -110,7 +120,12 @@ import { ActionSheetProvider } from '../providers/action-sheet/action-sheet';
     ModalProvider,
     FormValidatorProvider,
     ToastProvider,
-    ActionSheetProvider
+    ActionSheetProvider,
+    InventoryProvider,
+    StorageProvider,
+    SyncProvider,
+    ConnectionProvider,
+    PreferencesProvider
   ]
 })
 export class AppModule {}
