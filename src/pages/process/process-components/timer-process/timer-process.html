@@ -1,0 +1,179 @@
+<div class="container">
+
+  <!-- Active Step View -->
+
+  <!-- 'All' Timer Controls -->
+  <ion-row  *ngIf="!isPreview"
+            id="timer-master-controls">
+
+    <ion-col col-12>
+      <h2>All Timer Controls</h2>
+    </ion-col>
+
+    <!-- 'All' Timer Control Buttons -->
+
+    <!-- Start All Timers Button -->
+    <ion-col col-6>
+      <button ion-button
+              color="primary"
+              class="button timer-button"
+              (click)="startAllTimers()">
+        Start {{ timers.length > 1 ? 'All': '' }}
+      </button>
+    </ion-col>
+
+    <!-- Stop All Timers Button -->
+    <ion-col col-6>
+      <button ion-button
+              color="primary"
+              class="button timer-button"
+              (click)="stopAllTimers()">
+        Stop {{ timers.length > 1 ? 'All': '' }}
+      </button>
+    </ion-col>
+
+    <!-- Add minute to All Timers Button -->
+    <ion-col col-6>
+      <button ion-button
+              color="primary"
+              class="button timer-button"
+              (click)="addToAllTimers()">
+        +1min {{ timers.length > 1 ? 'All': '' }}
+      </button>
+    </ion-col>
+
+    <!-- Reset All Timers Button -->
+    <ion-col col-6>
+      <button ion-button
+              color="secondary"
+              class="button timer-button"
+              (click)="resetAllTimers()">
+        Reset {{ timers.length > 1 ? 'All': '' }}
+      </button>
+    </ion-col>
+
+    <!-- Timer Description -->
+    <ion-col col-12>
+      <button ion-button
+              class="button timer-button"
+              (click)="toggleShowDescription()">
+        {{ showDescription ? 'Hide Descriptions': 'Show Descriptions' }}
+      </button>
+    </ion-col>
+
+  </ion-row>
+
+  <ng-container *ngFor="let timer of timers; index as i" >
+
+    <!-- Preview View -->
+    <ion-row *ngIf="isPreview">
+
+      <ion-col col-12>
+        <h2>{{ timer.timer.name }}</h2>
+      </ion-col>
+
+      <ion-col col-6>
+        <span [innerText]="getFormattedDurationString(timer.timer.duration)"></span>
+      </ion-col>
+
+      <ion-col col-6>
+        <span>Intervals: {{ timer.timer.splitInterval }}</span>
+      </ion-col>
+
+      <ion-col col-12>
+        <p>{{ timer.timer.description }}<p>
+      </ion-col>
+    </ion-row>
+    <!-- End Preview View -->
+
+
+    <!-- Active Step View Timers -->
+    <ng-container *ngIf="!isPreview">
+
+      <!-- Active Step View Timer Data -->
+      <ion-row class="timer-row">
+
+        <ion-col col-12>
+          <h2>{{ timer.timer.name }}</h2>
+        </ion-col>
+
+        <ion-col  col-12
+                  *ngIf="showDescription"
+                  class="description">
+          <p>{{ timer.timer.description }}</p>
+        </ion-col>
+
+      </ion-row>
+      <!-- End Active Step View Timer Data -->
+
+      <ion-row  align-items-center
+                #slidingTimers
+                class="timer-row">
+
+        <!-- Timer Progress Circle Component -->
+        <ion-col *ngIf="timer.settings !== undefined">
+          <progress-circle  [settings]="timer.settings"
+                            (click)="toggleTimerControls(timer)">
+          </progress-circle>
+        </ion-col>
+        <!-- End Timer Progress Circle Component -->
+
+        <ng-container *ngIf="isConcurrent">
+
+          <!-- Concurrent Timers Individual Controls -->
+          <div  class="timer-individual-controls"
+                [@slideUpDown]="isExpanded(timer)">
+
+              <!-- Start Individual Timer Button -->
+              <ion-row>
+                <button ion-button
+                        color="primary"
+                        class="button timer-button"
+                        (click)="startSingleTimer(timer)">
+                  Start
+                </button>
+              </ion-row>
+
+              <!-- Stop Individual Timer Button -->
+              <ion-row>
+                <button ion-button
+                        color="primary"
+                        class="button timer-button"
+                        (click)="stopSingleTimer(timer)">
+                  Stop
+                </button>
+              </ion-row>
+
+              <!-- Add minute to Individual Timer Button -->
+              <ion-row>
+                <button ion-button
+                        color="primary"
+                        class="button timer-button"
+                        (click)="addToSingleTimer(timer)">
+                  +1min
+                </button>
+              </ion-row>
+
+              <!-- Reset Individual Timer Button -->
+              <ion-row>
+                <button ion-button
+                        color="secondary"
+                        class="button timer-button"
+                        (click)="resetSingleTimer(timer)">
+                  Reset
+                </button>
+              </ion-row>
+
+          </div>
+          <!-- End Concurrent Timers Individual Controls -->
+
+        </ng-container>
+
+      </ion-row>
+
+    </ng-container>
+    <!-- End Active Step View Timers -->
+
+  </ng-container>
+
+</div>

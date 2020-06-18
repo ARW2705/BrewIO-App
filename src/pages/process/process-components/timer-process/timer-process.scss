@@ -1,0 +1,58 @@
+timer-process {
+  #timer-master-controls {
+    /* Display */
+    background: map-get($colors, gray-scale-4);
+    -webkit-box-shadow: inset 0 0 40px 20px map-get($colors, gray-scale-3);
+    box-shadow: inset 0 0 40px 20px map-get($colors, gray-scale-3);
+
+    /* Text */
+    text-align: center;
+
+    /* Children */
+    .timer-button {
+      /* Text */
+      font-size: 1.3em;
+    }
+  }
+
+  .timer-button {
+    /* Display */
+    width: 100%;
+
+    /* Color */
+    color: map-get($colors, gray-scale-2);
+
+    /* Text */
+    font-size: 1.1em;
+  }
+
+  .timer-individual-controls {
+    /* Display */
+    z-index: 1 !important;
+    width: 100%;
+    margin-top: 5px;
+    height: auto;
+    overflow: hidden;
+  }
+
+  .timer-row {
+    /* Display */
+    width: 100%;
+
+    /* Children */
+    ion-col {
+      /* Display */
+      z-index: 2;
+
+      /* Color */
+      background-color: map-get($colors, gray-scale-2);
+
+      /* Children */
+      h2 {
+        /* Text */
+        font-size: 2em;
+        text-align: center;
+      }
+    }
+  }
+}
