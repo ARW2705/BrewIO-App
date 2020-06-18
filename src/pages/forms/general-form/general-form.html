@@ -19,7 +19,7 @@
     </ion-item>
 
     <!-- Recipe Variant Name Input -->
-    <ion-item *ngIf="formType == 'recipe'">
+    <ion-item *ngIf="formType == 'variant'">
       <ion-label floating>
         Enter Batch Variant Name
       </ion-label>
@@ -88,14 +88,14 @@
       <ion-input formControlName="mashVolume" type="number"></ion-input>
     </ion-item>
 
-    <ng-container *ngIf="formType == 'recipe'">
-      <!-- Toggle recipe as favorite -->
+    <ng-container *ngIf="formType == 'variant'">
+      <!-- Toggle recipe variant as favorite -->
       <ion-item>
         <ion-label position="floating">Set as favorite</ion-label>
         <ion-toggle formControlName="isFavorite" color="primary"></ion-toggle>
       </ion-item>
 
-      <!-- Toggle recipe to use as recipe master -->
+      <!-- Toggle recipe variant to use as recipe master -->
       <ion-item>
         <ion-label position="floating">Set as recipe master</ion-label>
         <ion-toggle formControlName="isMaster" color="primary"></ion-toggle>
