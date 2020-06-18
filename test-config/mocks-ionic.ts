@@ -8,6 +8,22 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { baseURL } from '../src/shared/constants/base-url';
 import { apiVersion } from '../src/shared/constants/api-version';
 
+
+export class FormMock {
+  _ids: number = -1;
+  public nextId(): number {
+    return ++this._ids;
+  }
+}
+
+export class DomMock {
+  public debouncer(): any { }
+}
+
+export class GestureMock {
+  public createGesture(): any { }
+}
+
 export class NetworkMock {
   public onConnect(): Observable<any> {
     return Observable.of();
@@ -221,7 +237,7 @@ export class NavParamsMock {
     }
     return 'default';
   }
-  static setParams(key, val){
+  static setParams(key, val): void {
     NavParamsMock.returnParam[key] = val;
   }
 }
@@ -265,11 +281,15 @@ export class StorageMock {
 }
 
 export class EventsMock {
-  public emit(...args): any {
+  public subscribe(...args): any {
     return;
   }
 
-  public subscribe(...args): any {
+  public unsubscribe(...args): any {
+    return;
+  }
+
+  public publish(...args): any {
     return;
   }
 }
