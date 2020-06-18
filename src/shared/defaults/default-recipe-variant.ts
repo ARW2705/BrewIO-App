@@ -1,14 +1,12 @@
-import { Recipe } from '../interfaces/recipe';
+import { RecipeVariant } from '../interfaces/recipe-variant';
 
-export const defaultRecipe = () => {
-  const def: Recipe = {
-    _id: 'default',
+export const defaultRecipeVariant = () => {
+  const def: RecipeVariant = {
+    cid: '0',
     variantName: 'Initial Batch',
     notes: [],
-    isActive: false,
     isFavorite: false,
     isMaster: false,
-    // owner: 'default',
     efficiency: 70,
     brewingType: 'None Selected',
     mashDuration: 60,
@@ -21,7 +19,6 @@ export const defaultRecipe = () => {
     ABV: 0,
     IBU: 0,
     SRM: 0,
-    currentStep: 0,
     grains: [],
     hops: [],
     yeast: [],
