@@ -1,5 +1,5 @@
 /* Module imports */
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { NavController, NavParams, ViewController } from 'ionic-angular';
 import { FormGroup, FormBuilder, FormControl, Validators } from '@angular/forms';
 
@@ -10,7 +10,7 @@ import { Style } from '../../../shared/interfaces/library';
   selector: 'page-general-form',
   templateUrl: 'general-form.html',
 })
-export class GeneralFormPage {
+export class GeneralFormPage implements OnInit {
   generalForm: FormGroup = null;
   formType: string = '';
   docMethod: string = '';
@@ -30,12 +30,21 @@ export class GeneralFormPage {
     public navParams: NavParams,
     public viewCtrl: ViewController,
     public formBuilder: FormBuilder
-  ) {
-    this.formType = navParams.get('formType');
-    this.docMethod = navParams.get('docMethod');
-    this.styles = navParams.get('styles');
-    this.initForm(navParams.get('data'));
+  ) { }
+
+  /***** Lifecycle Hooks *****/
+
+  ngOnInit() {
+    this.formType = this.navParams.get('formType');
+    this.docMethod = this.navParams.get('docMethod');
+    this.styles = this.navParams.get('styles');
+    this.initForm(this.navParams.get('data'));
   }
+
+  /***** End Lifecycle Hooks *****/
+
+
+  /***** Form Methods *****/
 
   /**
    * ion-select comparison function - allows objects as values
@@ -130,5 +139,7 @@ export class GeneralFormPage {
     this.convertFormValuesToNumbers();
     this.viewCtrl.dismiss(this.generalForm.value);
   }
+
+  /***** End Form Methods *****/
 
 }

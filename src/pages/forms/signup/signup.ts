@@ -4,6 +4,7 @@ import { NavController, NavParams, ViewController } from 'ionic-angular';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { Subject } from 'rxjs/Subject';
 import { takeUntil } from 'rxjs/operators/takeUntil';
+import { take } from 'rxjs/operators/take';
 
 /* Provider imports */
 import { FormValidatorProvider } from '../../../providers/form-validator/form-validator';
@@ -119,7 +120,7 @@ export class SignupPage implements OnInit, OnDestroy {
     const signupData = this.signupForm.value;
     signupData.preferredUnits = signupData.preferredUnits ? 'm': 'e';
     this.userService.signUp(signupData)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(take(1))
       .subscribe(
         response => {
           this.toastService.presentToast('Sign up complete!', 1500, 'bright-toast');

@@ -3,6 +3,7 @@ import { Component, ChangeDetectorRef, AfterViewInit } from '@angular/core';
 import { NavController, NavParams, ModalController, Events } from 'ionic-angular';
 import { Subject } from 'rxjs/Subject';
 import { takeUntil } from 'rxjs/operators/takeUntil';
+import { take } from 'rxjs/operators/take';
 
 /* Interface imports */
 import { RecipeVariant } from '../../../shared/interfaces/recipe-variant';
@@ -650,7 +651,7 @@ export class RecipeFormPage implements AfterViewInit {
   submitCreationPost(payload: any, message: string): void {
     if (this.formType === 'master') {
       this.recipeService.postRecipeMaster(payload)
-        .pipe(takeUntil(this.destroy$))
+        .pipe(take(1))
         .subscribe(
           () => {
             console.log('master create success');
@@ -666,7 +667,7 @@ export class RecipeFormPage implements AfterViewInit {
         );
     } else if (this.formType === 'variant') {
       this.recipeService.postRecipeToMasterById(getId(this.master), payload)
-        .pipe(takeUntil(this.destroy$))
+        .pipe(take(1))
         .subscribe(
           () => {
             console.log('variant create success');
@@ -691,7 +692,7 @@ export class RecipeFormPage implements AfterViewInit {
   submitPatchUpdate(payload: any, message: string): void {
     if (this.formType === 'master') {
       this.recipeService.patchRecipeMasterById(getId(this.master), payload)
-        .pipe(takeUntil(this.destroy$))
+        .pipe(take(1))
         .subscribe(
           () => {
             this.toastService.presentToast(message);
@@ -703,7 +704,7 @@ export class RecipeFormPage implements AfterViewInit {
         );
     } else if (this.formType === 'variant') {
       this.recipeService.patchRecipeVariantById(getId(this.master), getId(this.variant), payload)
-        .pipe(takeUntil(this.destroy$))
+        .pipe(take(1))
         .subscribe(
           () => {
             this.toastService.presentToast(message);

@@ -1,5 +1,5 @@
 /* Module imports */
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ViewController, NavController, NavParams } from 'ionic-angular';
 import { FormGroup, FormControl, FormBuilder, Validators } from '@angular/forms';
 
@@ -7,7 +7,7 @@ import { FormGroup, FormControl, FormBuilder, Validators } from '@angular/forms'
   selector: 'page-ingredient-form',
   templateUrl: 'ingredient-form.html',
 })
-export class IngredientFormPage {
+export class IngredientFormPage implements OnInit {
   title: string = '';
   ingredientForm: FormGroup;
   ingredientLibrary: any = null;
@@ -23,8 +23,12 @@ export class IngredientFormPage {
     public navParams: NavParams,
     public viewCtrl: ViewController,
     public formBuilder: FormBuilder
-  ) {
-    const data = navParams.get('data');
+  ) { }
+
+  /***** Lifecycle Hooks *****/
+
+  ngOnInit() {
+    const data = this.navParams.get('data');
     if (!data) this.dismissOnError(data);
     if (data.library) this.ingredientLibrary = data.library;
     this.ingredientType = data.ingredientType;
@@ -35,6 +39,11 @@ export class IngredientFormPage {
     }
     this.initForm(data);
   }
+
+  /***** End Lifecycle Hooks *****/
+
+
+  /***** Form Methods *****/
 
   /**
    * Call ViewController dismiss method
@@ -163,5 +172,7 @@ export class IngredientFormPage {
   toNumber(controlValue: string): number {
     return parseFloat(controlValue);
   }
+
+  /***** End Form Methods *****/
 
 }
