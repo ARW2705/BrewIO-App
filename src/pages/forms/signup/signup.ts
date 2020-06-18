@@ -1,7 +1,9 @@
 /* Module imports */
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { NavController, NavParams, ViewController } from 'ionic-angular';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { Subject } from 'rxjs/Subject';
+import { takeUntil } from 'rxjs/operators/takeUntil';
 
 /* Provider imports */
 import { FormValidatorProvider } from '../../../providers/form-validator/form-validator';
@@ -12,10 +14,11 @@ import { ToastProvider } from '../../../providers/toast/toast';
   selector: 'page-signup',
   templateUrl: 'signup.html',
 })
-export class SignupPage {
+export class SignupPage implements OnInit, OnDestroy {
   signupForm: FormGroup;
   showPassword: boolean = false;
   preferredUnits: string = 'EN';
+  destroy$: Subject<boolean> = new Subject<boolean>();
 
   constructor(
     public navCtrl: NavController,
@@ -24,9 +27,23 @@ export class SignupPage {
     public formBuilder: FormBuilder,
     public userService: UserProvider,
     public toastService: ToastProvider
-  ) {
+  ) { }
+
+  /***** Lifecycle Hooks *****/
+
+  ngOnInit() {
     this.initForm();
   }
+
+  ngOnDestroy() {
+    this.destroy$.next(true);
+    this.destroy$.complete();
+  }
+
+  /***** End Lifecycle Hooks *****/
+
+
+  /***** Form Methods *****/
 
   /**
    * Call ViewController dismiss method with no data
@@ -86,6 +103,7 @@ export class SignupPage {
       validator: FormValidatorProvider.PasswordMatch()
     });
     this.signupForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
       .subscribe(value => {
         this.preferredUnits = value.preferredUnits ? 'EN': 'M';
       });
@@ -101,6 +119,7 @@ export class SignupPage {
     const signupData = this.signupForm.value;
     signupData.preferredUnits = signupData.preferredUnits ? 'm': 'e';
     this.userService.signUp(signupData)
+      .pipe(takeUntil(this.destroy$))
       .subscribe(
         response => {
           this.toastService.presentToast('Sign up complete!', 1500, 'bright-toast');
@@ -121,5 +140,7 @@ export class SignupPage {
   togglePasswordVisible(): void {
     this.showPassword = !this.showPassword;
   }
+
+  /***** End Lifecycle Hooks *****/
 
 }
