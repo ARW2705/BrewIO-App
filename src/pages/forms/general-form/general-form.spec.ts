@@ -14,49 +14,50 @@ import { GeneralFormPage } from './general-form';
 
 
 describe('General Form', () => {
+  let fixture: ComponentFixture<GeneralFormPage>;
+  let generalPage: GeneralFormPage;
+  configureTestBed();
+
+  beforeAll(done => (async() => {
+    TestBed.configureTestingModule({
+      declarations: [
+        GeneralFormPage
+      ],
+      imports: [
+        IonicModule.forRoot(GeneralFormPage)
+      ],
+      providers: [
+        { provide: NavController, useClass: NavMock },
+        { provide: NavParams, useClass: NavParamsMock },
+        { provide: ViewController, useClass: ViewControllerMock }
+      ]
+    });
+    await TestBed.compileComponents();
+  })()
+  .then(done)
+  .catch(done.fail));
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(GeneralFormPage);
+    generalPage = fixture.componentInstance;
+  });
 
   describe('Form create', () => {
-    let fixture: ComponentFixture<GeneralFormPage>;
-    let generalPage: GeneralFormPage;
-    configureTestBed();
-
     beforeAll(async(() => {
       NavParamsMock.setParams('formType', 'master');
       NavParamsMock.setParams('docMethod', 'create');
       NavParamsMock.setParams('styles', mockStyles());
     }));
 
-    beforeAll(done => (async() => {
-      TestBed.configureTestingModule({
-        declarations: [
-          GeneralFormPage
-        ],
-        imports: [
-          IonicModule.forRoot(GeneralFormPage)
-        ],
-        providers: [
-          { provide: NavController, useClass: NavMock },
-          { provide: NavParams, useClass: NavParamsMock },
-          { provide: ViewController, useClass: ViewControllerMock }
-        ]
-      });
-      await TestBed.compileComponents();
-    })()
-    .then(done)
-    .catch(done.fail));
-
-    beforeEach(() => {
-      fixture = TestBed.createComponent(GeneralFormPage);
-      generalPage = fixture.componentInstance;
-    });
-
     test('should create the component in creation mode', () => {
       fixture.detectChanges();
+
       expect(generalPage).toBeDefined();
     }); // end 'should create the component in creation mode' test
 
     test('should create the form with default values', () => {
       fixture.detectChanges();
+
       expect(generalPage.generalForm.value.style).toBeUndefined();
       expect(generalPage.generalForm.value.brewingType).toMatch('');
       expect(generalPage.generalForm.controls).toHaveProperty('name');
@@ -64,15 +65,18 @@ describe('General Form', () => {
 
     test('should compare ion-select items', () => {
       fixture.detectChanges();
+
       const o1a = {_id: 1};
       const o1b = {_id: 1};
       const o2 = {_id: 2};
+
       expect(generalPage.compareWithFn(o1a, o1b)).toBe(true);
       expect(generalPage.compareWithFn(o1a, o2)).toBe(false);
     }); // end 'should compare ion-select items' test
 
     test('should convert form numbers from strings to actual numbers', () => {
       fixture.detectChanges();
+
       const form = generalPage.generalForm.controls;
       form.efficiency.setValue('60')
       form.batchVolume.setValue('5');
@@ -80,7 +84,9 @@ describe('General Form', () => {
       form.mashVolume.setValue('5');
       form.boilDuration.setValue('60');
       form.mashDuration.setValue('60');
+
       generalPage.convertFormValuesToNumbers();
+
       expect(form.efficiency.value).toBe(60);
       expect(form.batchVolume.value).toBe(5);
       expect(form.boilVolume.value).toBe(5);
@@ -91,22 +97,31 @@ describe('General Form', () => {
 
     test('should dismiss the modal', () => {
       fixture.detectChanges();
+
       const viewSpy = jest.spyOn(generalPage.viewCtrl, 'dismiss');
+
       generalPage.dismiss();
+
       expect(viewSpy).toHaveBeenCalled();
     }); // 'should dismiss the modal' test
 
     test('should update the selected style', () => {
       fixture.detectChanges();
+
       const _mockStyle = mockStyles()[0];
+
       expect(generalPage.styleSelection).toBeUndefined();
+
       generalPage.onStyleSelection(_mockStyle);
+
       expect(generalPage.styleSelection).toBe(_mockStyle);
     }); // end 'should update the selected style' test
 
     test('should submit the form', () => {
       fixture.detectChanges();
+
       const viewSpy = jest.spyOn(generalPage.viewCtrl, 'dismiss');
+
       const form = generalPage.generalForm.controls;
       const _mockStyle = mockStyles()[0];
       form.name.setValue('some name');
@@ -115,7 +130,9 @@ describe('General Form', () => {
       form.batchVolume.setValue('5');
       form.boilVolume.setValue('5');
       form.mashVolume.setValue('5');
+
       generalPage.onSubmit();
+
       expect(viewSpy).toHaveBeenCalledWith({
         name: 'some name',
         style: _mockStyle,
@@ -135,10 +152,6 @@ describe('General Form', () => {
 
 
   describe('Form update', () => {
-    let fixture: ComponentFixture<GeneralFormPage>;
-    let generalPage: GeneralFormPage;
-    configureTestBed();
-
     beforeAll(async(() => {
       NavParamsMock.setParams('formType', 'recipe');
       NavParamsMock.setParams('docMethod', 'update');
@@ -157,32 +170,9 @@ describe('General Form', () => {
       });
     }));
 
-    beforeAll(done => (async() => {
-      TestBed.configureTestingModule({
-        declarations: [
-          GeneralFormPage
-        ],
-        imports: [
-          IonicModule.forRoot(GeneralFormPage)
-        ],
-        providers: [
-          { provide: NavController, useClass: NavMock },
-          { provide: NavParams, useClass: NavParamsMock },
-          { provide: ViewController, useClass: ViewControllerMock }
-        ]
-      });
-      await TestBed.compileComponents();
-    })()
-    .then(done)
-    .catch(done.fail));
-
-    beforeEach(() => {
-      fixture = TestBed.createComponent(GeneralFormPage);
-      generalPage = fixture.componentInstance;
-    });
-
     test('should init form with given values', () => {
       fixture.detectChanges();
+      
       expect(generalPage.generalForm.value).toStrictEqual({
         variantName: '',
         style: mockStyles()[1],
