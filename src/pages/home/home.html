@@ -11,33 +11,29 @@
 
     <!-- Welcome header -->
     <ion-row justify-content-center>
-      <h2>Welcome {{ user == null ? 'to BrewIO': user.firstname ? user.firstname: user.username }}!</h2>
+      <h2 [innerText]="getWelcomeMessage()"></h2>
     </ion-row>
 
-    <!-- If user logged in -->
-    <ng-container *ngIf="user">
+    <!-- List of active batches -->
+    <ion-row class="messages-header">
+      <h3>Active Batches</h3>
+    </ion-row>
+    <active-batches></active-batches>
 
-      <!-- List of active batches -->
-      <ion-row class="messages-header">
-        <h3>Active Batches</h3>
-      </ion-row>
-      <active-batches></active-batches>
-
-      <!-- TODO: implement notifications -->
-      <ion-row class="messages-header">
-        <h3>Notifications</h3>
-      </ion-row>
-      <ion-row *ngIf="!notifications.length"
-               justify-content-center>
-        No notifications
-      </ion-row>
-      <ion-row *ngIf="notifications.length">
-        Notifications shown here
-      </ion-row>
-    </ng-container>
+    <!-- TODO: implement notifications -->
+    <!-- <ion-row class="messages-header">
+      <h3>Notifications</h3>
+    </ion-row>
+    <ion-row *ngIf="!notifications.length"
+             justify-content-center>
+      No notifications
+    </ion-row>
+    <ion-row *ngIf="notifications.length">
+      Notifications shown here
+    </ion-row> -->
 
     <!-- If user not logged in -->
-    <ng-container *ngIf="!user">
+    <ng-container *ngIf="!isLoggedIn()">
       <ion-row justify-content-around>
 
         <!-- Open login modal button -->
