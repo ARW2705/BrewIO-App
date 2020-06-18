@@ -1,13 +1,16 @@
 /* Module imports */
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { NavController, Events } from 'ionic-angular';
+import { NavController } from 'ionic-angular';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
-import 'rxjs/add/operator/takeUntil';
+import { takeUntil } from 'rxjs/operators/takeUntil';
 
 /* Interface imports */
-import { Recipe } from '../../shared/interfaces/recipe';
+import { RecipeVariant } from '../../shared/interfaces/recipe-variant';
 import { User } from '../../shared/interfaces/user';
+
+/* Utility imports */
+import { getId } from '../../shared/utility-functions/utilities';
 
 /* Page imports */
 import { ProcessPage } from '../../pages/process/process';
@@ -29,7 +32,6 @@ export class HomePage implements OnInit, OnDestroy {
 
   constructor(
     public navCtrl: NavController,
-    public events: Events,
     public userService: UserProvider,
     public recipeService: RecipeProvider,
     public modalService: ModalProvider
@@ -41,12 +43,12 @@ export class HomePage implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.destroy$.next(true);
-    this.destroy$.unsubscribe();
+    this.destroy$.complete();
   }
 
   ngOnInit() {
     this.user$
-      .takeUntil(this.destroy$)
+      .pipe(takeUntil(this.destroy$))
       .subscribe(user => {
         this.user = user
       });
@@ -55,17 +57,47 @@ export class HomePage implements OnInit, OnDestroy {
   /***** End lifecycle hooks *****/
 
   /**
+   * Format welcome message
+   *
+   * @params: none
+   *
+   * @return: welcome message string
+  **/
+  getWelcomeMessage(): string {
+    let userName = ' ';
+    if (this.user !== null) {
+      if (this.user.firstname !== undefined && this.user.firstname.length > 0) {
+        userName = ` ${this.user.firstname} `;
+      } else if (this.user.username !== undefined && this.user.username.length > 0) {
+        userName = ` ${this.user.username} `;
+      }
+    }
+    return `Welcome${userName}to BrewIO`;
+  }
+
+  /**
+   * Check if a user is logged in
+   *
+   * @params: none
+   *
+   * @return: true if user is logged in
+  **/
+  isLoggedIn(): boolean {
+    return this.userService.isLoggedIn();
+  }
+
+  /**
    * Navigate to Process Page with required data
    *
-   * @params: batch - Recipe to use as template for brew process
+   * @params: variant - Recipe variant to use as template for brew process
    *
    * @return: none
   **/
-  navToBrewProcess(recipe: Recipe): void {
+  navToBrewProcess(variant: RecipeVariant): void {
     const master$ = this.recipeService.getMasterList().value
       .find(_master$ => {
-        return _master$.value.recipes.some(_recipe => {
-          return _recipe._id === recipe._id;
+        return _master$.value.variants.some(_variant => {
+          return getId(_variant) === getId(variant);
         })
       });
     const master = master$.value;
@@ -74,7 +106,7 @@ export class HomePage implements OnInit, OnDestroy {
       {
         master: master,
         requestedUserId: master.owner,
-        selectedRecipeId: recipe._id
+        selectedRecipeId: getId(variant)
       }
     );
   }
