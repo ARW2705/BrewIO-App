@@ -4,21 +4,6 @@ page-process {
     padding-top: 56px;
   }
 
-  #timer-master-controls {
-    /* Display */
-    background: map-get($colors, gray-scale-4);
-    -webkit-box-shadow: inset 0 0 40px 20px map-get($colors, gray-scale-3);
-    box-shadow: inset 0 0 40px 20px map-get($colors, gray-scale-3);
-
-    /* Text */
-    text-align: center;
-
-    /* Children */
-    .timer-button {
-      font-size: 1.3em;
-    }
-  }
-
   #step-control-buttons {
     /* Children */
     ion-col {
@@ -30,51 +15,6 @@ page-process {
       /* Text */
       font-size: 2em;
     }
-  }
-
-  .alert-datetime {
-    /* Display */
-    border-bottom: 1px solid map-get($colors, gray-scale-6);
-
-    /* Color */
-    color: map-get($colors, gray-scale-8);
-
-    /* Text */
-    font-size: 1.1em;
-    text-align: center;
-  }
-
-  .alert-description {
-    /* Color */
-    color: map-get($colors, gray-scale-8);
-
-    /* Text */
-    white-space: normal;
-    text-align: center;
-  }
-
-  .alert-list {
-    /* Children */
-    .item-inner {
-      /* Display */
-      border: none !important;
-    }
-
-    h3 {
-      /* Text */
-      text-align: center;
-    }
-  }
-
-  .calendar-description {
-    /* Text */
-    text-align: center;
-  }
-
-  .change-button {
-    /* Display */
-    display: block;
-    margin: 0.6rem auto;
   }
 
   .description {
@@ -89,101 +29,14 @@ page-process {
     }
   }
 
-  .expand-button {
-    /* Display */
-    width: 100%;
-    background: transparent;
-    /* Color */
-    color: map-get($colors, gray-scale-10);
-
-    /* Text */
-    font-size: 2em;
-
-    /* Children */
-    h2 {
-      /* Display */
-      margin: 0.5rem 0 0;
-    }
-  }
-
   .nav-process-button {
     /* Color */
     color: map-get($colors, gray-scale-2);
   }
 
-  .next-datetime {
-    /* Children */
-    ion-label {
-      /* Children */
-      p:not(:first-child) {
-        /* Color */
-        color: map-get($colors, secondary) !important;
-      }
-    }
-  }
-
-  .past-datetime {
-    /* Children */
-    ion-label {
-      /* Children */
-      p {
-        /* Color */
-        color: map-get($colors, gray-scale-5);
-      }
-    }
-  }
-
-  .past-datetime:hover {
-    /* Children */
-    ion-label {
-      /* Children */
-      p {
-        /* Color */
-        color: map-get($colors, gray-scale-8);
-      }
-    }
-  }
-
   .row {
     /* Display */
     justify-content: center;
-  }
-
-  .timer-button {
-    /* Display */
-    width: 100%;
-
-    /* Color */
-    color: map-get($colors, gray-scale-2);
-
-    /* Text */
-    font-size: 1.1em;
-  }
-
-  .timer-individual-controls {
-    /* Display */
-    z-index: 1 !important;
-  }
-
-  .timer-row {
-    /* Display */
-    width: 100%;
-
-    /* Children */
-    ion-col {
-      /* Display */
-      z-index: 2;
-
-      /* Color */
-      background-color: map-get($colors, gray-scale-2);
-
-      /* Children */
-      h2 {
-        /* Text */
-        font-size: 2em;
-        text-align: center;
-      }
-    }
   }
 
 }

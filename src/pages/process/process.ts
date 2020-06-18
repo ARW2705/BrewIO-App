@@ -1,32 +1,34 @@
 /* Module imports */
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { NavController, NavParams, Platform, Events } from 'ionic-angular';
-import { Observable } from 'rxjs/Observable';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Subject } from 'rxjs/Subject';
-import 'rxjs/add/operator/takeUntil';
+import { takeUntil } from 'rxjs/operators/takeUntil';
+import { take } from 'rxjs/operators/take';
 
 /* Interface imports */
 import { RecipeMaster } from '../../shared/interfaces/recipe-master';
-import { Recipe } from '../../shared/interfaces/recipe';
+import { RecipeVariant } from '../../shared/interfaces/recipe-variant';
 import { Batch } from '../../shared/interfaces/batch';
-import { Alert } from '../../shared/interfaces/alerts';
-import { ProgressCircleSettings } from '../../shared/interfaces/progress-circle';
-import { Timer } from '../../shared/interfaces/timers';
+import { Alert } from '../../shared/interfaces/alert';
+import { Process } from '../../shared/interfaces/process';
 
 /* Utility function imports */
-import { clone } from '../../shared/utility-functions/utilities';
+import { getId } from '../../shared/utility-functions/utilities';
+import { hasId } from '../../shared/utility-functions/utilities';
 
 /* Animation imports */
 import { slideUpDown } from '../../animations/slide';
 
 /* Component imports */
-import { CalendarComponent } from '../../components/calendar/calendar';
+import { CalendarProcessComponent } from './process-components/calendar-process/calendar-process';
 
 /* Provider imports */
 import { RecipeProvider } from '../../providers/recipe/recipe';
 import { ProcessProvider } from '../../providers/process/process';
 import { UserProvider } from '../../providers/user/user';
 import { ToastProvider } from '../../providers/toast/toast';
+import { TimerProvider } from '../../providers/timer/timer';
 
 @Component({
   selector: 'page-process',
@@ -36,37 +38,18 @@ import { ToastProvider } from '../../providers/toast/toast';
   ]
 })
 export class ProcessPage implements OnInit, OnDestroy {
-  @ViewChild('calendar') calendarRef: CalendarComponent;
-  selectedBatch$: Observable<Batch> = null;
+  @ViewChild('calendar') calendarRef: CalendarProcessComponent;
+  selectedBatch$: BehaviorSubject<Batch> = null;
+  selectedBatch: Batch = null;
   destroy$: Subject<boolean> = new Subject<boolean>();
-  showDescription: boolean = false;
   master: RecipeMaster = null;
-  recipe: Recipe = null;
+  recipe: RecipeVariant = null;
   batchId: string = null;
   requestedUserId: string = null;
-  circumference: number = 0;
-  timers: Array<Array<Timer>> = [];
-  currentTimers: number = 0;
-  viewStepIndex = 0;
-  isConcurrent = false;
-  selectedBatch: Batch = null;
+  viewStepIndex: number = 0;
+  isConcurrent: boolean = false;
   _headerNavPop: any;
-
-  timerHeight: number;
-  timerWidth: number;
-  timerStrokeWidth: number;
-  timerRadius: number;
-  timerOriginX: number;
-  timerOriginY: number;
-  timerFontSize: string;
-  timerDY: string;
-
-  timerStroke = '#ffffff';
-  timerCircleFill = 'transparent';
-  timerTextFill = 'white';
-  timerTextXY = '50%';
-  timerTextAnchor = 'middle';
-  timerFontFamily = 'Arial';
+  _changeDate: any;
 
   constructor(
     public navCtrl: NavController,
@@ -76,43 +59,30 @@ export class ProcessPage implements OnInit, OnDestroy {
     public recipeService: RecipeProvider,
     public processService: ProcessProvider,
     public userService: UserProvider,
-    public toastService: ToastProvider
+    public toastService: ToastProvider,
+    public timerService: TimerProvider
   ) {
     this.master = navParams.get('master');
     this.requestedUserId = navParams.get('requestedUserId');
-    this.recipe = this.master.recipes.find(recipe => recipe._id === navParams.get('selectedRecipeId'));
+    this.recipe = this.master.variants.find(variant => hasId(variant, navParams.get('selectedRecipeId')));
     this.batchId = navParams.get('selectedBatchId');
     this._headerNavPop = this.headerNavPopEventHandler.bind(this);
+    this._changeDate = this.changeDateEventHandler.bind(this);
   }
 
   /***** Lifecycle Hooks *****/
 
-  ngOnDestroy() {
-    this.events.unsubscribe('pop-header-nav', this._headerNavPop);
-    this.destroy$.next(true);
-    this.destroy$.unsubscribe();
-  }
-
   ngOnInit() {
     this.events.subscribe('pop-header-nav', this._headerNavPop);
-    const timerWidth = Math.round(this.platform.width() * 2 / 3);
-    this.timerWidth = timerWidth;
-    this.timerHeight = timerWidth;
-    this.timerStrokeWidth = 8;
-    this.timerRadius = (timerWidth / 2) - (this.timerStrokeWidth * 2);
-    this.circumference = this.timerRadius * 2 * Math.PI;
-    this.timerOriginX = timerWidth / 2;
-    this.timerOriginY = timerWidth / 2;
-    this.timerFontSize = `${Math.round(timerWidth / 3)}px`;
-    this.timerDY = `${timerWidth / 800}em`;
+    this.events.subscribe('change-date', this._changeDate);
 
     if (!this.batchId) {
       // Start a new batch
       console.log('starting batch');
-      this.processService.startNewBatch(this.requestedUserId, this.master._id, this.recipe._id)
+      this.processService.startNewBatch(this.requestedUserId, getId(this.master), getId(this.recipe))
         .subscribe(
           newBatch => {
-            this.selectedBatch$ = this.processService.getActiveBatchById(newBatch._id);
+            this.selectedBatch$ = this.processService.getActiveBatchById(getId(newBatch));
 
             if (this.selectedBatch$ === null) {
               this.toastService.presentToast('Internal error: Batch not found', 3000, 'bottom');
@@ -121,12 +91,12 @@ export class ProcessPage implements OnInit, OnDestroy {
               }, 3000);
             } else {
               this.selectedBatch$
-                .takeUntil(this.destroy$)
+                .pipe(takeUntil(this.destroy$))
                 .subscribe((selectedBatch: Batch) => {
                   this.selectedBatch = selectedBatch;
-                  this.batchId = selectedBatch._id;
+                  this.batchId = getId(selectedBatch);
                   this.updateRecipeMasterActive(true);
-                  if (this.timers.length === 0) this.composeTimers();
+                  this.timerService.addBatchTimer(selectedBatch);
                 });
             }
           },
@@ -137,22 +107,155 @@ export class ProcessPage implements OnInit, OnDestroy {
         });
     } else {
       // Continue an existing batch
-      console.log('continuing batch');
+      console.log('continuing batch', this.batchId);
       this.selectedBatch$ = this.processService.getActiveBatchById(this.batchId);
       this.selectedBatch$
-        .takeUntil(this.destroy$)
-        .subscribe((selectedBatch: Batch) => {
-          this.selectedBatch = selectedBatch;
-          if (this.timers.length === 0) this.composeTimers();
-          this.goToActiveStep();
-        });
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(
+          (selectedBatch: Batch) => {
+            this.selectedBatch = selectedBatch;
+            this.timerService.addBatchTimer(selectedBatch);
+            this.goToActiveStep();
+          },
+          error => {
+            // TODO change toast to error message in view, then call go back
+            this.toastService.presentToast(error);
+            this.events.publish('update-nav-header', {caller: 'process page', other: 'batch-end'});
+          });
     }
+  }
+
+  ngOnDestroy() {
+    this.events.unsubscribe('pop-header-nav', this._headerNavPop);
+    this.events.unsubscribe('change-date', this._changeDate);
+    this.destroy$.next(true);
+    this.destroy$.complete();
   }
 
   /***** End Lifecycle Hooks *****/
 
 
-  /***** Step Controls *****/
+  /***** Child Component Outputs *****/
+
+  /**
+   * Get alerts associated with the current step
+   *
+   * @params: none
+   *
+   * @return: Array of alerts
+  **/
+  getAlerts(): Array<Alert> {
+    return this.selectedBatch.alerts.filter((alert: Alert) => {
+      return  alert.title
+              === this.selectedBatch.schedule[this.selectedBatch.currentStep].name;
+    });
+  }
+
+  /**
+   * Get the selected batch cid
+   *
+   * @params: none
+   *
+   * @return: selected batch cid
+  **/
+  getBatchId(): string {
+    return this.selectedBatch.cid;
+  }
+
+  /**
+   * Get the process step at current view index
+   *
+   * @params: none
+   *
+   * @return: the current process
+  **/
+  getStepData(): Process {
+    return this.selectedBatch.schedule[this.viewStepIndex];
+  }
+
+  /**
+   * Get the timer step process steps starting at current view index
+   *
+   * @params: none
+   *
+   * @return: Array of processes
+  **/
+  getTimerStepData(): Array<Process> {
+    const batch = this.selectedBatch;
+
+    const start = this.viewStepIndex;
+    let end = start + 1;
+
+    if (batch.schedule[start].concurrent) {
+      for (; end < batch.schedule.length; end++) {
+        if (!batch.schedule[end].concurrent) break;
+      }
+    }
+    return batch.schedule.slice(start, end);
+  }
+
+
+  /***** View Display Methods *****/
+
+  /**
+   * Check if the selected batch has been populated
+   *
+   * @params: none
+   *
+   * @return: true if the selected batch has been changed from null
+  **/
+  isBatchLoaded(): boolean {
+    return this.selectedBatch !== null;
+  }
+
+  /**
+   * Check if the current view step is a manual step
+   *
+   * @params: none
+   *
+   * @return: true if view step is a manual step
+  **/
+  isManualStepView(): boolean {
+    return this.getStepData().type === 'manual';
+  }
+
+  /**
+   * Check if the current view step is a timer step
+   *
+   * @params: none
+   *
+   * @return: true if view step is a timer step
+  **/
+  isTimerStepView(): boolean {
+    return this.getStepData().type === 'timer';
+  }
+
+  /**
+   * Check if the current view step is a calendar step
+   *
+   * @params: none
+   *
+   * @return: true if view step is a calendar step
+  **/
+  isCalendarStepView(): boolean {
+    return this.getStepData().type === 'calendar';
+  }
+
+  /**
+   * Check if the current view is also the current step or a preview
+   *
+   * @params: none
+   *
+   * @return: true if the view index is not the current step index
+  **/
+  isPreview(): boolean {
+    return this.selectedBatch.currentStep !== this.viewStepIndex;
+  }
+
+  /***** End View Display Methods *****/
+
+
+  /***** View Navigation Methods *****/
 
   /**
    * Check if current view is at the beginning or end of process schedule
@@ -175,59 +278,42 @@ export class ProcessPage implements OnInit, OnDestroy {
   changeStep(direction: string): void {
     const nextIndex = this.getStep(false, direction);
     if (nextIndex !== -1) {
-      this.setViewTimers(nextIndex);
       this.viewStepIndex = nextIndex;
     }
   }
 
   /**
    * Complete the current process step and proceed to next step,
-   * update the server with the next step index,
-   * if on last step, end the process, update the server, then nav back
+   * update the server with the next step index, if on last step, end the
+   * process, update the server, then nav back
    *
    * @params: none
-   *
    * @return: none
   **/
   completeStep(): void {
     const nextIndex = this.getStep(true);
     const isFinished = nextIndex === -1;
-    if (!isFinished && this.selectedBatch.schedule[this.selectedBatch.currentStep + 1].type === 'timer') {
-      this.setViewTimers(nextIndex);
-    }
-    this.processService.incrementCurrentStep(this.selectedBatch, nextIndex)
-      .subscribe((updated: Batch) => {
-        if (isFinished) {
-          console.log(isFinished);
-          this.updateRecipeMasterActive(false);
-          this.toastService.presentToast('Enjoy!', 1000, 'bright-toast');
-          this.events.publish('update-nav-header', {caller: 'process page', other: 'batch-end'});
-        } else {
-          this.selectedBatch.currentStep = nextIndex;
-          this.viewStepIndex = nextIndex;
-        }
-      });
-  }
 
-  /**
-   * Get step duration to be used in description display
-   *
-   * @params: duration - stored duration in minutes
-   *
-   * @return: datetime string hh:mm
-  **/
-  getFormattedDurationString(duration: number): string {
-    let result = '';
-    if (duration > 59) {
-      const hours = Math.floor(duration / 60);
-      result += `${hours} hour${hours > 1 ? 's': ''}`;
-      duration = duration % 60;
-      result += (duration) ? ' ': '';
-    }
-    if (duration) {
-      result += `${duration} minute${duration > 1 ? 's': ''}`;
-    }
-    return result;
+    this.processService.incrementCurrentStep(this.selectedBatch, nextIndex)
+      .pipe(take(1))
+      .subscribe(
+        () => {
+          if (isFinished) {
+            const batchId = this.selectedBatch.cid;
+            this.selectedBatch = null;
+            this.timerService.removeBatchTimer(batchId);
+            this.updateRecipeMasterActive(false);
+            this.toastService.presentToast('Enjoy!', 1000, 'bright-toast');
+            this.events.publish('update-nav-header', {caller: 'process page', other: 'batch-end'});
+          } else {
+            this.selectedBatch.currentStep = nextIndex;
+            this.viewStepIndex = nextIndex;
+          }
+        },
+        error => {
+          // TODO handle increment step error
+          this.toastService.presentToast(error);
+        });
   }
 
   /**
@@ -269,6 +355,7 @@ export class ProcessPage implements OnInit, OnDestroy {
   getStep(onComplete: boolean = false, direction: string = 'next'): number {
     let nextIndex = -1;
     const viewIndex = onComplete ? this.selectedBatch.currentStep: this.viewStepIndex;
+
     if (direction === 'next') {
       if (viewIndex < this.selectedBatch.schedule.length - 1) {
         if (this.selectedBatch.schedule[viewIndex].concurrent) {
@@ -286,34 +373,8 @@ export class ProcessPage implements OnInit, OnDestroy {
         }
       }
     }
+
     return nextIndex;
-  }
-
-  /**
-   * Get the currently viewed step description
-   *
-   * @return: step description at the current view step index
-  **/
-  getViewStepDescription(): string {
-    return `${this.selectedBatch.schedule[this.viewStepIndex].description}`;
-  }
-
-  /**
-   * Get the currently viewed step's name
-   *
-   * @return: process step's name at current view index
-  **/
-  getViewStepName(): string {
-    return `${this.selectedBatch.schedule[this.viewStepIndex].name}`;
-  }
-
-  /**
-   * Get the currently viewed step type
-   *
-   * @return: process step's type at current view index
-  **/
-  getViewStepType(): string {
-    return `${this.selectedBatch.schedule[this.viewStepIndex].type}`;
   }
 
   /**
@@ -323,462 +384,78 @@ export class ProcessPage implements OnInit, OnDestroy {
    * @return: none
   **/
   goToActiveStep(): void {
-    this.setViewTimers(this.selectedBatch.currentStep);
     this.viewStepIndex = this.selectedBatch.currentStep;
   }
 
-  /***** End Step Controls *****/
+  /***** End View Navigation Methods *****/
 
 
-  /***** Alerts *****/
+  /***** Calendar Specific Methods *****/
 
   /**
-   * Get css classes by alert values
+   * Handle change date event from calendar
    *
-   * @params: alert - calendar alert
-   *
-   * @return: ngClass object with associated class names
+   * @params: none
+   * @return: none
   **/
-  getAlertClass(alert: Alert): any {
-    const closest = this.getClosestAlertByGroup(alert);
-    return {
-      'next-datetime': alert === closest,
-      'past-datetime': new Date().getTime() > new Date(alert.datetime).getTime()
-    };
+  changeDateEventHandler(): void {
+    this.toastService.presentToast('Select new dates', 2000, 'top');
+    delete this.selectedBatch.schedule[this.selectedBatch.currentStep].startDatetime;
+    this.clearAlertsForCurrentStep();
   }
 
   /**
-   * Get alert for a particular step that is closest to the present datetime
+   * Remove alerts for the current step
    *
-   * @params: alert - an alert instance, use to find all alerts with the same title
-   *
-   * @return: alert that is closest to the current datetime
+   * @params: none
+   * @return: none
   **/
-  getClosestAlertByGroup(alert: Alert): Alert {
-    const alerts = this.selectedBatch.alerts.filter(item => {
-      return item.title === alert.title;
-    });
-    return alerts.reduce((acc, curr) => {
-      const accDiff = new Date(acc.datetime).getTime() - new Date().getTime();
-      const currDiff = new Date(curr.datetime).getTime() - new Date().getTime();
-      const isCurrCloser = Math.abs(currDiff) < Math.abs(accDiff) && currDiff > 0;
-      return isCurrCloser ? curr: acc;
+  clearAlertsForCurrentStep(): void {
+    this.selectedBatch.alerts = this.selectedBatch.alerts.filter(alert => {
+      return alert.title !== this.selectedBatch.schedule[this.selectedBatch.currentStep].name;
     });
   }
 
   /**
-   * Only display alerts for the given step
-   *
-   * @params: alert - Alert object to check
-   *
-   * @return: true if alert title equals the current step's name
-  **/
-  shouldShowAlert(alert: Alert): boolean {
-    return alert.title === this.selectedBatch.schedule[this.selectedBatch.currentStep].name;
-  }
-
-  /***** End Alerts *****/
-
-
-  /***** Calendar *****/
-
-  /**
-   * Check if a calendar step has been started, but not finished
+   * Check if the current calendar is in progress
    *
    * @params: none
    *
-   * @return: true if a calendar step has been started, but not completed yet
+   * @return: true if current step has a startDatetime property
   **/
-  calendarInProgress(): boolean {
+  isCalendarInProgress(): boolean {
     return  this.selectedBatch.currentStep < this.selectedBatch.schedule.length
             && this.selectedBatch.schedule[this.selectedBatch.currentStep].hasOwnProperty('startDatetime');
   }
 
   /**
-   * Delete the started calendar values - triggers calendar view to choose dates
-   *
-   * @params: none
-   * @return: none
-  **/
-  changeDate(): void {
-    this.toastService.presentToast('Select new dates', 2000, 'top');
-    delete this.selectedBatch.schedule[this.selectedBatch.currentStep].startDatetime;
-  }
-
-  /**
-   * Get values from current calendar step
-   *
-   * @params: none
-   *
-   * @return: calendar values to use in template
-  **/
-  getCurrentStepCalendarData(): any {
-    return {
-      _id: this.selectedBatch.schedule[this.viewStepIndex]._id,
-      duration: this.selectedBatch.schedule[this.viewStepIndex].duration,
-      title: this.selectedBatch.schedule[this.viewStepIndex].name,
-      description: this.selectedBatch.schedule[this.viewStepIndex].description
-    };
-  }
-
-  getNextDateSummary(): string {
-    return this.selectedBatch.schedule[this.selectedBatch.currentStep].description;
-  }
-
-  /**
-   * Set the start of a calendar step and update server
+   * Set the start of a calendar step
    *
    * @params: none
    * @return: none
   **/
   startCalendar(): void {
-    const calendarValues = this.calendarRef.getFinal();
-    const update = {
-      startDatetime: calendarValues.startDatetime,
-      alerts: calendarValues.alerts
-    };
-    this.processService.patchBatchStepById(this.selectedBatch, calendarValues._id, update)
+    const values = this.calendarRef.startCalendar();
+    this.processService.patchBatchStepById(this.selectedBatch, values['id'], values['update'])
+      .pipe(take(1))
       .subscribe(() => {
         console.log('Started calendar');
       });
   }
 
-  /***** End Calendar *****/
+  /***** End Calendar Specific Methods *****/
 
-
-  /***** Timers *****/
-
-  /**
-   * Clear setInterval of given timer interval
-   *
-   * @params: timer - a timer type process step instance
-   *
-   * @return: none
-  **/
-  clearTimer(timer: Timer): void {
-    clearInterval(timer.interval);
-    timer.interval = null;
-  }
-
-  /**
-   * Group timers in the process schedule into arrays stored in timers array,
-   * concurrent timers will be handled as a single step
-   *
-   * @params: none
-   *
-   * @params: none
-  **/
-  composeTimers(): void {
-    let first = null;
-    let concurrent = [];
-    for (let i=0; i < this.selectedBatch.schedule.length; i++) {
-      if (this.selectedBatch.schedule[i].type === 'timer') {
-        const timeRemaining = this.selectedBatch.schedule[i].duration * 60; // change duration from minutes to seconds
-        if (this.selectedBatch.schedule[i].concurrent) {
-          concurrent.push({
-            first: first === null ? this.selectedBatch.schedule[i]._id: first,
-            timer: clone(this.selectedBatch.schedule[i]),
-            interval: null,
-            timeRemaining: timeRemaining,
-            show: false,
-            settings: this.initTimerSettings(i, timeRemaining)
-          });
-          if ((i === this.selectedBatch.schedule.length - 1
-              || !this.selectedBatch.schedule[i + 1].concurrent)
-              && concurrent.length) {
-            this.timers.push(concurrent);
-            concurrent = [];
-            first = null;
-          }
-        } else {
-          this.timers.push([{
-            first: this.selectedBatch.schedule[i]._id,
-            timer: clone(this.selectedBatch.schedule[i]),
-            interval: null,
-            timeRemaining: timeRemaining,
-            show: false,
-            settings: this.initTimerSettings(i, timeRemaining)
-          }]);
-        }
-      }
-    }
-  }
-
-  /**
-   * Format the time remaining text inside progress circle
-   *
-   * @params: timeRemaining - time remaining in seconds
-   *
-   * @return: datetime string in hh:mm:ss format - hour/minutes removed if zero
-  **/
-  formatProgressCircleText(timeRemaining: number): string {
-    let remainder = timeRemaining;
-    let result = '';
-    let hours, minutes;
-    if (remainder > 3599) {
-      hours = Math.floor(remainder / 3600);
-      remainder = remainder % 3600;
-      result += hours + ':';
-    }
-    if (remainder > 59 || timeRemaining > 3599) {
-      minutes = Math.floor(remainder / 60);
-      remainder = remainder % 60;
-      result += minutes < 10 && timeRemaining > 599 ? '0': '';
-      result += minutes + ':';
-    }
-    result += remainder < 10 ? '0': '';
-    result += remainder;
-    return result;
-  }
-
-  /**
-   * Get the appropriate font size for timer display based on the
-   * number of digits to be displayed
-   *
-   * @params: timeRemaining - remaining time in seconds
-   *
-   * @return: css font size value
-  **/
-  getFontSize(timeRemaining: number): string {
-    if (timeRemaining > 3600) {
-      return `${Math.round(this.timerWidth / 5)}px`;
-    } else if (timeRemaining > 60) {
-      return `${Math.round(this.timerWidth / 4)}px`;
-    } else {
-      return `${Math.round(this.timerWidth / 3)}px`;
-    }
-  }
-
-  /**
-   * Compose process circle css values
-   *
-   * @params: index - process schedule index of the timer
-   * @params: timeRemaining - time remaining in seconds
-   *
-   * @return: object containing formatted css values
-  **/
-  initTimerSettings(index: number, timeRemaining: number): ProgressCircleSettings {
-    return {
-      height: this.timerHeight,
-      width: this.timerWidth,
-      circle: {
-        strokeDasharray: `${this.circumference} ${this.circumference}`,
-        strokeDashoffset: '0',
-        stroke: this.timerStroke,
-        strokeWidth: this.timerStrokeWidth,
-        fill: this.timerCircleFill,
-        radius: this.timerRadius,
-        originX: this.timerOriginX,
-        originY: this.timerOriginY
-      },
-      text: {
-        textX: this.timerTextXY,
-        textY: this.timerTextXY,
-        textAnchor: this.timerTextAnchor,
-        fill: this.timerTextFill,
-        fontSize: this.getFontSize(timeRemaining),
-        fontFamily: this.timerFontFamily,
-        dY: this.timerDY,
-        content: this.formatProgressCircleText(this.selectedBatch.schedule[index].duration * 60)
-      }
-    };
-  }
-
-  /**
-   * Reset a timer interval
-   *
-   * @params: timer - a timer type process step instance
-   *
-   * @return: none
-  **/
-  resetDuration(timer: Timer): void {
-    const process = this.selectedBatch.schedule.find(process => {
-      return process._id === timer.first;
-    });
-    timer.timer.duration = process.duration;
-  }
-
-  /**
-   * Update css values as timer progresses
-   *
-   * @params: timer - a timer type process step instance
-   *
-   * @return: none
-  **/
-  setProgress(timer: Timer): void {
-    timer.settings.text.fontSize = this.getFontSize(timer.timeRemaining);
-    timer.settings.circle.strokeDashoffset = `
-      ${this.circumference - timer.timeRemaining / (timer.timer.duration * 60) * this.circumference}
-    `;
-    timer.settings.text.content = this.formatProgressCircleText(timer.timeRemaining);
-    if (timer.timeRemaining < 1) {
-      this.clearTimer(timer);
-      // TODO activate alarm
-      console.log('timer expired alarm');
-    } else if (timer.timer.splitInterval > 1) {
-      const interval = timer.timer.duration * 60 / timer.timer.splitInterval;
-      if (timer.timeRemaining % interval === 0) {
-        // TODO activate interval alarm
-        console.log('interval alarm');
-      }
-    }
-  }
-
-  /**
-   * Start a single timer instance
-   *
-   * @params: timer - the timer to start
-   *
-   * @return: none
-  **/
-  startSingleTimer(timer: Timer): void {
-    timer.interval = setInterval(() => {
-      if (timer.timeRemaining > 0) {
-        timer.timeRemaining--;
-      }
-      this.setProgress(timer);
-    }, 1000);
-  }
-
-  /**
-   * Stop a single timer instance
-   *
-   * @params: timer - the timer to stop
-   *
-   * @return: none
-  **/
-  stopSingleTimer(timer: Timer): void {
-    this.clearTimer(timer);
-  }
-
-  /**
-   * Add a minute to a single timer instance
-   *
-   * @params: timer - the timer to add time to
-   *
-   * @return: none
-  **/
-  addToSingleTimer(timer: Timer): void {
-    timer.timer.duration++;
-    timer.timeRemaining += 60;
-    this.setProgress(timer);
-  }
-
-  /**
-   * Reset a single timer instance
-   *
-   * @params: timer - the timer to reset
-   *
-   * @return: none
-  **/
-  resetSingleTimer(timer: Timer): void {
-    this.clearTimer(timer);
-    this.resetDuration(timer);
-    timer.timeRemaining = timer.timer.duration * 60;
-    this.setProgress(timer);
-  }
-
-  /**
-   * Start all timers for the current step
-   *
-   * @params: none
-   * @return: none
-  **/
-  startAllTimers(): void {
-    for (let timer of this.timers[this.currentTimers]) {
-      timer.interval = setInterval(() => {
-        if (timer.timeRemaining > 0) {
-          timer.timeRemaining--;
-        }
-        this.setProgress(timer);
-      }, 1000);
-    }
-  }
-
-  /**
-   * Stop all timers for the current step
-   *
-   * @params: none
-   * @return: none
-  **/
-  stopAllTimers(): void {
-    for (let timer of this.timers[this.currentTimers]) {
-      this.clearTimer(timer);
-    }
-  }
-
-  /**
-   * Add a minute to all timers for the current step
-   *
-   * @params: none
-   * @return: none
-  **/
-  addToAllTimers(): void {
-    for (let timer of this.timers[this.currentTimers]) {
-      timer.timer.duration++;
-      timer.timeRemaining += 60;
-      this.setProgress(timer);
-    }
-  }
-
-  /**
-   * Reset all timers for the current Step
-   *
-   * @params: none
-   * @return: none
-  **/
-  resetAllTimers(): void {
-    for (let timer of this.timers[this.currentTimers]) {
-      this.clearTimer(timer);
-      this.resetDuration(timer);
-      timer.timeRemaining = timer.timer.duration * 60;
-      this.setProgress(timer);
-    }
-  }
-
-  /**
-   * Get index in array of timers to use from step index
-   *
-   * @params: index - step index
-  **/
-  setViewTimers(index: number): void {
-    for (let i=0; i < this.timers.length; i++) {
-      if (this.timers[i][0].first === this.selectedBatch.schedule[index]._id) {
-        this.isConcurrent = this.timers[i].length > 1;
-        this.currentTimers = i;
-        return;
-      }
-    }
-    this.currentTimers = 0;
-  }
-
-  /**
-   * Show or hide individual timer controls
-   *
-   * @params: timer - a timer type process step instance
-   *
-   * @return: none
-  **/
-  toggleTimerControls(timer: Timer): void {
-    timer.show = !timer.show;
-  }
-
-  /***** End Timers *****/
 
   /***** Other *****/
 
-  headerNavPopEventHandler(): void {
-    this.navCtrl.pop();
-  }
-
   /**
-   * Show or hide the current step description
+   * Handle header nav pop event
    *
    * @params: none
    * @return: none
   **/
-  toggleShowDescription(): void {
-    this.showDescription = !this.showDescription;
+  headerNavPopEventHandler(): void {
+    this.navCtrl.pop();
   }
 
   /**
@@ -789,11 +466,18 @@ export class ProcessPage implements OnInit, OnDestroy {
    * @return: none
   **/
   updateRecipeMasterActive(start: boolean): void {
-    this.recipeService.patchRecipeMasterById(this.master._id, {hasActiveBatch: start})
-      .subscribe(master => {
-        console.log('Recipe master has active batch: ', master.hasActiveBatch);
-      });
+    this.recipeService.patchRecipeMasterById(getId(this.master), {hasActiveBatch: start})
+      .pipe(take(1))
+      .subscribe(
+        master => {
+          console.log('Recipe master has active batch: ', master.hasActiveBatch);
+        },
+        error => {
+          console.log(error);
+        }
+      );
   }
 
   /***** End Other *****/
+
 }
