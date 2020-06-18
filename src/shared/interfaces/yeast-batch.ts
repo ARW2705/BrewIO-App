@@ -1,7 +1,8 @@
 import { Yeast } from './library';
 
 export interface YeastBatch {
-  _id: string;
+  _id?: string;
+  cid: string;
   createdAt?: string;
   updatedAt?: string;
   yeastType: Yeast;

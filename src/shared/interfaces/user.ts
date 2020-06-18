@@ -1,5 +1,6 @@
 export interface User {
   _id?: string;
+  cid: string;
   createdAt?: string;
   updatedAt?: string;
   username: string;

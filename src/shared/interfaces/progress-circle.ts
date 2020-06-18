@@ -21,4 +21,4 @@ export interface ProgressCircleSettings {
     dY: string;
     content: string;
   }
-}
+};

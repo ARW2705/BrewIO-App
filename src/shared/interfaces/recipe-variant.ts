@@ -4,15 +4,13 @@ import { YeastBatch } from './yeast-batch';
 import { OtherIngredients } from './other-ingredients';
 import { Process } from './process';
 
-export interface Recipe {
-  _id: string;
-  createdAt?: string;
-  updatedAt?: string;
+export interface RecipeVariant {
+  _id?: string;
+  cid: string;
   variantName: string;
   notes: Array<string>;
-  isActive: boolean;
   isFavorite: boolean;
-  isMaster?: boolean;
+  isMaster: boolean;
   rating?: number;
   owner?: string;
   efficiency: number;
@@ -27,7 +25,6 @@ export interface Recipe {
   ABV: number;
   IBU: number;
   SRM: number;
-  currentStep: number;
   grains: Array<GrainBill>;
   hops: Array<HopsSchedule>;
   yeast: Array<YeastBatch>;
