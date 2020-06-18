@@ -1,11 +1,12 @@
 import { RecipeMaster } from '../../src/shared/interfaces/recipe-master';
 
-import { mockRecipeComplete } from './mockRecipeComplete';
+import { mockRecipeVariantComplete } from './mockRecipeVariantComplete';
 import { mockStyles } from './mockStyles';
 
 export const mockRecipeMasterInactive = () => {
   const mock: RecipeMaster = {
     _id: 'inactive',
+    cid: '1234567890124',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
     name: 'inactive',
@@ -15,8 +16,9 @@ export const mockRecipeMasterInactive = () => {
     owner: 'owner-id',
     hasActiveBatch: false,
     isPublic: true,
-    recipes: [
-      mockRecipeComplete()
+    isFriendsOnly: false,
+    variants: [
+      mockRecipeVariantComplete()
     ]
   };
   return mock;

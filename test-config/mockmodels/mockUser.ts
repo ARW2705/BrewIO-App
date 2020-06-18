@@ -3,6 +3,7 @@ import { User } from '../../src/shared/interfaces/user';
 export const mockUser = () => {
   const mock: User =  {
     _id: 'test-id',
+    cid: 'offline',
     createdAt: '',
     updatedAt: '',
     username: 'mockUser',

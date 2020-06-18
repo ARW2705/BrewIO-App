@@ -1,4 +1,4 @@
-import { Alert } from '../../src/shared/interfaces/alerts';
+import { Alert } from '../../src/shared/interfaces/alert';
 
 export const mockAlert = () => {
   const mock: Alert = {

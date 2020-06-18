@@ -4,6 +4,7 @@ export const mockOtherIngredient = () => {
   const mock: Array<OtherIngredients> = [
     {
       _id: '1',
+      cid: '1234567890123',
       name: 'other1',
       type: 'flavor',
       description: 'other1 description',
@@ -12,6 +13,7 @@ export const mockOtherIngredient = () => {
     },
     {
       _id: '2',
+      cid: '1234567890124',
       name: 'other2',
       type: 'water treatment',
       description: 'makes water better',
