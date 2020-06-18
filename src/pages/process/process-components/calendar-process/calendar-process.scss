@@ -1,0 +1,79 @@
+calendar-process {
+  .alert-datetime {
+    /* Display */
+    border-bottom: 1px solid map-get($colors, gray-scale-6);
+
+    /* Color */
+    color: map-get($colors, gray-scale-8);
+
+    /* Text */
+    font-size: 1.1em;
+    text-align: center;
+  }
+
+  .alert-description {
+    /* Color */
+    color: map-get($colors, gray-scale-8);
+
+    /* Text */
+    white-space: normal;
+    text-align: center;
+  }
+
+  .alert-list {
+    /* Children */
+    .item-inner {
+      /* Display */
+      border: none !important;
+    }
+
+    h3 {
+      /* Text */
+      text-align: center;
+    }
+  }
+
+  .calendar-description {
+    /* Text */
+    text-align: center;
+  }
+
+  .change-button {
+    /* Display */
+    display: block;
+    margin: 0.6rem auto;
+  }
+
+  .expand-button {
+    /* Display */
+    width: 100%;
+    background: transparent;
+    /* Color */
+    color: map-get($colors, gray-scale-10);
+
+    /* Text */
+    font-size: 2em;
+
+    /* Children */
+    h2 {
+      /* Display */
+      margin: 0.5rem 0 0;
+    }
+  }
+
+  .next-datetime {
+    /* Children */
+    & > div > div > ion-label > p {
+      /* Color */
+      color: map-get($colors, secondary);
+    }
+  }
+
+  .past-datetime {
+    /* Children */
+    & > div > div > ion-label > p {
+      /* Color */
+      color: map-get($colors, gray-scale-5);
+    }
+  }
+}
