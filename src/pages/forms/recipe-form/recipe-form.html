@@ -14,8 +14,8 @@
           <ion-col *ngIf="formType == 'master'">
             {{ master.name == '' ? 'Untitled Recipe': master.name }}
           </ion-col>
-          <ion-col *ngIf="formType == 'recipe'">
-            {{ recipe.variantName == '' ? 'Untitled Batch': recipe.variantName }}
+          <ion-col *ngIf="formType == 'variant'">
+            {{ variant.variantName == '' ? 'Untitled Batch': variant.variantName }}
           </ion-col>
         </ion-row>
 
@@ -23,7 +23,7 @@
 
           <!-- Calculated recipe alcohol by volume -->
           <ion-col>
-            {{ recipe.ABV.toFixed(1) }}% ABV
+            {{ variant.ABV.toFixed(1) }}% ABV
           </ion-col>
 
           <!-- Recipe's chosen style -->
@@ -52,7 +52,7 @@
 
           <!-- Calculated original gravity -->
           <ion-col>
-            Original Gravity {{ recipe.originalGravity.toFixed(3) }}
+            Original Gravity {{ variant.originalGravity.toFixed(3) }}
           </ion-col>
 
           <!-- Style specified original gravity -->
@@ -66,7 +66,7 @@
 
           <!-- Calculated final gravity -->
           <ion-col>
-            Final Gravity {{ recipe.finalGravity.toFixed(3) }}
+            Final Gravity {{ variant.finalGravity.toFixed(3) }}
           </ion-col>
 
           <!-- Style specified final gravity -->
@@ -80,7 +80,7 @@
 
           <!-- Calculated IBU -->
           <ion-col>
-            IBU {{ recipe.IBU.toFixed(1) }}
+            IBU {{ variant.IBU.toFixed(1) }}
           </ion-col>
 
           <!-- Style specified IBU -->
@@ -94,7 +94,7 @@
 
           <!-- Calculated SRM -->
           <ion-col>
-            SRM {{ recipe.SRM.toFixed(1) }}
+            SRM {{ variant.SRM.toFixed(1) }}
           </ion-col>
 
           <!-- Style specified SRM -->
@@ -114,14 +114,14 @@
             Add Ingredient
           </button>
         </ion-col>
-        <ion-col *ngIf="recipe.grains.length || recipe.hops.length || recipe.yeast.length || recipe.otherIngredients.length">
+        <ion-col *ngIf="variant.grains.length || variant.hops.length || variant.yeast.length || variant.otherIngredients.length">
 
           <!-- Selected Grain Bill -->
 
-          <ng-container *ngIf="recipe.grains.length">
+          <ng-container *ngIf="variant.grains.length">
             <ion-label class="recipe-group-label">Grain Bill</ion-label>
             <ion-list no-lines>
-              <ion-item *ngFor="let grains of recipe.grains" class="item-buttons">
+              <ion-item *ngFor="let grains of variant.grains" class="item-buttons">
 
                 <!-- Selected grains item -->
                 <ion-grid no-padding>
@@ -183,10 +183,10 @@
 
           <!-- Selected Hops Schedule -->
 
-          <ng-container *ngIf="recipe.hops.length">
+          <ng-container *ngIf="variant.hops.length">
             <ion-label class="recipe-group-label">Hops Schedule</ion-label>
             <ion-list no-lines>
-              <ion-item *ngFor="let hops of recipe.hops" class="item-buttons">
+              <ion-item *ngFor="let hops of variant.hops" class="item-buttons">
 
                 <!-- Selected hops item -->
                 <ion-grid no-padding>
@@ -243,10 +243,10 @@
 
           <!-- Selected Yeast Batch -->
 
-          <ng-container *ngIf="recipe.yeast.length">
+          <ng-container *ngIf="variant.yeast.length">
             <ion-label class="recipe-group-label">Yeast</ion-label>
             <ion-list no-lines>
-              <ion-item *ngFor="let yeast of recipe.yeast" class="item-buttons">
+              <ion-item *ngFor="let yeast of variant.yeast" class="item-buttons">
 
                 <!-- Yeast item -->
                 <ion-grid no-padding>
@@ -298,10 +298,10 @@
 
           <!-- Other Ingredients -->
 
-          <ng-container *ngIf="recipe.otherIngredients.length">
+          <ng-container *ngIf="variant.otherIngredients.length">
             <ion-label class="recipe-group-label">Other Ingredients</ion-label>
             <ion-list no-lines>
-              <ion-item *ngFor="let other of recipe.otherIngredients" class="item-buttons">
+              <ion-item *ngFor="let other of variant.otherIngredients" class="item-buttons">
 
                 <!-- Other ingredient item -->
                 <ion-grid no-padding>
@@ -360,12 +360,12 @@
           </button>
         </ion-col>
 
-        <ion-col *ngIf="recipe.processSchedule.length">
+        <ion-col *ngIf="variant.processSchedule.length">
           <ion-list no-lines>
 
             <!-- Current process step list -->
-            <ion-item-group reorder="true" (ionItemReorder)="$event.applyTo(recipe.processSchedule)">
-              <ion-item *ngFor="let step of recipe.processSchedule; index as i"
+            <ion-item-group reorder="true" (ionItemReorder)="$event.applyTo(variant.processSchedule)">
+              <ion-item *ngFor="let step of variant.processSchedule; index as i"
                         class="process-item">
                 <ion-label>
 
@@ -393,7 +393,7 @@
           <button class="addition-button"
                   ion-button
                   color="primary"
-                  (click)="openNoteModal('recipe')">
+                  (click)="openNoteModal('variant')">
             Add Recipe Note
           </button>
 
@@ -407,7 +407,7 @@
                       class="note-item">
 
               <!-- Open note form modal to edit note button -->
-              <button (click)="openNoteModal('recipe', i)">
+              <button (click)="openNoteModal('variant', i)">
                 <span>{{ note }}</span>
               </button>
 
@@ -417,7 +417,7 @@
       </ion-row>
 
       <!-- Batch notes -->
-      <ion-row *ngIf="formType == 'recipe'">
+      <ion-row *ngIf="formType == 'variant'">
         <ion-col col-12>
 
           <!-- Open recipe note form modal button -->
@@ -430,11 +430,11 @@
 
         </ion-col>
         <ion-col col-12
-                 *ngIf="recipe.notes.length">
+                 *ngIf="variant.notes.length">
 
           <!-- Current list of batch notes -->
           <ion-list>
-            <ion-item *ngFor="let note of recipe.notes; index as i"
+            <ion-item *ngFor="let note of variant.notes; index as i"
                       class="note-item">
 
               <!-- Open note form modal to edit note button -->
