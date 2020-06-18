@@ -1,6 +1,7 @@
 /* Module imports */
 import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { SimpleChange } from '@angular/core';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { IonicModule } from 'ionic-angular';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
@@ -11,7 +12,7 @@ import { of } from 'rxjs/observable/of';
 import { configureTestBed } from '../../../../../test-config/configureTestBed';
 
 /* Interface imports */
-import { Timer, BatchTimer } from '../../../../shared/interfaces/timer';
+import { Timer } from '../../../../shared/interfaces/timer';
 
 /* Mock imports */
 import { mockTimer, mockConcurrentTimers } from '../../../../../test-config/mockmodels/mockTimer';
@@ -83,6 +84,38 @@ describe('Timer Process Component', () => {
       expect(timerPage).toBeDefined();
     }); // end 'should create the component' test
 
+    test('should detect changes to step data', () => {
+      timerPage.initTimers = jest
+        .fn();
+
+      const timerSpy = jest.spyOn(timerPage, 'initTimers');
+
+      const _schedule = mockProcessSchedule();
+      const _firstTimer = [_schedule[10]];
+      const _secondTimer = [_schedule[15]];
+
+      timerPage.stepData = _firstTimer;
+
+      timerPage.ngOnChanges({
+        stepData: new SimpleChange(null, _secondTimer, true)
+      });
+
+      fixture.detectChanges();
+
+      expect(timerPage.stepData).toStrictEqual(_secondTimer);
+      expect(timerSpy).toHaveBeenCalled();
+
+      timerPage.isPreview = false;
+
+      timerPage.ngOnChanges({
+        isPreview: new SimpleChange(null, true, true)
+      });
+
+      fixture.detectChanges();
+
+      expect(timerPage.isPreview).toBe(true);
+    }); // end 'should detect changes to step data' test
+
     test('should initialize timers', done => {
       fixture.detectChanges();
 
@@ -96,6 +129,20 @@ describe('Timer Process Component', () => {
         done();
       }, 10);
     }); // end 'should initialize timers' test
+
+    test('should short circuit init timers if unable to get timers', () => {
+      timerService.getTimersByProcessId = jest
+        .fn()
+        .mockReturnValue(undefined);
+
+      fixture.detectChanges();
+
+      timerPage.timers = [ mockTimer() ];
+
+      timerPage.initTimers();
+
+      expect(timerPage.timers.length).toBe(0);
+    }); // end 'should short circuit init timers if unable to get timers' test
 
     test('should handle adding a minute to a timer', done => {
       timerService.addToTimer = jest

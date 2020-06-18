@@ -47,6 +47,9 @@ export class TimerProcessComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes.stepData !== undefined && changes.stepData.currentValue !== undefined) {
+      if (changes.stepData.currentValue.type !== 'timer') {
+        this.destroy$.next(true);
+      }
       this.stepData = changes.stepData.currentValue;
       this.destroy$.next(true);
       this.initTimers();
@@ -72,6 +75,9 @@ export class TimerProcessComponent implements OnInit, OnChanges, OnDestroy {
   initTimers(): void {
     this.timers = [];
     const timers: Array<BehaviorSubject<Timer>> = this.timerService.getTimersByProcessId(this.batchId, this.stepData[0].cid);
+
+    if (timers === undefined) return;
+
     this.isConcurrent = timers.length > 1;
     timers.forEach(timer$ => {
       timer$
@@ -83,7 +89,7 @@ export class TimerProcessComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   /**
-   * Update a timer in timers list
+   * Update a timer in timers list or add to list if not present
    *
    * @params: timer - updated Timer
    *
