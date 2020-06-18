@@ -1,28 +1,39 @@
 /* Module imports */
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { NavController, NavParams, ViewController } from 'ionic-angular';
 import { FormGroup, FormBuilder, FormControl, Validators } from '@angular/forms';
+
 
 @Component({
   selector: 'page-process-form',
   templateUrl: 'process-form.html',
 })
-export class ProcessFormPage {
+export class ProcessFormPage implements OnInit {
   title: string = '';
   myDate = (new Date()).toISOString();
-  public stepType: string;
-  public processForm: FormGroup;
-  public formMode: string;
+  stepType: string;
+  processForm: FormGroup;
+  formMode: string;
 
-  constructor(public navCtrl: NavController,
+  constructor(
+    public navCtrl: NavController,
     public navParams: NavParams,
     public formBuilder: FormBuilder,
-    public viewCtrl: ViewController) {
-      this.stepType = navParams.get('processType');
-      this.formMode = navParams.get('formMode');
-      this.title = `${this.formMode} ${this.stepType}`;
-      this.initForm(navParams.get('update'));
+    public viewCtrl: ViewController) { }
+
+  /***** Lifecycle Hooks *****/
+
+  ngOnInit() {
+    this.stepType = this.navParams.get('processType');
+    this.formMode = this.navParams.get('formMode');
+    this.title = `${this.formMode} ${this.stepType}`;
+    this.initForm(this.navParams.get('update'));
   }
+
+  /***** End Lifecycle Hooks *****/
+
+
+  /***** Form Methods *****/
 
   /**
    * Call ViewController dismiss method with deletion flag
@@ -58,6 +69,7 @@ export class ProcessFormPage {
       name: ['', [Validators.minLength(2), Validators.maxLength(25), Validators.required]],
       description: ['']
     });
+
     // Add step type specific form controls
     if (this.stepType === 'manual') {
       this.processForm.addControl('expectedDuration', new FormControl());
@@ -68,6 +80,7 @@ export class ProcessFormPage {
       }
       this.processForm.addControl('duration', new FormControl());
     }
+
     // Populate form fields with provided data, if available
     if (data) {
       const control = this.processForm.controls;
@@ -98,5 +111,7 @@ export class ProcessFormPage {
       this.viewCtrl.dismiss({update: this.processForm.value});
     }
   }
+
+  /***** End Form Methods *****/
 
 }
