@@ -15,9 +15,10 @@ export function slideUpDown() {
       style({
         height: '{{ height }}px'
       }),
-      animate('500ms cubic-bezier(0.645, 0.045, 0.355, 1)')
+      animate('{{ speed }}ms cubic-bezier(0.645, 0.045, 0.355, 1)')
     ], {params: {
-      height: 0
+      height: 0,
+      speed: 500
     }})
   ]);
 }
