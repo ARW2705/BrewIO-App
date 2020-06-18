@@ -1,14 +1,10 @@
 /* Module imports */
 import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/testing';
-import { HttpTestingController, HttpClientTestingModule } from '@angular/common/http/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { IonicModule, NavController, Events, ToastController } from 'ionic-angular';
-import { IonicStorageModule } from '@ionic/storage';
-import { Network } from '@ionic-native/network/ngx';
-
-/* Constants imports */
-import { baseURL } from '../../shared/constants/base-url';
-import { apiVersion } from '../../shared/constants/api-version';
+import { IonicModule, NavController, Events } from 'ionic-angular';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
+import { of } from 'rxjs/observable/of';
 
 /* Test configuration imports */
 import { configureTestBed } from '../../../test-config/configureTestBed';
@@ -16,175 +12,116 @@ import { configureTestBed } from '../../../test-config/configureTestBed';
 /* Mock imports */
 import { mockRecipeMasterActive } from '../../../test-config/mockmodels/mockRecipeMasterActive';
 import { mockRecipeMasterInactive } from '../../../test-config/mockmodels/mockRecipeMasterInactive';
-import { mockUser } from '../../../test-config/mockmodels/mockUser';
-import { NavMock, ToastControllerMock, StorageMock, SortPipeMock } from '../../../test-config/mocks-ionic';
+import { NavMock, SortPipeMock } from '../../../test-config/mocks-ionic';
+
+/* Interface imports */
+import { RecipeMaster } from '../../shared/interfaces/recipe-master';
 
 /* Page imports */
 import { RecipePage } from './recipe';
-import { RecipeMasterDetailPage } from '../recipe-master-detail/recipe-master-detail';
+import { RecipeDetailPage } from '../recipe-detail/recipe-detail';
 import { ProcessPage } from '../process/process';
 import { RecipeFormPage } from '../forms/recipe-form/recipe-form';
 
 /* Provider imports */
 import { UserProvider } from '../../providers/user/user';
 import { RecipeProvider } from '../../providers/recipe/recipe';
-import { ProcessProvider } from '../../providers/process/process';
 import { ToastProvider } from '../../providers/toast/toast';
-import { ProcessHttpErrorProvider } from '../../providers/process-http-error/process-http-error';
-import { StorageProvider } from '../../providers/storage/storage';
-import { ConnectionProvider } from '../../providers/connection/connection';
-import { PreferencesProvider } from '../../providers/preferences/preferences';
 
 
 describe('Recipe Page', () => {
+  let fixture: ComponentFixture<RecipePage>;
+  let recipePage: RecipePage;
+  let injector: TestBed;
+  let recipeService: RecipeProvider;
+  let eventService: Events;
+  let toastService: ToastProvider;
+  let userService: UserProvider;
+  configureTestBed();
+
+  beforeAll(done => (async() => {
+    TestBed.configureTestingModule({
+      declarations: [
+        RecipePage,
+        RecipeDetailPage,
+        ProcessPage,
+        RecipeFormPage,
+        SortPipeMock
+      ],
+      imports: [
+        IonicModule.forRoot(RecipePage)
+      ],
+      providers: [
+        { provide: RecipeProvider, useValue: {} },
+        { provide: ToastProvider, useValue: {} },
+        { provide: NavController, useClass: NavMock },
+        { provide: UserProvider, useValue: {} }
+      ],
+      schemas: [
+        NO_ERRORS_SCHEMA
+      ]
+    });
+    await TestBed.compileComponents();
+  })()
+  .then(done)
+  .catch(done.fail));
+
+  beforeEach(async(() => {
+    injector = getTestBed();
+    recipeService = injector.get(RecipeProvider);
+    toastService = injector.get(ToastProvider);
+    userService = injector.get(UserProvider);
+    eventService = injector.get(Events);
+    recipeService.getMasterList = jest
+      .fn()
+      .mockReturnValue(
+        new BehaviorSubject<Array<BehaviorSubject<RecipeMaster>>>(
+          [
+            new BehaviorSubject<RecipeMaster>(mockRecipeMasterActive()),
+            new BehaviorSubject<RecipeMaster>(mockRecipeMasterInactive())
+          ]
+        )
+      );
+    toastService.presentToast = jest
+      .fn();
+    userService.isLoggedIn = jest
+      .fn()
+      .mockReturnValueOnce(true)
+      .mockReturnValueOnce(false);
+  }));
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(RecipePage);
+    recipePage = fixture.componentInstance;
+  });
 
   describe('Component creation', () => {
-    let fixture: ComponentFixture<RecipePage>;
-    let recipePage: RecipePage;
-    let injector: TestBed;
-    let httpMock: HttpTestingController;
-    let recipeService: RecipeProvider;
-    configureTestBed();
-
-    beforeAll(done => (async() => {
-      TestBed.configureTestingModule({
-        declarations: [
-          RecipePage,
-          RecipeMasterDetailPage,
-          ProcessPage,
-          RecipeFormPage,
-          SortPipeMock
-        ],
-        imports: [
-          IonicModule.forRoot(RecipePage),
-          HttpClientTestingModule,
-          IonicStorageModule.forRoot()
-        ],
-        providers: [
-          UserProvider,
-          RecipeProvider,
-          ProcessProvider,
-          ToastProvider,
-          StorageProvider,
-          Network,
-          ConnectionProvider,
-          { provide: PreferencesProvider, useValue: {} },
-          { provide: NavController, useClass: NavMock },
-          { provide: ToastController, useClass: ToastControllerMock },
-          { provide: ProcessHttpErrorProvider, useValue: {} },
-          { provide: Storage, useClass: StorageMock }
-        ],
-        schemas: [
-          NO_ERRORS_SCHEMA
-        ]
-      });
-      await TestBed.compileComponents();
-    })()
-    .then(done)
-    .catch(done.fail));
-
-    beforeEach(async(() => {
-      injector = getTestBed();
-      recipeService = injector.get(RecipeProvider);
-      httpMock = injector.get(HttpTestingController);
-      recipeService.initializeRecipeMasterList();
-
-      const recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/user`);
-      recipeReq.flush([mockRecipeMasterActive(), mockRecipeMasterInactive()]);
-    }));
-
-    beforeEach(() => {
-      fixture = TestBed.createComponent(RecipePage);
-      recipePage = fixture.componentInstance;
-    });
-
-    afterEach(() => {
-      httpMock.verify();
-    });
-
     test('should create the component', () => {
       fixture.detectChanges();
+
       expect(recipePage).toBeDefined();
     }); // end 'should create the component' test
 
     test('should have a list of recipe masters', () => {
       fixture.detectChanges();
-      expect(recipePage.masterRecipeList.length).toBe(2);
+
+      expect(recipePage.masterList.length).toBe(2);
     }); // end 'should have a list of recipe masters' test
 
   }); // end 'Component creation' section
 
   describe('Navigation handling', () => {
-    let fixture: ComponentFixture<RecipePage>;
-    let recipePage: RecipePage;
-    let injector: TestBed;
-    let httpMock: HttpTestingController;
-    let recipeService: RecipeProvider;
-    let eventService: Events;
-    configureTestBed();
-
-    beforeAll(done => (async() => {
-      TestBed.configureTestingModule({
-        declarations: [
-          RecipePage,
-          RecipeMasterDetailPage,
-          ProcessPage,
-          RecipeFormPage,
-          SortPipeMock
-        ],
-        imports: [
-          IonicModule.forRoot(RecipePage),
-          HttpClientTestingModule,
-          IonicStorageModule.forRoot()
-        ],
-        providers: [
-          UserProvider,
-          RecipeProvider,
-          ToastProvider,
-          Events,
-          StorageProvider,
-          Network,
-          ConnectionProvider,
-          { provide: PreferencesProvider, useValue: {} },
-          { provide: NavController, useClass: NavMock },
-          { provide: ToastController, useClass: ToastControllerMock },
-          { provide: ProcessHttpErrorProvider, useValue: {} },
-          { provide: ProcessProvider, useValue: {} },
-          { provide: Storage, useClass: StorageMock }
-        ],
-        schemas: [
-          NO_ERRORS_SCHEMA
-        ]
-      });
-      await TestBed.compileComponents();
-    })()
-    .then(done)
-    .catch(done.fail));
-
-    beforeEach(async(() => {
-      injector = getTestBed();
-      recipeService = injector.get(RecipeProvider);
-      httpMock = injector.get(HttpTestingController);
-      eventService = injector.get(Events);
-      recipeService.initializeRecipeMasterList();
-
-      const recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/user`);
-      recipeReq.flush([mockRecipeMasterActive(), mockRecipeMasterInactive()]);
-    }));
-
-    beforeEach(() => {
-      fixture = TestBed.createComponent(RecipePage);
-      recipePage = fixture.componentInstance;
-    });
-
-    afterEach(() => {
-      httpMock.verify();
-    });
-
     test('should navigate to brewing process page with a recipe', done => {
       fixture.detectChanges();
+
+      recipeService.isRecipeProcessPresent = jest
+        .fn()
+        .mockReturnValue(true);
+
       const _mockRecipeMaster = mockRecipeMasterActive();
+
       const navSpy = jest.spyOn(recipePage.navCtrl, 'push');
+
       eventService.subscribe('update-nav-header', data => {
         expect(data.dest).toMatch('process');
         expect(data.destType).toMatch('page');
@@ -192,7 +129,9 @@ describe('Recipe Page', () => {
         expect(data.origin).toMatch('mock-active-name');
         done();
       });
+
       recipePage.navToBrewProcess(_mockRecipeMaster);
+
       expect(navSpy).toHaveBeenCalledWith(
         ProcessPage,
         {
@@ -205,10 +144,18 @@ describe('Recipe Page', () => {
 
     test('should fail to navigate to brewing process page when missing a recipe', () => {
       fixture.detectChanges();
+
+      recipeService.isRecipeProcessPresent = jest
+        .fn()
+        .mockReturnValue(false);
+
       const _mockRecipeMaster = mockRecipeMasterActive();
       _mockRecipeMaster.master = 'expect-none';
-      const toastSpy = jest.spyOn(recipePage.toastService, 'presentToast');
+
+      const toastSpy = jest.spyOn(toastService, 'presentToast');
+
       recipePage.navToBrewProcess(_mockRecipeMaster);
+
       expect(toastSpy).toHaveBeenCalledWith(
         'Recipe missing a process guide!',
         2000
@@ -217,17 +164,22 @@ describe('Recipe Page', () => {
 
     test('should navigate to recipe master details page for master at given index', done => {
       fixture.detectChanges();
+
       const _mockRecipeMaster = mockRecipeMasterInactive();
+
       const navSpy = jest.spyOn(recipePage.navCtrl, 'push');
+
       eventService.subscribe('update-nav-header', data => {
         expect(data.destType).toMatch('page');
         expect(data.destTitle).toMatch(_mockRecipeMaster.name);
         expect(data.origin).toMatch('mock-active-name');
         done();
       });
+
       recipePage.navToDetails(1);
+
       expect(navSpy).toHaveBeenCalledWith(
-        RecipeMasterDetailPage,
+        RecipeDetailPage,
         {
           masterId: _mockRecipeMaster._id
         }
@@ -236,17 +188,20 @@ describe('Recipe Page', () => {
 
     test('should fail to navigate to the recipe master details page with an invalid index', () => {
       fixture.detectChanges();
+
       const toastSpy = jest.spyOn(recipePage.toastService, 'presentToast');
+
       recipePage.navToDetails(2);
-      expect(toastSpy).toHaveBeenCalledWith(
-        'Error: invalid Recipe Master list index',
-        2000
-      );
+
+      expect(toastSpy.mock.calls[0][0]).toMatch('Error: invalid Recipe Master list index');
+      expect(toastSpy.mock.calls[0][1]).toBe(2000);
     }); // end 'should fail to navigate to the recipe master details page with an invalid index' test
 
     test('should navigate to the recipe form in creation mode', done => {
       fixture.detectChanges();
+
       const navSpy = jest.spyOn(recipePage.navCtrl, 'push');
+
       eventService.subscribe('update-nav-header', data => {
         expect(data.dest).toMatch('recipe-form');
         expect(data.destType).toMatch('page');
@@ -254,7 +209,9 @@ describe('Recipe Page', () => {
         expect(data.origin).toMatch('mock-active-name');
         done();
       });
+
       recipePage.navToRecipeForm();
+
       expect(navSpy).toHaveBeenCalledWith(
         RecipeFormPage,
         {
@@ -267,127 +224,96 @@ describe('Recipe Page', () => {
   }); // end 'Navigation handling' section
 
   describe('Utility methods', () => {
-    let fixture: ComponentFixture<RecipePage>;
-    let recipePage: RecipePage;
-    let injector: TestBed;
-    let httpMock: HttpTestingController;
-    let recipeService: RecipeProvider;
-    let userService: UserProvider;
-    configureTestBed();
-
-    beforeAll(done => (async() => {
-      TestBed.configureTestingModule({
-        declarations: [
-          RecipePage,
-          RecipeMasterDetailPage,
-          ProcessPage,
-          RecipeFormPage,
-          SortPipeMock
-        ],
-        imports: [
-          IonicModule.forRoot(RecipePage),
-          HttpClientTestingModule,
-          IonicStorageModule.forRoot()
-        ],
-        providers: [
-          UserProvider,
-          RecipeProvider,
-          ProcessProvider,
-          ToastProvider,
-          Events,
-          StorageProvider,
-          Network,
-          ConnectionProvider,
-          { provide: PreferencesProvider, useValue: {} },
-          { provide: NavController, useClass: NavMock },
-          { provide: ToastController, useClass: ToastControllerMock },
-          { provide: ProcessHttpErrorProvider, useValue: {} },
-          { provide: Storage, useClass: StorageMock }
-        ],
-        schemas: [
-          NO_ERRORS_SCHEMA
-        ]
-      });
-      await TestBed.compileComponents();
-    })()
-    .then(done)
-    .catch(done.fail));
-
-    beforeEach(async(() => {
-      injector = getTestBed();
-      recipeService = injector.get(RecipeProvider);
-      userService = injector.get(UserProvider);
-      httpMock = injector.get(HttpTestingController);
-      recipeService.initializeRecipeMasterList();
-
-      const recipeReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/user`);
-      recipeReq.flush([mockRecipeMasterActive(), mockRecipeMasterInactive()]);
-    }));
-
-    beforeEach(() => {
-      fixture = TestBed.createComponent(RecipePage);
-      recipePage = fixture.componentInstance;
-    });
-
-    afterEach(() => {
-      httpMock.verify();
-    });
-
     test('should delete a recipe master', done => {
       fixture.detectChanges();
-      const recipeSpy = jest.spyOn(recipePage.recipeService, 'deleteRecipeMasterById');
-      expect(recipePage.masterList.length).toBe(2);
-      const _mockRecipeMaster = mockRecipeMasterInactive();
 
-      recipePage.deleteMaster(_mockRecipeMaster);
+      recipeService.deleteRecipeMasterById = jest
+        .fn()
+        .mockReturnValue(of({}));
+
+      const recipeSpy = jest.spyOn(recipeService, 'deleteRecipeMasterById');
+      const toastSpy = jest.spyOn(toastService, 'presentToast');
+
+      const _mockRecipeMasterInactive = mockRecipeMasterInactive();
+
+      recipePage.deleteMaster(_mockRecipeMasterInactive);
 
       setTimeout(() => {
         expect(recipeSpy).toHaveBeenCalled();
-        expect(recipePage.masterList.length).toBe(1);
+        expect(toastSpy.mock.calls[0][0]).toMatch('Deleted Recipe');
+        expect(toastSpy.mock.calls[0][1]).toBe(1000);
         done();
       }, 10);
-
-      const deleteReq = httpMock.expectOne(`${baseURL}/${apiVersion}/recipes/private/master/${_mockRecipeMaster._id}`);
-      deleteReq.flush(_mockRecipeMaster);
     }); // end 'should delete a recipe master' test
 
     test('should fail to delete a recipe master if a batch is active', () => {
       fixture.detectChanges();
+
       const toastSpy = jest.spyOn(recipePage.toastService, 'presentToast');
+
       recipePage.deleteMaster(mockRecipeMasterActive());
-      expect(toastSpy).toHaveBeenCalledWith(
-        'Cannot delete a recipe master with a batch in progress',
-        3000
-      );
+
+      expect(toastSpy.mock.calls[0][0]).toMatch('Cannot delete a recipe master with a batch in progress');
+      expect(toastSpy.mock.calls[0][1]).toBe(3000);
     }); // end 'should fail to delete a recipe master if a batch is active' test
+
+    test('should display error feedback if a recipe master failed to be deleted', done => {
+      fixture.detectChanges();
+
+      recipeService.deleteRecipeMasterById = jest
+        .fn()
+        .mockReturnValue(new ErrorObservable('delete error'));
+
+      const toastSpy = jest.spyOn(recipePage.toastService, 'presentToast');
+
+      const _mockRecipeMaster = mockRecipeMasterActive();
+      _mockRecipeMaster.hasActiveBatch = false;
+
+      recipePage.deleteMaster(_mockRecipeMaster);
+
+      setTimeout(() => {
+        expect(toastSpy.mock.calls[0][0]).toMatch('An error occured during recipe deletion');
+        expect(toastSpy.mock.calls[0][1]).toBe(2000);
+        done();
+      }, 10);
+    }); // end 'should display error feedback if a recipe master failed to be deleted' test
 
     test('should toggle a recipe master at index to be expanded', () => {
       fixture.detectChanges();
+
       expect(recipePage.masterIndex).toBe(-1);
+
       recipePage.expandMaster(1);
+
       expect(recipePage.masterIndex).toBe(1);
+
       recipePage.expandMaster(1);
+
       expect(recipePage.masterIndex).toBe(-1);
     }); // end 'should toggle a recipe master at index to be expanded' test
 
     test('should check if user is logged in', () => {
       fixture.detectChanges();
-      expect(recipePage.isLoggedIn()).toBe(false);
-      const _mockUser = mockUser();
-      userService.user$.next(_mockUser);
+
+      // first value should be true
       expect(recipePage.isLoggedIn()).toBe(true);
+      // second value should be false
+      expect(recipePage.isLoggedIn()).toBe(false);
     }); // end 'should check if user is logged in' test
 
     test('should compose the recipe master list with values from recipe set as the master', () => {
       fixture.detectChanges();
-      recipePage.masterRecipeList = [];
+
       recipePage.mapMasterRecipes();
-      expect(recipePage.masterRecipeList.length).toBe(2);
+
+      expect(recipePage.masterList.length).toBe(2);
     }); // end 'should compose the recipe master list with values from recipe set as the master' test
 
     test('should mark given recipe master index as being expanded', () => {
       fixture.detectChanges();
+
       recipePage.masterIndex = 0;
+
       expect(recipePage.showExpandedMaster(0)).toBe(true);
       expect(recipePage.showExpandedMaster(1)).toBe(false);
       expect(recipePage.showExpandedMaster(2)).toBe(false);
