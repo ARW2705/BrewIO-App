@@ -17,12 +17,35 @@ import { IngredientFormPage } from './ingredient-form';
 
 
 describe('Ingredient Form', () => {
+  let fixture: ComponentFixture<IngredientFormPage>;
+  let ingredientPage: IngredientFormPage;
+  configureTestBed();
+
+  beforeAll(done => (async() => {
+    TestBed.configureTestingModule({
+      declarations: [
+        IngredientFormPage
+      ],
+      imports: [
+        IonicModule.forRoot(IngredientFormPage)
+      ],
+      providers: [
+        { provide: NavController, useClass: NavMock },
+        { provide: NavParams, useClass: NavParamsMock },
+        { provide: ViewController, useClass: ViewControllerMock }
+      ]
+    });
+    await TestBed.compileComponents();
+  })()
+  .then(done)
+  .catch(done.fail));
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(IngredientFormPage);
+    ingredientPage = fixture.componentInstance;
+  });
 
   describe('New instance', () => {
-    let fixture: ComponentFixture<IngredientFormPage>;
-    let ingredientPage: IngredientFormPage;
-    configureTestBed();
-
     beforeAll(async(() => {
       NavParamsMock.setParams('data', {
         ingredientType: 'grains',
@@ -30,30 +53,6 @@ describe('Ingredient Form', () => {
         library: mockGrains()
       });
     }));
-
-    beforeAll(done => (async() => {
-      TestBed.configureTestingModule({
-        declarations: [
-          IngredientFormPage
-        ],
-        imports: [
-          IonicModule.forRoot(IngredientFormPage)
-        ],
-        providers: [
-          { provide: NavController, useClass: NavMock },
-          { provide: NavParams, useClass: NavParamsMock },
-          { provide: ViewController, useClass: ViewControllerMock }
-        ]
-      });
-      await TestBed.compileComponents();
-    })()
-    .then(done)
-    .catch(done.fail));
-
-    beforeEach(() => {
-      fixture = TestBed.createComponent(IngredientFormPage);
-      ingredientPage = fixture.componentInstance;
-    });
 
     test('should create the component configured to add a grains instance', () => {
       fixture.detectChanges();
@@ -108,10 +107,6 @@ describe('Ingredient Form', () => {
 
 
   describe('Update grains', () => {
-    let fixture: ComponentFixture<IngredientFormPage>;
-    let ingredientPage: IngredientFormPage;
-    configureTestBed();
-
     beforeAll(async(() => {
       NavParamsMock.setParams('data', {
         ingredientType: 'grains',
@@ -123,30 +118,6 @@ describe('Ingredient Form', () => {
         library: mockGrains()
       });
     }));
-
-    beforeAll(done => (async() => {
-      TestBed.configureTestingModule({
-        declarations: [
-          IngredientFormPage
-        ],
-        imports: [
-          IonicModule.forRoot(IngredientFormPage)
-        ],
-        providers: [
-          { provide: NavController, useClass: NavMock },
-          { provide: NavParams, useClass: NavParamsMock },
-          { provide: ViewController, useClass: ViewControllerMock }
-        ]
-      });
-      await TestBed.compileComponents();
-    })()
-    .then(done)
-    .catch(done.fail));
-
-    beforeEach(() => {
-      fixture = TestBed.createComponent(IngredientFormPage);
-      ingredientPage = fixture.componentInstance;
-    });
 
     test('should configure form to update a grains instance', () => {
       fixture.detectChanges();
@@ -180,10 +151,6 @@ describe('Ingredient Form', () => {
 
 
   describe('Update hops', () => {
-    let fixture: ComponentFixture<IngredientFormPage>;
-    let ingredientPage: IngredientFormPage;
-    configureTestBed();
-
     beforeAll(async(() => {
       NavParamsMock.setParams('data', {
         ingredientType: 'hops',
@@ -196,30 +163,6 @@ describe('Ingredient Form', () => {
         library: mockHops()
       });
     }));
-
-    beforeAll(done => (async() => {
-      TestBed.configureTestingModule({
-        declarations: [
-          IngredientFormPage
-        ],
-        imports: [
-          IonicModule.forRoot(IngredientFormPage)
-        ],
-        providers: [
-          { provide: NavController, useClass: NavMock },
-          { provide: NavParams, useClass: NavParamsMock },
-          { provide: ViewController, useClass: ViewControllerMock }
-        ]
-      });
-      await TestBed.compileComponents();
-    })()
-    .then(done)
-    .catch(done.fail));
-
-    beforeEach(() => {
-      fixture = TestBed.createComponent(IngredientFormPage);
-      ingredientPage = fixture.componentInstance;
-    });
 
     test('should configure form to update a hops instance', () => {
       fixture.detectChanges();
@@ -247,10 +190,6 @@ describe('Ingredient Form', () => {
 
 
   describe('Update yeast', () => {
-    let fixture: ComponentFixture<IngredientFormPage>;
-    let ingredientPage: IngredientFormPage;
-    configureTestBed();
-
     beforeAll(async(() => {
       NavParamsMock.setParams('data', {
         ingredientType: 'yeast',
@@ -262,30 +201,6 @@ describe('Ingredient Form', () => {
         library: mockYeast()
       });
     }));
-
-    beforeAll(done => (async() => {
-      TestBed.configureTestingModule({
-        declarations: [
-          IngredientFormPage
-        ],
-        imports: [
-          IonicModule.forRoot(IngredientFormPage)
-        ],
-        providers: [
-          { provide: NavController, useClass: NavMock },
-          { provide: NavParams, useClass: NavParamsMock },
-          { provide: ViewController, useClass: ViewControllerMock }
-        ]
-      });
-      await TestBed.compileComponents();
-    })()
-    .then(done)
-    .catch(done.fail));
-
-    beforeEach(() => {
-      fixture = TestBed.createComponent(IngredientFormPage);
-      ingredientPage = fixture.componentInstance;
-    });
 
     test('should configure form to update a yeast instance', () => {
       fixture.detectChanges();
@@ -311,10 +226,6 @@ describe('Ingredient Form', () => {
 
 
   describe('Update other ingredient', () => {
-    let fixture: ComponentFixture<IngredientFormPage>;
-    let ingredientPage: IngredientFormPage;
-    configureTestBed();
-
     beforeAll(async(() => {
       const _mockOtherIngredient = mockOtherIngredient()[0];
       NavParamsMock.setParams('data', {
@@ -328,30 +239,6 @@ describe('Ingredient Form', () => {
         }
       });
     }));
-
-    beforeAll(done => (async() => {
-      TestBed.configureTestingModule({
-        declarations: [
-          IngredientFormPage
-        ],
-        imports: [
-          IonicModule.forRoot(IngredientFormPage)
-        ],
-        providers: [
-          { provide: NavController, useClass: NavMock },
-          { provide: NavParams, useClass: NavParamsMock },
-          { provide: ViewController, useClass: ViewControllerMock }
-        ]
-      });
-      await TestBed.compileComponents();
-    })()
-    .then(done)
-    .catch(done.fail));
-
-    beforeEach(() => {
-      fixture = TestBed.createComponent(IngredientFormPage);
-      ingredientPage = fixture.componentInstance;
-    });
 
     test('should configure form to update an \'other\' ingredient instance', () => {
       fixture.detectChanges();
