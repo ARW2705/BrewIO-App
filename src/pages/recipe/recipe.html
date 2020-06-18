@@ -3,7 +3,7 @@
   <ion-grid>
 
     <!-- Display all active batches -->
-    <ng-container *ngIf="isLoggedIn()">
+    <ng-container *ngIf="hasActiveBatch()">
       <ion-row class="messages-header">
         <h3>Active Batches</h3>
       </ion-row>
@@ -19,11 +19,11 @@
       </button>
     </ion-row>
 
-    <ion-row *ngIf="isLoggedIn() && masterList">
+    <ion-row *ngIf="masterList">
 
       <!-- Recipe masters list -->
       <ion-list id="master-list">
-        <ng-container *ngFor="let master of getArrayFromObservables(masterList); index as i">
+        <ng-container *ngFor="let master of masterList; index as i">
 
           <!-- Slide left or right for actions, click to toggle ingredient list -->
           <ion-item-sliding #slidingItems class="recipe-master-item">
@@ -64,11 +64,11 @@
                 <ion-row class="master-summary-subheader">
                   <ion-col>
                     <p>
-                      {{ masterRecipeList[i].batchVolume }} gal
-                       • {{ masterRecipeList[i].brewingType | titlecase }}
-                       • {{ masterRecipeList[i].ABV.toFixed(1) }}% ABV
-                       • {{ masterRecipeList[i].IBU.toFixed(1) }} IBU
-                       • {{ masterRecipeList[i].SRM.toFixed(1) }} SRM
+                      {{ variantList[i].batchVolume }} gal
+                       • {{ variantList[i].brewingType | titlecase }}
+                       • {{ variantList[i].ABV.toFixed(1) }}% ABV
+                       • {{ variantList[i].IBU.toFixed(1) }} IBU
+                       • {{ variantList[i].SRM.toFixed(1) }} SRM
                     </p>
                   </ion-col>
                 </ion-row>
@@ -101,15 +101,15 @@
           <accordion [expanded]="showExpandedMaster(i)">
             <ion-card class="recipe-card">
               <ion-card-content>
-                <ion-list *ngIf="masterRecipeList[i]">
+                <ion-list *ngIf="variantList[i]">
 
                   <!-- Grain Bill -->
-                  <ion-item-group *ngIf="masterRecipeList[i].grains.length">
+                  <ion-item-group *ngIf="variantList[i].grains.length">
                     <ion-item-divider color="primary" class="card-divider">
                       Grains
                     </ion-item-divider>
                     <ion-grid>
-                      <ion-row  *ngFor="let grains of masterRecipeList[i].grains"
+                      <ion-row  *ngFor="let grains of variantList[i].grains"
                                 justify-content-between
                                 align-items-center
                                 class="ingredient-row">
@@ -124,12 +124,12 @@
                   </ion-item-group>
 
                   <!-- Hops Schedule -->
-                  <ion-item-group *ngIf="masterRecipeList[i].hops.length">
+                  <ion-item-group *ngIf="variantList[i].hops.length">
                     <ion-item-divider color="primary" class="card-divider">
                       Hops
                     </ion-item-divider>
                     <ion-grid>
-                      <ion-row  *ngFor="let hops of masterRecipeList[i].hops"
+                      <ion-row  *ngFor="let hops of variantList[i].hops"
                                 justify-content-between
                                 align-items-center
                                 class="ingredient-row">
@@ -144,12 +144,12 @@
                   </ion-item-group>
 
                   <!-- Yeast Batch -->
-                  <ion-item-group *ngIf="masterRecipeList[i].yeast.length">
+                  <ion-item-group *ngIf="variantList[i].yeast.length">
                     <ion-item-divider color="primary" class="card-divider">
                       Yeast
                     </ion-item-divider>
                     <ion-grid>
-                      <ion-row  *ngFor="let yeast of masterRecipeList[i].yeast"
+                      <ion-row  *ngFor="let yeast of variantList[i].yeast"
                                 justify-content-between
                                 align-items-center
                                 class="ingredient-row">
@@ -164,12 +164,12 @@
                   </ion-item-group>
 
                   <!-- Other ingredients -->
-                  <ion-item-group *ngIf="masterRecipeList[i].otherIngredients.length">
+                  <ion-item-group *ngIf="variantList[i].otherIngredients.length">
                     <ion-item-divider color="primary" class="card-divider">
                       Other Ingredients
                     </ion-item-divider>
                     <ion-grid>
-                      <ion-row  *ngFor="let other of masterRecipeList[i].otherIngredients"
+                      <ion-row  *ngFor="let other of variantList[i].otherIngredients"
                                 justify-content-between
                                 class="ingredient-row">>
                         <ion-col col-7>
