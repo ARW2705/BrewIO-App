@@ -1,5 +1,5 @@
 /* Module imports */
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { NavController, NavParams, ViewController } from 'ionic-angular';
 import { FormControl, Validators } from '@angular/forms';
 
@@ -7,20 +7,31 @@ import { FormControl, Validators } from '@angular/forms';
   selector: 'page-note-form',
   templateUrl: 'note-form.html',
 })
-export class NoteFormPage {
+export class NoteFormPage implements OnInit {
   title: string = '';
   note: FormControl = null;
   formMethod: string = '';
   noteType: string = '';
 
-  constructor(public navCtrl: NavController,
+  constructor(
+    public navCtrl: NavController,
     public navParams: NavParams,
-    public viewCtrl: ViewController) {
-      this.formMethod = navParams.get('formMethod');
-      this.noteType = navParams.get('noteType');
-      this.title = this.noteType;
-      this.note = new FormControl(navParams.get('toUpdate'), [Validators.maxLength(120)]);
+    public viewCtrl: ViewController
+  ) { }
+
+  /***** Lifecycle Hooks *****/
+
+  ngOnInit() {
+    this.formMethod = this.navParams.get('formMethod');
+    this.noteType = this.navParams.get('noteType');
+    this.title = this.noteType;
+    this.note = new FormControl(this.navParams.get('toUpdate'), [Validators.maxLength(120)]);
   }
+
+  /***** End Lifecycle Hooks *****/
+
+
+  /***** Form Methods *****/
 
   /**
    * Call ViewController dismiss method with no additional data
@@ -54,5 +65,7 @@ export class NoteFormPage {
       note: this.note.value
     });
   }
+
+  /***** End Form Methods *****/
 
 }
