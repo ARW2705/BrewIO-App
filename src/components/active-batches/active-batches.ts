@@ -3,7 +3,7 @@ import { Component, OnInit, OnDestroy, ViewChildren, QueryList } from '@angular/
 import { NavController, Events, ItemSliding } from 'ionic-angular';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
-import 'rxjs/add/operator/takeUntil';
+import { takeUntil } from 'rxjs/operators/takeUntil';
 
 /* Interface imports */
 import { RecipeMaster } from '../../shared/interfaces/recipe-master';
@@ -11,7 +11,11 @@ import { Batch } from '../../shared/interfaces/batch';
 import { User } from '../../shared/interfaces/user';
 
 /* Utility function imports */
-import { getArrayFromObservables } from '../../shared/utility-functions/utilities';
+import {
+  getArrayFromObservables,
+  getId,
+  hasId
+} from '../../shared/utility-functions/utilities';
 
 /* Page imports */
 import { ProcessPage } from '../../pages/process/process';
@@ -22,15 +26,13 @@ import { RecipeProvider } from '../../providers/recipe/recipe';
 import { ToastProvider } from '../../providers/toast/toast';
 import { UserProvider } from '../../providers/user/user';
 
+
 @Component({
   selector: 'active-batches',
   templateUrl: 'active-batches.html'
 })
 export class ActiveBatchesComponent implements OnInit, OnDestroy {
   @ViewChildren('slidingItems') slidingItems: QueryList<ItemSliding>;
-  user$: Observable<User> = null;
-  activeBatchesList$: Observable<Array<Observable<Batch>>> = null;
-  masterList$: Observable<Array<Observable<RecipeMaster>>> = null;
   destroy$: Subject<boolean> = new Subject<boolean>();
   user: User = null;
   activeBatchesList: Array<Observable<Batch>> = [];
@@ -38,35 +40,34 @@ export class ActiveBatchesComponent implements OnInit, OnDestroy {
   getArrayFromObservables = getArrayFromObservables;
   _updateHeaderNav: any;
 
-  constructor(public navCtrl: NavController,
+  constructor(
+    public navCtrl: NavController,
     public events: Events,
     public processService: ProcessProvider,
     public recipeService: RecipeProvider,
     public toastService: ToastProvider,
-    public userService: UserProvider) {
-      this.user$ = this.userService.getUser();
-      this.activeBatchesList$ = this.processService.getActiveBatchesList();
-      this.masterList$ = this.recipeService.getMasterList();
-      this._updateHeaderNav = this.updateHeaderNavEventHandler.bind(this);
+    public userService: UserProvider)
+  {
+    this._updateHeaderNav = this.updateHeaderNavEventHandler.bind(this);
   }
 
   /***** Lifecycle Hooks *****/
 
   ngOnInit() {
-    this.user$
-      .takeUntil(this.destroy$)
+    this.userService.getUser()
+      .pipe(takeUntil(this.destroy$))
       .subscribe(user => {
         this.user = user;
       });
 
-    this.activeBatchesList$
-      .takeUntil(this.destroy$)
+    this.processService.getActiveBatchesList()
+      .pipe(takeUntil(this.destroy$))
       .subscribe(activeBatchesList => {
         this.activeBatchesList = activeBatchesList;
       });
 
-    this.masterList$
-      .takeUntil(this.destroy$)
+    this.recipeService.getMasterList()
+      .pipe(takeUntil(this.destroy$))
       .subscribe(masterList => {
         this.masterList = masterList;
       });
@@ -76,7 +77,7 @@ export class ActiveBatchesComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.destroy$.next(true);
-    this.destroy$.unsubscribe();
+    this.destroy$.complete();
     this.events.unsubscribe('update-nav-header', this._updateHeaderNav);
   }
 
@@ -115,8 +116,8 @@ export class ActiveBatchesComponent implements OnInit, OnDestroy {
   getMasterByBatch(batch: Batch): RecipeMaster {
     const list = getArrayFromObservables(this.masterList);
     const master = list.find(_master => {
-      return _master.recipes.some(_recipe => {
-        return _recipe._id === batch.recipe;
+      return _master.variants.some(_recipe => {
+        return hasId(_recipe, batch.recipe);
       })
     });
     return master;
@@ -147,7 +148,7 @@ export class ActiveBatchesComponent implements OnInit, OnDestroy {
     let recipe = undefined;
     const master = this.getMasterByBatch(batch);
     if (master !== undefined) {
-      recipe = master.recipes.find(recipe => recipe._id === batch.recipe);
+      recipe = master.variants.find(recipe => hasId(recipe, batch.recipe));
     }
     return (recipe !== undefined) ? recipe.variantName: '';
   }
@@ -180,14 +181,14 @@ export class ActiveBatchesComponent implements OnInit, OnDestroy {
         caller: 'active batches component',
         dest: 'process',
         destType: 'page',
-        destTitle: master.recipes.find(recipe => recipe._id === batch.recipe).variantName,
+        destTitle: master.variants.find(recipe => hasId(recipe, batch.recipe)).variantName,
         origin: this.navCtrl.getActive().name
       });
       this.navCtrl.push(ProcessPage, {
         master: master,
         requestedUserId: master.owner,
         selectedRecipeId: master.master,
-        selectedBatchId: batch._id
+        selectedBatchId: getId(batch)
       });
     } else {
       this.toastService.presentToast('Error finding associated Recipe');
