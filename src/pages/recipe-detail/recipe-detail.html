@@ -26,7 +26,7 @@
         <button ion-button
                 class="form-button"
                 color="primary"
-                (click)="navToRecipeForm('recipe')">
+                (click)="navToRecipeForm('variant')">
           Create New Variant
         </button>
       </ion-row>
@@ -89,14 +89,14 @@
 
       <ion-row>
         <ion-list id="variant-list">
-          <ng-container *ngFor="let recipe of recipeMaster.recipes; index as i">
+          <ng-container *ngFor="let recipe of recipeMaster.variants; index as i">
 
             <!-- Recipe variant list -->
             <ion-item-sliding #slidingItems>
 
               <!-- Delete recipe variant button -->
               <ion-item-options side="left"
-                                *ngIf="recipeMaster.recipes.length > 1">
+                                *ngIf="recipeMaster.variants.length > 1">
                 <button ion-button
                         color="danger"
                         [disabled]="!canDelete()"
@@ -173,7 +173,7 @@
                 <!-- Open recipe form to edit -->
                 <button ion-button
                         color="secondary"
-                        (click)="navToRecipeForm('recipe', recipe)">
+                        (click)="navToRecipeForm('variant', recipe)">
                   <ion-icon name="menu"></ion-icon>
                   Edit
                 </button>
