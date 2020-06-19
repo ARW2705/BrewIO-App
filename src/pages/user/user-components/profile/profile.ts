@@ -4,6 +4,8 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { TextInput } from 'ionic-angular';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
+import { takeUntil } from 'rxjs/operators/takeUntil';
+import { take } from 'rxjs/operators/take';
 
 /* Page imports */
 import { User } from '../../../../shared/interfaces/user';
@@ -11,7 +13,6 @@ import { User } from '../../../../shared/interfaces/user';
 /* Provider imports */
 import { UserProvider } from '../../../../providers/user/user';
 import { ToastProvider } from '../../../../providers/toast/toast';
-import { ModalProvider } from '../../../../providers/modal/modal';
 
 
 @Component({
@@ -37,23 +38,29 @@ export class ProfileComponent {
     public formBuilder: FormBuilder,
     public cdRef: ChangeDetectorRef,
     public userService: UserProvider,
-    public toastService: ToastProvider,
-    public modalService: ModalProvider
+    public toastService: ToastProvider
   ) { }
 
-  ngOnDestroy() {
-    this.destroy$.next(true);
-    this.destroy$.unsubscribe();
-  }
+  /***** Lifecycle Hooks *****/
 
   ngOnInit() {
     this.userService.getUser()
-      .takeUntil(this.destroy$)
+      .pipe(takeUntil(this.destroy$))
       .subscribe(user => {
         this.user = user;
         this.initForm(user);
       });
   }
+
+  ngOnDestroy() {
+    this.destroy$.next(true);
+    this.destroy$.complete();
+  }
+
+  /***** End Lifecycle Hooks *****/
+
+
+  /***** Form Methods *****/
 
   /**
    * Select field to be edited
@@ -154,6 +161,7 @@ export class ProfileComponent {
   **/
   onUpdate(): void {
     this.userService.updateUserProfile(this.userForm.value)
+      .pipe(take(1))
       .subscribe(
         response => {
           this.updateForm(response);
@@ -176,5 +184,7 @@ export class ProfileComponent {
     this.mapOriginalValues(update);
     this.userForm.reset(this.originalValues);
   }
+
+  /***** End Form Methods *****/
 
 }
