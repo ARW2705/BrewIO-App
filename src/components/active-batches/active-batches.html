@@ -1,6 +1,6 @@
 <ion-grid no-padding>
 
-  <ion-row *ngIf="user && isLoggedIn() && activeBatchesList.length">
+  <ion-row *ngIf="user && activeBatchesList.length">
 
     <ion-list id="batch-list">
       <ng-container *ngFor="let batch of getArrayFromObservables(activeBatchesList)">
@@ -52,15 +52,9 @@
 
   </ion-row>
 
-  <!-- Not logged in warning -->
-
-  <ion-row class="no-active-message" *ngIf="!user || !isLoggedIn()">
-    Must be logged in to view active batches
-  </ion-row>
-
   <!-- Logged in, but no active batches present message -->
 
-  <ion-row class="no-active-message" *ngIf="isLoggedIn() && !activeBatchesList.length">
+  <ion-row class="no-active-message" *ngIf="!activeBatchesList.length">
     No Active Batches
   </ion-row>
 
