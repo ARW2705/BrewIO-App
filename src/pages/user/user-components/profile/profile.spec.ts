@@ -1,66 +1,47 @@
 /* Module imports */
 import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/testing';
-import { IonicModule, Events, ToastController, ModalController } from 'ionic-angular';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { IonicModule } from 'ionic-angular';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { IonicStorageModule } from '@ionic/storage';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
-
-/* Constants imports */
-import { baseURL } from '../../../../shared/constants/base-url';
-import { apiVersion } from '../../../../shared/constants/api-version';
+import { of } from 'rxjs/observable/of';
 
 /* Test configuration imports */
 import { configureTestBed } from '../../../../../test-config/configureTestBed';
 
 /* Mock imports */
 import { mockUser } from '../../../../../test-config/mockmodels/mockUser';
-import { ModalControllerMock, ToastControllerMock } from '../../../../../test-config/mocks-ionic';
 
-/* Module imports */
-import { UserComponentsModule } from '../user.components.module';
+/* Interface imports */
+import { User } from '../../../../shared/interfaces/user';
 
 /* Component imports */
 import { ProfileComponent } from './profile';
 
 /* Provider imports */
 import { UserProvider } from '../../../../providers/user/user';
-import { ProcessHttpErrorProvider } from '../../../../providers/process-http-error/process-http-error';
-import { ModalProvider } from '../../../../providers/modal/modal';
 import { ToastProvider } from '../../../../providers/toast/toast';
-import { StorageProvider } from '../../../../providers/storage/storage';
-import { ConnectionProvider } from '../../../../providers/connection/connection';
-import { PreferencesProvider } from '../../../../providers/preferences/preferences';
 
 
-describe('About Component', () => {
-  let profileComponent: ProfileComponent;
+describe('Profile Component', () => {
+  let profilePage: ProfileComponent;
   let fixture: ComponentFixture<ProfileComponent>;
   let injector: TestBed;
-  let httpMock: HttpTestingController;
   let userService: UserProvider;
+  let toastService: ToastProvider;
   configureTestBed();
 
   beforeAll(done => (async() => {
     TestBed.configureTestingModule({
-      declarations: [ ],
+      declarations: [
+        ProfileComponent
+      ],
       imports: [
-        IonicModule.forRoot(ProfileComponent),
-        UserComponentsModule,
-        HttpClientTestingModule,
-        IonicStorageModule
+        IonicModule.forRoot(ProfileComponent)
       ],
       providers: [
-        UserProvider,
-        ModalProvider,
-        ToastProvider,
-        ProcessHttpErrorProvider,
-        PreferencesProvider,
-        { provide: ConnectionProvider, useValue: {} },
-        { provide: StorageProvider, useValue: {} },
-        { provide: ModalController, useClass: ModalControllerMock },
-        { provide: ToastController, useClass: ToastControllerMock },
-        { provide: Events, useValue: {} }
+        { provide: UserProvider, useValue: {} },
+        { provide: ToastProvider, useValue: {} }
       ],
       schemas: [
         NO_ERRORS_SCHEMA
@@ -74,167 +55,197 @@ describe('About Component', () => {
   beforeEach(async(() => {
     injector = getTestBed();
     userService = injector.get(UserProvider);
-    httpMock = injector.get(HttpTestingController);
-    userService.user$.next(mockUser());
+    toastService = injector.get(ToastProvider);
+
+    userService.getUser = jest
+      .fn()
+      .mockReturnValue(new BehaviorSubject<User>(mockUser()));
+    userService.isLoggedIn = jest
+      .fn()
+      .mockReturnValue(true);
+
+    toastService.presentToast = jest
+      .fn();
   }));
 
   beforeEach(() => {
     fixture = TestBed.createComponent(ProfileComponent);
-    profileComponent = fixture.componentInstance;
+    profilePage = fixture.componentInstance;
   });
 
-  afterEach(() => {
-    httpMock.verify();
-  });
+  test('should create the component', () => {
+    fixture.detectChanges();
 
-  describe('Profile Component', () => {
+    expect(profilePage).toBeDefined();
+  }); // end 'should create the component' test
 
-    test('should create the component', () => {
-      fixture.detectChanges();
-      expect(ProfileComponent).toBeDefined();
-    }); // end 'should create the component' test
+  test('should have new updated values', () => {
+    fixture.detectChanges();
 
-    test('should have new updated values', () => {
-      fixture.detectChanges();
-      profileComponent.originalValues.email = 'new-email';
-      expect(profileComponent.hasValuesToUpdate()).toBe(true);
-    }); // end 'should have new updated values' test
+    profilePage.originalValues.email = 'new-email';
 
-    test('should not have new updated values', () => {
-      fixture.detectChanges();
-      profileComponent.originalValues = profileComponent.userForm.value;
-      expect(profileComponent.hasValuesToUpdate()).toBe(false);
-    }); // end 'should not have new updated values' test
+    expect(profilePage.hasValuesToUpdate()).toBe(true);
+  }); // end 'should have new updated values' test
 
-    test('should stop editing', () => {
-      fixture.detectChanges();
-      profileComponent.changeEdit('email', null);
-      expect(profileComponent.editing).toMatch('');
-    }); // end 'should stop editing' test
+  test('should not have new updated values', () => {
+    fixture.detectChanges();
 
-    test('should init form with user', () => {
-      fixture.detectChanges();
-      const _mockUser = mockUser();
-      expect(profileComponent.userForm.controls.email.value).toMatch(_mockUser.email);
-      expect(profileComponent.userForm.controls.firstname.value).toMatch(_mockUser.firstname);
-      expect(profileComponent.userForm.controls.lastname.value).toMatch(_mockUser.lastname);
-    }); // end 'should init form with user' test
+    profilePage.originalValues = profilePage.userForm.value;
 
-    test('should init form without a user', () => {
-      fixture.detectChanges();
-      profileComponent.initForm({});
-      expect(profileComponent.userForm.controls.email.value.length).toBe(0);
-      expect(profileComponent.userForm.controls.firstname.value.length).toBe(0);
-      expect(profileComponent.userForm.controls.lastname.value.length).toBe(0);
-    }); // end 'should init form without a user' test
+    expect(profilePage.hasValuesToUpdate()).toBe(false);
+  }); // end 'should not have new updated values' test
 
-    test('should be in editing for field', () => {
-      fixture.detectChanges();
-      const field = 'firstname';
-      profileComponent.editing = field;
-      expect(profileComponent.isEditing(field)).toBe(true);
-    }); // end 'should be in editing for field' test
+  test('should stop editing', () => {
+    fixture.detectChanges();
 
-    test('should not be in editing for field', () => {
-      fixture.detectChanges();
-      const field = 'email';
-      profileComponent.editing = '';
-      expect(profileComponent.isEditing(field)).toBe(false);
-    }); // end 'should not be in editing for field' test
+    profilePage.changeEdit('email', null);
 
-    test('should be logged in', () => {
-      fixture.detectChanges();
-      expect(profileComponent.isLoggedIn()).toBe(true);
-    }); // end 'should be logged in' test
+    expect(profilePage.editing).toMatch('');
+  }); // end 'should stop editing' test
 
-    test('should change editing to \'email\'', () => {
-      fixture.detectChanges();
-      profileComponent.changeEdit('email', undefined);
-      expect(profileComponent.editing).toMatch('email');
-    }); // end 'should change editing to \'email\'' test
+  test('should init form with user', () => {
+    fixture.detectChanges();
 
-    test('should change editing to \'firstname\'', () => {
-      fixture.detectChanges();
-      profileComponent.changeEdit('firstname', undefined);
-      expect(profileComponent.editing).toMatch('firstname');
-    }); // end 'should change editing to \'firstname\'' test
+    const _mockUser = mockUser();
 
-    test('should change editing to \'lastname\'', () => {
-      fixture.detectChanges();
-      profileComponent.changeEdit('lastname', undefined);
-      expect(profileComponent.editing).toMatch('lastname');
-    }); // end 'should change editing to \'lastname\'' test
+    expect(profilePage.userForm.controls.email.value).toMatch(_mockUser.email);
+    expect(profilePage.userForm.controls.firstname.value).toMatch(_mockUser.firstname);
+    expect(profilePage.userForm.controls.lastname.value).toMatch(_mockUser.lastname);
+  }); // end 'should init form with user' test
 
-    test('should stop editing', () => {
-      fixture.detectChanges();
-      profileComponent.changeEdit('email', null);
-      expect(profileComponent.editing).toMatch('');
-    }); // end 'should stop editing' test
+  test('should init form without a user', () => {
+    fixture.detectChanges();
 
-    test('should map new values to original values', () => {
-      fixture.detectChanges();
-      const newValues = {
-        email: 'new-email',
-        firstname: 'new-firstname',
-        lastname: 'new-lastname',
-        ignore: true
-      };
+    profilePage.initForm({});
 
-      profileComponent.mapOriginalValues(newValues);
+    expect(profilePage.userForm.controls.email.value.length).toBe(0);
+    expect(profilePage.userForm.controls.firstname.value.length).toBe(0);
+    expect(profilePage.userForm.controls.lastname.value.length).toBe(0);
+  }); // end 'should init form without a user' test
 
-      expect(profileComponent.originalValues.email).toMatch(newValues.email);
-      expect(profileComponent.originalValues.firstname).toMatch(newValues.firstname);
-      expect(profileComponent.originalValues.lastname).toMatch(newValues.lastname);
-      expect(profileComponent.originalValues['ignore']).toBeUndefined();
-    }); // end 'should map new values to original values' test
+  test('should be in editing for field', () => {
+    fixture.detectChanges();
 
-    test('should submit an update', done => {
-      fixture.detectChanges();
-      const _mockUser = mockUser();
-      const onUpdateSpy = jest.spyOn(profileComponent.userService, 'updateUserProfile');
-      const toastSpy = jest.spyOn(profileComponent.toastService, 'presentToast');
+    const field = 'firstname';
 
-      profileComponent.onUpdate();
+    profilePage.editing = field;
 
-      const updateReq = httpMock.expectOne(`${baseURL}/${apiVersion}/users/profile`);
-      expect(updateReq.request.method).toMatch('PATCH');
-      updateReq.flush({
-        email: _mockUser.email,
-        firstname: _mockUser.firstname,
-        lastname: _mockUser.lastname
-      });
+    expect(profilePage.isEditing(field)).toBe(true);
+  }); // end 'should be in editing for field' test
 
-      setTimeout(() => {
-        expect(onUpdateSpy).toHaveBeenCalled();
-        expect(toastSpy).toHaveBeenCalledWith('Profile Updated');
-        done();
-      }, 10);
-    }); // end 'should submit an update' test
+  test('should not be in editing for field', () => {
+    fixture.detectChanges();
 
-    test('should fail to update user profile on error response', () => {
-      fixture.detectChanges();
-      userService.updateUserProfile = jest
-        .fn()
-        .mockReturnValue(new ErrorObservable('update error'));
-      const toastSpy = jest.spyOn(profileComponent.toastService, 'presentToast');
+    const field = 'email';
 
-      profileComponent.onUpdate();
+    profilePage.editing = '';
 
-      expect(toastSpy).toHaveBeenCalledWith('update error');
-    }); // end 'should fail to update user profile on error response' test
+    expect(profilePage.isEditing(field)).toBe(false);
+  }); // end 'should not be in editing for field' test
 
-    test('should update original values with updated values', () => {
-      fixture.detectChanges();
-      profileComponent.updateForm({
-        email: 'email',
-        firstname: 'first',
-        lastname: 'last'
-      });
-      expect(profileComponent.originalValues.email).toMatch('email');
-      expect(profileComponent.originalValues.firstname).toMatch('first');
-      expect(profileComponent.originalValues.lastname).toMatch('last');
-    }); // end 'should update original values with updated values' test
+  test('should be logged in', () => {
+    fixture.detectChanges();
 
-  });
+    expect(profilePage.isLoggedIn()).toBe(true);
+  }); // end 'should be logged in' test
+
+  test('should change editing to \'email\'', () => {
+    fixture.detectChanges();
+
+    profilePage.changeEdit('email', undefined);
+
+    expect(profilePage.editing).toMatch('email');
+  }); // end 'should change editing to \'email\'' test
+
+  test('should change editing to \'firstname\'', () => {
+    fixture.detectChanges();
+
+    profilePage.changeEdit('firstname', undefined);
+
+    expect(profilePage.editing).toMatch('firstname');
+  }); // end 'should change editing to \'firstname\'' test
+
+  test('should change editing to \'lastname\'', () => {
+    fixture.detectChanges();
+
+    profilePage.changeEdit('lastname', undefined);
+
+    expect(profilePage.editing).toMatch('lastname');
+  }); // end 'should change editing to \'lastname\'' test
+
+  test('should stop editing', () => {
+    fixture.detectChanges();
+
+    profilePage.changeEdit('email', null);
+
+    expect(profilePage.editing).toMatch('');
+  }); // end 'should stop editing' test
+
+  test('should map new values to original values', () => {
+    fixture.detectChanges();
+
+    const newValues = {
+      email: 'new-email',
+      firstname: 'new-firstname',
+      lastname: 'new-lastname',
+      ignore: true
+    };
+
+    profilePage.mapOriginalValues(newValues);
+
+    expect(profilePage.originalValues.email).toMatch(newValues.email);
+    expect(profilePage.originalValues.firstname).toMatch(newValues.firstname);
+    expect(profilePage.originalValues.lastname).toMatch(newValues.lastname);
+    expect(profilePage.originalValues['ignore']).toBeUndefined();
+  }); // end 'should map new values to original values' test
+
+  test('should submit an update', () => {
+    const _mockUser = mockUser();
+
+    userService.updateUserProfile = jest
+      .fn()
+      .mockReturnValue(of(_mockUser));
+
+    profilePage.updateForm = jest
+      .fn();
+
+    fixture.detectChanges();
+
+    const updateSpy = jest.spyOn(profilePage, 'updateForm');
+    const toastSpy = jest.spyOn(toastService, 'presentToast');
+
+    profilePage.onUpdate();
+
+    expect(updateSpy).toHaveBeenCalledWith(_mockUser);
+    expect(toastSpy).toHaveBeenCalledWith('Profile Updated');
+  }); // end 'should submit an update' test
+
+  test('should fail to update user profile on error response', () => {
+    fixture.detectChanges();
+
+    userService.updateUserProfile = jest
+      .fn()
+      .mockReturnValue(new ErrorObservable('update error'));
+
+    const toastSpy = jest.spyOn(toastService, 'presentToast');
+
+    profilePage.onUpdate();
+
+    expect(toastSpy).toHaveBeenCalledWith('update error');
+  }); // end 'should fail to update user profile on error response' test
+
+  test('should update original values with updated values', () => {
+    fixture.detectChanges();
+
+    profilePage.updateForm({
+      email: 'email',
+      firstname: 'first',
+      lastname: 'last'
+    });
+
+    expect(profilePage.originalValues.email).toMatch('email');
+    expect(profilePage.originalValues.firstname).toMatch('first');
+    expect(profilePage.originalValues.lastname).toMatch('last');
+  }); // end 'should update original values with updated values' test
 
 });
