@@ -1,8 +1,8 @@
 /* Module imports */
 import { Component } from '@angular/core';
-import 'rxjs/add/operator/takeUntil';
 
 /* Provider imports */
+import { UserProvider } from '../../providers/user/user';
 import { ModalProvider } from '../../providers/modal/modal';
 
 
@@ -13,14 +13,20 @@ import { ModalProvider } from '../../providers/modal/modal';
 export class UserPage {
   expandedContent = '';
 
-  constructor(public modalService: ModalProvider) { }
+  constructor(
+    public userService: UserProvider,
+    public modalService: ModalProvider
+  ) { }
 
-  showExpandedContent(section: string): boolean {
-    return section === this.expandedContent;
-  }
-
-  toggleExpandContent(section: string): void {
-    this.expandedContent = this.expandedContent === section ? '': section;
+  /**
+   * Check if a user is logged in
+   *
+   * @params: none
+   *
+   * @return: true if a user is logged in
+  **/
+  isLoggedIn(): boolean {
+    return this.userService.isLoggedIn();
   }
 
   /**
@@ -41,6 +47,28 @@ export class UserPage {
   **/
   openSignup(): void {
     this.modalService.openSignup();
+  }
+
+  /**
+   * Determine if content should be expanded or collapsed
+   *
+   * @params: section - name of section check
+   *
+   * @return: true if section name matches expandedContent name
+  **/
+  showExpandedContent(section: string): boolean {
+    return section === this.expandedContent;
+  }
+
+  /**
+   * Toggle whether section should be expanded or collapsed
+   *
+   * @params: section - name of section to toggle
+   *
+   * @return: none
+  **/
+  toggleExpandContent(section: string): void {
+    this.expandedContent = this.expandedContent === section ? '': section;
   }
 
 }
