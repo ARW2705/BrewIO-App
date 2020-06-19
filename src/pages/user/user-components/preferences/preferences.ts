@@ -1,6 +1,6 @@
 /* Module imports */
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { FormGroup, FormBuilder } from '@angular/forms';
 import { Subject } from 'rxjs/Subject';
 
 /* Interface imports */
@@ -27,6 +27,8 @@ export class PreferencesComponent implements OnInit, OnDestroy {
     public formBuilder: FormBuilder
   ) { }
 
+  /***** Lifecycle Hooks *****/
+
   ngOnInit() {
     this.userService.getUser()
       .takeUntil(this.destroy$)
@@ -46,15 +48,32 @@ export class PreferencesComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.destroy$.next(true);
-    this.destroy$.unsubscribe();
+    this.destroy$.complete();
   }
 
+  /***** End Lifecycle Hooks *****/
+
+
+  /***** Form Methods *****/
+
+  /**
+   * Initialize preferences form
+   *
+   * @params: none
+   * @return: none
+  **/
   initForm(): void {
     this.preferencesForm = this.formBuilder.group({
       preferredUnits: this.user.preferredUnits === 'e'
     });
   }
 
+  /**
+   * Listen for changes to form and update service
+   *
+   * @params: none
+   * @return: none
+  **/
   listenForChanges(): void {
     this.preferencesForm.valueChanges
       .subscribe(formValues => {
@@ -62,5 +81,7 @@ export class PreferencesComponent implements OnInit, OnDestroy {
         this.preferenceService.setUnits(formValues.preferredUnits);
       });
   }
+
+  /***** End Form Methods *****/
 
 }
