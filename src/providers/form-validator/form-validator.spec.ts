@@ -1,20 +1,32 @@
 /* Module imports */
+import { TestBed, getTestBed, async } from '@angular/core/testing';
 import { FormControl, FormGroup, ValidatorFn } from '@angular/forms';
 
 /* Provider imports */
 import { FormValidatorProvider } from './form-validator';
 
 describe('Custom form validator service', () => {
-
+  let injector: TestBed;
+  let validator: FormValidatorProvider;
   let matchValidator: ValidatorFn;
   let patternValidator: ValidatorFn;
   let errorGetter: any;
 
-  describe('Validates password confimration', () => {
-
-    beforeAll(() => {
-      matchValidator = FormValidatorProvider.PasswordMatch();
+  beforeAll(async(() => {
+    TestBed.configureTestingModule({
+      imports: [],
+      providers: [
+        FormValidatorProvider
+      ]
     });
+    injector = getTestBed();
+    validator = injector.get(FormValidatorProvider);
+    matchValidator = FormValidatorProvider.PasswordMatch();
+    patternValidator = FormValidatorProvider.PasswordPattern();
+    errorGetter = FormValidatorProvider.GetErrorMessage;
+  }));
+
+  describe('Validates password confimration', () => {
 
     test('should match password and confirmation', () => {
       const formGroup = new FormGroup({
@@ -46,10 +58,6 @@ describe('Custom form validator service', () => {
 
   describe('Validates password pattern', () => {
 
-    beforeAll(() => {
-      patternValidator = FormValidatorProvider.PasswordPattern();
-    });
-
     test('should match password pattern', () => {
       expect(patternValidator(new FormControl('abcDEF123!@#'))).toBe(null);
     });
@@ -73,10 +81,6 @@ describe('Custom form validator service', () => {
   }); // end 'Validates password pattern' section
 
   describe('Gets validator error messages', () => {
-
-    beforeAll(() => {
-      errorGetter = FormValidatorProvider.GetErrorMessage;
-    });
 
     test('should get username is required error', () => {
       expect(errorGetter('username', 'required')).toMatch('Username is required');
