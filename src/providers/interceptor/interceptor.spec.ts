@@ -1,9 +1,8 @@
 /* Module Imports */
 import { TestBed, getTestBed, async } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { HTTP_INTERCEPTORS, HttpErrorResponse } from '@angular/common/http';
-import { IonicStorageModule } from '@ionic/storage';
-import { Events, ToastController } from 'ionic-angular';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 /* Constant imports */
 import { baseURL } from '../../shared/constants/base-url';
@@ -12,20 +11,18 @@ import { apiVersion } from '../../shared/constants/api-version';
 /* Test configuration imports */
 import { configureTestBed } from '../../../test-config/configureTestBed';
 
+/* Interface imports */
+import { User } from '../../shared/interfaces/user';
+
 /* Mock imports */
-import { HttpMock, ToastControllerMock } from '../../../test-config/mocks-ionic';
+import { HttpMock } from '../../../test-config/mocks-ionic';
 import { mockUser } from '../../../test-config/mockmodels/mockUser';
+import { mockErrorResponse } from '../../../test-config/mockmodels/mockErrorResponse';
 
 /* Provider imports */
 import { AuthorizedInterceptor, UnauthorizedInterceptor } from './interceptor';
 import { UserProvider } from '../user/user';
-import { ProcessProvider } from '../process/process';
-import { RecipeProvider } from '../recipe/recipe';
-import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
-import { StorageProvider } from '../storage/storage';
-import { ConnectionProvider } from '../connection/connection';
 import { ToastProvider } from '../toast/toast';
-import { PreferencesProvider } from '../preferences/preferences';
 
 
 describe('HTTP Interceptor service', () => {
@@ -39,34 +36,28 @@ describe('HTTP Interceptor service', () => {
   beforeAll(async(() => {
     TestBed.configureTestingModule({
       imports: [
-        HttpClientTestingModule,
-        IonicStorageModule.forRoot()
+        HttpClientTestingModule
       ],
       providers: [
-        UserProvider,
         HttpMock,
-        Events,
-        ToastProvider,
-        { provide: ProcessProvider, useValue: {} },
-        { provide: RecipeProvider, useValue: {} },
-        { provide: ProcessHttpErrorProvider, useValue: {} },
-        { provide: StorageProvider, useValue: {} },
-        { provide: ConnectionProvider, useValue: {} },
-        { provide: PreferencesProvider, useValue: {} },
-        { provide: ToastController, useClass: ToastControllerMock },
+        { provide: UserProvider, useValue: {} },
+        { provide: ToastProvider, useValue: {} },
         { provide: HTTP_INTERCEPTORS, useClass: AuthorizedInterceptor, multi: true },
         { provide: HTTP_INTERCEPTORS, useClass: UnauthorizedInterceptor, multi: true}
       ]
     });
   }));
 
-  beforeEach(() => {
+  beforeAll(async(() => {
     injector = getTestBed();
     httpMock = injector.get(HttpTestingController);
     userService = injector.get(UserProvider);
     mockHttpService = injector.get(HttpMock);
     toastService = injector.get(ToastProvider);
-  });
+
+    toastService.presentToast = jest
+      .fn();
+  }));
 
   afterEach(() => {
     httpMock.verify();
@@ -74,8 +65,14 @@ describe('HTTP Interceptor service', () => {
 
   describe('Authorized interceptor', () => {
 
-    beforeEach(() => {
-      userService.getUser().next(mockUser());
+    beforeAll(() => {
+      const _mockUser = mockUser();
+      userService.getUser = jest
+        .fn()
+        .mockReturnValue(new BehaviorSubject<User>(_mockUser));
+      userService.getToken = jest
+        .fn()
+        .mockReturnValue(_mockUser.token);
     });
 
     test('should have authorization header with token', done => {
@@ -100,11 +97,16 @@ describe('HTTP Interceptor service', () => {
 
   describe('Unauthorized interceptor', () => {
 
+    beforeEach(() => {
+      userService.getUser = jest
+        .fn()
+        .mockReturnValue(new BehaviorSubject<User>(null));
+      userService.getToken = jest
+        .fn()
+        .mockReturnValue(undefined);
+    });
+
     test('should have authorization header of undefined and 401 error', done => {
-      const mockErrorResponse: HttpErrorResponse = new HttpErrorResponse({
-        status: 401,
-        statusText: 'Not Authorized'
-      });
       const toastSpy = jest.spyOn(toastService, 'presentToast');
 
       mockHttpService.get()
@@ -115,9 +117,9 @@ describe('HTTP Interceptor service', () => {
             done();
           },
           error => {
-            expect(error.status).toBe(mockErrorResponse.status);
-            expect(error.statusText).toMatch(mockErrorResponse.statusText);
-            expect(toastSpy.mock.calls[0][0]).toMatch('Not Authorized. Please log in');
+            expect(error.status).toBe(401);
+            expect(error.statusText).toMatch('Not Authorized');
+            expect(toastSpy.mock.calls[toastSpy.mock.calls.length - 1][0]).toMatch('Not Authorized. Please log in');
             done();
           }
         );
@@ -125,14 +127,10 @@ describe('HTTP Interceptor service', () => {
       const req = httpMock.expectOne(`${baseURL}/${apiVersion}/mock`);
       expect(req.request.headers.has('Authorization')).toBeTruthy();
       expect(req.request.headers.get('Authorization')).toMatch('undefined');
-      req.flush({}, mockErrorResponse);
+      req.flush(null, mockErrorResponse(401, 'Not Authorized'));
     }); // end 'should have authorization header of undefined and 401 error' test
 
     test('should have authorization header of undefined and a non-401 error', done => {
-      const mockErrorResponse: HttpErrorResponse = new HttpErrorResponse({
-        status: 400,
-        statusText: 'Bad Request'
-      });
       const toastSpy = jest.spyOn(toastService, 'presentToast');
 
       mockHttpService.get()
@@ -143,9 +141,9 @@ describe('HTTP Interceptor service', () => {
             done();
           },
           error => {
-            expect(error.status).toBe(mockErrorResponse.status);
-            expect(error.statusText).toMatch(mockErrorResponse.statusText);
-            expect(toastSpy.mock.calls[0][0]).toMatch(`An unexpected error occured: <${mockErrorResponse.status}> ${mockErrorResponse.statusText}`);
+            expect(error.status).toBe(400);
+            expect(error.statusText).toMatch('Bad Request');
+            expect(toastSpy.mock.calls[toastSpy.mock.calls.length - 1][0]).toMatch('An unexpected error occured: <400> Bad Request');
             done();
           }
         );
@@ -153,7 +151,7 @@ describe('HTTP Interceptor service', () => {
       const req = httpMock.expectOne(`${baseURL}/${apiVersion}/mock`);
       expect(req.request.headers.has('Authorization')).toBeTruthy();
       expect(req.request.headers.get('Authorization')).toMatch('undefined');
-      req.flush(null, mockErrorResponse);
+      req.flush(null, mockErrorResponse(400, 'Bad Request'));
     }); // end 'should have authorization header of undefined and a non-401 error' test
 
   }); // end 'Unauthorized interceptor' section
