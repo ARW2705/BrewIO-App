@@ -5,6 +5,7 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 /* Constants imports */
 import { sharedProperties } from '../constants/shared-properties';
 import { staticLibraryProperties } from '../constants/static-library-properties';
+import { defaultIdTypeRegex } from '../constants/default-id-pattern';
 
 
 /**
@@ -46,7 +47,7 @@ export function clone(obj: any): any {
  *
  * @params: obsArr - an array of observables of an object
  *
- * @return: array of the current values of each observable
+ * @return: new array of the current values of each observable
 **/
 export function getArrayFromObservables(obsArr: Array<Observable<any>>): Array<any> {
   return obsArr.map(obs => {
@@ -54,6 +55,19 @@ export function getArrayFromObservables(obsArr: Array<Observable<any>>): Array<a
     obs.subscribe(data => object = data);
     return object;
   });
+}
+
+/**
+ * Get an id from an object, prioritizing _id
+ *
+ * @params: obj - an object that may contain an id
+ *
+ * @return: the id as a string else undefined
+**/
+export function getId(obj: any): string {
+  if (obj['_id'] !== undefined) return obj['_id'];
+  if (obj['cid'] !== undefined) return obj['cid'];
+  return undefined;
 }
 
 /**
@@ -66,11 +80,48 @@ export function getArrayFromObservables(obsArr: Array<Observable<any>>): Array<a
 **/
 export function getIndexById(id: string, arr: Array<any>): number {
   for (let i=0; i < arr.length; i++) {
-    if (arr[i]._id == id) {
+    if (hasId(arr[i], id)) {
       return i;
     }
   }
   return -1;
+}
+
+/**
+ * Check if the given id is client (default) or server generated
+ * Server generated ids are 24 chars long, client generated are unix timestamps
+ * in milliseconds
+ *
+ * @params: id - id as a string
+ *
+ * @return: true if id contains no letters
+**/
+export function hasDefaultIdType(id: string): boolean {
+  return defaultIdTypeRegex.test(id);
+}
+
+/**
+ * Check if object has search id either as _id or cid property
+ *
+ * @params: obj - object in which to search
+ * @params: searchId - id to compare
+ *
+ * @return: true if either obj _id or cid matches searchId
+**/
+export function hasId(obj: object, searchId: string): boolean {
+  if (searchId === null || searchId === undefined) return false;
+  return obj['_id'] === searchId || obj['cid'] === searchId;
+}
+
+/**
+ * Check if a server id has been set as '_id' property
+ *
+ * @params: id - id as a string
+ *
+ * @return: true if id is undefined
+**/
+export function missingServerId(id: string): boolean {
+  return id === undefined;
 }
 
 /**

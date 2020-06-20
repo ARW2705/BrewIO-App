@@ -43,12 +43,27 @@ describe('Shared: utility functions', () => {
     expect(notFound).toBe(-1);
   }); // end 'should get index of object by id' test
 
+  test('should check if id is a client or server id', () => {
+    expect(utils.hasDefaultIdType('0123456789012')).toBe(true);
+    expect(utils.hasDefaultIdType('0a1b2c3d4e5f6g7h8i9j0kl1')).toBe(false);
+  }); // end 'should check if id is a client or server id' test
+
   test('should convert array of Observables to array of values', () => {
     const valueArray = utils.getArrayFromObservables(mockObservablesArray());
     expect(valueArray[0].key).toBe('a');
     expect(valueArray[1].key).toBe('b');
     expect(valueArray[2].key).toBe('c');
   }); // end 'should convert array of Observables to array of values' test
+
+  test('should get id', () => {
+    const obj1 = { _id: 'id' };
+    const obj2 = { cid: 'id' };
+    const obj3 = {};
+
+    expect(utils.getId(obj1)).toMatch('id');
+    expect(utils.getId(obj2)).toMatch('id');
+    expect(utils.getId(obj3)).toBeUndefined();
+  }); // end 'should get id' test
 
   test('should round number to specified decimal places', () => {
     expect(utils.roundToDecimalPlace(Math.PI, 4)).toBe(3.1416);
@@ -60,5 +75,23 @@ describe('Shared: utility functions', () => {
   test('should change string to title case', () => {
     expect(utils.toTitleCase('the quick brown fox jumps over the lazy dog')).toMatch('The Quick Brown Fox Jumps Over The Lazy Dog');
   }); // end 'should change string to title case' test
+
+  test('should check if server id is missing', () => {
+    expect(utils.missingServerId('0a1b2c3d4e5f6g7h8i9j0kl1')).toBe(false);
+    expect(utils.missingServerId(undefined)).toBe(true);
+  }); // end 'should check if server id is missing' test
+
+  test('should check if object contains search id', () => {
+    const obj1 = { _id: 'id' };
+    const obj2 = { cid: 'id' };
+    const obj3 = {};
+
+    expect(utils.hasId(obj1, 'id')).toBe(true);
+    expect(utils.hasId(obj2, 'id')).toBe(true);
+    expect(utils.hasId(obj1, 'other')).toBe(false);
+    expect(utils.hasId(obj3, 'id')).toBe(false);
+    expect(utils.hasId(obj1, null)).toBe(false);
+    expect(utils.hasId(obj1, undefined)).toBe(false);
+  }); // end 'should check if object contains search id' test
 
 });
