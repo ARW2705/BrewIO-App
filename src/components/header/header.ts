@@ -1,9 +1,8 @@
 /* Module Imports */
 import { Component, Input, OnInit, OnDestroy } from '@angular/core';
-import { ModalController, NavController, Events } from 'ionic-angular';
-import { Observable } from 'rxjs/Observable';
+import { NavController, Events } from 'ionic-angular';
 import { Subject } from 'rxjs/Subject';
-import 'rxjs/add/operator/takeUntil';
+import { takeUntil } from 'rxjs/operators/takeUntil';
 
 /* Interface Imports */
 import { User } from '../../shared/interfaces/user';
@@ -19,33 +18,31 @@ import { ModalProvider } from '../../providers/modal/modal';
 export class HeaderComponent implements OnInit, OnDestroy {
   @Input() title: string;
   destroy$: Subject<boolean> = new Subject<boolean>();
-  user$: Observable<User> = null;
   user: User = null;
   isTabPage: boolean = true;
   currentTab: string = '';
   navStack: Array<string> = [];
   _headerNavUpdate: any;
 
-  constructor(public modalCtrl: ModalController,
-    public navCtrl: NavController,
+  constructor(
     public events: Events,
     public userService: UserProvider,
-    public modalService: ModalProvider) {
-      this.user$ = this.userService.getUser();
-      this._headerNavUpdate = this.headerNavUpdateEventHandler.bind(this);
+    public modalService: ModalProvider)
+  {
+    this._headerNavUpdate = this.headerNavUpdateEventHandler.bind(this);
   }
 
   /***** Lifecycle Hooks *****/
 
   ngOnDestroy() {
     this.destroy$.next(true);
-    this.destroy$.unsubscribe();
+    this.destroy$.complete();
     this.events.unsubscribe('update-nav-header', this._headerNavUpdate);
   }
 
   ngOnInit() {
-    this.user$
-      .takeUntil(this.destroy$)
+    this.userService.getUser()
+      .pipe(takeUntil(this.destroy$))
       .subscribe(_user => {
         this.user = _user;
       });
@@ -100,9 +97,20 @@ export class HeaderComponent implements OnInit, OnDestroy {
       // if on process page and batch has been completed,
       // or a form submission has completed,
       // automatically go back
-      console.log(data.caller);
+      // console.log(data.caller);
       this.goBack();
     }
+  }
+
+  /**
+   * Check if user is logged in
+   *
+   * @params: none
+   *
+   * @return: true if a user is logged in
+  **/
+  isLoggedIn(): boolean {
+    return this.userService.isLoggedIn();
   }
 
   /**
