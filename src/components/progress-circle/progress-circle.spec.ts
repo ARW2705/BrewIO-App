@@ -1,5 +1,5 @@
 /* Module imports */
-import { TestBed, async, ComponentFixture } from '@angular/core/testing';
+import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { IonicModule } from 'ionic-angular';
 import { By } from '@angular/platform-browser';
 
@@ -25,7 +25,7 @@ describe('Progress Circle Component', () => {
         ProgressCircleComponent
       ],
       imports: [
-        IonicModule
+        IonicModule.forRoot(ProgressCircleComponent)
       ],
       providers: []
     });
@@ -42,20 +42,27 @@ describe('Progress Circle Component', () => {
 
   test('should create the component', () => {
     fixture.detectChanges();
+
     expect(progressCircle).toBeDefined();
+
     expect(progressCircle.settings).toStrictEqual(mockTimer().settings);
   }); // end 'should create the component' test
 
   test('should have an svg with attributes', () => {
     fixture.detectChanges();
+
     const svg = fixture.debugElement.query(By.css('svg'));
+
     expect(svg.attributes.width).toMatch(testSettings.width.toString());
     expect(svg.attributes.height).toMatch(testSettings.height.toString());
-    console.log(svg.children[0].name);
+
     const circle = svg.children.find(child => child.name === 'circle');
+
     expect(circle).toBeDefined();
     expect(circle.attributes['stroke-dashoffset']).toMatch('10');
+
     const text = svg.children.find(child => child.name === 'text');
+
     expect(text.attributes['text-anchor']).toMatch('textAnchor');
   }); // end 'should have an svg with attributes' test
 
