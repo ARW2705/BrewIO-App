@@ -3,6 +3,9 @@ import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/cor
 import * as moment from 'moment';
 import * as _ from 'lodash';
 
+/* Utility imports */
+import { getId } from '../../shared/utility-functions/utilities';
+
 /* Interface imports */
 import { CalendarDate } from '../../shared/interfaces/calendar-date';
 
@@ -27,14 +30,14 @@ export class CalendarComponent implements OnInit, OnChanges {
 
   /***** Lifecycle Hooks *****/
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes.stepData.previousValue === undefined
-        || changes.stepData.currentValue._id === changes.stepData.previousValue._id) return;
-    this.stepData = changes.stepData.currentValue;
+  ngOnInit() {
     this.initCalendar();
   }
 
-  ngOnInit() {
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes.stepData.previousValue === undefined
+        || getId(changes.stepData.currentValue) === getId(changes.stepData.previousValue)) return;
+    this.stepData = changes.stepData.currentValue;
     this.initCalendar();
   }
 
@@ -105,7 +108,7 @@ export class CalendarComponent implements OnInit, OnChanges {
   **/
   getFinal(): any {
     return {
-      _id: this.stepData._id,
+      _id: getId(this.stepData),
       startDatetime: this.startDate.mDate.toISOString(),
       alerts: this.projectedDates.map(date => {
         return {
