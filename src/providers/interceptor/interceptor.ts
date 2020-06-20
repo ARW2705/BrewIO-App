@@ -2,7 +2,6 @@
 import { HttpInterceptor, HttpHandler, HttpRequest, HttpErrorResponse, HttpEvent } from '@angular/common/http';
 import { Injectable, Injector } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/operator/do';
 
 /* Provider imports */
 import { UserProvider } from '../user/user';
