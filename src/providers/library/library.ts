@@ -3,8 +3,10 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
-import 'rxjs/add/operator/catch';
-import 'rxjs/add/operator/map';
+import { forkJoin } from 'rxjs/observable/forkJoin';
+import { of } from 'rxjs/observable/of'
+import { map } from 'rxjs/operators/map';
+import { catchError } from 'rxjs/operators/catchError';
 
 /* Constants imports */
 import { baseURL } from '../../shared/constants/base-url';
@@ -44,16 +46,16 @@ export class LibraryProvider {
     this.storageService.getLibrary()
       .subscribe(
         (libraries: LibraryStorage) => {
-          this.grainsLibrary = libraries.grains;
-          this.hopsLibrary = libraries.hops;
-          this.yeastLibrary = libraries.yeast;
-          this.styleLibrary = libraries.style;
+          if (this.grainsLibrary === null) this.grainsLibrary = libraries.grains;
+          if (this.hopsLibrary === null) this.hopsLibrary = libraries.hops;
+          if (this.yeastLibrary === null) this.yeastLibrary = libraries.yeast;
+          if (this.styleLibrary === null) this.styleLibrary = libraries.style;
         },
         (error: ErrorObservable) => {
-          console.log(`${error}: awaiting data from server`);
+          console.log(`${error.error}: awaiting data from server`);
         }
       );
-    Observable.forkJoin(
+    forkJoin(
       this.fetchGrainsLibrary(),
       this.fetchHopsLibrary(),
       this.fetchYeastLibrary(),
@@ -82,12 +84,14 @@ export class LibraryProvider {
   **/
   fetchGrainsLibrary(): Observable<Array<Grains>> {
     return this.http.get(`${baseURL}/${apiVersion}/library/grains`)
-      .map((grains: Array<Grains>) => {
-        this.grainsLibrary = grains.sort(this.sortAlpha);
-        this.updateStorage();
-        return grains;
-      })
-      .catch(error => this.processHttpError.handleError(error));
+      .pipe(
+        map((grains: Array<Grains>) => {
+          this.grainsLibrary = grains.sort(this.sortAlpha);
+          this.updateStorage();
+          return grains;
+        }),
+        catchError(error => this.processHttpError.handleError(error))
+      );
   }
 
   /**
@@ -99,12 +103,14 @@ export class LibraryProvider {
   **/
   fetchHopsLibrary(): Observable<Array<Hops>> {
     return this.http.get(`${baseURL}/${apiVersion}/library/hops`)
-      .map((hops: Array<Hops>) => {
-        this.hopsLibrary = hops.sort(this.sortAlpha);
-        this.updateStorage();
-        return hops;
-      })
-      .catch(error => this.processHttpError.handleError(error));
+      .pipe(
+        map((hops: Array<Hops>) => {
+          this.hopsLibrary = hops.sort(this.sortAlpha);
+          this.updateStorage();
+          return hops;
+        }),
+        catchError(error => this.processHttpError.handleError(error))
+      );
   }
 
   /**
@@ -116,12 +122,14 @@ export class LibraryProvider {
   **/
   fetchYeastLibrary(): Observable<Array<Yeast>> {
     return this.http.get(`${baseURL}/${apiVersion}/library/yeast`)
-      .map((yeast: Array<Yeast>) => {
-        this.yeastLibrary = yeast.sort(this.sortAlpha);
-        this.updateStorage();
-        return yeast;
-      })
-      .catch(error => this.processHttpError.handleError(error));
+      .pipe(
+        map((yeast: Array<Yeast>) => {
+          this.yeastLibrary = yeast.sort(this.sortAlpha);
+          this.updateStorage();
+          return yeast;
+        }),
+        catchError(error => this.processHttpError.handleError(error))
+      );
   }
 
   /**
@@ -133,12 +141,14 @@ export class LibraryProvider {
   **/
   fetchStyleLibrary(): Observable<Array<Style>> {
     return this.http.get(`${baseURL}/${apiVersion}/library/style`)
-      .map((style: Array<Style>) => {
-        this.styleLibrary = style.sort(this.sortAlpha);
-        this.updateStorage();
-        return style;
-      })
-      .catch(error => this.processHttpError.handleError(error));
+      .pipe(
+        map((style: Array<Style>) => {
+          this.styleLibrary = style.sort(this.sortAlpha);
+          this.updateStorage();
+          return style;
+        }),
+        catchError(error => this.processHttpError.handleError(error))
+      );
   }
 
   /***** End API access methods *****/
@@ -154,7 +164,7 @@ export class LibraryProvider {
    * @return: combined observable of all library requests
   **/
   getAllLibraries(): Observable<Array<Array<any>>> {
-    return Observable.forkJoin(
+    return forkJoin(
       this.getGrainsLibrary(),
       this.getHopsLibrary(),
       this.getYeastLibrary(),
@@ -172,7 +182,7 @@ export class LibraryProvider {
   getGrainsLibrary(): Observable<Array<Grains>> {
     return this.grainsLibrary === null
             ? this.fetchGrainsLibrary()
-            : Observable.of(this.grainsLibrary);
+            : of(this.grainsLibrary);
   }
 
   /**
@@ -188,9 +198,9 @@ export class LibraryProvider {
       grains = this.grainsLibrary.find(entry => entry._id === grainId);
     }
     return grains !== undefined
-            ? Observable.of(grains)
+            ? of(grains)
             : this.fetchGrainsLibrary()
-              .map(library => library.find(entry => entry._id === grainId));
+                .pipe(map(library => library.find(entry => entry._id === grainId)));
   }
 
   /**
@@ -203,7 +213,7 @@ export class LibraryProvider {
   getHopsLibrary(): Observable<Array<Hops>> {
     return this.hopsLibrary === null
             ? this.fetchHopsLibrary()
-            : Observable.of(this.hopsLibrary);
+            : of(this.hopsLibrary);
   }
 
   /**
@@ -219,9 +229,9 @@ export class LibraryProvider {
       hops = this.hopsLibrary.find(entry => entry._id === hopsId);
     }
     return hops !== undefined
-            ? Observable.of(hops)
+            ? of(hops)
             : this.fetchHopsLibrary()
-              .map(library => library.find(entry => entry._id === hopsId));
+                .pipe(map(library => library.find(entry => entry._id === hopsId)));
   }
 
   /**
@@ -234,7 +244,7 @@ export class LibraryProvider {
   getYeastLibrary(): Observable<Array<Yeast>> {
     return this.yeastLibrary === null
             ? this.fetchYeastLibrary()
-            : Observable.of(this.yeastLibrary);
+            : of(this.yeastLibrary);
   }
 
   /**
@@ -250,9 +260,9 @@ export class LibraryProvider {
       yeast = this.yeastLibrary.find(entry => entry._id === yeastId);
     }
     return yeast !== undefined
-            ? Observable.of(yeast)
+            ? of(yeast)
             : this.fetchYeastLibrary()
-              .map(library => library.find(entry => entry._id === yeastId));
+                .pipe(map(library => library.find(entry => entry._id === yeastId)));
   }
 
   /**
@@ -265,7 +275,7 @@ export class LibraryProvider {
   getStyleLibrary(): Observable<Array<Style>> {
     return this.styleLibrary === null
             ? this.fetchStyleLibrary()
-            : Observable.of(this.styleLibrary);
+            : of(this.styleLibrary);
   }
 
   /**
@@ -281,9 +291,9 @@ export class LibraryProvider {
       style = this.styleLibrary.find(entry => entry._id === styleId);
     }
     return style !== undefined
-            ? Observable.of(style)
+            ? of(style)
             : this.fetchStyleLibrary()
-              .map(library => library.find(entry => entry._id === styleId));
+                .pipe(map(library => library.find(entry => entry._id === styleId)));
   }
 
   /**
