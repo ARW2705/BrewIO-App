@@ -28,15 +28,17 @@ describe('Preferences Provider', () => {
 
   test('should set the units system', () => {
     expect(preferenceService.units).toMatch('e');
+
     preferenceService.setUnits('m');
+
     expect(preferenceService.units).toMatch('m');
-  });
+  }); // end 'should set the units system' test
 
   test('should throw error with unknown system type', () => {
     expect(() => {
       preferenceService.setUnits('error type');
     })
     .toThrowError('Invalid unit type: error type');
-  });
+  }); // end 'should throw error with unknown system type' test
 
 });
