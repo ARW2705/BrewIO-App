@@ -1,7 +1,8 @@
 /* Module imports */
 import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable } from 'rxjs/Observable';
+import { _throw as throwError } from 'rxjs/observable/throw';
 
 
 @Injectable()
@@ -33,7 +34,7 @@ export class ProcessHttpErrorProvider {
     } else {
       errMsg = (error.message) ? error.message: error.toString();
     }
-    return Observable.throw(errMsg);
+    return throwError(errMsg);
   }
 
 }
