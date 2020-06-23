@@ -125,10 +125,10 @@ describe('Calendar Process Component', () => {
 
     const data = cpPage.getCurrentStepCalendarData();
 
-    expect(data._id).toMatch(stepData._id);
-    expect(data.duration).toBe(stepData.duration);
-    expect(data.title).toMatch(stepData.name);
-    expect(data.description).toMatch(stepData.description);
+    expect(data['_id']).toMatch(stepData._id);
+    expect(data['duration']).toBe(stepData.duration);
+    expect(data['title']).toMatch(stepData.name);
+    expect(data['description']).toMatch(stepData.description);
   }); // end 'should get the step data of current calendar step' test
 
   test('should check if a calendar step is in progress', () => {
