@@ -1,24 +1,36 @@
 /* Module imports */
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Events } from 'ionic-angular';
 import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 import { _throw as throwError } from 'rxjs/observable/throw';
+import { map } from 'rxjs/operators/map';
+import { catchError } from 'rxjs/operators/catchError';
+import { mergeMap } from 'rxjs/operators/mergeMap';
+import { of } from 'rxjs/observable/of';
+import { concat } from 'rxjs/observable/concat';
 
 /* Constants imports */
 import { baseURL } from '../../shared/constants/base-url';
 import { apiVersion } from '../../shared/constants/api-version';
+import { syncMethods } from '../../shared/constants/sync-methods';
 
 /* Interface imports */
 import { Batch } from '../../shared/interfaces/batch';
 import { Process } from '../../shared/interfaces/process';
-import { Recipe } from '../../shared/interfaces/recipe';
+import { RecipeMaster } from '../../shared/interfaces/recipe-master';
+import { RecipeVariant } from '../../shared/interfaces/recipe-variant';
+import { SyncResponse } from '../../shared/interfaces/sync-response';
+import { SyncMetadata } from '../../shared/interfaces/sync-metadata';
 
 /* Utility function imports */
 import { getIndexById } from '../../shared/utility-functions/utilities';
 import { getArrayFromObservables } from '../../shared/utility-functions/utilities';
+import { getId } from '../../shared/utility-functions/utilities';
+import { hasId } from '../../shared/utility-functions/utilities';
+import { missingServerId } from '../../shared/utility-functions/utilities';
 
 /* Provider imports */
 import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
@@ -26,11 +38,15 @@ import { StorageProvider } from '../storage/storage';
 import { UserProvider } from '../user/user';
 import { RecipeProvider } from '../recipe/recipe';
 import { ConnectionProvider } from '../connection/connection';
+import { SyncProvider } from '../sync/sync';
+import { ClientIdProvider } from '../client-id/client-id';
 
 
 @Injectable()
 export class ProcessProvider {
   activeBatchList$: BehaviorSubject<Array<BehaviorSubject<Batch>>> = new BehaviorSubject<Array<BehaviorSubject<Batch>>>([]);
+  syncErrors: Array<string> = [];
+  syncBaseRoute: string = 'process/batch';
 
   constructor(
     public http: HttpClient,
@@ -39,35 +55,44 @@ export class ProcessProvider {
     public storageService: StorageProvider,
     public userService: UserProvider,
     public recipeService: RecipeProvider,
-    public connectionService: ConnectionProvider
+    public connectionService: ConnectionProvider,
+    public syncService: SyncProvider,
+    public clientIdService: ClientIdProvider
   ) {
     this.events.subscribe('init-data', this.initializeActiveBatchList.bind(this));
     this.events.subscribe('clear-data', this.clearProcesses.bind(this));
+    this.events.subscribe('sync-on-signup', this.syncOnSignup.bind(this));
+    this.events.subscribe('connected', this.syncOnReconnect.bind(this, false));
   }
 
   /***** API access methods *****/
 
   /**
-   * Complete a batch, update database if connected and logged in
+   * Complete a batch; update database if connected and logged in else set
+   * flag for sync
    *
    * @params: batchId - batch to end
    *
    * @return: observable of ended batch
   **/
   endBatchById(batchId: string): Observable<Batch> {
-    if (this.connectionService.isConnected()) {
-      return this.http.delete(`${baseURL}/${apiVersion}/process/in-progress/${batchId}`)
-        .flatMap(() => {
-          return this.removeBatchFromList(batchId);
-        })
-        .catch(error => this.processHttpError.handleError(error));
+    if (this.connectionService.isConnected() && this.userService.isLoggedIn()) {
+      return this.http.delete(`${baseURL}/${apiVersion}/process/batch/${batchId}`)
+        .pipe(
+          mergeMap(() => {
+            return this.removeBatchFromList(batchId);
+          }),
+          catchError((error: HttpErrorResponse) => this.processHttpError.handleError(error))
+        );
+    } else {
+      this.addSyncFlag('delete', batchId);
     }
     return this.removeBatchFromList(batchId);
   }
 
   /**
-   * Go to next step of a batch's schedule, update database if connected and
-   * logged in
+   * Go to next step of a batch's schedule; update database if connected and
+   * logged in else set flag for sync
    *
    * @params: batchId - batch to update
    * @params: nextIndex - the next process schedule step to go to, -1 to end the batch
@@ -75,16 +100,18 @@ export class ProcessProvider {
    * @return: observable of updated batch
   **/
   incrementCurrentStep(batch: Batch, nextIndex: number): Observable<Batch> {
-    if (nextIndex === -1) return this.endBatchById(batch._id);
+    if (nextIndex === -1) return this.endBatchById(getId(batch));
 
     try {
       batch.currentStep = nextIndex;
-      const updatedBatch = this.updateBatchInList(batch);
-      if (this.connectionService.isConnected()) {
-        return this.http.patch(`${baseURL}/${apiVersion}/process/in-progress/${batch._id}`, updatedBatch)
-          .catch(error => this.processHttpError.handleError(error));
+      const updatedBatch: Batch = this.updateBatchInList(batch);
+      if (this.connectionService.isConnected() && this.userService.isLoggedIn()) {
+        return this.http.patch(`${baseURL}/${apiVersion}/process/batch/${batch._id}`, updatedBatch)
+          .pipe(catchError((error: HttpErrorResponse) => this.processHttpError.handleError(error)));
+      } else {
+        this.addSyncFlag('update', getId(batch));
       }
-      return Observable.of(updatedBatch);
+      return of(updatedBatch);
     } catch(error) {
       return throwError(error.message);
     }
@@ -105,29 +132,62 @@ export class ProcessProvider {
   initializeActiveBatchList(): void {
     this.storageService.getBatches()
       .subscribe(
-        (activeBatchList: any) => {
-          this.mapActiveBatchArrayToSubjects(activeBatchList);
-        },
-        (error: ErrorObservable) => console.log(`${error.error}: awaiting data from server`)
-      );
-    if (this.connectionService.isConnected()) {
-      this.http.get(`${baseURL}/${apiVersion}/process/in-progress`)
-        .catch(error => this.processHttpError.handleError(error))
-        .subscribe(
-          batchList => {
-            this.mapActiveBatchArrayToSubjects(batchList);
-            this.updateStorage();
-          },
-          error => {
-            // TODO error feedback
-            console.log(error);
+        (activeBatchList: Array<Batch>) => {
+          console.log('batches from storage');
+          if (this.activeBatchList$.value.length === 0) {
+            this.mapActiveBatchArrayToSubjects(activeBatchList);
           }
-        );
+        },
+        (error: ErrorObservable) => console.log(`${error}: awaiting data from server`)
+      );
+    if (this.connectionService.isConnected() && this.userService.isLoggedIn()) {
+      concat(
+        this.syncOnConnection(true),
+        this.http.get(`${baseURL}/${apiVersion}/process/batch`)
+          .pipe(
+            map((activeBatchArrayResponse: Array<Batch>) => {
+              console.log('batches from server');
+              this.mapActiveBatchArrayToSubjects(activeBatchArrayResponse);
+              this.updateBatchStorage();
+            }),
+            catchError((error: HttpErrorResponse) => this.processHttpError.handleError(error))
+          )
+      )
+      .subscribe(
+        () => {}, // Nothing further required if successful
+        error => {
+          // TODO error feedback
+          console.log('batch init error', error);
+        }
+      );
     }
   }
 
   /**
-   * Update individual batch step - update database if connected and logged in
+   * Update an active batch; update database if connected and logged in else
+   * set flag for sync
+   *
+   * @params: batchId - batch id to update
+   *
+   * @return: Observable of updated batch
+  **/
+  patchBatch(batch: Batch): Observable<Batch> {
+    try {
+      const updatedBatch: Batch = this.updateBatchInList(batch);
+      if (this.connectionService.isConnected() && this.userService.isLoggedIn()) {
+        return this.http.patch<Batch>(`${baseURL}/${apiVersion}/process/batch/${batch._id}`, batch)
+          .pipe(catchError((error: HttpErrorResponse) => this.processHttpError.handleError(error)));
+      }
+      this.addSyncFlag('update', getId(batch));
+      return of(updatedBatch);
+    } catch(error) {
+      return throwError(error.message);
+    }
+  }
+
+  /**
+   * Update individual batch step; update database if connected and logged in
+   * else set flag for sync
    *
    * @params: batchId - batch id to update
    * @params: stepId - step id to update
@@ -137,74 +197,229 @@ export class ProcessProvider {
   **/
   patchBatchStepById(batch: Batch, stepId: string, stepUpdate: object): Observable<Batch> {
     try {
-      const updatedBatch = this.updateStepOfBatchInList(batch, stepId, stepUpdate)
-      if (this.connectionService.isConnected()) {
-        return this.http.patch<Batch>(`${baseURL}/${apiVersion}/process/in-progress/${batch._id}`, updatedBatch)
-          .map((updatedBatchResponse: Batch) => {
-            return updatedBatchResponse;
-          })
-          .catch(error => this.processHttpError.handleError(error));
+      const updatedBatch: Batch = this.updateStepOfBatchInList(batch, stepId, stepUpdate)
+      if (this.connectionService.isConnected() && this.userService.isLoggedIn()) {
+        return this.http.patch<Batch>(`${baseURL}/${apiVersion}/process/batch/${batch._id}`, updatedBatch)
+          .pipe(catchError((error: HttpErrorResponse) => this.processHttpError.handleError(error)));
       }
-      return Observable.of(updatedBatch);
+      this.addSyncFlag('update', getId(batch));
+      return of(updatedBatch);
     } catch(error) {
       return throwError(error.message);
     }
   }
 
   /**
-   * Start a new batch process, add new batch to list, then return the batch
+   * Start a new batch process and add new batch to list; update database if
+   * connected and logged in else set flag for sync
    *
    * @params: userId - client user's id
-   * @params: masterRecipeId - recipe master id that contains the recipe
-   * @params: recipeId - recipe to base batch on
+   * @params: recipeMasterId - recipe master id that contains the recipe
+   * @params: recipeVariantId - recipe variant id to base batch on
    *
-   * @return: observable of new batch from server response
+   * @return: observable of new batch
   **/
-  startNewBatch(userId: string, masterRecipeId: string, recipeId: string): Observable<Batch | any> {
-    const user = this.userService.getUser().value;
-    if (this.connectionService.isConnected()) {
-      return this.http.get(`${baseURL}/${apiVersion}/process/user/${userId}/master/${masterRecipeId}/recipe/${recipeId}`)
-        .flatMap((batchResponse: Batch) => {
-          return this.addBatchToList(batchResponse);
-        })
-        .catch(error => this.processHttpError.handleError(error));
-    } else if (user._id === userId) {
-      return this.generateBatchFromRecipe(masterRecipeId, recipeId, userId)
-        .flatMap((batch: Batch) => {
-          return this.addBatchToList(batch);
-        });
+  startNewBatch(userId: string, recipeMasterId: string, recipeVariantId: string): Observable<Batch | any> {
+    if (this.connectionService.isConnected() && this.userService.isLoggedIn()) {
+      return this.http.get(`${baseURL}/${apiVersion}/process/user/${userId}/master/${recipeMasterId}/variant/${recipeVariantId}`)
+        .pipe(
+          mergeMap((batchResponse: Batch) => {
+            return this.addBatchToList(batchResponse);
+          }),
+          catchError((error: HttpErrorResponse) => this.processHttpError.handleError(error))
+        );
     }
-    return throwError('Must be connected to internet to use a public recipe');
-  }
-
-  /**
-   * Update a step of a batch in activeBatchList
-   *
-   * @params: batch - the batch the step belongs to
-   * @params: stepId - id of the step to update
-   * @params: stepUpdate - updated step values to apply
-   *
-   * @return the updated parent batch of the updated step
-  **/
-  updateStepOfBatchInList(batch: Batch, stepId: string, stepUpdate: object): Batch {
-    const activeBatch$ = this.getActiveBatchById(batch._id);
-    const activeBatch = activeBatch$.value;
-
-    if (activeBatch.owner === null) throw new Error('Active batch is missing an owner id');
-
-    const stepIndex = activeBatch.schedule.findIndex(step => step._id === stepId);
-
-    if (stepIndex === -1) throw new Error(`Active batch missing step with id ${stepId}`);
-
-    activeBatch.alerts = activeBatch.alerts.concat(stepUpdate['alerts']);
-    activeBatch.schedule[stepIndex]['startDatetime'] = stepUpdate['startDatetime'];
-
-    activeBatch$.next(activeBatch);
-    this.updateStorage();
-    return activeBatch;
+    return this.generateBatchFromRecipe(recipeMasterId, recipeVariantId, userId)
+      .pipe(
+        mergeMap((batch: Batch) => {
+          this.addSyncFlag('create', batch.cid)
+          return this.addBatchToList(batch);
+        })
+      );
   }
 
   /***** End API access methods *****/
+
+
+  /***** Sync methods *****/
+
+  /**
+   * Add a sync flag for a batch
+   *
+   * @params: method - options: 'create', 'update', or 'delete'
+   * @params: docId - document id to apply sync
+   *
+   * @return: none
+  **/
+  addSyncFlag(method: string, docId: string): void {
+    this.syncService.addSyncFlag({
+      method: method,
+      docId: docId,
+      docType: 'batch'
+    });
+  }
+
+  /**
+   * Clear all sync errors
+   *
+   * @params: none
+   * @return: none
+  **/
+  dismissAllErrors(): void {
+    this.syncErrors = [];
+  }
+
+  /**
+   * Clear a sync error at the given index
+   *
+   * @params: index - error array index
+   *
+   * @return: none
+  **/
+  dismissError(index: number): void {
+    if (index >= this.syncErrors.length || index < 0) throw new Error('Invalid sync error index');
+    this.syncErrors.splice(index, 1);
+  }
+
+  /**
+   * Get an array of batches that have sync flags
+   *
+   * @params: none
+   *
+   * @return: Array of behavior subjects of batches
+  **/
+  getFlaggedBatches(): Array<BehaviorSubject<Batch>> {
+    return this.getActiveBatchesList()
+      .value
+      .filter(
+          (activeBatch$: BehaviorSubject<Batch>) => {
+          return this.syncService.getAllSyncFlags().some((syncFlag: SyncMetadata) => {
+            return hasId(activeBatch$.value, syncFlag.docId);
+          });
+        }
+      );
+  }
+
+  /**
+   * Process sync successes to update in memory docs
+   *
+   * @params: syncedData - an array of successfully synced docs
+   *
+   * @return: none
+  **/
+  processSyncSuccess(syncData: Array<Batch | object>): void {
+    syncData.forEach((_syncData: any) => {
+      if (_syncData['isDeleted']) {
+        this.removeBatchFromList(_syncData['data']['_id']);
+      } else {
+        const batch$: BehaviorSubject<Batch> = this.getActiveBatchById(_syncData.cid);
+        if (batch$ === undefined) {
+          this.syncErrors.push(`Batch with id: '${_syncData.cid}' not found`);
+        } else {
+          batch$.next(_syncData);
+        }
+      }
+    });
+  }
+
+  /**
+   * Process all sync flags on a login or reconnect event
+   *
+   * @params: onLogin - true if calling sync at login, false for sync on reconnect
+   *
+   * @return: none
+  **/
+  syncOnConnection(onLogin: boolean): Observable<boolean> {
+    // Ignore reconnects if not logged in
+    if (!onLogin && !this.userService.isLoggedIn()) return of(false);
+
+    const requests: Array<any> = [];
+    this.syncService.getSyncFlagsByType('batch').forEach((syncFlag: SyncMetadata) => {
+      const batch$: BehaviorSubject<Batch> = this.getActiveBatchById(syncFlag.docId);
+
+      if (syncMethods.includes(syncFlag.method)) {
+        if (batch$ === undefined && syncFlag.method !== 'delete') {
+          requests.push(throwError(`Sync error: Batch with id '${syncFlag.docId}' not found`));
+        } else if (syncFlag.method === 'update' && missingServerId(batch$.value._id)) {
+          requests.push(throwError(`Batch with id: ${batch$.value.cid} is missing its server id`));
+        } else if (syncFlag.method === 'create') {
+          batch$.value['forSync'] = true;
+          requests.push(this.syncService.postSync(this.syncBaseRoute, batch$.value));
+        } else if (syncFlag.method === 'update' && !missingServerId(batch$.value._id)) {
+          requests.push(this.syncService.patchSync(`${this.syncBaseRoute}/${batch$.value._id}`, batch$.value));
+        } else if (syncFlag.method === 'delete') {
+          requests.push(this.syncService.deleteSync(`${this.syncBaseRoute}/${syncFlag.docId}`));
+        }
+      } else {
+        requests.push(throwError(`Sync error: Unknown sync flag method '${syncFlag.method}'`));
+      }
+    });
+
+    return this.syncService.sync('batch', requests)
+      .pipe(
+        map((responses: SyncResponse) => {
+          console.log('sync complete');
+          if (!onLogin) {
+            this.processSyncSuccess(responses.successes);
+            this.updateBatchStorage();
+          }
+          this.syncErrors = responses.errors;
+          return true;
+        })
+      );
+  }
+
+  /**
+   * Network reconnect event handler
+   * Process sync flags on reconnect - only if signed in
+   *
+   * @params: none
+   * @params: none
+  **/
+  syncOnReconnect(): void {
+    this.syncOnConnection(false)
+      .subscribe(
+        () => {}, // Nothing further required if successful
+        (error: ErrorObservable) => {
+          // TODO error feedback (toast?)
+          console.log(error);
+        }
+      );
+  }
+
+  /**
+   * Post all stored batches to server
+   *
+   * @params: none
+   * @return: none
+  **/
+  syncOnSignup(): void {
+    const requests: Array<any> = [];
+    const batchList$: BehaviorSubject<Array<BehaviorSubject<Batch>>> = this.getActiveBatchesList();
+    const batchList: Array<BehaviorSubject<Batch>> = batchList$.value;
+
+    batchList.forEach(batch$ => {
+      const recipe$: BehaviorSubject<RecipeMaster> = this.recipeService.getRecipeMasterByRecipeId(batch$.value.recipe);
+
+      if (recipe$ === undefined) {
+        requests.push(throwError(`Recipe with id ${batch$.value.recipe} not found`));
+        return;
+      }
+
+      const payload: Batch = batch$.value;
+      payload['forSync'] = true;
+      requests.push(this.syncService.postSync(this.syncBaseRoute, payload));
+    });
+
+    this.syncService.sync('batch', requests)
+      .subscribe((responses: SyncResponse) => {
+        this.processSyncSuccess(responses.successes);
+        this.syncErrors = responses.errors;
+        this.updateBatchStorage();
+      });
+  }
+
+  /***** End Sync methods *****/
 
 
   /***** Utility methods *****/
@@ -217,16 +432,16 @@ export class ProcessProvider {
    * @return: Observable of the new batch
   **/
   addBatchToList(newBatch: Batch): Observable<Batch> {
-    const batchSubject$ = new BehaviorSubject<Batch>(newBatch);
-    const batchList = this.activeBatchList$.value;
+    const batchSubject$: BehaviorSubject<Batch> = new BehaviorSubject<Batch>(newBatch);
+    const batchList: Array<BehaviorSubject<Batch>> = this.activeBatchList$.value;
     batchList.push(batchSubject$);
     this.activeBatchList$.next(batchList);
-    this.updateStorage();
+    this.updateBatchStorage();
     return batchSubject$;
   }
 
   /**
-   * Call complete for all recipes and clear recipeMasterList array on user logout
+   * Call complete for all recipes and clear activeBatchList on user logout
    *
    * @params: none
    * @return: none
@@ -242,35 +457,39 @@ export class ProcessProvider {
   /**
    * Create a batch using a recipe process schedule as template
    *
-   * @params: masterRecipeId - the recipe's master id
-   * @params: recipeId - the recipe id from which to copy the schedule
-   * @params: userId - the user's id (offline)
+   * @params: recipeMasterId - the recipe's master id
+   * @params: recipeVariantId - the recipe variant id from which to copy the schedule
+   * @params: userId - the user's id
    *
    * @return: Observable of new batch
   **/
-  generateBatchFromRecipe(masterRecipeId: string, recipeId: string, userId: string): Observable<Batch> {
-    const now = Date.now();
-    return this.recipeService.getRecipeById(masterRecipeId, recipeId)
-      .map((recipe: Recipe) => {
-        const newBatch: Batch = {
-          _id: Date.now().toString(),
-          createdAt: (new Date()).toISOString(),
-          owner: userId,
-          currentStep: 0,
-          recipe: recipeId,
-          schedule: Array.from(recipe.processSchedule, (process, index) => {
-            const copy = { _id: (now + index).toString() };
-            for (const key in process) {
-              if (key !== '_id') {
-                copy[key] = process[key];
+  generateBatchFromRecipe(recipeMasterId: string, recipeVariantId: string, userId: string): Observable<Batch> {
+    return this.recipeService.getRecipeVariantById(recipeMasterId, recipeVariantId)
+      .pipe(
+        map((recipe: RecipeVariant) => {
+          const newBatch: Batch = {
+            cid: this.clientIdService.getNewId(),
+            createdAt: (new Date()).toISOString(),
+            owner: userId,
+            currentStep: 0,
+            recipe: getId(recipe),
+            schedule: Array.from(
+              recipe.processSchedule,
+              process => {
+                const copy: object = { cid: this.clientIdService.getNewId() };
+                for (const key in process) {
+                  if (key !== '_id') {
+                    copy[key] = process[key];
+                  }
+                }
+                return <Process>copy;
               }
-            }
-            return <Process>copy;
-          }),
-          alerts: []
-        };
-        return newBatch;
-      });
+            ),
+            alerts: []
+          };
+          return newBatch;
+        })
+      );
   }
 
   /**
@@ -278,13 +497,12 @@ export class ProcessProvider {
    *
    * @params: batchId - id of batch to retrieve
    *
-   * @return: requested batch subject
+   * @return: requested batch subject or undefined if not present
   **/
   getActiveBatchById(batchId: string): BehaviorSubject<Batch> {
-    const found = this.activeBatchList$.value.find(batch$ => batch$.value._id === batchId);
-    return  (found !== undefined)
-            ? found
-            : null;
+    return this.activeBatchList$.value.find(batch$ => {
+      return hasId(batch$.value, batchId);
+    });
   }
 
   /**
@@ -307,10 +525,14 @@ export class ProcessProvider {
    * @return: none
   **/
   mapActiveBatchArrayToSubjects(activeBatchList: Array<Batch>): void {
-    this.activeBatchList$.next(
-      activeBatchList.map(activeBatch => {
-        return new BehaviorSubject<Batch>(activeBatch);
-      })
+    const currentBatchList$: BehaviorSubject<Array<BehaviorSubject<Batch>>> = this.getActiveBatchesList();
+    const syncList: Array<BehaviorSubject<Batch>> = this.getFlaggedBatches();
+    currentBatchList$.next(
+      activeBatchList
+        .map(activeBatch => {
+          return new BehaviorSubject<Batch>(activeBatch);
+        })
+        .concat(syncList)
     );
   }
 
@@ -322,34 +544,34 @@ export class ProcessProvider {
    * @return: Observable of null, using for error throw/handling
   **/
   removeBatchFromList(batchId: string): Observable<Batch> {
-    const batchList = this.activeBatchList$.value;
-    const indexToRemove = getIndexById(batchId, getArrayFromObservables(batchList));
+    const batchList: Array<BehaviorSubject<Batch>> = this.activeBatchList$.value;
+    const indexToRemove: number = getIndexById(batchId, getArrayFromObservables(batchList));
 
     if (indexToRemove === -1) return throwError(`Delete error: Active batch with id ${batchId} not found`);
 
     batchList[indexToRemove].complete();
     batchList.splice(indexToRemove, 1);
     this.activeBatchList$.next(batchList);
-    this.updateStorage();
+    this.updateBatchStorage();
 
-    return Observable.of(null);
+    return of(null);
   }
 
   /**
    * Update a batch subject in active batch list
    *
-   * @params: updatedBatch - updated batch data may be complete or partial Batch
+   * @params: update - updated batch data may be complete or partial Batch
    *
    * @return: updated Batch
   **/
   updateBatchInList(update: Batch | object): Batch {
-    const activeBatchList = this.activeBatchList$.value;
-    const batchIndex = activeBatchList.findIndex(batch$ => batch$.value._id === update['_id']);
+    const activeBatchList: Array<BehaviorSubject<Batch>> = this.activeBatchList$.value;
+    const batchIndex: number = activeBatchList.findIndex(batch$ => hasId(batch$.value, getId(update)));
 
     if (batchIndex === -1) throw new Error(`Active batch with id ${update['_id']} not found`);
 
-    const activeBatch$ = activeBatchList[batchIndex];
-    const activeBatch = activeBatch$.value;
+    const activeBatch$: BehaviorSubject<Batch> = activeBatchList[batchIndex];
+    const activeBatch: Batch = activeBatch$.value;
     for (const key in update) {
       if (activeBatch.hasOwnProperty(key)) {
         activeBatch[key] = update[key];
@@ -358,7 +580,36 @@ export class ProcessProvider {
 
     activeBatch$.next(activeBatch);
     this.activeBatchList$.next(activeBatchList);
-    this.updateStorage();
+    this.updateBatchStorage();
+
+    return activeBatch;
+  }
+
+  /**
+   * Update a step of a batch in activeBatchList
+   *
+   * @params: batch - the batch the step belongs to
+   * @params: stepId - id of the step to update
+   * @params: stepUpdate - updated step values to apply
+   *
+   * @return the updated parent batch of the updated step
+  **/
+  updateStepOfBatchInList(batch: Batch, stepId: string, stepUpdate: object): Batch {
+    const activeBatch$: BehaviorSubject<Batch> = this.getActiveBatchById(getId(batch));
+    if (activeBatch$ === undefined) throw new Error(`Active batch with id ${getId(batch)} not found`);
+
+    const activeBatch: Batch = activeBatch$.value;
+    if (activeBatch.owner === null) throw new Error('Active batch is missing an owner id');
+
+    const stepIndex: number = activeBatch.schedule.findIndex(step => hasId(step, stepId));
+
+    if (stepIndex === -1) throw new Error(`Active batch missing step with id ${stepId}`);
+
+    activeBatch.alerts = activeBatch.alerts.concat(stepUpdate['alerts']);
+    activeBatch.schedule[stepIndex]['startDatetime'] = stepUpdate['startDatetime'];
+
+    activeBatch$.next(activeBatch);
+    this.updateBatchStorage();
     return activeBatch;
   }
 
@@ -368,7 +619,7 @@ export class ProcessProvider {
    * @params: none
    * @return: none
   **/
-  updateStorage(): void {
+  updateBatchStorage(): void {
     this.storageService.setBatches(
       this.activeBatchList$.value.map(
         (activeBatch$: BehaviorSubject<Batch>) => activeBatch$.value
