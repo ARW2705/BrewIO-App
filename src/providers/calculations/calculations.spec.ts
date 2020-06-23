@@ -8,7 +8,7 @@ import { configureTestBed } from '../../../test-config/configureTestBed';
 import { mockGrainBill } from '../../../test-config/mockmodels/mockGrainBill';
 import { mockHopsSchedule } from '../../../test-config/mockmodels/mockHopsSchedule';
 import { mockYeastGroup } from '../../../test-config/mockmodels/mockYeastGroup';
-import { mockRecipeComplete } from '../../../test-config/mockmodels/mockRecipeComplete';
+import { mockRecipeVariantComplete } from '../../../test-config/mockmodels/mockRecipeVariantComplete';
 
 /* Provider imports */
 import { CalculationsProvider } from './calculations';
@@ -99,36 +99,36 @@ describe('Calculations service', () => {
 
 
   describe('\nCalculates with complete recipe', () => {
-    const _mockRecipeComplete = mockRecipeComplete();
+    const _mockRecipeVariantComplete = mockRecipeVariantComplete();
 
     beforeAll(() => {
-      calculationService.calculateRecipeValues(_mockRecipeComplete);
+      calculationService.calculateRecipeValues(_mockRecipeVariantComplete);
     });
 
     test('calculates Original Gravity from complete recipe', () => {
-      expect(_mockRecipeComplete.originalGravity).toEqual(1.065);
+      expect(_mockRecipeVariantComplete.originalGravity).toEqual(1.065);
     });
 
     test('calculates Final Gravity from complete recipe', () => {
-      expect(_mockRecipeComplete.finalGravity).toEqual(1.017);
+      expect(_mockRecipeVariantComplete.finalGravity).toEqual(1.017);
     });
 
     test('calculates Total IBU from complete recipe', () => {
-      expect(_mockRecipeComplete.IBU).toEqual(38.8);
+      expect(_mockRecipeVariantComplete.IBU).toEqual(38.8);
     });
 
     test('calculates Total SRM from complete recipe', () => {
-      expect(_mockRecipeComplete.SRM).toEqual(19.6);
+      expect(_mockRecipeVariantComplete.SRM).toEqual(19.6);
     });
 
     test('calculates ABV from complete recipe', () => {
-      expect(_mockRecipeComplete.ABV).toEqual(6.588);
+      expect(_mockRecipeVariantComplete.ABV).toEqual(6.588);
     });
 
   }); // end 'Calculates with complete recipe' section
 
   describe('\nCalculates with incomplete recipe: no grains', () => {
-    const _mockRecipeWithoutGrains = mockRecipeComplete();
+    const _mockRecipeWithoutGrains = mockRecipeVariantComplete();
 
     beforeAll(() => {
       _mockRecipeWithoutGrains.grains = [];
@@ -158,7 +158,7 @@ describe('Calculations service', () => {
   }); // end 'Calculates with incomplete recipe: no grains' section
 
   describe('\nCalculates with incomplete recipe: no hops', () => {
-    const _mockRecipeWithoutHops = mockRecipeComplete();
+    const _mockRecipeWithoutHops = mockRecipeVariantComplete();
 
     beforeAll(() => {
       _mockRecipeWithoutHops.hops = [];
@@ -172,7 +172,7 @@ describe('Calculations service', () => {
   }); // end 'Calculates with incomplete recipe: no hops' section
 
   describe('\nCalculates with incomplete recipe: no yeast', () => {
-    const _mockRecipeWithoutYeast = mockRecipeComplete();
+    const _mockRecipeWithoutYeast = mockRecipeVariantComplete();
 
     beforeAll(() => {
       _mockRecipeWithoutYeast.yeast = [];

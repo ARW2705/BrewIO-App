@@ -9,7 +9,7 @@ import { GrainBill } from '../../shared/interfaces/grain-bill';
 import { HopsSchedule } from '../../shared/interfaces/hops-schedule';
 import { YeastBatch } from '../../shared/interfaces/yeast-batch';
 import { Grains, Hops } from '../../shared/interfaces/library';
-import { Recipe } from '../../shared/interfaces/recipe';
+import { RecipeVariant } from '../../shared/interfaces/recipe-variant';
 
 /* Utility function imports */
 import { roundToDecimalPlace } from '../../shared/utility-functions/utilities';
@@ -23,31 +23,31 @@ export class CalculationsProvider {
   /**
    * Calculate original gravity, final gravity, IBU, SRM, and ABV for a given recipe
    *
-   * @params: recipe - recipe values to calculate with
+   * @params: variant - recipe variant values to calculate with
    *
    * @return: none
   **/
-  calculateRecipeValues(recipe: Recipe): void {
+  calculateRecipeValues(variant: RecipeVariant): void {
     let og = 1;
     let fg = 1;
     let ibu = 0;
     let srm = 0;
     let abv = 0;
-    if (recipe.grains.length) {
-      og = this.calculateTotalOriginalGravity(recipe.batchVolume, (recipe.efficiency / 100), recipe.grains);
-      const attenuationRate = recipe.yeast.length ? this.getAverageAttenuation(recipe.yeast): 75;
+    if (variant.grains.length) {
+      og = this.calculateTotalOriginalGravity(variant.batchVolume, (variant.efficiency / 100), variant.grains);
+      const attenuationRate = variant.yeast.length ? this.getAverageAttenuation(variant.yeast): 75;
       fg = this.getFinalGravity(og, attenuationRate);
-      srm = this.calculateTotalSRM(recipe.grains, recipe.batchVolume);
+      srm = this.calculateTotalSRM(variant.grains, variant.batchVolume);
       abv = this.getABV(og, fg);
     }
-    if (recipe.hops.length) {
-      ibu = this.calculateTotalIBU(recipe.hops, og, recipe.batchVolume, recipe.boilVolume);
+    if (variant.hops.length) {
+      ibu = this.calculateTotalIBU(variant.hops, og, variant.batchVolume, variant.boilVolume);
     }
-    recipe.originalGravity = og;
-    recipe.finalGravity = fg;
-    recipe.IBU = ibu;
-    recipe.SRM = srm;
-    recipe.ABV = abv;
+    variant.originalGravity = og;
+    variant.finalGravity = fg;
+    variant.IBU = ibu;
+    variant.SRM = srm;
+    variant.ABV = abv;
   }
 
   /**
