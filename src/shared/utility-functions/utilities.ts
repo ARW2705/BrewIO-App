@@ -16,7 +16,7 @@ import { defaultIdTypeRegex } from '../constants/default-id-pattern';
  *
  * @return: deep copied object
 **/
-export function clone(obj: any): any {
+export function clone<T>(obj: T): T {
   let newObj;
 
   if (Array.isArray(obj)) {
@@ -49,9 +49,9 @@ export function clone(obj: any): any {
  *
  * @return: new array of the current values of each observable
 **/
-export function getArrayFromObservables(obsArr: Array<Observable<any>>): Array<any> {
-  return obsArr.map(obs => {
-    let object = null;
+export function getArrayFromObservables<T>(obsArr: Array<Observable<T>>): Array<T> {
+  return obsArr.map((obs: Observable<T>) => {
+    let object: T = null;
     obs.subscribe(data => object = data);
     return object;
   });
@@ -64,7 +64,7 @@ export function getArrayFromObservables(obsArr: Array<Observable<any>>): Array<a
  *
  * @return: the id as a string else undefined
 **/
-export function getId(obj: any): string {
+export function getId(obj: object): string {
   if (obj['_id'] !== undefined) return obj['_id'];
   if (obj['cid'] !== undefined) return obj['cid'];
   return undefined;
@@ -78,7 +78,7 @@ export function getId(obj: any): string {
  *
  * @return: index of object with matching id or -1 if none found
 **/
-export function getIndexById(id: string, arr: Array<any>): number {
+export function getIndexById(id: string, arr: Array<object>): number {
   for (let i=0; i < arr.length; i++) {
     if (hasId(arr[i], id)) {
       return i;
@@ -144,7 +144,7 @@ export function roundToDecimalPlace(numToRound: number, places: number): number 
  *
  * @return: none
 **/
-export function stripSharedProperties(obj: any): void {
+export function stripSharedProperties(obj: object): void {
   if (Array.isArray(obj)) {
     for (let item of obj) {
       if (typeof item === 'object' && item !== null) {
