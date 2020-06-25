@@ -5,6 +5,8 @@ import { Events } from 'ionic-angular';
 import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
+import { map } from 'rxjs/operators/map';
+import { catchError } from 'rxjs/operators/catchError';
 
 /* Constants imports */
 import { baseURL } from '../../shared/constants/base-url';
@@ -12,6 +14,8 @@ import { apiVersion } from '../../shared/constants/api-version';
 
 /* Interface imports */
 import { User } from '../../shared/interfaces/user';
+import { UserResponse } from '../../shared/interfaces/user-response';
+import { LoginCredentials } from '../../shared/interfaces/login-credentials';
 
 /* Provider imports */
 import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
@@ -19,18 +23,12 @@ import { StorageProvider } from '../storage/storage';
 import { ConnectionProvider } from '../connection/connection';
 import { PreferencesProvider } from '../preferences/preferences';
 
-/* Local Interfaces */
-interface JWTResponse {
-  status: string;
-  success: boolean;
-  user: any
-};
-
 
 @Injectable()
 export class UserProvider {
   user$: BehaviorSubject<User> = new BehaviorSubject<User>({
     _id: undefined,
+    cid: undefined,
     createdAt: undefined,
     updatedAt: undefined,
     username: undefined,
@@ -57,15 +55,15 @@ export class UserProvider {
    *
    * @params: none
    *
-   * @return: Observable of JWTResponse
+   * @return: Observable of UserResponse
   **/
-  checkJWToken(): Observable<JWTResponse> {
-    return this.http.get<JWTResponse>(`${baseURL}/${apiVersion}/users/checkJWToken`)
-      .catch(error => this.processHttpError.handleError(error));
+  checkJWToken(): Observable<UserResponse> {
+    return this.http.get<UserResponse>(`${baseURL}/${apiVersion}/users/checkJWToken`)
+      .pipe(catchError(error => this.processHttpError.handleError(error)));
   }
 
   /**
-   * Set user subject data to undefined values, clear user from ionic storage,
+   * Set user subject data to default values, clear user from ionic storage,
    * and emit event to call any other stored values to be cleared
    *
    * @params: none
@@ -74,15 +72,16 @@ export class UserProvider {
   clearUserData(): void {
     this.user$.next({
       _id: undefined,
+      cid: 'offline',
       createdAt: undefined,
       updatedAt: undefined,
-      username: undefined,
+      username: '',
       firstname: undefined,
       lastname: undefined,
       email: undefined,
       friendList: [],
-      token: undefined,
-      preferredUnits: undefined
+      token: '',
+      preferredUnits: 'e'
     });
 
     this.storageService.removeUser();
@@ -116,14 +115,14 @@ export class UserProvider {
    *
    * @params: none
    *
-   * @return: true if an auth token is present in user subject
+   * @return: true if an auth token is present and not an empty string
   **/
   isLoggedIn(): boolean {
     return this.user$.value.token !== undefined && this.user$.value.token !== '';
   }
 
   /**
-   * Load user data from ionic storage. If user id is 'offline', set app for
+   * Load user data from ionic storage. If user is not logged in, set app for
    * offline mode. Otherwise, check if json web token is valid. Remove stored
    * token if no longer valid. Finally, emit event to request other data
    *
@@ -135,13 +134,10 @@ export class UserProvider {
       .subscribe(
         user => {
           this.user$.next(user);
-          if (user._id === 'offline') {
-            this.connectionService.setOfflineMode(true);
-            this.preferenceService.setUnits('e');
-          } else {
+          if (this.isLoggedIn()) {
             this.checkJWToken()
               .subscribe(
-                (jwtResponse: JWTResponse) => {
+                (jwtResponse: UserResponse) => {
                   console.log(jwtResponse.status);
                 },
                 (error: string) => {
@@ -154,6 +150,9 @@ export class UserProvider {
                   }
                 }
               );
+          } else {
+            this.connectionService.setOfflineMode(true);
+            this.preferenceService.setUnits('e');
           }
           this.events.publish('init-data');
           this.preferenceService.setUnits(user.preferredUnits);
@@ -167,26 +166,33 @@ export class UserProvider {
    * If user selected to remember login, store user data in ionic storage
    *
    * @params: user - contains username string, password string, and remember boolean
+   * @params: onSignupSync - true if logging in after initial sign up
    *
    * @return: observable with login response user data
   **/
-  logIn(user: any): Observable<User> {
+  logIn(user: LoginCredentials, onSignupSync: boolean): Observable<User> {
     return this.http.post(`${baseURL}/${apiVersion}/users/login`, user)
-      .map((response: any) => {
-        this.user$.next(response.user);
-        this.connectionService.setOfflineMode(false);
-        this.events.publish('init-data');
-        this.preferenceService.setUnits(response.user.preferredUnits);
-        if (user.remember) {
-          this.storageService.setUser(response.user)
-            .subscribe(
-              () => console.log('stored user data'),
-              (error: ErrorObservable) => console.log('user store error', error)
-            );
-        }
-        return response.user;
-      })
-      .catch(error => this.processHttpError.handleError(error));
+      .pipe(
+        map((response: UserResponse) => {
+          this.user$.next(response.user);
+          this.connectionService.setOfflineMode(false);
+          if (onSignupSync) {
+            this.events.publish('sync-on-signup');
+          } else {
+            this.events.publish('init-data');
+          }
+          this.preferenceService.setUnits(response.user.preferredUnits);
+          if (user.remember) {
+            this.storageService.setUser(response.user)
+              .subscribe(
+                () => console.log('stored user data'),
+                (error: ErrorObservable) => console.log('user store error', error)
+              );
+          }
+          return response.user;
+        }),
+        catchError(error => this.processHttpError.handleError(error))
+      );
   }
 
   /**
@@ -207,16 +213,25 @@ export class UserProvider {
    *
    * @return: if signup successful, return observable of login response, else signup response
   **/
-  signUp(user: any): Observable<any> {
+  signUp(user: object): Observable<UserResponse> {
     return this.http.post(`${baseURL}/${apiVersion}/users/signup`, user)
-      .map((response: any) => {
-        this.logIn({username: user.username, password: user.password})
+      .pipe(
+        map((response: UserResponse) => {
+          this.logIn(
+            {
+              username: user['username'],
+              password: user['password'],
+              remember: true
+            },
+            true
+          )
           .subscribe(_user => {
-            console.log('Signup successful; log in successful', user.username);
+            console.log('Signup successful; log in successful', user['username']);
           });
-        return response;
-      })
-      .catch(error => this.processHttpError.handleError(error));
+          return response;
+        }),
+        catchError(error => this.processHttpError.handleError(error))
+      );
   }
 
   /**
@@ -226,20 +241,22 @@ export class UserProvider {
    *
    * @return: Observable of user data from server
   **/
-  updateUserProfile(user: any): Observable<User> {
+  updateUserProfile(user: object): Observable<User> {
     return this.http.patch(`${baseURL}/${apiVersion}/users/profile`, user)
-      .map((updatedUser: User) => {
-        const userData = this.user$.value;
-        for (const key in updatedUser) {
-          if (userData.hasOwnProperty(key)) {
-            userData[key] = updatedUser[key];
+      .pipe(
+        map((updatedUser: User) => {
+          const userData = this.user$.value;
+          for (const key in updatedUser) {
+            if (userData.hasOwnProperty(key)) {
+              userData[key] = updatedUser[key];
+            }
           }
-        }
-        this.user$.next(userData);
-        this.preferenceService.setUnits(userData.preferredUnits);
-        return updatedUser;
-      })
-      .catch(error => this.processHttpError.handleError(error));
+          this.user$.next(userData);
+          this.preferenceService.setUnits(userData.preferredUnits);
+          return updatedUser;
+        }),
+        catchError(error => this.processHttpError.handleError(error))
+      );
   }
 
 }
