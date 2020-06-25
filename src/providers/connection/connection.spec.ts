@@ -1,13 +1,13 @@
 /* Module imports */
 import { TestBed, getTestBed, async } from '@angular/core/testing';
-import { Platform } from 'ionic-angular';
+import { Platform, Events } from 'ionic-angular';
 import { Network } from '@ionic-native/network/ngx';
 
 /* Test configuration import */
 import { configureTestBed } from '../../../test-config/configureTestBed';
 
 /* Mock imports */
-import { NetworkMockDev, NetworkMockCordova, PlatformMockDev, PlatformMockCordova } from '../../../test-config/mocks-ionic';
+import { EventsMock, NetworkMockDev, NetworkMockCordova, PlatformMockDev, PlatformMockCordova } from '../../../test-config/mocks-ionic';
 
 /* Provider imports */
 import { ConnectionProvider } from './connection';
@@ -26,6 +26,7 @@ describe('Connection Provider', () => {
         imports: [],
         providers: [
           ConnectionProvider,
+          { provide: Events, useClass: EventsMock },
           { provide: Platform, useClass: PlatformMockDev },
           { provide: Network, useClass: NetworkMockDev }
         ]
@@ -65,6 +66,7 @@ describe('Connection Provider', () => {
         imports: [],
         providers: [
           ConnectionProvider,
+          { provide: Events, useClass: EventsMock },
           { provide: Platform, useClass: PlatformMockCordova },
           { provide: Network, useClass: NetworkMockCordova }
         ]
