@@ -37,6 +37,7 @@ describe('Recipe Page', () => {
   let eventService: Events;
   let toastService: ToastProvider;
   let userService: UserProvider;
+  let navCtrl: NavController;
   configureTestBed();
 
   beforeAll(done => (async() => {
@@ -66,12 +67,19 @@ describe('Recipe Page', () => {
   .then(done)
   .catch(done.fail));
 
-  beforeEach(async(() => {
+  beforeAll(async(() => {
     injector = getTestBed();
     recipeService = injector.get(RecipeProvider);
     toastService = injector.get(ToastProvider);
     userService = injector.get(UserProvider);
     eventService = injector.get(Events);
+    navCtrl = injector.get(NavController);
+
+    navCtrl.push = jest
+      .fn();
+  }));
+
+  beforeEach(async(() => {
     recipeService.getMasterList = jest
       .fn()
       .mockReturnValue(
@@ -82,12 +90,12 @@ describe('Recipe Page', () => {
           ]
         )
       );
-    toastService.presentToast = jest
-      .fn();
     userService.isLoggedIn = jest
       .fn()
       .mockReturnValueOnce(true)
       .mockReturnValueOnce(false);
+    toastService.presentToast = jest
+      .fn();
   }));
 
   beforeEach(() => {
@@ -111,7 +119,8 @@ describe('Recipe Page', () => {
   }); // end 'Component creation' section
 
   describe('Navigation handling', () => {
-    test('should navigate to brewing process page with a recipe', done => {
+
+    test('should navigate to brewing process page with a recipe', () => {
       fixture.detectChanges();
 
       recipeService.isRecipeProcessPresent = jest
@@ -121,14 +130,6 @@ describe('Recipe Page', () => {
       const _mockRecipeMaster = mockRecipeMasterActive();
 
       const navSpy = jest.spyOn(recipePage.navCtrl, 'push');
-
-      eventService.subscribe('update-nav-header', data => {
-        expect(data.dest).toMatch('process');
-        expect(data.destType).toMatch('page');
-        expect(data.destTitle).toMatch(_mockRecipeMaster.master);
-        expect(data.origin).toMatch('mock-active-name');
-        done();
-      });
 
       recipePage.navToBrewProcess(_mockRecipeMaster);
 
@@ -162,19 +163,12 @@ describe('Recipe Page', () => {
       );
     }); // end 'should fail to navigate to brewing process page when missing a recipe' test
 
-    test('should navigate to recipe master details page for master at given index', done => {
+    test('should navigate to recipe master details page for master at given index', () => {
       fixture.detectChanges();
 
       const _mockRecipeMaster = mockRecipeMasterInactive();
 
       const navSpy = jest.spyOn(recipePage.navCtrl, 'push');
-
-      eventService.subscribe('update-nav-header', data => {
-        expect(data.destType).toMatch('page');
-        expect(data.destTitle).toMatch(_mockRecipeMaster.name);
-        expect(data.origin).toMatch('mock-active-name');
-        done();
-      });
 
       recipePage.navToDetails(1);
 
@@ -197,18 +191,10 @@ describe('Recipe Page', () => {
       expect(toastSpy.mock.calls[0][1]).toBe(2000);
     }); // end 'should fail to navigate to the recipe master details page with an invalid index' test
 
-    test('should navigate to the recipe form in creation mode', done => {
+    test('should navigate to the recipe form in creation mode', () => {
       fixture.detectChanges();
 
       const navSpy = jest.spyOn(recipePage.navCtrl, 'push');
-
-      eventService.subscribe('update-nav-header', data => {
-        expect(data.dest).toMatch('recipe-form');
-        expect(data.destType).toMatch('page');
-        expect(data.destTitle).toMatch('Create Recipe');
-        expect(data.origin).toMatch('mock-active-name');
-        done();
-      });
 
       recipePage.navToRecipeForm();
 

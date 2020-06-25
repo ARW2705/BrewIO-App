@@ -48,12 +48,12 @@ describe('Calendar Process Component', () => {
   .then(done)
   .catch(done.fail));
 
-  beforeEach(async(() => {
+  beforeAll(async(() => {
     injector = getTestBed();
-    eventService = injector.get(Events);
   }));
 
   beforeEach(() => {
+    eventService = injector.get(Events);
     fixture = TestBed.createComponent(CalendarProcessComponent);
     cpPage = fixture.componentInstance;
     cpPage.stepData = mockProcessSchedule()[0];

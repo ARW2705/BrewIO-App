@@ -43,7 +43,7 @@ describe('User Page', () => {
   .then(done)
   .catch(done.fail));
 
-  beforeEach(async(() => {
+  beforeAll(async(() => {
     injector = getTestBed();
     userService = injector.get(UserProvider);
     modalService = injector.get(ModalProvider);

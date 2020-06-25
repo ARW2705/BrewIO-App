@@ -99,28 +99,14 @@ describe('Recipe Form', () => {
   .then(done)
   .catch(done.fail));
 
-  beforeEach(async(() => {
+  beforeAll(async(() => {
     injector = getTestBed();
-    eventService = injector.get(Events);
     actionService = injector.get(ActionSheetProvider);
     libraryService = injector.get(LibraryProvider);
     clientIdService = injector.get(ClientIdProvider);
     calculator = injector.get(CalculationsProvider);
     recipeService = injector.get(RecipeProvider);
     toastService = injector.get(ToastProvider);
-    modalCtrl = injector.get(ModalController);
-    navCtrl = injector.get(NavController);
-
-    actionService.openActionSheet = jest
-      .fn();
-
-    libraryService.getAllLibraries = jest
-      .fn()
-      .mockReturnValue(of([mockGrains(), mockHops(), mockYeast(), mockStyles()]));
-
-    clientIdService.getNewId = jest
-      .fn()
-      .mockReturnValue(Date.now().toString());
 
     calculator.calculateRecipeValues = jest
       .fn(variant => {
@@ -133,6 +119,23 @@ describe('Recipe Form', () => {
     calculator.getIBU = jest
       .fn()
       .mockReturnValue(42);
+
+    libraryService.getAllLibraries = jest
+      .fn()
+      .mockReturnValue(of([mockGrains(), mockHops(), mockYeast(), mockStyles()]));
+
+    clientIdService.getNewId = jest
+      .fn()
+      .mockReturnValue(Date.now().toString());
+  }));
+
+  beforeEach(async(() => {
+    eventService = injector.get(Events);
+    navCtrl = injector.get(NavController);
+    modalCtrl = injector.get(ModalController);
+
+    actionService.openActionSheet = jest
+      .fn();
 
     toastService.presentToast = jest
       .fn();

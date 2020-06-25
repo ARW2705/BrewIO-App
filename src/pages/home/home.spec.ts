@@ -60,11 +60,14 @@ describe('Home Page', () => {
   .then(done)
   .catch(done.fail));
 
-  beforeEach(async(() => {
+  beforeAll(async(() => {
     injector = getTestBed();
     userService = injector.get(UserProvider);
     modalService = injector.get(ModalProvider);
     recipeService = injector.get(RecipeProvider);
+  }));
+
+  beforeEach(async(() => {
     navCtrl = injector.get(NavController);
   }));
 

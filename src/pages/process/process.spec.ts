@@ -84,7 +84,7 @@ describe('Process Page', () => {
   .then(done)
   .catch(done.fail));
 
-  beforeEach(async(() => {
+  beforeAll(async(() => {
     injector = getTestBed();
     processService = injector.get(ProcessProvider);
     recipeService = injector.get(RecipeProvider);

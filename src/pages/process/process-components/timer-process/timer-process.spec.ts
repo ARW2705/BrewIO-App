@@ -54,7 +54,7 @@ describe('Timer Process Component', () => {
   .then(done)
   .catch(done.fail));
 
-  beforeEach(async(() => {
+  beforeAll(async(() => {
     injector = getTestBed();
     timerService = injector.get(TimerProvider);
   }));
