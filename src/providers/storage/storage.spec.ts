@@ -15,6 +15,7 @@ import { mockHops } from '../../../test-config/mockmodels/mockHops';
 import { mockYeast } from '../../../test-config/mockmodels/mockYeast';
 import { mockStyles } from '../../../test-config/mockmodels/mockStyles';
 import { mockBatch } from '../../../test-config/mockmodels/mockBatch';
+import { mockSyncMetadata } from '../../../test-config/mockmodels/mockSyncMetadata';
 import { StorageMock } from '../../../test-config/mocks-ionic';
 
 /* Interface imports */
@@ -22,6 +23,7 @@ import { User } from '../../shared/interfaces/user';
 import { RecipeMaster } from '../../shared/interfaces/recipe-master';
 import { Batch } from '../../shared/interfaces/batch';
 import { LibraryStorage } from '../../shared/interfaces/library';
+import { SyncMetadata } from '../../shared/interfaces/sync-metadata';
 
 /* Provider imports */
 import { StorageProvider } from './storage';
@@ -329,6 +331,111 @@ describe('Storage Service', () => {
     }, 10);
   }); // end 'should remove all stored recipe masters' test
 
+  test('should get stored sync flags', done => {
+    mockStorage.set('sync', JSON.stringify([
+      mockSyncMetadata('create', '1', 'recipe'),
+      mockSyncMetadata('delete', '2', 'batch')
+    ]));
+    storageService.getSyncFlags()
+      .subscribe((syncFlagList: Array<SyncMetadata>) => {
+        expect(syncFlagList.length).toBe(2);
+        expect(syncFlagList[0].docId).toMatch('1');
+        expect(syncFlagList[1].docType).toMatch('batch');
+        done();
+      });
+    // const _mockRecipeMasterActive = mockRecipeMasterActive();
+    // const _mockRecipeMasterInactive = mockRecipeMasterInactive();
+    // mockStorage.set('recipe', JSON.stringify([_mockRecipeMasterActive, _mockRecipeMasterInactive]));
+    // storageService.getRecipes()
+    //   .subscribe((recipeMasterList: Array<RecipeMaster>) => {
+    //     expect(recipeMasterList.length).toBe(2);
+    //     expect(recipeMasterList[0]).toStrictEqual(_mockRecipeMasterActive);
+    //     expect(recipeMasterList[1]).toStrictEqual(_mockRecipeMasterInactive);
+    //     done();
+    //   });
+  }); // end 'should get stored sync flags' test
+
+  test('should get not found error with no flags in storage', done => {
+    storageService.getSyncFlags()
+      .subscribe(
+        (response: any) => {
+          console.log('Should not have a response', response);
+          expect(true).toBe(false);
+        },
+        (error: ErrorObservable) => {
+          expect(error.error).toMatch('Sync flag storage error: Key not found');
+          done();
+        }
+      );
+  }); // end 'should get not found error with no flags in storage' test
+
+  test('should get data not found error with empty flags array in storage', done => {
+    mockStorage.set('sync', JSON.stringify([]));
+    storageService.getSyncFlags()
+      .subscribe(
+        (response: any) => {
+          console.log('Should not have a response', response);
+          expect(true).toBe(false);
+        },
+        (error: ErrorObservable) => {
+          expect(error.error).toMatch('No flags in storage');
+          done();
+        }
+      );
+  }); // end 'should get data not found error with empty flags array in storage' test
+
+  test('should get data not found error if null is stored', done => {
+    storageService.storage.get = jest
+      .fn()
+      .mockReturnValue(Promise.resolve(null));
+
+    storageService.getSyncFlags()
+      .subscribe(
+        response => {
+          console.log('Should not have a reponse', response);
+          expect(true).toBe(false);
+        },
+        error => {
+          expect(error.error).toMatch('Flags not found');
+          done();
+        }
+      );
+  }); // end 'should get data not found error if null is stored' test
+
+  test('should remove all stored sync flags', done => {
+    mockStorage.set('sync', [mockSyncMetadata('create', 'docId', 'docType')]);
+    const removeSpy = jest.spyOn(storageService.storage, 'remove');
+    storageService.removeSyncFlags();
+    expect(removeSpy).toHaveBeenCalled();
+    setTimeout(() => {
+      mockStorage.get('sync')
+        .then(response => {
+          console.log('Should not get a response', response);
+          expect(true).toBe(false);
+        })
+        .catch(error => {
+          expect(error).toMatch('Key not found');
+          done();
+        })
+    }, 10);
+  }); // end 'should remove all stored sync flags' test
+
+  test('should store a list of sync flags', done => {
+    const storeSpy = jest.spyOn(storageService.storage, 'set');
+    storageService.setSyncFlags([
+      mockSyncMetadata('create', 'dId', 'dType'),
+      mockSyncMetadata('update', 'otherId', 'otherType')
+    ])
+    .subscribe((data: string) => {
+      const parsed = JSON.parse(data);
+      expect(storeSpy).toHaveBeenCalled();
+      expect(parsed.length).toBe(2);
+      expect(parsed[0].docType).toMatch('dType');
+      expect(parsed[1].docId).toMatch('otherId');
+      done();
+    });
+  }); // end 'should store a list of sync flags' test
+
   test('should store a user', done => {
     const _mockUser = mockUser();
     const storeSpy = jest.spyOn(storageService.storage, 'set');
@@ -356,7 +463,7 @@ describe('Storage Service', () => {
     storageService.getUser()
       .subscribe((user: any) => {
         expect(user).toBeDefined();
-        expect(user._id).toMatch('offline');
+        expect(user.cid).toMatch('offline');
         done();
       });
   }); // end 'should create an offline user' test
@@ -369,7 +476,7 @@ describe('Storage Service', () => {
     storageService.getUser()
       .subscribe((user: any) => {
         expect(user).toBeDefined();
-        expect(user._id).toMatch('offline');
+        expect(user.cid).toMatch('offline');
         done();
       });
   }); // end 'should create an offline user if null is stored' test
