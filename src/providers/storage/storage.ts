@@ -11,6 +11,7 @@ import { User } from '../../shared/interfaces/user';
 import { RecipeMaster } from '../../shared/interfaces/recipe-master';
 import { Batch } from '../../shared/interfaces/batch';
 import { LibraryStorage } from '../../shared/interfaces/library';
+import { SyncMetadata } from '../../shared/interfaces/sync-metadata';
 
 
 @Injectable()
@@ -19,6 +20,7 @@ export class StorageProvider {
   recipeStorageKey = 'recipe';
   batchStorageKey = 'batch';
   libraryStorageKey = 'library';
+  syncStorageKey = 'sync';
 
   constructor(public storage: Storage) { }
 
@@ -168,6 +170,58 @@ export class StorageProvider {
   }
 
   /**
+   * Get all sync flags from storage
+   *
+   * @params: none
+   *
+   * @return: Observable of array of sync metadata
+  **/
+  getSyncFlags(): Observable<Array<SyncMetadata>> {
+    return fromPromise(
+      this.storage.get(this.syncStorageKey)
+        .then(flags => {
+          if (flags === null) throw throwError('Flags not found');
+          const parsed = JSON.parse(flags);
+          if (parsed.length === 0) throw throwError('No flags in storage');
+          return parsed;
+        })
+        .catch(error => {
+          if (error instanceof ErrorObservable) {
+            throw error;
+          }
+          throw throwError(`Sync flag storage error: ${error}`);
+        })
+    );
+  }
+
+  /**
+   * Remove all sync flags from storage
+   *
+   * @params: none
+   * @return: none
+  **/
+  removeSyncFlags(): void {
+    this.storage.remove(this.syncStorageKey)
+      .then(() => console.log('Sync flags cleared'));
+  }
+
+  /**
+   * Store sync flags for given type
+   *
+   * @params: flags - array of sync flags to store
+   *
+   * @return: Observable of storage response
+  **/
+  setSyncFlags(flags: Array<SyncMetadata>): Observable<any> {
+    return fromPromise(
+      this.storage.set(
+        this.syncStorageKey,
+        JSON.stringify(flags)
+      )
+    );
+  }
+
+  /**
    * Get user data and credentials
    *
    * @params: none
@@ -183,7 +237,7 @@ export class StorageProvider {
         })
         .catch(() => {
           return {
-            _id: 'offline',
+            cid: 'offline',
             username: '',
             token: '',
             preferredUnits: 'e'
