@@ -4,6 +4,7 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs/Observable';
 import { Pipe, PipeTransform } from '@angular/core';
+import { of } from 'rxjs/observable/of';
 
 import { baseURL } from '../src/shared/constants/base-url';
 import { apiVersion } from '../src/shared/constants/api-version';
@@ -26,11 +27,11 @@ export class GestureMock {
 
 export class NetworkMock {
   public onConnect(): Observable<any> {
-    return Observable.of();
+    return of();
   }
 
   public onDisconnect(): Observable<any> {
-    return Observable.of();
+    return of();
   }
 }
 
@@ -163,6 +164,12 @@ export class PlatformMockCordova extends PlatformMock {
 
   public is(platform: string): boolean {
     return this._platformMock === platform;
+  }
+}
+
+export class BackgroundModeMock {
+  enable() {
+    return;
   }
 }
 

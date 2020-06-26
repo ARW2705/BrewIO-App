@@ -74,7 +74,7 @@ export const mockConcurrentTimers = () => {
     }
   };
   const mock2: Timer = {
-    first: mockTimer[1].cid,
+    first: mockTimer[0].cid,
     timer: mockTimer[1],
     cid: '0123456789013',
     timeRemaining: mockTimer[1].duration / 2,
