@@ -35,7 +35,7 @@ export class ToastProvider {
         message: message,
         duration: duration || 2000,
         position: position || 'bottom',
-        cssClass: `${defaultClass} ${customClass}` || defaultClass,
+        cssClass: `${defaultClass}${customClass !== undefined ? ' ' + customClass: ''}`,
         showCloseButton: showCloseButton || false,
         closeButtonText: closeButtonText || 'Close',
         dismissOnPageChange: dismissOnPageChange || false
