@@ -145,7 +145,7 @@ describe('Timer Process Component', () => {
     }); // end 'should short circuit init timers if unable to get timers' test
 
     test('should handle adding a minute to a timer', done => {
-      timerService.addToTimer = jest
+      timerService.addTimeToTimer = jest
         .fn()
         .mockReturnValue(of({}));
 
@@ -165,7 +165,7 @@ describe('Timer Process Component', () => {
     }); // end 'should handle adding a minute to a timer' test
 
     test('should handle error response after trying to add a minute to a timer', done => {
-      timerService.addToTimer = jest
+      timerService.addTimeToTimer = jest
         .fn()
         .mockReturnValue(new ErrorObservable('error response'));
 

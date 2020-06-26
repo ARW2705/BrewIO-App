@@ -112,7 +112,7 @@ export class TimerProcessComponent implements OnInit, OnChanges, OnDestroy {
    * @return: none
   **/
   addToSingleTimer(timer: Timer): void {
-    this.timerService.addToTimer(this.batchId, timer.cid)
+    this.timerService.addTimeToTimer(this.batchId, timer.cid)
       .pipe(take(1))
       .subscribe(
         () => {
