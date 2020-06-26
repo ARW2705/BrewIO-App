@@ -1,6 +1,6 @@
 /* Module imports */
 import { Injectable } from '@angular/core';
-import { Platform } from 'ionic-angular';
+import { Platform, Events } from 'ionic-angular';
 import { Network } from '@ionic-native/network/ngx';
 
 
@@ -10,7 +10,8 @@ export class ConnectionProvider {
 
   constructor(
     public network: Network,
-    public platform: Platform
+    public platform: Platform,
+    public events: Events
   ) {
     if (this.platform.is('cordova')) {
       this.monitor();
@@ -44,11 +45,13 @@ export class ConnectionProvider {
       .subscribe(() => {
         console.log('on connect');
         this.connection = true;
+        this.events.publish('connected');
       });
     this.network.onDisconnect()
       .subscribe(() => {
         console.log('on disconnect');
         this.connection = false;
+        this.events.publish('disconnected');
       });
   }
 
