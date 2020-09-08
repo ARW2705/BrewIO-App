@@ -1,6 +1,6 @@
 /* Module imports */
 import { Injectable } from '@angular/core';
-import { ToastController } from 'ionic-angular';
+import { Toast, ToastController } from 'ionic-angular';
 
 
 @Injectable()
@@ -30,17 +30,17 @@ export class ToastProvider {
     closeButtonText?: string,
     dismissOnPageChange?: boolean
   ): void {
-      const defaultClass = 'main-toast';
-      const toast = this.toastCtrl.create({
-        message: message,
-        duration: duration || 2000,
-        position: position || 'bottom',
-        cssClass: `${defaultClass}${customClass !== undefined ? ' ' + customClass: ''}`,
-        showCloseButton: showCloseButton || false,
-        closeButtonText: closeButtonText || 'Close',
-        dismissOnPageChange: dismissOnPageChange || false
-      });
-      toast.present();
+    const defaultClass: string = 'toast-main';
+    const toast: Toast = this.toastCtrl.create({
+      message: message,
+      duration: duration || 2000,
+      position: position || 'bottom',
+      cssClass: `${defaultClass}${customClass !== undefined ? ' ' + customClass: ''}`,
+      showCloseButton: showCloseButton || false,
+      closeButtonText: closeButtonText || 'Close',
+      dismissOnPageChange: dismissOnPageChange || false
+    });
+    toast.present();
   }
 
 }

@@ -35,7 +35,7 @@ describe('Toast Provider', () => {
   });
 
   test('should present a toast with default options', () => {
-    const toastSpy = jest.spyOn(toastCtrl, 'create');
+    const toastSpy: jest.SpyInstance = jest.spyOn(toastCtrl, 'create');
 
     toastService.presentToast('my message');
 
@@ -43,7 +43,7 @@ describe('Toast Provider', () => {
       message: 'my message',
       duration: 2000,
       position: 'bottom',
-      cssClass: 'main-toast',
+      cssClass: 'toast-main',
       showCloseButton: false,
       closeButtonText: 'Close',
       dismissOnPageChange: false
@@ -51,7 +51,7 @@ describe('Toast Provider', () => {
   }); // end 'should present a toast with default options' test
 
   test('should present toast with given options', () => {
-    const toastSpy = jest.spyOn(toastCtrl, 'create');
+    const toastSpy: jest.SpyInstance = jest.spyOn(toastCtrl, 'create');
 
     toastService.presentToast(
       'my message',
@@ -67,7 +67,7 @@ describe('Toast Provider', () => {
       message: 'my message',
       duration: 3000,
       position: 'top',
-      cssClass: 'main-toast custom',
+      cssClass: 'toast-main custom',
       showCloseButton: true,
       closeButtonText: 'X',
       dismissOnPageChange: true
