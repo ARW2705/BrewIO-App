@@ -1,77 +1,166 @@
 /* Module imports */
 import { Injectable } from '@angular/core';
 import { Storage } from '@ionic/storage';
-import { Observable } from 'rxjs/Observable';
 import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
+import { Observable } from 'rxjs/Observable';
 import { fromPromise } from 'rxjs/observable/fromPromise';
 import { _throw as throwError } from 'rxjs/observable/throw';
 
 /* Interface imports */
-import { User } from '../../shared/interfaces/user';
-import { RecipeMaster } from '../../shared/interfaces/recipe-master';
 import { Batch } from '../../shared/interfaces/batch';
 import { LibraryStorage } from '../../shared/interfaces/library';
-import { SyncMetadata } from '../../shared/interfaces/sync-metadata';
+import { InventoryItem } from '../../shared/interfaces/inventory-item';
+import { RecipeMaster } from '../../shared/interfaces/recipe-master';
+import { SyncMetadata } from '../../shared/interfaces/sync';
+import { User } from '../../shared/interfaces/user';
+
+/* Default imports */
+import { defaultEnglish } from '../../shared/defaults/default-units';
+
+/* Utility imports */
+import { clone } from '../../shared/utility-functions/clone';
 
 
 @Injectable()
 export class StorageProvider {
-  userStorageKey = 'user';
-  recipeStorageKey = 'recipe';
-  batchStorageKey = 'batch';
-  libraryStorageKey = 'library';
-  syncStorageKey = 'sync';
+  activeBatchStorageKey: string = 'active';
+  archiveBatchStorageKey: string = 'archive';
+  inventoryStorageKey: string = 'inventory';
+  libraryStorageKey: string = 'library';
+  recipeStorageKey: string = 'recipe';
+  syncStorageKey: string = 'sync';
+  userStorageKey: string = 'user';
 
   constructor(public storage: Storage) { }
 
   /**
-   * Get all active batches from storage
+   * Get all active or archive batches from storage
+   *
+   * @params: isActive - true for active batches, false for archive batches
+   *
+   * @return: Observable of array of active batches
+  **/
+  getBatches(isActive: boolean): Observable<Batch[]> {
+    return fromPromise(
+      this.storage.get(
+        isActive ? this.activeBatchStorageKey: this.archiveBatchStorageKey
+      )
+      .then((batches: string): Batch[] => {
+        if (batches === null) {
+          throw throwError(
+            `${ isActive ? 'Active': 'Archive' } batch data not found`
+          );
+        }
+
+        const parsed: Batch[] = JSON.parse(batches);
+
+        if (!parsed.length) {
+          throw throwError(
+            `No ${ isActive ? 'active': 'archive' } batch data in storage`
+          );
+        }
+
+        return parsed;
+      })
+      .catch((error: Error | ErrorObservable)=> {
+        if (error instanceof ErrorObservable) {
+          throw error;
+        }
+        throw throwError(`Active batch storage error: ${error}`);
+      })
+    );
+  }
+
+  /**
+   * Remove active or archive batches from storage
+   *
+   * @params: isActive - true for active batches, false for archive batches
+   *
+   * @return: none
+  **/
+  removeBatches(isActive: boolean): void {
+    this.storage.remove(
+      isActive ? this.activeBatchStorageKey: this.archiveBatchStorageKey
+    )
+    .then((): void => {
+      console.log(`${ isActive ? 'Active': 'Archive' } batch data cleared`)
+    });
+  }
+
+  /**
+   * Store list of active or archive batches
+   *
+   * @params: isActive - true for active batches, false for archive batches
+   * @params: batchList - list of all active batches
+   *
+   * @return: Observable of storage set response
+  **/
+  setBatches(isActive: boolean, batchList: Batch[]): Observable<any> {
+    return fromPromise(
+      this.storage.set(
+        isActive ? this.activeBatchStorageKey: this.archiveBatchStorageKey,
+        JSON.stringify(batchList)
+      )
+    );
+  }
+
+  /**
+   * Get inventory from storage
    *
    * @params: none
    *
    * @return: Observable of array of active batches
   **/
-  getBatches(): Observable<Array<Batch>> {
+  getInventory(): Observable<InventoryItem[]> {
     return fromPromise(
-      this.storage.get(this.batchStorageKey)
-        .then(batches => {
-          if (batches === null) throw throwError('Active batch data not found');
-          const parsed = JSON.parse(batches);
-          if (parsed.length === 0) throw throwError('No active batch data in storage');
+      this.storage.get(this.inventoryStorageKey)
+        .then((inventory: string): InventoryItem[] => {
+          if (inventory === null) {
+            throw throwError('Inventory data not found');
+          }
+
+          const parsed: InventoryItem[] = JSON.parse(inventory);
+
+          if (!parsed.length) {
+            throw throwError('No inventory data in storage');
+          }
+
           return parsed;
         })
-        .catch(error => {
+        .catch((error: Error | ErrorObservable) => {
           if (error instanceof ErrorObservable) {
             throw error;
           }
-          throw throwError(`Active batch storage error: ${error}`);
+          throw throwError(`Inventory storage error: ${error}`);
         })
     );
   }
 
   /**
-   * Remove active batches from storage
+   * Remove inventory from storage
    *
    * @params: none
+   *
    * @return: none
   **/
-  removeBatches(): void {
-    this.storage.remove(this.batchStorageKey)
-      .then(() => console.log('Active batch data cleared'));
+  removeInventory(): void {
+    this.storage
+      .remove(this.inventoryStorageKey)
+      .then((): void => console.log('Inventory data cleared'));
   }
 
   /**
-   * Store list of active batches
+   * Store inventory
    *
-   * @params: activeBatchList - list of all active batches
+   * @params: inventory - array of items in inventory
    *
    * @return: Observable of storage set response
   **/
-  setBatches(activeBatchList: Array<Batch>): Observable<any> {
+  setInventory(inventory: InventoryItem[]): Observable<any> {
     return fromPromise(
       this.storage.set(
-        this.batchStorageKey,
-        JSON.stringify(activeBatchList)
+        this.inventoryStorageKey,
+        JSON.stringify(inventory)
       )
     );
   }
@@ -86,13 +175,20 @@ export class StorageProvider {
   getLibrary(): Observable<LibraryStorage> {
     return fromPromise(
       this.storage.get(this.libraryStorageKey)
-        .then(libraries => {
-          if (libraries === null) throw throwError('Library data not found');
-          const parsed = JSON.parse(libraries);
-          if (Object.keys(parsed).length === 0) throw throwError('No library data in storage');
+        .then((libraries: string): LibraryStorage => {
+          if (libraries === null) {
+            throw throwError('Library data not found');
+          }
+
+          const parsed: LibraryStorage = JSON.parse(libraries);
+
+          if (!Object.keys(parsed).length) {
+            throw throwError('No library data in storage');
+          }
+
           return parsed;
         })
-        .catch(error => {
+        .catch((error: Error | ErrorObservable) => {
           if (error instanceof ErrorObservable) {
             throw error;
           }
@@ -124,16 +220,23 @@ export class StorageProvider {
    *
    * @return: Observable of array of recipe masters
   **/
-  getRecipes(): Observable<Array<RecipeMaster>> {
+  getRecipes(): Observable<RecipeMaster[]> {
     return fromPromise(
       this.storage.get(this.recipeStorageKey)
-        .then(recipes => {
-          if (recipes === null) throw throwError('Recipe data not found');
-          const parsed = JSON.parse(recipes);
-          if (parsed.length === 0) throw throwError('No recipe data in storage');
+        .then((recipes: string): RecipeMaster[] => {
+          if (recipes === null) {
+            throw throwError('Recipe data not found');
+          }
+
+          const parsed: RecipeMaster[] = JSON.parse(recipes);
+
+          if (parsed.length === 0) {
+            throw throwError('No recipe data in storage');
+          }
+
           return parsed;
         })
-        .catch(error => {
+        .catch((error: Error | ErrorObservable) => {
           if (error instanceof ErrorObservable) {
             throw error;
           }
@@ -149,8 +252,9 @@ export class StorageProvider {
    * @return: none
   **/
   removeRecipes(): void {
-    this.storage.remove(this.recipeStorageKey)
-      .then(() => console.log('Recipe data cleared'));
+    this.storage
+      .remove(this.recipeStorageKey)
+      .then((): void => console.log('Recipe data cleared'));
   }
 
   /**
@@ -160,7 +264,7 @@ export class StorageProvider {
    *
    * @return: Observable of storage set response
   **/
-  setRecipes(recipeMasterList: Array<RecipeMaster>): Observable<any> {
+  setRecipes(recipeMasterList: RecipeMaster[]): Observable<any> {
     return fromPromise(
       this.storage.set(
         this.recipeStorageKey,
@@ -176,16 +280,23 @@ export class StorageProvider {
    *
    * @return: Observable of array of sync metadata
   **/
-  getSyncFlags(): Observable<Array<SyncMetadata>> {
+  getSyncFlags(): Observable<SyncMetadata[]> {
     return fromPromise(
       this.storage.get(this.syncStorageKey)
-        .then(flags => {
-          if (flags === null) throw throwError('Flags not found');
-          const parsed = JSON.parse(flags);
-          if (parsed.length === 0) throw throwError('No flags in storage');
+        .then((flags: string): SyncMetadata[] => {
+          if (flags === null) {
+            throw throwError('Flags not found');
+          }
+
+          const parsed: SyncMetadata[] = JSON.parse(flags);
+
+          if (parsed.length === 0) {
+            throw throwError('No flags in storage');
+          }
+
           return parsed;
         })
-        .catch(error => {
+        .catch((error: Error | ErrorObservable) => {
           if (error instanceof ErrorObservable) {
             throw error;
           }
@@ -201,8 +312,9 @@ export class StorageProvider {
    * @return: none
   **/
   removeSyncFlags(): void {
-    this.storage.remove(this.syncStorageKey)
-      .then(() => console.log('Sync flags cleared'));
+    this.storage
+      .remove(this.syncStorageKey)
+      .then((): void => console.log('Sync flags cleared'));
   }
 
   /**
@@ -212,7 +324,7 @@ export class StorageProvider {
    *
    * @return: Observable of storage response
   **/
-  setSyncFlags(flags: Array<SyncMetadata>): Observable<any> {
+  setSyncFlags(flags: SyncMetadata[]): Observable<any> {
     return fromPromise(
       this.storage.set(
         this.syncStorageKey,
@@ -231,16 +343,20 @@ export class StorageProvider {
   getUser(): Observable<User> {
     return fromPromise(
       this.storage.get(this.userStorageKey)
-        .then(user => {
-          if (user === null) throw new Error('No user data');
+        .then((user: string): User => {
+          if (user === null) {
+            throw new Error('No user data');
+          }
+
           return JSON.parse(user);
         })
-        .catch(() => {
+        .catch((): User => {
           return {
             cid: 'offline',
             username: '',
             token: '',
-            preferredUnits: 'e'
+            preferredUnitSystem: defaultEnglish.system,
+            units: clone(defaultEnglish)
           };
         })
     );
@@ -253,8 +369,9 @@ export class StorageProvider {
    * @return: none
   **/
   removeUser(): void {
-    this.storage.remove(this.userStorageKey)
-      .then(() => console.log('User data cleared'));
+    this.storage
+      .remove(this.userStorageKey)
+      .then((): void => console.log('User data cleared'));
   }
 
   /**
