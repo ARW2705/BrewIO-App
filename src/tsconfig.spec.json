@@ -11,5 +11,11 @@
   ],
   "exclude": [
     "node_modules"
-  ]
+  ],
+  "lib": [
+    "dom",
+    "es2015",
+    "es2017",
+    "esnext"
+  ],
 }
