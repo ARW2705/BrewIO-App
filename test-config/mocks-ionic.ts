@@ -6,8 +6,70 @@ import { Observable } from 'rxjs/Observable';
 import { Pipe, PipeTransform } from '@angular/core';
 import { of } from 'rxjs/observable/of';
 
-import { baseURL } from '../src/shared/constants/base-url';
-import { apiVersion } from '../src/shared/constants/api-version';
+import { BASE_URL } from '../src/shared/constants/base-url';
+import { API_VERSION } from '../src/shared/constants/api-version';
+
+
+export class ActionSheetControllerMock {
+  public _getPortal(): any {
+    return {}
+  };
+
+  public create(options?: any) {
+    return new ActionSheetMock();
+  }
+}
+
+
+class ActionSheetMock {
+  public present() { };
+  public dismiss() { };
+  public dismissAll() { };
+}
+
+
+export class AppMock { }
+
+
+export class BackgroundModeMock {
+  enable() {
+    return;
+  }
+}
+
+
+export class ConfigMock {
+  public get(...args): any {
+    return;
+  }
+
+  public getBoolean(...args): any {
+    return;
+  }
+}
+
+
+export class DeepLinkerMock { }
+
+
+export class DomMock {
+  public debouncer(): any { }
+}
+
+
+export class EventsMock {
+  public subscribe(...args): any {
+    return;
+  }
+
+  public unsubscribe(...args): any {
+    return;
+  }
+
+  public publish(...args): any {
+    return;
+  }
+}
 
 
 export class FormMock {
@@ -17,13 +79,116 @@ export class FormMock {
   }
 }
 
-export class DomMock {
-  public debouncer(): any { }
-}
 
 export class GestureMock {
   public createGesture(): any { }
 }
+
+
+@Injectable()
+export class HttpMock {
+  ROOT_URL: string = `${BASE_URL}/${API_VERSION}`;
+
+  constructor(public http: HttpClient) { }
+
+  public get(): Observable<any> {
+    return this.http.get<any>(this.ROOT_URL + '/mock');
+  }
+}
+
+
+export class ModalControllerMock {
+  public _getPortal(): any {
+    return {}
+  };
+
+  public create(options?: any) {
+    return new ModalMock();
+  }
+}
+
+
+export class ModalMock {
+  _callbackData: any = undefined;
+
+  _getCallBackData(): any {
+    return this._callbackData;
+  }
+
+  _setCallBackData(data: any) {
+    this._callbackData = data;
+  }
+
+  present(options?: any) { };
+  dismiss() { };
+  dismissAll() { };
+  onDidDismiss(cb) {
+    cb(this._callbackData);
+  };
+}
+
+
+export class NavMock {
+  _views: any[] = [ {name: 'first'}, { name: 'last' }];
+
+  public pop(): any {
+    return new Promise(function(resolve: Function): void {
+      resolve();
+    });
+  }
+
+  public push(): any {
+    return new Promise(function(resolve: Function): void {
+      resolve();
+    });
+  }
+
+  public getActive(): any {
+    return {
+      instance: {
+        model: 'something',
+      },
+      name: 'mock-active-name'
+    };
+  }
+
+  public setRoot(): any {
+    return true;
+  }
+
+  public registerChildNav(nav: any): void {
+    return ;
+  }
+
+  public unregisterChildNav(nav: any): void {
+    return ;
+  }
+
+  public getViews(): any[] {
+    return this._views;
+  }
+
+  public length(): number {
+    return this._views.length;
+  }
+}
+
+
+export class NavParamsMock {
+  static returnParam = {};
+
+  public get(key): any {
+    if (Object.keys(NavParamsMock.returnParam).length > 0) {
+      return NavParamsMock.returnParam[key];
+    }
+    return 'default';
+  }
+
+  static setParams(key, val): void {
+    NavParamsMock.returnParam[key] = val;
+  }
+}
+
 
 export class NetworkMock {
   public onConnect(): Observable<any> {
@@ -35,6 +200,7 @@ export class NetworkMock {
   }
 }
 
+
 export class NetworkMockDev extends NetworkMock {
   constructor() {
     super();
@@ -44,6 +210,7 @@ export class NetworkMockDev extends NetworkMock {
     return 'none';
   }
 }
+
 
 export class NetworkMockCordova extends NetworkMock {
   constructor() {
@@ -73,8 +240,8 @@ export class NetworkMockCordova extends NetworkMock {
   }
 }
 
-export class PlatformMock {
 
+export class PlatformMock {
   public Css = {
     transition: ''
   }
@@ -143,17 +310,6 @@ export class PlatformMock {
   }
 }
 
-export class PlatformMockDev extends PlatformMock {
-  _platformMock: string = '';
-
-  constructor() {
-    super();
-  }
-
-  public is(platform: string): boolean {
-    return this._platformMock === platform;
-  }
-}
 
 export class PlatformMockCordova extends PlatformMock {
   _platformMock: string = 'cordova';
@@ -167,17 +323,27 @@ export class PlatformMockCordova extends PlatformMock {
   }
 }
 
-export class BackgroundModeMock {
-  enable() {
-    return;
+
+export class PlatformMockDev extends PlatformMock {
+  _platformMock: string = '';
+
+  constructor() {
+    super();
+  }
+
+  public is(platform: string): boolean {
+    return this._platformMock === platform;
   }
 }
 
-export class StatusBarMock extends StatusBar {
-  styleDefault() {
-    return;
+
+@Pipe({name: 'sort'})
+export class SortPipeMock implements PipeTransform {
+  transform(arr: Array<any>, sortBy: string): Array<any> {
+    return arr;
   }
 }
+
 
 export class SplashScreenMock extends SplashScreen {
   hide() {
@@ -185,71 +351,13 @@ export class SplashScreenMock extends SplashScreen {
   }
 }
 
-export class NavMock {
 
-  public pop(): any {
-    return new Promise(function(resolve: Function): void {
-      resolve();
-    });
-  }
-
-  public push(): any {
-    return new Promise(function(resolve: Function): void {
-      resolve();
-    });
-  }
-
-  public getActive(): any {
-    return {
-      instance: {
-        model: 'something',
-      },
-      name: 'mock-active-name'
-    };
-  }
-
-  public setRoot(): any {
-    return true;
-  }
-
-  public registerChildNav(nav: any): void {
-    return ;
-  }
-
-  public unregisterChildNav(nav: any): void {
-    return ;
-  }
-
-}
-
-export class ViewControllerMock {
-  public readReady = {
-    subscribe(){ }
-  };
-  public writeReady = {
-    subscribe(){ }
-  };
-  public dismiss() { }
-  public _setHeader() { }
-  public _setNavbar() { }
-  public _setIONContent() { }
-  public _setIONContentRef() { }
-}
-
-export class NavParamsMock {
-  static returnParam = {};
-  public get(key): any {
-    if (Object.keys(NavParamsMock.returnParam).length > 0) {
-      return NavParamsMock.returnParam[key];
-    }
-    return 'default';
-  }
-  static setParams(key, val): void {
-    NavParamsMock.returnParam[key] = val;
+export class StatusBarMock extends StatusBar {
+  styleDefault() {
+    return;
   }
 }
 
-export class DeepLinkerMock { }
 
 @Injectable()
 export class StorageMock {
@@ -287,45 +395,6 @@ export class StorageMock {
   }
 }
 
-export class EventsMock {
-  public subscribe(...args): any {
-    return;
-  }
-
-  public unsubscribe(...args): any {
-    return;
-  }
-
-  public publish(...args): any {
-    return;
-  }
-}
-
-export class ConfigMock {
-  public get(...args): any {
-    return;
-  }
-
-  public getBoolean(...args): any {
-    return;
-  }
-}
-
-export class AppMock {
-
-}
-
-@Injectable()
-export class HttpMock {
-  ROOT_URL: string = `${baseURL}/${apiVersion}`;
-
-  constructor(public http: HttpClient) { }
-
-  public get(): Observable<any> {
-    return this.http.get<any>(this.ROOT_URL + '/mock');
-  }
-
-}
 
 export class ToastControllerMock {
   public _getPortal(): any {
@@ -343,42 +412,17 @@ class ToastMock {
   dismissAll() { };
 }
 
-export class ModalControllerMock {
-  public _getPortal(): any {
-    return {}
+
+export class ViewControllerMock {
+  public readReady = {
+    subscribe(){ }
   };
-
-  public create(options?: any) {
-    return new ModalMock();
-  }
-}
-
-class ModalMock {
-  present(options?: any) { };
-  dismiss() { };
-  dismissAll() { };
-  onDidDismiss() { };
-}
-
-export class ActionSheetControllerMock {
-  public _getPortal(): any {
-    return {}
+  public writeReady = {
+    subscribe(){ }
   };
-
-  public create(options?: any) {
-    return new ActionSheetMock();
-  }
-}
-
-class ActionSheetMock {
-  public present() { };
-  public dismiss() { };
-  public dismissAll() { };
-}
-
-@Pipe({name: 'sort'})
-export class SortPipeMock implements PipeTransform {
-  transform(arr: Array<any>, sortBy: string): Array<any> {
-    return arr;
-  }
+  public dismiss() { }
+  public _setHeader() { }
+  public _setNavbar() { }
+  public _setIONContent() { }
+  public _setIONContentRef() { }
 }
