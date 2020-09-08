@@ -1,11 +1,15 @@
 /* Module imports */
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
-import { Events, Tabs, Slides } from 'ionic-angular';
+import { Events, Slides, Tabs } from 'ionic-angular';
+
+/* Interface imports */
+import { PageChoice } from '../../shared/interfaces/page-choice';
 
 /* Page imports */
-import { RecipePage } from '../recipe/recipe';
-import { UserPage } from '../user/user';
+import { ExtrasPage } from '../extras/extras';
 import { HomePage } from '../home/home';
+import { RecipePage } from '../recipe/recipe';
+
 
 @Component({
   templateUrl: 'tabs.html'
@@ -14,12 +18,27 @@ export class TabsPage implements OnInit, OnDestroy {
   @ViewChild('navTabs') navTabs: Tabs;
   @ViewChild(Slides) slides: Slides;
   currentIndex: number = 0;
-  _popHeaderNav: any;
-  tabs = [
-    { component: HomePage,   title: 'Home',    header: 'BrewIO',  icon: 'home'    },
-    { component: RecipePage, title: 'Recipes', header: 'Recipes', icon: 'beer'    },
-    { component: UserPage,   title: 'User',    header: 'User',    icon: 'settings' }
+  tabs: PageChoice[] = [
+    {
+      component: HomePage,
+      title: 'Home',
+      header: 'BrewIO',
+      icon: 'home'
+    },
+    {
+      component: RecipePage,
+      title: 'Recipes',
+      header: 'Recipes',
+      icon: 'beer'
+    },
+    {
+      component: ExtrasPage,
+      title: 'Extras',
+      header: 'Extras',
+      icon: 'more'
+    }
   ];
+  _popHeaderNav: any;
 
   constructor(public events: Events) {
     this._popHeaderNav = this.popHeaderNavEventHandler.bind(this);
@@ -27,13 +46,13 @@ export class TabsPage implements OnInit, OnDestroy {
 
   /***** Lifecycle hooks *****/
 
-  ngOnDestroy() {
-    this.events.unsubscribe('pop-header-nav', this._popHeaderNav);
-  }
-
   ngOnInit() {
     this.slides.lockSwipes(true);
     this.events.subscribe('pop-header-nav', this._popHeaderNav);
+  }
+
+  ngOnDestroy() {
+    this.events.unsubscribe('pop-header-nav', this._popHeaderNav);
   }
 
   /***** End lifecycle hooks *****/
@@ -54,8 +73,8 @@ export class TabsPage implements OnInit, OnDestroy {
    *
    * @return: none
   **/
-  onTabNavigation(event: any): void {
-    this.setIndex(event.index);
+  onTabNavigation(event: object): void {
+    this.setIndex(event['index']);
     this.updateHeader();
   }
 
@@ -67,7 +86,8 @@ export class TabsPage implements OnInit, OnDestroy {
    * @return: none
   **/
   popHeaderNavEventHandler(data: any): void {
-    if (this.tabs.some(tab => tab.component.name === data.origin)) {
+    if (this.tabs.some((tab: PageChoice) => tab.component.name === data.origin)) {
+      this.navTabs.select(this.currentIndex);
       this.updateHeader();
     }
   }

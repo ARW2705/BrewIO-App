@@ -40,14 +40,12 @@ describe('Tabs page', () => {
   .then(done)
   .catch(done.fail));
 
-  beforeEach(async(() => {
-    injector = getTestBed();
-    eventService = injector.get(Events);
-  }));
-
   beforeEach(() => {
     fixture = TestBed.createComponent(TabsPage);
     tabsPage = fixture.componentInstance;
+
+    injector = getTestBed();
+    eventService = injector.get(Events);
   });
 
   describe('Component creation', () => {
@@ -74,8 +72,10 @@ describe('Tabs page', () => {
     test('should change the tab index', () => {
       fixture.detectChanges();
 
-      tabsPage.navTabs.select = jest.fn();
-      tabsPage.slides.slideTo = jest.fn();
+      tabsPage.navTabs.select = jest
+        .fn();
+      tabsPage.slides.slideTo = jest
+        .fn();
 
       tabsPage.setIndex(1);
 
@@ -98,8 +98,9 @@ describe('Tabs page', () => {
     test('should change tab navigation index', done => {
       fixture.detectChanges();
 
-      const tabSpy = jest.spyOn(tabsPage, 'setIndex');
-      const updateSpy = jest.spyOn(tabsPage, 'updateHeader');
+      const tabSpy: jest.SpyInstance = jest.spyOn(tabsPage, 'setIndex');
+      const updateSpy: jest.SpyInstance = jest.spyOn(tabsPage, 'updateHeader');
+
       tabsPage.navTabs.select = jest.fn();
       tabsPage.slides.slideTo = jest.fn();
 
@@ -120,7 +121,8 @@ describe('Tabs page', () => {
     test('should update header after event', () => {
       fixture.detectChanges();
 
-      const updateHeaderSpy = jest.spyOn(tabsPage, 'updateHeader');
+      const updateHeaderSpy: jest.SpyInstance = jest
+        .spyOn(tabsPage, 'updateHeader');
 
       tabsPage.popHeaderNavEventHandler({origin: 'HomePage'});
 
@@ -130,7 +132,8 @@ describe('Tabs page', () => {
     test('should not update header after event', () => {
       fixture.detectChanges();
 
-      const updateHeaderSpy = jest.spyOn(tabsPage, 'updateHeader');
+      const updateHeaderSpy: jest.SpyInstance = jest
+        .spyOn(tabsPage, 'updateHeader');
 
       tabsPage.popHeaderNavEventHandler({origin: 'SomeOtherPage'});
 
@@ -140,7 +143,7 @@ describe('Tabs page', () => {
     test('should emit a header update event', () => {
       fixture.detectChanges();
 
-      const eventSpy = jest.spyOn(eventService, 'publish');
+      const eventSpy: jest.SpyInstance = jest.spyOn(eventService, 'publish');
 
       tabsPage.updateHeader();
 
