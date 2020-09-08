@@ -1,27 +1,35 @@
 /* Module imports */
-import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
 import { Events } from 'ionic-angular';
-import { Observable } from 'rxjs/Observable';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
-import { map } from 'rxjs/operators/map';
+import { Observable } from 'rxjs/Observable';
 import { catchError } from 'rxjs/operators/catchError';
+import { of } from 'rxjs/observable/of';
+import { map } from 'rxjs/operators/map';
 
 /* Constants imports */
-import { baseURL } from '../../shared/constants/base-url';
-import { apiVersion } from '../../shared/constants/api-version';
+import { API_VERSION } from '../../shared/constants/api-version';
+import { BASE_URL } from '../../shared/constants/base-url';
+
+/* Default imports */
+import { defaultEnglish } from '../../shared/defaults/default-units';
+
+/* Utility imports */
+import { clone } from '../../shared/utility-functions/clone';
+import { normalizeErrorObservableMessage } from '../../shared/utility-functions/observable-helpers';
 
 /* Interface imports */
+import { LoginCredentials } from '../../shared/interfaces/login-credentials';
 import { User } from '../../shared/interfaces/user';
 import { UserResponse } from '../../shared/interfaces/user-response';
-import { LoginCredentials } from '../../shared/interfaces/login-credentials';
 
 /* Provider imports */
-import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
-import { StorageProvider } from '../storage/storage';
 import { ConnectionProvider } from '../connection/connection';
 import { PreferencesProvider } from '../preferences/preferences';
+import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
+import { StorageProvider } from '../storage/storage';
 
 
 @Injectable()
@@ -37,17 +45,18 @@ export class UserProvider {
     email: undefined,
     friendList: [],
     token: undefined,
-    preferredUnits: undefined
+    preferredUnitSystem: undefined,
+    units: undefined
   });
   userStorageKey: string = 'user';
 
   constructor(
-    public http: HttpClient,
     public events: Events,
-    public processHttpError: ProcessHttpErrorProvider,
-    public storageService: StorageProvider,
+    public http: HttpClient,
     public connectionService: ConnectionProvider,
-    public preferenceService: PreferencesProvider
+    public preferenceService: PreferencesProvider,
+    public processHttpError: ProcessHttpErrorProvider,
+    public storageService: StorageProvider
   ) { }
 
   /**
@@ -58,8 +67,14 @@ export class UserProvider {
    * @return: Observable of UserResponse
   **/
   checkJWToken(): Observable<UserResponse> {
-    return this.http.get<UserResponse>(`${baseURL}/${apiVersion}/users/checkJWToken`)
-      .pipe(catchError(error => this.processHttpError.handleError(error)));
+    return this.http.get<UserResponse>(
+      `${BASE_URL}/${API_VERSION}/users/checkJWToken`
+    )
+    .pipe(
+      catchError((error: HttpErrorResponse): ErrorObservable => {
+        return this.processHttpError.handleError(error)
+      })
+    );
   }
 
   /**
@@ -81,7 +96,8 @@ export class UserProvider {
       email: undefined,
       friendList: [],
       token: '',
-      preferredUnits: 'e'
+      preferredUnitSystem: defaultEnglish.system,
+      units: clone(defaultEnglish)
     });
 
     this.storageService.removeUser();
@@ -118,7 +134,8 @@ export class UserProvider {
    * @return: true if an auth token is present and not an empty string
   **/
   isLoggedIn(): boolean {
-    return this.user$.value.token !== undefined && this.user$.value.token !== '';
+    return this.getUser().value.token !== undefined
+      && this.getUser().value.token !== '';
   }
 
   /**
@@ -132,19 +149,19 @@ export class UserProvider {
   loadUserFromStorage(): void {
     this.storageService.getUser()
       .subscribe(
-        user => {
+        (user: User): void => {
           this.user$.next(user);
           if (this.isLoggedIn()) {
             this.checkJWToken()
               .subscribe(
-                (jwtResponse: UserResponse) => {
+                (jwtResponse: UserResponse): void => {
                   console.log(jwtResponse.status);
                 },
-                (error: string) => {
+                (error: string): void => {
                   // TODO: feedback to login again
                   console.log(error);
                   if (error.includes('401')) {
-                    const removedToken = this.user$.value;
+                    const removedToken: User = this.getUser().value;
                     removedToken.token = undefined;
                     this.user$.next(removedToken);
                   }
@@ -152,12 +169,18 @@ export class UserProvider {
               );
           } else {
             this.connectionService.setOfflineMode(true);
-            this.preferenceService.setUnits('e');
           }
-          this.events.publish('init-data');
-          this.preferenceService.setUnits(user.preferredUnits);
+          this.events.publish('init-recipes');
+          this.preferenceService.setUnits(
+            user.preferredUnitSystem,
+            user.units
+          );
         },
-        error => console.log('user load error', error)
+        (error: ErrorObservable): void => {
+          console.log(
+            `User load error: ${normalizeErrorObservableMessage(error)}`
+          );
+        }
       );
   }
 
@@ -171,27 +194,40 @@ export class UserProvider {
    * @return: observable with login response user data
   **/
   logIn(user: LoginCredentials, onSignupSync: boolean): Observable<User> {
-    return this.http.post(`${baseURL}/${apiVersion}/users/login`, user)
+    return this.http.post(`${BASE_URL}/${API_VERSION}/users/login`, user)
       .pipe(
-        map((response: UserResponse) => {
+        map((response: UserResponse): User => {
           this.user$.next(response.user);
           this.connectionService.setOfflineMode(false);
+
           if (onSignupSync) {
-            this.events.publish('sync-on-signup');
+            this.events.publish('sync-recipes-on-signup');
           } else {
-            this.events.publish('init-data');
+            this.events.publish('init-recipes');
           }
-          this.preferenceService.setUnits(response.user.preferredUnits);
+
+          this.preferenceService.setUnits(
+            response.user.preferredUnitSystem,
+            response.user.units
+          );
+
           if (user.remember) {
             this.storageService.setUser(response.user)
               .subscribe(
-                () => console.log('stored user data'),
-                (error: ErrorObservable) => console.log('user store error', error)
+                (): void => console.log('stored user data'),
+                (error: ErrorObservable): void => {
+                  console.log(
+                    `User store error: ${normalizeErrorObservableMessage(error)}`
+                  );
+                }
               );
           }
+
           return response.user;
         }),
-        catchError(error => this.processHttpError.handleError(error))
+        catchError((error: HttpErrorResponse): ErrorObservable => {
+          return this.processHttpError.handleError(error)
+        })
       );
   }
 
@@ -211,12 +247,17 @@ export class UserProvider {
    *
    * @params: user - user must contain at least a username, password, and email
    *
-   * @return: if signup successful, return observable of login response, else signup response
+   * @return: if signup successful, return observable of login response,
+   *          else signup response
   **/
   signUp(user: object): Observable<UserResponse> {
-    return this.http.post(`${baseURL}/${apiVersion}/users/signup`, user)
+    // Attach required user fields
+    user['preferredUnitSystem'] = this.preferenceService.preferredUnitSystem;
+    user['units'] = this.preferenceService.units;
+
+    return this.http.post(`${BASE_URL}/${API_VERSION}/users/signup`, user)
       .pipe(
-        map((response: UserResponse) => {
+        map((response: UserResponse): UserResponse => {
           this.logIn(
             {
               username: user['username'],
@@ -225,12 +266,16 @@ export class UserProvider {
             },
             true
           )
-          .subscribe(_user => {
-            console.log('Signup successful; log in successful', user['username']);
+          .subscribe((_user: User): void => {
+            console.log(
+              'Signup successful; log in successful', user['username']
+            );
           });
           return response;
         }),
-        catchError(error => this.processHttpError.handleError(error))
+        catchError((error: HttpErrorResponse): ErrorObservable => {
+          return this.processHttpError.handleError(error);
+        })
       );
   }
 
@@ -242,21 +287,37 @@ export class UserProvider {
    * @return: Observable of user data from server
   **/
   updateUserProfile(user: object): Observable<User> {
-    return this.http.patch(`${baseURL}/${apiVersion}/users/profile`, user)
-      .pipe(
-        map((updatedUser: User) => {
-          const userData = this.user$.value;
-          for (const key in updatedUser) {
-            if (userData.hasOwnProperty(key)) {
-              userData[key] = updatedUser[key];
+    if (this.isLoggedIn()) {
+      return this.http.patch(`${BASE_URL}/${API_VERSION}/users/profile`, user)
+        .pipe(
+          map((updatedUser: object): User => {
+            const userData: User = this.getUser().value;
+
+            for (const key in updatedUser) {
+              if (userData.hasOwnProperty(key)) {
+                userData[key] = updatedUser[key];
+              }
             }
-          }
-          this.user$.next(userData);
-          this.preferenceService.setUnits(userData.preferredUnits);
-          return updatedUser;
-        }),
-        catchError(error => this.processHttpError.handleError(error))
-      );
+
+            this.user$.next(userData);
+
+            this.preferenceService.setUnits(
+              updatedUser['preferredUnitSystem'],
+              updatedUser['units']
+            );
+
+            this.storageService.setUser(userData)
+              .subscribe(() => console.log('user data stored'));
+
+            return userData;
+          }),
+          catchError((error: HttpErrorResponse): ErrorObservable => {
+            return this.processHttpError.handleError(error);
+          })
+        );
+    }
+    
+    return of(null);
   }
 
 }
