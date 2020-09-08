@@ -1,22 +1,20 @@
 /* Module imports */
-import { Injectable } from '@angular/core';
-import { Platform } from 'ionic-angular';
 import { BackgroundMode } from '@ionic-native/background-mode';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { Injectable } from '@angular/core';
+import { Platform } from 'ionic-angular';
 import { Observable } from 'rxjs/Observable';
 import { _throw as throwError } from 'rxjs/observable/throw';
 
 /* Interface imports */
-import { Timer, BatchTimer } from '../../shared/interfaces/timer';
 import { Batch } from '../../shared/interfaces/batch';
-import { ProgressCircleSettings } from '../../shared/interfaces/progress-circle';
 import { Process } from '../../shared/interfaces/process';
+import { ProgressCircleSettings } from '../../shared/interfaces/progress-circle';
+import { Timer, BatchTimer } from '../../shared/interfaces/timer';
 
 /* Utility imports */
-import {
-  hasId,
-  clone
-} from '../../shared/utility-functions/utilities';
+import { clone } from '../../shared/utility-functions/clone';
+import { hasId } from '../../shared/utility-functions/id-helpers';
 
 /* Provider imports */
 import { ClientIdProvider } from '../client-id/client-id';
@@ -24,8 +22,8 @@ import { ClientIdProvider } from '../client-id/client-id';
 
 @Injectable()
 export class TimerProvider {
-  batchTimers: Array<BatchTimer> = [];
-  timing: any = null;
+  batchTimers: BatchTimer[] = [];
+  timing: number = null;
 
   circumference: number;
   timerHeight: number;
@@ -44,12 +42,18 @@ export class TimerProvider {
   timerFontFamily: string = 'Arial';
 
   constructor(
-    public platform: Platform,
     public backgroundMode: BackgroundMode,
-    public clientIdService: ClientIdProvider
+    public clientIdService: ClientIdProvider,
+    public platform: Platform
   ) {
     if (this.platform.is('cordova')) {
       this.backgroundMode.enable();
+      this.backgroundMode.overrideBackButton();
+      this.backgroundMode.setDefaults({
+        hidden: true,
+        silent: true,
+        color: '40e0cf'
+      });
     }
     this.timing = setInterval(() => {
       this.tick();
@@ -65,39 +69,39 @@ export class TimerProvider {
    * @return: none
   **/
   addBatchTimer(batch: Batch): void {
-    console.log('adding batch timer');
-    if (this.getBatchTimerById(batch.cid) !== undefined) return;
+    if (this.getBatchTimerById(batch.cid) === undefined) {
 
-    let timers: Array<BehaviorSubject<Timer>> = [];
-    let concurrentIndex: number = 0;
-    for (let i=0; i < batch.schedule.length; i++) {
-      if (batch.schedule[i].type === 'timer') {
-        const timeRemaining: number = batch.schedule[i].duration * 60; // change duration from minutes to seconds
+      let timers: BehaviorSubject<Timer>[] = [];
+      let concurrentIndex: number = 0;
+      for (let i=0; i < batch.process.schedule.length; i++) {
+        if (batch.process.schedule[i].type === 'timer') {
+          const timeRemaining: number = batch.process.schedule[i].duration * 60; // change duration from minutes to seconds
 
-        const newTimer$: BehaviorSubject<Timer> = new BehaviorSubject<Timer>({
-          cid: this.clientIdService.getNewId(),
-          first: batch.schedule[i - concurrentIndex].cid,
-          timer: clone(batch.schedule[i]),
-          timeRemaining: timeRemaining,
-          show: false,
-          isRunning: false,
-          settings: this.getSettings(batch.schedule[i])
-        });
-        timers.push(newTimer$);
+          const newTimer$: BehaviorSubject<Timer> = new BehaviorSubject<Timer>({
+            cid: this.clientIdService.getNewId(),
+            first: batch.process.schedule[i - concurrentIndex].cid,
+            timer: clone(batch.process.schedule[i]),
+            timeRemaining: timeRemaining,
+            show: false,
+            isRunning: false,
+            settings: this.getSettings(batch.process.schedule[i])
+          });
+          timers.push(newTimer$);
 
-        if (i < batch.schedule.length - 1
-          && batch.schedule[i].concurrent
-          && batch.schedule[i + 1].concurrent) {
-          concurrentIndex++;
-        } else {
-          concurrentIndex = 0;
+          if (i < batch.process.schedule.length - 1
+            && batch.process.schedule[i].concurrent
+            && batch.process.schedule[i + 1].concurrent) {
+            concurrentIndex++;
+          } else {
+            concurrentIndex = 0;
+          }
         }
       }
+      this.batchTimers.push({
+        batchId: batch.cid,
+        timers: timers
+      });
     }
-    this.batchTimers.push({
-      batchId: batch.cid,
-      timers: timers
-    });
   }
 
   /**
@@ -109,14 +113,20 @@ export class TimerProvider {
    * @return: observable of updated timer
   **/
   addTimeToTimer(batchId: string, timerId: string): Observable<Timer> {
-    const timer$: BehaviorSubject<Timer> = this.getTimerSubjectById(batchId, timerId);
-    if (timer$ === undefined) return throwError('Timer not found');
+    const timer$: BehaviorSubject<Timer>
+      = this.getTimerSubjectById(batchId, timerId);
+
+    if (timer$ === undefined) {
+      return throwError('Timer not found');
+    }
 
     const timer: Timer = timer$.value;
+
     timer.timer.duration++;
     timer.timeRemaining += 60;
     this.setProgress(timer);
     timer$.next(timer);
+
     return timer$;
   }
 
@@ -131,19 +141,28 @@ export class TimerProvider {
     let remainder: number = timeRemaining;
     let result: string = '';
     let hours: number, minutes: number;
+
+    // Set hours
     if (remainder > 3599) {
       hours = Math.floor(remainder / 3600);
       remainder = remainder % 3600;
       result += hours + ':';
     }
+
+    // Set minutes
     if (remainder > 59) {
       minutes = Math.floor(remainder / 60);
       remainder = remainder % 60;
       result += minutes < 10 && timeRemaining > 599 ? '0': '';
       result += minutes + ':';
+    } else if (timeRemaining > 59) {
+      result += '00:';
     }
+
+    // Set seconds
     result += remainder < 10 ? '0': '';
     result += remainder;
+
     return result;
   }
 
@@ -156,7 +175,8 @@ export class TimerProvider {
    *          not found
   **/
   getBatchTimerById(batchId: string): BatchTimer {
-    return this.batchTimers.find(batchTimer => batchTimer.batchId === batchId);
+    return this.batchTimers
+    .find((batchTimer: BatchTimer): boolean => batchTimer.batchId === batchId);
   }
 
   /**
@@ -168,9 +188,9 @@ export class TimerProvider {
    * @return: css font size value
   **/
   getFontSize(timeRemaining: number): string {
-    if (timeRemaining > 3600) {
+    if (timeRemaining > 3599) {
       return `${Math.round(this.timerWidth / 5)}px`;
-    } else if (timeRemaining > 60) {
+    } else if (timeRemaining > 59) {
       return `${Math.round(this.timerWidth / 4)}px`;
     } else {
       return `${Math.round(this.timerWidth / 3)}px`;
@@ -220,11 +240,20 @@ export class TimerProvider {
    * @return: array of timer behaviorsubjects associated to process else
    *          else undefined if not found
   **/
-  getTimersByProcessId(batchId: string, processId: string): Array<BehaviorSubject<Timer>> {
+  getTimersByProcessId(
+    batchId: string,
+    processId: string
+  ): BehaviorSubject<Timer>[] {
     const batchTimer: BatchTimer = this.getBatchTimerById(batchId);
-    if (batchTimer === undefined) return undefined;
 
-    return batchTimer.timers.filter(timer$ => timer$.value.first === processId);
+    if (batchTimer === undefined) {
+      return undefined;
+    }
+
+    return batchTimer.timers
+      .filter((timer$: BehaviorSubject<Timer>): boolean => {
+        return timer$.value.first === processId;
+      });
   }
 
   /**
@@ -237,9 +266,15 @@ export class TimerProvider {
   **/
   getTimerSubjectById(batchId: string, timerId: string): BehaviorSubject<Timer> {
     const batchTimer: BatchTimer = this.getBatchTimerById(batchId);
-    if (batchTimer === undefined) return undefined;
 
-    return batchTimer.timers.find(timer$ => hasId(timer$.value, timerId));
+    if (batchTimer === undefined) {
+      return undefined;
+    }
+
+    return batchTimer.timers
+      .find((timer$: BehaviorSubject<Timer>): boolean => {
+        return hasId(timer$.value, timerId)
+      });
   }
 
   /**
@@ -250,13 +285,16 @@ export class TimerProvider {
    * @return: none
   **/
   removeBatchTimer(batchId: string): void {
-    const batchTimerIndex: number = this.batchTimers.findIndex(batchTimer => {
-      return batchTimer.batchId === batchId;
-    });
-    if (batchTimerIndex === -1) return;
+    const batchTimerIndex: number = this.batchTimers
+      .findIndex(batchTimer => {
+        return batchTimer.batchId === batchId;
+      });
 
-    this.batchTimers[batchTimerIndex].timers.forEach(timer$ => timer$.complete());
-    this.batchTimers.splice(batchTimerIndex, 1);
+    if (batchTimerIndex !== -1) {
+      this.batchTimers[batchTimerIndex].timers
+        .forEach((timer$: BehaviorSubject<Timer>): void => timer$.complete());
+      this.batchTimers.splice(batchTimerIndex, 1);
+    }
   }
 
   /**
@@ -268,16 +306,26 @@ export class TimerProvider {
    *
    * @return: observable of updated timer
   **/
-  resetTimer(batchId: string, timerId: string, duration: number): Observable<Timer> {
-    const timer$: BehaviorSubject<Timer> = this.getTimerSubjectById(batchId, timerId);
-    if (timer$ === undefined) return throwError('Timer not found');
+  resetTimer(
+    batchId: string,
+    timerId: string,
+    duration: number
+  ): Observable<Timer> {
+    const timer$: BehaviorSubject<Timer>
+      = this.getTimerSubjectById(batchId, timerId);
+
+    if (timer$ === undefined) {
+      return throwError('Timer not found');
+    }
 
     const timer: Timer = timer$.value;
+
     timer.isRunning = false;
     timer.timer.duration = duration;
     timer.timeRemaining = timer.timer.duration * 60;
     this.setProgress(timer);
     timer$.next(timer);
+
     return timer$;
   }
 
@@ -293,18 +341,50 @@ export class TimerProvider {
     timer.settings.circle.strokeDashoffset = `
       ${this.circumference - timer.timeRemaining / (timer.timer.duration * 60) * this.circumference}
     `;
-    timer.settings.text.content = this.formatProgressCircleText(timer.timeRemaining);
-    if (timer.timeRemaining < 1) {
-      timer.isRunning = false;
-      // TODO activate alarm
-      console.log('timer expired alarm');
-    } else if (timer.timer.splitInterval > 1) {
-      const interval: number = timer.timer.duration * 60 / timer.timer.splitInterval;
-      if (timer.timeRemaining % interval === 0) {
-        // TODO activate interval alarm
-        console.log('interval alarm');
+    timer.settings.text.content
+      = this.formatProgressCircleText(timer.timeRemaining);
+
+    if (timer.isRunning) {
+      if (timer.timeRemaining < 1) {
+        timer.isRunning = false;
+        // TODO activate alarm
+        console.log('timer expired alarm');
+      } else if (timer.timer.splitInterval > 1) {
+        const interval: number = timer.timer.duration
+          * 60
+          / timer.timer.splitInterval;
+
+        if (timer.timeRemaining % interval === 0) {
+          // TODO activate interval alarm
+          console.log('interval alarm');
+        }
       }
     }
+  }
+
+  /**
+   * Get step duration to be used in description display
+   *
+   * @params: duration - stored duration in minutes
+   *
+   * @return: datetime string hh:mm
+  **/
+  getFormattedDurationString(duration: number): string {
+    let result: string = 'Duration: ';
+
+    // Get hours
+    if (duration > 59) {
+      const hours = Math.floor(duration / 60);
+      result += `${hours} hour${hours > 1 ? 's': ''}`;
+      duration = duration % 60;
+      result += (duration) ? ' ': '';
+    }
+
+    // Get minutes
+    if (duration) {
+      result += `${duration} minute${duration > 1 ? 's': ''}`;
+    }
+    return result;
   }
 
   /**
@@ -318,6 +398,7 @@ export class TimerProvider {
     const strokeWidth: number = 8;
     const radius: number = (width / 2) - (strokeWidth * 2);
     const circumference: number = radius * 2 * Math.PI;
+
     this.circumference = circumference;
     this.timerHeight = width;
     this.timerWidth = width;
@@ -362,13 +443,19 @@ export class TimerProvider {
    * @return: observable of updated timer
   **/
   switchTimer(batchId: string, timerId: string, run: boolean): Observable<Timer> {
-    const timer$: BehaviorSubject<Timer> = this.getTimerSubjectById(batchId, timerId);
-    if (timer$ === undefined) return throwError('Timer not found');
+    const timer$: BehaviorSubject<Timer>
+      = this.getTimerSubjectById(batchId, timerId);
+
+    if (timer$ === undefined) {
+      return throwError('Timer not found');
+    }
 
     const timer: Timer = timer$.value;
+
     timer.isRunning = run;
     this.setProgress(timer);
     timer$.next(timer);
+
     return timer$;
   }
 
@@ -379,9 +466,10 @@ export class TimerProvider {
    * @return: none
   **/
   tick(): void {
-    this.batchTimers.forEach(batchTimer => {
-      batchTimer.timers.forEach(timer$ => {
+    this.batchTimers.forEach((batchTimer: BatchTimer): void => {
+      batchTimer.timers.forEach((timer$: BehaviorSubject<Timer>): void => {
         const timer: Timer = timer$.value;
+
         if (timer.isRunning) {
           if (timer.timeRemaining > 0) {
             timer.timeRemaining--;
@@ -389,10 +477,59 @@ export class TimerProvider {
             timer.isRunning = false;
           }
         }
+
         this.setProgress(timer);
+        this.updateNotifications();
         timer$.next(timer);
       });
     });
+  }
+
+  /**
+   * Update notifications timer
+   *
+   * @params: none
+   * @return: none
+  **/
+  updateNotifications(): void {
+    if (this.platform.is('cordova') && this.backgroundMode.isEnabled()) {
+      const timers: Timer[] = this.batchTimers.flatMap(
+        (batchTimer: BatchTimer): Timer[] => {
+          const _timers: Timer[] = [];
+
+          batchTimer.timers
+            .forEach((timer$: BehaviorSubject<Timer>): void => {
+              if (timer$.value.isRunning) {
+                _timers.push(timer$.value);
+              }
+            });
+
+          return _timers;
+        }
+      );
+
+      if (timers.length) {
+        let nearest: Timer = timers[0];
+
+        if (timers.length > 1) {
+          nearest = timers.reduce(
+            (acc: Timer, curr: Timer): Timer => {
+              return acc.timeRemaining < curr.timeRemaining
+                ? acc
+                : curr;
+              }
+          );
+        }
+
+        this.backgroundMode.configure({
+          title: nearest.settings.text.content,
+          text: `${timers.length} timer${timers.length > 2 ? 's': ''} running`,
+          hidden: false,
+          silent: false,
+          color: '40e0cf'
+        });
+      }
+    }
   }
 
 }

@@ -9,26 +9,28 @@ import { of } from 'rxjs/observable/of';
 import { configureTestBed } from '../../../test-config/configureTestBed';
 
 /* Mock imports */
-import { PlatformMockDev, BackgroundModeMock } from '../../../test-config/mocks-ionic';
 import { mockBatch } from '../../../test-config/mockmodels/mockBatch';
-import { mockTimer, mockConcurrentTimers } from '../../../test-config/mockmodels/mockTimer';
 import { mockBatchTimer } from '../../../test-config/mockmodels/mockBatchTimer';
+import { mockTimer, mockConcurrentTimers } from '../../../test-config/mockmodels/mockTimer';
+import { BackgroundModeMock, PlatformMockDev } from '../../../test-config/mocks-ionic';
 
 /* Interface imports */
-import { Timer, BatchTimer } from '../../shared/interfaces/timer';
 import { Batch } from '../../shared/interfaces/batch';
+import { Timer, BatchTimer } from '../../shared/interfaces/timer';
 import { Process } from '../../shared/interfaces/process';
 import { ProgressCircleSettings } from '../../shared/interfaces/progress-circle';
 
 /* Provider imports */
-import { TimerProvider } from './timer';
 import { ClientIdProvider } from '../client-id/client-id';
+import { TimerProvider } from './timer';
 
 
 describe('Timer Provider', () => {
   let injector: TestBed;
   let timerService: TimerProvider;
   let clientIdService: ClientIdProvider;
+  let mockBackground: BackgroundMode;
+  let mockPlatform: Platform;
   configureTestBed();
 
   beforeAll(async(() => {
@@ -47,6 +49,8 @@ describe('Timer Provider', () => {
     injector = getTestBed();
     timerService = injector.get(TimerProvider);
     clientIdService = injector.get(ClientIdProvider);
+    mockBackground = injector.get(BackgroundMode);
+    mockPlatform = injector.get(Platform);
   });
 
   afterEach(() => {
@@ -75,60 +79,75 @@ describe('Timer Provider', () => {
       .fn()
       .mockReturnValue(undefined);
 
-    const _mockTimer = mockTimer();
+    const _mockTimer: Timer = mockTimer();
+
     timerService.getSettings = jest
       .fn()
       .mockReturnValue(_mockTimer.settings);
 
-    let timeIndex = Date.now();
+    let timeIndex: number = Date.now();
+
     clientIdService.getNewId = jest
       .fn()
       .mockImplementation(() => {
         return (timeIndex++).toString();
       });
 
-    const _mockBatch = mockBatch();
+    const _mockBatch: Batch = mockBatch();
 
     timerService.addBatchTimer(_mockBatch);
 
     expect(timerService.batchTimers.length).toBe(1);
-    const _batchTimer = timerService.batchTimers[0];
+
+    const _batchTimer: BatchTimer = timerService.batchTimers[0];
+
     expect(_batchTimer.batchId).toMatch(_mockBatch.cid);
     expect(_batchTimer.timers.length).toBe(7);
 
-    const schedule = _mockBatch.schedule;
-    const timers = _batchTimer.timers;
+    const schedule: Process[] = _mockBatch.process.schedule;
+    const timers: BehaviorSubject<Timer>[] = _batchTimer.timers;
 
-    // First set of timers are concurrent, starts at index 2 in schedule, and has 2 timers
-    const _first1 = timers[0].value;
-    const _first2 = timers[1].value;
-    // both timers should have first set to id of first concurrent timer at index 2
+    // First set of timers are concurrent, starts at index 2 in schedule, and
+    // has 2 timers
+    const _first1: Timer = timers[0].value;
+    const _first2: Timer = timers[1].value;
+
+    // both timers should have first set to id of first concurrent timer at
+    // index 2
     expect(_first1.first).toMatch(schedule[2].cid);
     expect(_first2.first).toMatch(schedule[2].cid);
-    // each timer subject should have a copy of the schedule timer they're based on
+
+    // each timer subject should have a copy of the schedule timer they're
+    // based on
     expect(_first1.timer).toStrictEqual(schedule[2]);
     expect(_first2.timer).toStrictEqual(schedule[3]);
 
-    // Second set of timers are concurrent, starts at index 5 in schedule, and has 3 timers
-    const _second1 = timers[2].value;
-    const _second2 = timers[3].value;
-    const _second3 = timers[4].value;
-    // all timers should have first set to id of first concurrent timer at index 5
+    // Second set of timers are concurrent, starts at index 5 in schedule, and
+    // has 3 timers
+    const _second1: Timer = timers[2].value;
+    const _second2: Timer = timers[3].value;
+    const _second3: Timer = timers[4].value;
+
+    // all timers should have first set to id of first concurrent timer at
+    // index 5
     expect(_second1.first).toMatch(schedule[5].cid);
     expect(_second2.first).toMatch(schedule[5].cid);
     expect(_second3.first).toMatch(schedule[5].cid);
-    // each timer subject should have a copy of the schedule timer they're based on
+
+    // each timer subject should have a copy of the schedule timer they're
+    // based on
     expect(_second1.timer).toStrictEqual(schedule[5]);
     expect(_second2.timer).toStrictEqual(schedule[6]);
     expect(_second3.timer).toStrictEqual(schedule[7]);
 
     // Third set of timers are not concurrent and starts at index 10 in schedule
-    const _third = timers[5].value;
+    const _third: Timer = timers[5].value;
     expect(_third.first).toMatch(schedule[10].cid);
     expect(_third.timer).toStrictEqual(schedule[10]);
 
-    // Fourth set of timers are not concurrent and starts at index 15 in schedule
-    const _fourth = timers[6].value;
+    // Fourth set of timers are not concurrent and starts at index 15 in
+    // schedule
+    const _fourth: Timer = timers[6].value;
     expect(_fourth.first).toMatch(schedule[15].cid);
     expect(_fourth.timer).toStrictEqual(schedule[15]);
   }); // end 'should add a new batch timer' test
@@ -138,14 +157,15 @@ describe('Timer Provider', () => {
       .fn()
       .mockReturnValue(mockBatchTimer());
 
-    const _mockBatch = mockBatch();
+    const _mockBatch: Batch = mockBatch();
+
     timerService.addBatchTimer(_mockBatch);
 
     expect(timerService.batchTimers.length).toBe(0);
   }); // end 'should not add a batch timer if one with the same id already exists' test
 
   test('should add a minute to a timer', done => {
-    const _mockTimer = mockTimer();
+    const _mockTimer: Timer = mockTimer();
 
     timerService.getTimerSubjectById = jest
       .fn()
@@ -154,16 +174,18 @@ describe('Timer Provider', () => {
     timerService.setProgress = jest
       .fn();
 
-    const originalDuration = _mockTimer.timer.duration;
-    const originalRemaining = _mockTimer.timeRemaining;
+    const originalDuration: number = _mockTimer.timer.duration;
+    const originalRemaining: number = _mockTimer.timeRemaining;
+
     timerService.addTimeToTimer('batchId', _mockTimer.cid)
       .subscribe(
-        response => {
+        (response: Timer): void => {
           expect(response.timer.duration).toBe(originalDuration + 1);
           expect(response.timeRemaining).toBe(originalRemaining + 60);
           done();
-        }, error => {
-          console.log(error);
+        },
+        (error: any): void => {
+          console.log('Should not get an error', error);
           expect(true).toBe(false);
         }
       );
@@ -176,11 +198,11 @@ describe('Timer Provider', () => {
 
     timerService.addTimeToTimer('batchId', 'timerId')
       .subscribe(
-        response => {
+        (response: any): void => {
           console.log('should not have a response', response);
           expect(true).toBe(false);
         },
-        error => {
+        (error: string): void => {
           expect(error).toMatch('Timer not found');
           done();
         }
@@ -190,11 +212,14 @@ describe('Timer Provider', () => {
   test('should format the progress circle text', () => {
     expect(timerService.formatProgressCircleText(3661)).toMatch('1:01:01');
     expect(timerService.formatProgressCircleText(0)).toMatch('0');
+    expect(timerService.formatProgressCircleText(3600)).toMatch('1:00:00');
   }); // end 'should format the progress circle text' test
 
   test('should get a batch timer by the batch id', () => {
     const _mockBatchTimerTarget: BatchTimer = mockBatchTimer();
+
     _mockBatchTimerTarget.batchId = 'target';
+
     const _mockBatchTimerOther: BatchTimer = mockBatchTimer();
 
     timerService.batchTimers = [
@@ -221,7 +246,8 @@ describe('Timer Provider', () => {
 
   test('should populate process circle settings', () => {
     const _mockBatch: Batch = mockBatch();
-    const timerProcess: Process = _mockBatch.schedule[2];
+
+    const timerProcess: Process = _mockBatch.process.schedule[2];
 
     timerService.getFontSize = jest
       .fn()
@@ -231,7 +257,8 @@ describe('Timer Provider', () => {
       .fn()
       .mockReturnValue('1:00:00');
 
-    const settings: ProgressCircleSettings = timerService.getSettings(timerProcess);
+    const settings: ProgressCircleSettings = timerService
+      .getSettings(timerProcess);
 
     expect(settings).toStrictEqual({
       height: 240,
@@ -260,16 +287,20 @@ describe('Timer Provider', () => {
   }); // end 'should populate process circle settings' test
 
   test('should get all timers associated with a process', () => {
-    const _mockBatchTimer = mockBatchTimer();
-    const _mockBatch = mockBatch();
-    const _mockConcurrentTimers = mockConcurrentTimers();
+    const _mockBatchTimer: BatchTimer = mockBatchTimer();
+    const _mockBatch: Batch = mockBatch();
+    const _mockConcurrentTimers: Timer[] = mockConcurrentTimers();
 
     timerService.getBatchTimerById = jest
       .fn()
       .mockReturnValue(_mockBatchTimer);
 
     // search for schedule index 2 for a pair of concurrent timers
-    const result = timerService.getTimersByProcessId(_mockBatchTimer.batchId, _mockBatch.schedule[2].cid);
+    const result: BehaviorSubject<Timer>[] = timerService
+      .getTimersByProcessId(
+        _mockBatchTimer.batchId,
+        _mockBatch.process.schedule[2].cid
+      );
 
     expect(result.length).toBe(2);
     expect(result[0].value).toStrictEqual(_mockConcurrentTimers[0]);
@@ -278,12 +309,13 @@ describe('Timer Provider', () => {
     // has batch timers, but timer not present
     expect(
       timerService.getTimersByProcessId(_mockBatchTimer.batchId, 'void').length
-    ).toBe(0);
+    )
+    .toBe(0);
   }); // end 'should get all timers associated with a process' test
 
   test('should get undefined when getting timers by process id if batch timer is missing', () => {
-    const _mockBatch = mockBatch();
-    const _mockBatchTimer = mockBatchTimer();
+    const _mockBatch: Batch = mockBatch();
+    const _mockBatchTimer: BatchTimer = mockBatchTimer();
 
     timerService.getBatchTimerById = jest
       .fn()
@@ -292,14 +324,19 @@ describe('Timer Provider', () => {
     timerService.batchTimers = [ _mockBatchTimer ];
 
     expect(
-      timerService.getTimersByProcessId(_mockBatchTimer.batchId, _mockBatch.schedule[2].cid)
-    ).toBeUndefined();
+      timerService
+        .getTimersByProcessId(
+          _mockBatchTimer.batchId,
+          _mockBatch.process.schedule[2].cid
+        )
+    )
+    .toBeUndefined();
   }); // end 'should get undefined when getting timers by process id if batch timer is missing' test
 
   test('should get a timer by its id', () => {
-    const _mockBatchTimer = mockBatchTimer();
-    const _mockBatch = mockBatch();
-    const _mockTimer = mockTimer();
+    const _mockBatchTimer: BatchTimer = mockBatchTimer();
+    const _mockBatch: Batch = mockBatch();
+    const _mockTimer: Timer = mockTimer();
 
     timerService.getBatchTimerById = jest
       .fn()
@@ -307,29 +344,30 @@ describe('Timer Provider', () => {
 
     expect(
       timerService.getTimerSubjectById(_mockBatch.cid, _mockTimer.cid).value
-    ).toStrictEqual(_mockTimer);
+    )
+    .toStrictEqual(_mockTimer);
   }); // end 'should get a timer by its id' test
 
   test('should get undefined if batch timer not found or timer not found', () => {
-    const _mockBatchTimer = mockBatchTimer();
+    const _mockBatchTimer: BatchTimer = mockBatchTimer();
 
     timerService.getBatchTimerById = jest
       .fn()
       .mockReturnValueOnce(undefined)
       .mockReturnValueOnce(_mockBatchTimer);
 
-    expect(
-      timerService.getTimerSubjectById('void', 'void')
-    ).toBeUndefined();
-    expect(
-      timerService.getTimerSubjectById(_mockBatchTimer.batchId, 'void')
-    ).toBeUndefined();
+    expect(timerService.getTimerSubjectById('void', 'void'))
+      .toBeUndefined();
+
+    expect(timerService.getTimerSubjectById(_mockBatchTimer.batchId, 'void'))
+      .toBeUndefined();
   }); // end 'should get undefined if batch timer not found or timer not found' test
 
   test('should remove a batch timer from list', () => {
-    const _mockBatchTimerToRemove = mockBatchTimer();
+    const _mockBatchTimerToRemove: BatchTimer = mockBatchTimer();
     _mockBatchTimerToRemove.batchId = 'target';
-    const _mockBatchTimer = mockBatchTimer();
+
+    const _mockBatchTimer: BatchTimer = mockBatchTimer();
 
     timerService.batchTimers = [
       _mockBatchTimer,
@@ -343,7 +381,7 @@ describe('Timer Provider', () => {
   }); // end 'should remove a batch timer from list' test
 
   test('should not remove a batch timer if it is not in list', () => {
-    const _mockBatchTimer = mockBatchTimer();
+    const _mockBatchTimer: BatchTimer = mockBatchTimer();
 
     timerService.batchTimers = [
       _mockBatchTimer,
@@ -356,7 +394,7 @@ describe('Timer Provider', () => {
   }); // end 'should not remove a batch timer if it is not in list' test
 
   test('should reset a timer to a given duration', done => {
-    const _mockTimer = mockTimer();
+    const _mockTimer: Timer = mockTimer();
     _mockTimer.timeRemaining = 15;
     _mockTimer.timer.duration = 20;
 
@@ -369,13 +407,13 @@ describe('Timer Provider', () => {
 
     timerService.resetTimer('batchId', _mockTimer.cid, 30)
       .subscribe(
-        response => {
+        (response: Timer): void => {
           expect(response.timer.duration).toBe(30);
           expect(response.timeRemaining).toBe(1800);
           done();
         },
-        error => {
-          console.log(error);
+        (error: any): void => {
+          console.log('Should not get an error', error);
           expect(true).toBe(false);
         }
       );
@@ -388,11 +426,11 @@ describe('Timer Provider', () => {
 
     timerService.resetTimer('void', 'void', 0)
       .subscribe(
-        response => {
+        (response: any): void => {
           console.log('should not get a response', response);
           expect(true).toBe(false);
         },
-        error => {
+        (error: string): void => {
           expect(error).toMatch('Timer not found');
           done();
         }
@@ -400,7 +438,7 @@ describe('Timer Provider', () => {
   }); // end 'should fail to reset a timer that is not found' test
 
   test('should set timer css values based on progress', () => {
-    const _mockTimer = mockTimer();
+    const _mockTimer: Timer = mockTimer();
 
     timerService.getFontSize = jest
       .fn()
@@ -414,7 +452,7 @@ describe('Timer Provider', () => {
       .mockReturnValueOnce('15:00')
       .mockReturnValueOnce('0');
 
-    const consoleSpy = jest.spyOn(console, 'log');
+    const consoleSpy: jest.SpyInstance = jest.spyOn(console, 'log');
 
     _mockTimer.isRunning = true;
     _mockTimer.timeRemaining = 1201;
@@ -422,7 +460,8 @@ describe('Timer Provider', () => {
 
     timerService.setProgress(_mockTimer);
 
-    expect(_mockTimer.settings.circle.strokeDashoffset).toMatch('217.45406216447748');
+    expect(_mockTimer.settings.circle.strokeDashoffset)
+      .toMatch('217.45406216447748');
 
     _mockTimer.timeRemaining = 900;
 
@@ -438,16 +477,21 @@ describe('Timer Provider', () => {
     expect(_mockTimer.isRunning).toBe(false);
   }); // end 'should set timer css values based on progress' test
 
+  test('should format a duration string', () => {
+    expect(timerService.getFormattedDurationString(61))
+      .toMatch('Duration: 1 hour 1 minute');
+  }); // end 'should format a duration string' test
+
   test('should start a timer', done => {
     timerService.switchTimer = jest
       .fn()
       .mockReturnValue(of(mockTimer()));
 
-    const switchSpy = jest.spyOn(timerService, 'switchTimer');
+    const switchSpy: jest.SpyInstance = jest.spyOn(timerService, 'switchTimer');
 
     timerService.startTimer('batchId', 'timerId')
       .subscribe(
-        response => {
+        (response: Timer) => {
           expect(response).toBeDefined();
           expect(switchSpy).toHaveBeenCalledWith(
             'batchId',
@@ -456,7 +500,7 @@ describe('Timer Provider', () => {
           );
           done();
         },
-        error => {
+        (error: any): void => {
           console.log(error);
           expect(true).toBe(false);
         }
@@ -468,11 +512,11 @@ describe('Timer Provider', () => {
       .fn()
       .mockReturnValue(of(mockTimer()));
 
-    const switchSpy = jest.spyOn(timerService, 'switchTimer');
+    const switchSpy: jest.SpyInstance = jest.spyOn(timerService, 'switchTimer');
 
     timerService.stopTimer('batchId', 'timerId')
       .subscribe(
-        response => {
+        (response: Timer): void => {
           expect(response).toBeDefined();
           expect(switchSpy).toHaveBeenCalledWith(
             'batchId',
@@ -481,56 +525,54 @@ describe('Timer Provider', () => {
           );
           done();
         },
-        error => {
-          console.log(error);
+        (error: any): void => {
+          console.log('Should not get an error', error);
           expect(true).toBe(false);
         }
       );
   }); // end 'should stop a timer' test
 
   test('should toggle timer start', done => {
-    const _mockTimer = mockTimer();
-    const _mockTimerSubject = new BehaviorSubject<Timer>(_mockTimer);
+    const _mockTimer: Timer = mockTimer();
 
     timerService.getTimerSubjectById = jest
       .fn()
-      .mockReturnValue(_mockTimerSubject);
+      .mockReturnValue(new BehaviorSubject<Timer>(_mockTimer));
 
     timerService.setProgress = jest
       .fn();
 
     timerService.switchTimer('batchId', 'timerId', true)
       .subscribe(
-        response => {
+        (response: Timer): void => {
           expect(response.isRunning).toBe(true);
           done();
         },
-        error => {
-          console.log(error);
+        (error: any): void => {
+          console.log('Should not get an error', error);
           expect(true).toBe(false);
         }
       );
   }); // end 'should toggle timer start' test
 
   test('should toggle timer stop', done => {
-    const _mockTimer = mockTimer();
-    const _mockTimerSubject = new BehaviorSubject<Timer>(_mockTimer);
-
+    const _mockTimer: Timer = mockTimer();
+    
     timerService.getTimerSubjectById = jest
       .fn()
-      .mockReturnValue(_mockTimerSubject);
+      .mockReturnValue(new BehaviorSubject<Timer>(_mockTimer));
 
     timerService.setProgress = jest
       .fn();
 
     timerService.switchTimer('batchId', 'timerId', false)
       .subscribe(
-        response => {
+        (response: Timer): void => {
           expect(response.isRunning).toBe(false);
           done();
         },
-        error => {
-          console.log(error);
+        (error: any): void => {
+          console.log('Should not get an error', error);
           expect(true).toBe(false);
         }
       );
@@ -543,11 +585,11 @@ describe('Timer Provider', () => {
 
     timerService.switchTimer('batchId', 'timerId', true)
       .subscribe(
-        response => {
+        (response: any): void => {
           console.log('should not get a response', response);
           expect(true).toBe(false);
         },
-        error => {
+        (error: string): void => {
           expect(error).toMatch('Timer not found');
           done();
         }
@@ -559,22 +601,24 @@ describe('Timer Provider', () => {
       .fn();
 
     // setup two batch timers and start separate timers in each
-    const _mockBatchTimer1 = mockBatchTimer();
+    const _mockBatchTimer1: BatchTimer = mockBatchTimer();
     _mockBatchTimer1.batchId = 'batchTimer1';
+
     // start the first timer
-    const timer1$ = _mockBatchTimer1.timers[0];
-    const timer1 = timer1$.value;
+    const timer1$: BehaviorSubject<Timer> = _mockBatchTimer1.timers[0];
+    const timer1: Timer = timer1$.value;
     timer1.isRunning = true;
     timer1.timeRemaining = 1;
     timer1$.next(timer1);
 
-    const _mockBatchTimer2 = mockBatchTimer();
+    const _mockBatchTimer2: BatchTimer = mockBatchTimer();
     _mockBatchTimer2.batchId = 'batchTimer2';
+
     // start the second and third concurrent timers
-    const timer2$ = _mockBatchTimer2.timers[1];
-    const timer3$ = _mockBatchTimer2.timers[2];
-    const timer2 = timer2$.value;
-    const timer3 = timer3$.value;
+    const timer2$: BehaviorSubject<Timer> = _mockBatchTimer2.timers[1];
+    const timer3$: BehaviorSubject<Timer> = _mockBatchTimer2.timers[2];
+    const timer2: Timer = timer2$.value;
+    const timer3: Timer = timer3$.value;
     timer2.isRunning = true;
     timer3.isRunning = true;
     timer2.timeRemaining = 3600;
@@ -597,5 +641,53 @@ describe('Timer Provider', () => {
 
     expect(timer1$.value.isRunning).toBe(false);
   }); // end 'should update running timers each tick' test
+
+  test('should update background notification', () => {
+    mockPlatform.is = jest
+      .fn()
+      .mockReturnValue(true);
+    mockBackground.isEnabled = jest
+      .fn()
+      .mockReturnValue(true);
+    mockBackground.configure = jest
+      .fn();
+
+    const configureSpy: jest.SpyInstance = jest
+      .spyOn(mockBackground, 'configure');
+
+    const _mockBatch: Batch = mockBatch();
+    const _mockTimer: Timer = mockTimer();
+    _mockTimer.isRunning = true;
+
+    const _mockBatchTimer1: BatchTimer = {
+      batchId: _mockBatch.cid,
+      timers: [
+        new BehaviorSubject<Timer>(_mockTimer),
+        new BehaviorSubject<Timer>(_mockTimer)
+      ]
+    };
+
+    const _mockBatchTimer2: BatchTimer = {
+      batchId: _mockBatch.cid,
+      timers: [
+        new BehaviorSubject<Timer>(_mockTimer),
+        new BehaviorSubject<Timer>(_mockTimer)
+      ]
+    };
+
+    timerService.batchTimers = [_mockBatchTimer1, _mockBatchTimer2];
+
+    timerService.updateNotifications();
+
+    expect(configureSpy).toHaveBeenCalledWith(
+      {
+        title: 'content',
+        text: '4 timers running',
+        hidden: false,
+        silent: false,
+        color: '40e0cf'
+      }
+    );
+  }); // end 'should update background notification' test
 
 });
