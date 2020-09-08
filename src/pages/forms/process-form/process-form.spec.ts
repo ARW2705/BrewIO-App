@@ -1,12 +1,13 @@
 /* Module imports */
 import { TestBed, async, getTestBed, ComponentFixture } from '@angular/core/testing';
-import { IonicModule, NavController, NavParams, ViewController } from 'ionic-angular';
+import { IonicModule, NavParams, ViewController } from 'ionic-angular';
+import { AbstractControl } from '@angular/forms';
 
 /* Test configuration imports */
 import { configureTestBed } from '../../../../test-config/configureTestBed';
 
 /* Mock imports */
-import { NavMock, NavParamsMock, ViewControllerMock } from '../../../../test-config/mocks-ionic';
+import { NavParamsMock, ViewControllerMock } from '../../../../test-config/mocks-ionic';
 
 /* Page imports */
 import { ProcessFormPage } from './process-form';
@@ -28,7 +29,6 @@ describe('Process Form Page', () => {
         IonicModule.forRoot(ProcessFormPage)
       ],
       providers: [
-        { provide: NavController, useClass: NavMock },
         { provide: NavParams, useClass: NavParamsMock },
         { provide: ViewController, useClass: ViewControllerMock }
       ]
@@ -38,14 +38,12 @@ describe('Process Form Page', () => {
   .then(done)
   .catch(done.fail));
 
-  beforeEach(async(() => {
-    injector = getTestBed();
-    viewCtrl = injector.get(ViewController);
-  }));
-
   beforeEach(() => {
     fixture = TestBed.createComponent(ProcessFormPage);
     processPage = fixture.componentInstance;
+
+    injector = getTestBed();
+    viewCtrl = injector.get(ViewController);
   });
 
   describe('Form creation', () => {
@@ -63,7 +61,7 @@ describe('Process Form Page', () => {
     test('should call view controller dismiss with deletion flag', () => {
       fixture.detectChanges();
 
-      const viewSpy = jest.spyOn(viewCtrl, 'dismiss');
+      const viewSpy: jest.SpyInstance = jest.spyOn(viewCtrl, 'dismiss');
 
       processPage.deleteStep();
 
@@ -73,7 +71,7 @@ describe('Process Form Page', () => {
     test('should call view controller dismiss without args', () => {
       fixture.detectChanges();
 
-      const viewSpy = jest.spyOn(viewCtrl, 'dismiss');
+      const viewSpy: jest.SpyInstance = jest.spyOn(viewCtrl, 'dismiss');
 
       processPage.dismiss();
 
@@ -114,7 +112,7 @@ describe('Process Form Page', () => {
       processPage.processForm.controls.name.setValue('test name');
       processPage.processForm.controls.expectedDuration.setValue(10);
 
-      const viewSpy = jest.spyOn(viewCtrl, 'dismiss');
+      const viewSpy: jest.SpyInstance = jest.spyOn(viewCtrl, 'dismiss');
 
       processPage.onSubmit();
 
@@ -139,7 +137,8 @@ describe('Process Form Page', () => {
     test('should initialize a manual step form with values to update', () => {
       fixture.detectChanges();
 
-      const formControls = processPage.processForm.controls;
+      const formControls: { [key: string]: AbstractControl }
+      = processPage.processForm.controls;
 
       expect(formControls.expectedDuration.value).toBe(15);
       expect(formControls.name.value).toMatch('a manual step');
@@ -152,13 +151,16 @@ describe('Process Form Page', () => {
       processPage.stepType = 'timer';
 
       processPage.initForm({
+        cid: '0',
         name: 'a timer step',
         type: 'timer',
         description: 'timer step to update',
         concurrent: false,
         splitInterval: 1
       });
-      const formControls = processPage.processForm.controls;
+
+      const formControls: { [key: string]: AbstractControl }
+        = processPage.processForm.controls;
 
       expect(formControls.concurrent.value).toBe(false);
       expect(formControls.splitInterval.value).toBe(1);
@@ -171,12 +173,15 @@ describe('Process Form Page', () => {
       processPage.stepType = 'calendar';
 
       processPage.initForm({
+        cid: '1',
         name: 'a calendar step',
         type: 'calendar',
         description: 'calendar step to update',
         duration: 14
       });
-      const formControls = processPage.processForm.controls;
+
+      const formControls: { [key: string]: AbstractControl }
+        = processPage.processForm.controls;
 
       expect(formControls.duration.value).toBe(14);
       expect(formControls.name.value).toMatch('a calendar step');
@@ -185,10 +190,11 @@ describe('Process Form Page', () => {
     test('should submit an update form', () => {
       fixture.detectChanges();
 
-      const formControls = processPage.processForm.controls;
+      const formControls: { [key: string]: AbstractControl }
+        = processPage.processForm.controls;
       formControls.name.setValue('updated name');
 
-      const viewSpy = jest.spyOn(viewCtrl, 'dismiss');
+      const viewSpy: jest.SpyInstance = jest.spyOn(viewCtrl, 'dismiss');
 
       processPage.onSubmit();
 

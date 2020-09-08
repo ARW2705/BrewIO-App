@@ -1,0 +1,292 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>Inventory Form</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content  padding
+              class="sub-page">
+
+  <ion-grid *ngIf="inventoryForm">
+
+    <ion-row>
+
+      <form [formGroup]="inventoryForm">
+
+        <!-- Supplier Info Section -->
+
+        <!-- Item supplier name -->
+        <ion-item *ngIf="batch === null"
+                  class="form-input">
+
+          <ion-label floating>
+            Supplier Name
+          </ion-label>
+
+          <ion-input  formControlName="supplierName"
+                      type="text">
+          </ion-input>
+
+        </ion-item>
+
+        <!-- Item supplier website url [optional] -->
+        <ion-item *ngIf="batch === null && inventoryForm.controls.supplierURL !== undefined"
+                  class="form-input">
+
+          <ion-label floating>
+            Supplier Website URL
+          </ion-label>
+
+          <ion-input  formControlName="supplierURL"
+                      type="url">
+          </ion-input>
+
+        </ion-item>
+
+        <!-- Item supplier image file name [optional] -->
+        <!-- <ion-item  class="form-input"
+                        *ngIf="batch === null">
+          <ion-label floating>Supplier Image</ion-label>
+          <ion-input  type="text"
+                      formControlName="supplierLabelImageURL">
+          </ion-input>
+        </ion-item> -->
+
+        <!-- Item source type -->
+        <ion-item *ngIf="batch === null"
+                  class="form-input">
+
+          <ion-label floating>
+            Item Source
+          </ion-label>
+
+          <ion-select formControlName="sourceType"
+                      okText="Okay"
+                      cancelText="Dismiss">
+
+            <ion-option value="self">
+              My Recipe
+            </ion-option>
+
+            <ion-option value="other">
+              Other User Recipe
+            </ion-option>
+
+            <ion-option value="third">
+              Third Party
+            </ion-option>
+
+          </ion-select>
+
+        </ion-item>
+
+        <!-- END Supplier Info Section -->
+
+        <!---------------------------------------------->
+
+        <!-- Item Details Section -->
+
+        <!-- Item name -->
+        <ion-item *ngIf="batch === null"
+                  class="form-input">
+
+          <ion-label floating>
+            Item Name
+          </ion-label>
+
+          <ion-input  formControlName="itemName"
+                      type="text">
+          </ion-input>
+
+        </ion-item>
+
+        <!-- Item additional name [optional] -->
+        <ion-item *ngIf="batch === null && inventoryForm.controls.itemSubname !== undefined"
+                  class="form-input">
+
+          <ion-label floating>
+            Item Additional Name
+          </ion-label>
+
+          <ion-input  formControlName="itemSubname"
+                      type="text">
+          </ion-input>
+
+        </ion-item>
+
+        <!-- Item description [optional] -->
+        <ion-item class="form-input">
+
+          <ion-label floating>
+            Description
+          </ion-label>
+
+          <ion-textarea formControlName="description"
+                        rows="3">
+          </ion-textarea>
+
+        </ion-item>
+
+        <!-- Item label image name [optional] -->
+        <!-- <ion-item class="form-input">
+          <ion-label floating>Item Label Image</ion-label>
+          <ion-input  type="text"
+                      formControlName="itemLabelImageURL">
+          </ion-input>
+        </ion-item> -->
+
+        <!-- Item Style -->
+        <ion-item *ngIf="batch === null && styles !== null"
+                  class="form-input">
+
+          <ion-label floating>
+            Select Style
+          </ion-label>
+
+          <ion-select formControlName="itemStyleId"
+                      okText="Okay"
+                      cancelText="Dismiss"
+                      [(ngModel)]="styleSelection"
+                      (ionChange)="onStyleSelection($event)"
+                      [compareWith]="compareWithFn">
+
+            <ion-option *ngFor="let style of styles"
+                        [value]="style">
+              {{ style.name }}
+            </ion-option>
+
+          </ion-select>
+
+        </ion-item>
+
+        <!-- Item ABV -->
+        <ion-item *ngIf="batch === null"
+                  class="form-input">
+
+          <ion-label floating>
+            ABV
+          </ion-label>
+
+          <ion-input  formControlName="itemABV"
+                      type="number">
+          </ion-input>
+
+        </ion-item>
+
+        <!-- Item IBU -->
+        <ion-item *ngIf="batch === null && inventoryForm.controls.itemIBU !== undefined"
+                  class="form-input">
+
+          <ion-label floating>
+            IBU
+          </ion-label>
+
+          <ion-input  formControlName="itemIBU"
+                      type="number">
+          </ion-input>
+
+        </ion-item>
+
+        <!-- Item SRM -->
+        <ion-item *ngIf="batch === null && inventoryForm.controls.itemSRM !== undefined"
+                  class="form-input">
+
+          <ion-label floating>
+            SRM
+          </ion-label>
+
+          <ion-input  formControlName="itemSRM"
+                      type="number">
+          </ion-input>
+
+        </ion-item>
+
+        <!-- END Item Details Section -->
+
+        <!---------------------------------------------->
+
+        <!-- Stock Details Section -->
+
+        <!-- Item stock type -->
+        <ion-item class="form-input">
+
+          <ion-label floating>
+            Stock Type
+          </ion-label>
+
+          <ion-select formControlName="stockType"
+                      okText="Okay"
+                      cancelText="Dismiss">
+
+            <ion-option *ngFor="let type of stockTypes"
+                        [value]="type.name">
+              {{ type.name }}
+            </ion-option>
+
+          </ion-select>
+
+        </ion-item>
+
+        <!-- Initial Quantity -->
+        <ion-item class="form-input">
+
+          <ion-label floating>
+            Initial Quantity
+          </ion-label>
+
+          <ion-input  formControlName="initialQuantity"
+                      type="number">
+          </ion-input>
+
+        </ion-item>
+
+        <!-- Current Quantity -->
+        <ion-item *ngIf="item !== null"
+                  class="form-input">
+
+          <ion-label floating>
+            Current Quantity
+          </ion-label>
+
+          <ion-input  formControlName="currentQuantity"
+                      type="number">
+          </ion-input>
+
+        </ion-item>
+
+        <!-- End Stock Details Section -->
+
+      </form>
+
+    </ion-row>
+
+    <ion-row>
+
+      <ion-col *ngIf="!isRequired">
+
+        <button ion-button
+                color="primary"
+                (click)="dismiss()"
+                class="form-button">
+          Cancel
+        </button>
+
+      </ion-col>
+
+      <ion-col>
+
+        <button ion-button
+                color="primary"
+                (click)="onSubmit()"
+                class="form-button"
+                [disabled]="!inventoryForm.valid">
+          Submit
+        </button>
+
+      </ion-col>
+
+    </ion-row>
+
+  </ion-grid>
+
+</ion-content>

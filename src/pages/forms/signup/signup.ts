@@ -1,33 +1,31 @@
 /* Module imports */
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { NavController, NavParams, ViewController } from 'ionic-angular';
-import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { ViewController } from 'ionic-angular';
+import { AbstractControl, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subject } from 'rxjs/Subject';
-import { takeUntil } from 'rxjs/operators/takeUntil';
 import { take } from 'rxjs/operators/take';
 
 /* Provider imports */
 import { FormValidatorProvider } from '../../../providers/form-validator/form-validator';
-import { UserProvider } from '../../../providers/user/user';
 import { ToastProvider } from '../../../providers/toast/toast';
+import { UserProvider } from '../../../providers/user/user';
+
 
 @Component({
   selector: 'page-signup',
   templateUrl: 'signup.html',
 })
 export class SignupPage implements OnInit, OnDestroy {
-  signupForm: FormGroup;
-  showPassword: boolean = false;
-  preferredUnits: string = 'EN';
   destroy$: Subject<boolean> = new Subject<boolean>();
+  preferredUnits: string = 'EN';
+  showPassword: boolean = false;
+  signupForm: FormGroup;
 
   constructor(
-    public navCtrl: NavController,
-    public navParams: NavParams,
-    public viewCtrl: ViewController,
     public formBuilder: FormBuilder,
-    public userService: UserProvider,
-    public toastService: ToastProvider
+    public viewCtrl: ViewController,
+    public toastService: ToastProvider,
+    public userService: UserProvider
   ) { }
 
   /***** Lifecycle Hooks *****/
@@ -64,8 +62,8 @@ export class SignupPage implements OnInit, OnDestroy {
    *
    * @return: array of error messages
   **/
-  getFormErrors(control: string): Array<string> {
-    const result = [];
+  getFormErrors(control: string): string[] {
+    const result: string[] = [];
     for (const key in this.signupForm.controls[control].errors) {
       result.push(FormValidatorProvider.GetErrorMessage(control, key));
     }
@@ -80,7 +78,7 @@ export class SignupPage implements OnInit, OnDestroy {
    * @return: true if a control is dirty and has at least one error present
   **/
   hasFormError(control: string): boolean {
-    const formControl = this.signupForm.controls[control];
+    const formControl: AbstractControl = this.signupForm.controls[control];
     return formControl.touched && formControl.errors !== null;
   }
 
@@ -93,21 +91,52 @@ export class SignupPage implements OnInit, OnDestroy {
   **/
   initForm(): void {
     this.signupForm = this.formBuilder.group({
-      username: ['', [Validators.minLength(6), Validators.maxLength(20), Validators.required]],
-      password: ['', [Validators.minLength(8), Validators.maxLength(20), Validators.required, FormValidatorProvider.PasswordPattern()]],
-      passwordConfirmation: ['', [Validators.required]],
-      email: ['', [Validators.email, Validators.required]],
-      firstname: ['', [Validators.maxLength(25)]],
-      lastname: ['', [Validators.maxLength(25)]],
-      preferredUnits: true
+      username: [
+        '',
+        [
+          Validators.minLength(6),
+          Validators.maxLength(20),
+          Validators.required
+        ]
+      ],
+      password: [
+        '',
+        [
+          Validators.minLength(8),
+          Validators.maxLength(20),
+          Validators.required,
+          FormValidatorProvider.PasswordPattern()
+        ]
+      ],
+      passwordConfirmation: [
+        '',
+        [
+          Validators.required
+        ]
+      ],
+      email: [
+        '',
+        [
+          Validators.email,
+          Validators.required
+        ]
+      ],
+      firstname: [
+        '',
+        [
+          Validators.maxLength(25)
+        ]
+      ],
+      lastname: [
+        '',
+        [
+          Validators.maxLength(25)
+        ]
+      ],
+      // preferredUnits: true
     }, {
       validator: FormValidatorProvider.PasswordMatch()
     });
-    this.signupForm.valueChanges
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(value => {
-        this.preferredUnits = value.preferredUnits ? 'EN': 'M';
-      });
   }
 
   /**
@@ -117,18 +146,20 @@ export class SignupPage implements OnInit, OnDestroy {
    * @return: none
   **/
   onSubmit(): void {
-    const signupData = this.signupForm.value;
-    signupData.preferredUnits = signupData.preferredUnits ? 'm': 'e';
+    const signupData: object = this.signupForm.value;
+    // signupData.preferredUnits = signupData.preferredUnits ? 'm': 'e';
     this.userService.signUp(signupData)
       .pipe(take(1))
       .subscribe(
-        response => {
-          this.toastService.presentToast('Sign up complete!', 1500, 'bright-toast');
-          this.viewCtrl.dismiss(response);
+        () => {
+          this.toastService.presentToast(
+            'Sign up complete!',
+            1500,
+            'toast-bright'
+          );
+          this.viewCtrl.dismiss();
         },
-        error => {
-          this.toastService.presentToast(error, 2000);
-        }
+        error => this.toastService.presentToast(error, 2000)
       );
   }
 

@@ -1,22 +1,18 @@
 /* Module imports */
 import { Component, OnInit } from '@angular/core';
-import { NavController, NavParams, ViewController } from 'ionic-angular';
-import { FormGroup, FormBuilder, FormControl, Validators } from '@angular/forms';
+import { NavParams, ViewController } from 'ionic-angular';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 
 /* Interface imports */
 import { Style } from '../../../shared/interfaces/library';
+
 
 @Component({
   selector: 'page-general-form',
   templateUrl: 'general-form.html',
 })
 export class GeneralFormPage implements OnInit {
-  generalForm: FormGroup = null;
-  formType: string = '';
-  docMethod: string = '';
-  styles: Array<Style> = null;
-  styleSelection;
-  controlsToConvert: Array<string> = [
+  controlsToConvert: string[] = [
     'efficiency',
     'batchVolume',
     'boilVolume',
@@ -24,12 +20,16 @@ export class GeneralFormPage implements OnInit {
     'boilDuration',
     'mashDuration'
   ];
+  docMethod: string = '';
+  formType: string = '';
+  generalForm: FormGroup = null;
+  styles: Style[] = null;
+  styleSelection: Style;
 
   constructor(
-    public navCtrl: NavController,
+    public formBuilder: FormBuilder,
     public navParams: NavParams,
-    public viewCtrl: ViewController,
-    public formBuilder: FormBuilder
+    public viewCtrl: ViewController
   ) { }
 
   /***** Lifecycle Hooks *****/
@@ -66,7 +66,9 @@ export class GeneralFormPage implements OnInit {
   **/
   convertFormValuesToNumbers(): void {
     this.controlsToConvert.forEach(key => {
-      this.generalForm.controls[key].setValue(parseFloat(this.generalForm.value[key]));
+      this.generalForm.controls[key].setValue(
+        parseFloat(this.generalForm.value[key])
+      );
     });
   }
 
@@ -105,13 +107,22 @@ export class GeneralFormPage implements OnInit {
     // Set form control name based on formType
     this.generalForm.addControl(
       this.formType === 'master' ? 'name': 'variantName',
-      new FormControl('', [Validators.minLength(2), Validators.maxLength(30), Validators.required])
+      new FormControl(
+        '',
+        [Validators.minLength(2), Validators.maxLength(30), Validators.required]
+      )
     );
 
     // If form data was passed to page, map that data to form
     if (data) {
       for (const key in data) {
-        this.generalForm.controls[key].setValue(data[key]);
+        if (
+          this.docMethod !== 'create'
+          || (key !== 'isFavorite'
+              && key !== 'isMaster')
+        ) {
+          this.generalForm.controls[key].setValue(data[key]);
+        }
       }
       this.styleSelection = data.style;
     }

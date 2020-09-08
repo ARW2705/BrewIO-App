@@ -4,142 +4,195 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding>
+<ion-content  padding
+              class="sub-page">
+
   <form [formGroup]="signupForm">
 
     <!-- Username input -->
     <ion-item>
-      <ion-label floating>Username</ion-label>
-      <ion-input  type="text"
-                  formControlName="username"
+
+      <ion-label floating>
+        Username
+      </ion-label>
+
+      <ion-input  formControlName="username"
+                  type="text"
                   autofocus
                   autocapitalize="off">
       </ion-input>
+
     </ion-item>
 
     <!-- Username error message -->
     <ng-container *ngIf="hasFormError('username')">
+
       <div  *ngFor="let error of getFormErrors('username')"
             class="form-error"
             [innerText]="error">
       </div>
+
     </ng-container>
 
     <!-- Password input -->
     <ion-item>
-      <ion-label floating>Password</ion-label>
-      <ion-input  type="{{ showPassword ? 'text': 'password' }}"
-                  formControlName="password"
+
+      <ion-label floating>
+        Password
+      </ion-label>
+
+      <ion-input  formControlName="password"
+                  type="{{ showPassword ? 'text': 'password' }}"
                   autocapitalize="off">
       </ion-input>
+
     </ion-item>
 
     <!-- Password error message -->
     <ng-container *ngIf="hasFormError('password')">
+
       <div  *ngFor="let error of getFormErrors('password')"
             class="form-error"
             [innerText]="error">
       </div>
+
     </ng-container>
 
     <!-- Password confirmation input -->
     <ion-item>
-      <ion-label floating>Confirm Password</ion-label>
-      <ion-input  type="{{ showPassword ? 'text': 'password' }}"
-                  formControlName="passwordConfirmation"
+
+      <ion-label floating>
+        Confirm Password
+      </ion-label>
+
+      <ion-input  formControlName="passwordConfirmation"
+                  type="{{ showPassword ? 'text': 'password' }}"
                   autocapitalize="off">
       </ion-input>
+
     </ion-item>
 
     <!-- Password confirmation error message -->
     <ng-container *ngIf="hasFormError('passwordConfirmation')">
+
       <div  *ngFor="let error of getFormErrors('passwordConfirmation')"
             class="form-error"
             [innerText]="error">
       </div>
+
     </ng-container>
 
     <!-- Checkbox to toggle showing password as plain text or hidden -->
     <ion-item class="item-checkbox">
-      <ion-label>Show Password</ion-label>
+
+      <ion-label>
+        Show Password
+      </ion-label>
+
       <ion-checkbox (ionChange)="togglePasswordVisible()"></ion-checkbox>
+
     </ion-item>
 
     <!-- Email input -->
     <ion-item>
-      <ion-label>Email</ion-label>
-      <ion-input  type="text"
-                  formControlName="email"
+
+      <ion-label>
+        Email
+      </ion-label>
+
+      <ion-input  formControlName="email"
+                  type="text"
                   autocapitalize="off">
       </ion-input>
+
     </ion-item>
 
     <!-- Email error message -->
     <ng-container *ngIf="hasFormError('email')">
+
       <div  *ngFor="let error of getFormErrors('email')"
             class="form-error"
             [innerText]="error">
       </div>
+
     </ng-container>
 
     <!-- First name input -->
     <ion-item>
-      <ion-label>First Name</ion-label>
-      <ion-input  type="text"
-                  formControlName="firstname">
+
+      <ion-label>
+        First Name
+      </ion-label>
+
+      <ion-input  formControlName="firstname"
+                  type="text">
       </ion-input>
+
     </ion-item>
 
     <!-- First name error message -->
     <ng-container *ngIf="hasFormError('firstname')">
+
       <div  *ngFor="let error of getFormErrors('firstname')"
             class="form-error"
             [innerText]="error">
       </div>
+
     </ng-container>
 
     <!-- Last name input -->
     <ion-item>
-      <ion-label>Last Name</ion-label>
-      <ion-input  type="text"
-                  formControlName="lastname">
+
+      <ion-label>
+        Last Name
+      </ion-label>
+
+      <ion-input  formControlName="lastname"
+                  type="text">
       </ion-input>
+
     </ion-item>
 
     <!-- Last name error message -->
     <ng-container *ngIf="hasFormError('lastname')">
+
       <div  *ngFor="let error of getFormErrors('lastname')"
             class="form-error"
             [innerText]="error">
       </div>
+
     </ng-container>
 
     <!-- Preferred units toggle -->
-    <ion-item>
+    <!-- <ion-item>
       <ion-label position="floating">Preferred Units</ion-label>
       <ion-toggle formControlName="preferredUnits"
                   color="primary">
         {{ preferredUnits }}
       </ion-toggle>
-    </ion-item>
+    </ion-item> -->
 
   </form>
 
   <ion-grid>
+
     <ion-row>
 
       <!-- Form cancel button -->
       <ion-col>
+
         <button ion-button
                 color="primary"
                 class="form-button"
                 (click)="dismiss()">
           Cancel
         </button>
+
       </ion-col>
 
       <!-- Form submit button -->
       <ion-col>
+
         <button ion-button
                 color="primary"
                 class="form-button"
@@ -147,9 +200,11 @@
                 [disabled]="!signupForm.valid">
           Sign Up
         </button>
+
       </ion-col>
 
     </ion-row>
+    
   </ion-grid>
 
 </ion-content>

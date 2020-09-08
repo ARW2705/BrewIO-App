@@ -1,12 +1,12 @@
 /* Module imports */
 import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/testing';
-import { IonicModule, NavController, NavParams, ViewController } from 'ionic-angular';
+import { IonicModule, NavParams, ViewController } from 'ionic-angular';
 
 /* Test configuration imports */
 import { configureTestBed } from '../../../../test-config/configureTestBed';
 
 /* Mock imports */
-import { NavMock, NavParamsMock, ViewControllerMock } from '../../../../test-config/mocks-ionic';
+import { NavParamsMock, ViewControllerMock } from '../../../../test-config/mocks-ionic';
 
 /* Page imports */
 import { NoteFormPage } from './note-form';
@@ -28,7 +28,6 @@ describe('Note Form', () => {
         IonicModule.forRoot(NoteFormPage)
       ],
       providers: [
-        { provide: NavController, useClass: NavMock },
         { provide: NavParams, useClass: NavParamsMock },
         { provide: ViewController, useClass: ViewControllerMock }
       ]
@@ -38,14 +37,12 @@ describe('Note Form', () => {
   .then(done)
   .catch(done.fail));
 
-  beforeEach(async(() => {
-    injector = getTestBed();
-    viewCtrl = injector.get(ViewController);
-  }));
-
   beforeEach(() => {
     fixture = TestBed.createComponent(NoteFormPage);
     notePage = fixture.componentInstance;
+
+    injector = getTestBed();
+    viewCtrl = injector.get(ViewController);
   });
 
   describe('Note creation', () => {
@@ -108,7 +105,7 @@ describe('Note Form', () => {
       const viewSpy = jest.spyOn(viewCtrl, 'dismiss');
 
       notePage.onDelete();
-      
+
       expect(viewSpy).toHaveBeenCalledWith({method: 'delete'});
     }); // end 'should dismiss modal with delete flag' test
 

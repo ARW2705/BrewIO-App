@@ -1,6 +1,7 @@
 /* Module imports */
 import { ComponentFixture, TestBed, async } from '@angular/core/testing';
-import { IonicModule, NavController, NavParams, ViewController } from 'ionic-angular';
+import { IonicModule, NavParams, ViewController } from 'ionic-angular';
+import { FormGroup } from '@angular/forms';
 
 /* Test configuration imports */
 import { configureTestBed } from '../../../../test-config/configureTestBed';
@@ -10,7 +11,10 @@ import { mockGrains } from '../../../../test-config/mockmodels/mockGrains';
 import { mockHops } from '../../../../test-config/mockmodels/mockHops';
 import { mockYeast } from '../../../../test-config/mockmodels/mockYeast';
 import { mockOtherIngredient } from '../../../../test-config/mockmodels/mockOtherIngredient';
-import { NavMock, NavParamsMock, ViewControllerMock } from '../../../../test-config/mocks-ionic';
+import { NavParamsMock, ViewControllerMock } from '../../../../test-config/mocks-ionic';
+
+/* Interface imports */
+import { OtherIngredients } from '../../../shared/interfaces/other-ingredients';
 
 /* Page imports */
 import { IngredientFormPage } from './ingredient-form';
@@ -30,7 +34,6 @@ describe('Ingredient Form', () => {
         IonicModule.forRoot(IngredientFormPage)
       ],
       providers: [
-        { provide: NavController, useClass: NavMock },
         { provide: NavParams, useClass: NavParamsMock },
         { provide: ViewController, useClass: ViewControllerMock }
       ]
@@ -56,25 +59,34 @@ describe('Ingredient Form', () => {
 
     test('should create the component configured to add a grains instance', () => {
       fixture.detectChanges();
+
       expect(ingredientPage).toBeDefined();
       expect(ingredientPage.title).toMatch('Add grains');
     }); // end 'should create the component configured to add a grains instance' test
 
     test('should configure form for a grains instance', () => {
       fixture.detectChanges();
+
       expect(ingredientPage.formType).toMatch('create');
-      const form = ingredientPage.ingredientForm;
+
+      const form: FormGroup = ingredientPage.ingredientForm;
+
       expect(form.controls.hasOwnProperty('mill')).toBe(true);
     }); // end 'should configure form for a grains instance' test
 
     test('should submit a grains instance', () => {
       fixture.detectChanges();
-      const form = ingredientPage.ingredientForm;
+
+      const form: FormGroup = ingredientPage.ingredientForm;
       form.controls.type.setValue(mockGrains()[0]);
       form.controls.quantity.setValue('5');
       form.controls.mill.setValue('0.5');
-      const viewSpy = jest.spyOn(ingredientPage.viewCtrl, 'dismiss');
+
+      const viewSpy: jest.SpyInstance = jest
+        .spyOn(ingredientPage.viewCtrl, 'dismiss');
+
       ingredientPage.onSubmit();
+
       expect(viewSpy).toHaveBeenCalledWith({
         grainType: mockGrains()[0],
         quantity: 5,
@@ -83,23 +95,39 @@ describe('Ingredient Form', () => {
       });
     }); // end 'should submit a grains instance' test
 
-    test('should convert a string to a number', () => {
-      fixture.detectChanges();
-      expect(ingredientPage.toNumber('1')).toBe(1);
-      expect(ingredientPage.toNumber('0.9')).toBe(0.9);
-    }); // end 'should convert a string to a number' test
-
     test('should call dismiss without sending data', () => {
       fixture.detectChanges();
-      const viewSpy = jest.spyOn(ingredientPage.viewCtrl, 'dismiss');
+
+      const viewSpy: jest.SpyInstance = jest
+        .spyOn(ingredientPage.viewCtrl, 'dismiss');
+
       ingredientPage.dismiss();
+
       expect(viewSpy).toHaveBeenCalled();
     }); // end 'should call dismiss without sending data' test
 
+    test('should call dismiss with error if data not provided', () => {
+      NavParamsMock.setParams('data', undefined);
+
+      ingredientPage.dismissOnError = jest
+        .fn();
+
+      const dismissSpy: jest.SpyInstance = jest
+        .spyOn(ingredientPage, 'dismissOnError');
+
+      fixture.detectChanges();
+
+      expect(dismissSpy).toHaveBeenCalledWith(undefined);
+    }); // end 'should call dismiss with error if data not provided' test
+
     test('should call dismiss with error', () => {
       fixture.detectChanges();
-      const viewSpy = jest.spyOn(ingredientPage.viewCtrl, 'dismiss');
+
+      const viewSpy: jest.SpyInstance = jest
+        .spyOn(ingredientPage.viewCtrl, 'dismiss');
+
       ingredientPage.dismissOnError('error message');
+
       expect(viewSpy).toHaveBeenCalledWith({error: 'error message'});
     }); // end 'should call dismiss with error' test
 
@@ -121,7 +149,9 @@ describe('Ingredient Form', () => {
 
     test('should configure form to update a grains instance', () => {
       fixture.detectChanges();
-      const form = ingredientPage.ingredientForm;
+
+      const form: FormGroup = ingredientPage.ingredientForm;
+
       expect(ingredientPage.formType).toMatch('update');
       expect(form.controls.type.value).toStrictEqual(mockGrains()[0]);
       expect(form.controls.quantity.value).toBe(10);
@@ -130,8 +160,12 @@ describe('Ingredient Form', () => {
 
     test('should submit a grains update', () => {
       fixture.detectChanges();
-      const viewSpy = jest.spyOn(ingredientPage.viewCtrl, 'dismiss');
+
+      const viewSpy: jest.SpyInstance = jest
+        .spyOn(ingredientPage.viewCtrl, 'dismiss');
+
       ingredientPage.onSubmit();
+
       expect(viewSpy).toHaveBeenCalledWith({
         grainType: mockGrains()[0],
         quantity: 10,
@@ -142,8 +176,12 @@ describe('Ingredient Form', () => {
 
     test('should dismiss modal with delete flag', () => {
       fixture.detectChanges();
-      const viewSpy = jest.spyOn(ingredientPage.viewCtrl, 'dismiss');
+
+      const viewSpy: jest.SpyInstance = jest
+        .spyOn(ingredientPage.viewCtrl, 'dismiss');
+
       ingredientPage.onDeletion();
+
       expect(viewSpy).toHaveBeenCalledWith({delete: true});
     }); // end 'should dismiss modal with delete flag' test
 
@@ -166,7 +204,9 @@ describe('Ingredient Form', () => {
 
     test('should configure form to update a hops instance', () => {
       fixture.detectChanges();
-      const form = ingredientPage.ingredientForm;
+
+      const form: FormGroup = ingredientPage.ingredientForm;
+
       expect(form.controls.type.value).toStrictEqual(mockHops()[1]);
       expect(form.controls.quantity.value).toBe(1);
       expect(form.controls.addAt.value).toBe(60);
@@ -175,8 +215,12 @@ describe('Ingredient Form', () => {
 
     test('should submit a hops update', () => {
       fixture.detectChanges();
-      const viewSpy = jest.spyOn(ingredientPage.viewCtrl, 'dismiss');
+
+      const viewSpy: jest.SpyInstance = jest
+        .spyOn(ingredientPage.viewCtrl, 'dismiss');
+
       ingredientPage.onSubmit();
+
       expect(viewSpy).toHaveBeenCalledWith({
         hopsType: mockHops()[1],
         quantity: 1,
@@ -204,7 +248,9 @@ describe('Ingredient Form', () => {
 
     test('should configure form to update a yeast instance', () => {
       fixture.detectChanges();
-      const form = ingredientPage.ingredientForm;
+
+      const form: FormGroup = ingredientPage.ingredientForm;
+
       expect(form.controls.type.value).toStrictEqual(mockYeast()[1]);
       expect(form.controls.quantity.value).toBe(1);
       expect(form.controls.requiresStarter.value).toBe(true);
@@ -212,8 +258,12 @@ describe('Ingredient Form', () => {
 
     test('should submit a yeast update', () => {
       fixture.detectChanges();
-      const viewSpy = jest.spyOn(ingredientPage.viewCtrl, 'dismiss');
+
+      const viewSpy: jest.SpyInstance = jest
+        .spyOn(ingredientPage.viewCtrl, 'dismiss');
+
       ingredientPage.onSubmit();
+
       expect(viewSpy).toHaveBeenCalledWith({
         yeastType: mockYeast()[1],
         quantity: 1,
@@ -227,7 +277,8 @@ describe('Ingredient Form', () => {
 
   describe('Update other ingredient', () => {
     beforeAll(async(() => {
-      const _mockOtherIngredient = mockOtherIngredient()[0];
+      const _mockOtherIngredient: OtherIngredients = mockOtherIngredient()[0];
+
       NavParamsMock.setParams('data', {
         ingredientType: 'otherIngredients',
         update: {
@@ -242,11 +293,15 @@ describe('Ingredient Form', () => {
 
     test('should configure form to update an \'other\' ingredient instance', () => {
       fixture.detectChanges();
-      const form = ingredientPage.ingredientForm;
-      const _mockOtherIngredient = mockOtherIngredient()[0];
+
+      const form: FormGroup = ingredientPage.ingredientForm;
+
+      const _mockOtherIngredient: OtherIngredients = mockOtherIngredient()[0];
+
       expect(form.controls.type.value).toMatch(_mockOtherIngredient.type);
       expect(form.controls.name.value).toMatch(_mockOtherIngredient.name);
-      expect(form.controls.description.value).toMatch(_mockOtherIngredient.description);
+      expect(form.controls.description.value)
+        .toMatch(_mockOtherIngredient.description);
       expect(form.controls.quantity.value).toBe(1);
       expect(form.controls.units.value).toMatch(_mockOtherIngredient.units);
       expect(form.controls.hasOwnProperty('notes')).toBe(false);
@@ -254,8 +309,12 @@ describe('Ingredient Form', () => {
 
     test('should submit an \'other\' ingredient update', () => {
       fixture.detectChanges();
-      const viewSpy = jest.spyOn(ingredientPage.viewCtrl, 'dismiss');
+
+      const viewSpy: jest.SpyInstance = jest
+        .spyOn(ingredientPage.viewCtrl, 'dismiss');
+
       ingredientPage.onSubmit();
+
       expect(viewSpy).toHaveBeenCalledWith({
         name: 'other1',
         type: 'flavor',

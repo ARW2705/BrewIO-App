@@ -1,6 +1,7 @@
 /* Module imports */
 import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/testing';
-import { IonicModule, NavController, NavParams, ViewController, ToastController } from 'ionic-angular';
+import { IonicModule, ViewController, ToastController } from 'ionic-angular';
+import { AbstractControl } from '@angular/forms';
 import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 import { of } from 'rxjs/observable/of';
 
@@ -8,8 +9,11 @@ import { of } from 'rxjs/observable/of';
 import { configureTestBed } from '../../../../test-config/configureTestBed';
 
 /* Mock imports */
-import { NavMock, NavParamsMock, ViewControllerMock, ToastControllerMock } from '../../../../test-config/mocks-ionic';
+import { ViewControllerMock, ToastControllerMock } from '../../../../test-config/mocks-ionic';
 import { mockUser } from '../../../../test-config/mockmodels/mockUser';
+
+/* Interface imports */
+import { User } from '../../../shared/interfaces/user';
 
 /* Page imports */
 import { LoginPage } from './login';
@@ -39,8 +43,6 @@ describe('Login Form', () => {
       providers: [
         { provide: UserProvider, useValue: {} },
         { provide: ToastProvider, useValue: {} },
-        { provide: NavController, useClass: NavMock },
-        { provide: NavParams, useClass: NavParamsMock },
         { provide: ViewController, useClass: ViewControllerMock },
         { provide: ToastController, useClass: ToastControllerMock }
       ]
@@ -50,7 +52,10 @@ describe('Login Form', () => {
   .then(done)
   .catch(done.fail));
 
-  beforeEach(async(() => {
+  beforeEach(() => {
+    fixture = TestBed.createComponent(LoginPage);
+    loginPage = fixture.componentInstance;
+
     injector = getTestBed();
     userService = injector.get(UserProvider);
     toastService = injector.get(ToastProvider);
@@ -58,11 +63,6 @@ describe('Login Form', () => {
 
     toastService.presentToast = jest
       .fn();
-  }));
-
-  beforeEach(() => {
-    fixture = TestBed.createComponent(LoginPage);
-    loginPage = fixture.componentInstance;
   });
 
   test('should create component', () => {
@@ -86,7 +86,7 @@ describe('Login Form', () => {
   test('should close the modal', () => {
     fixture.detectChanges();
 
-    const viewSpy = jest.spyOn(viewCtrl, 'dismiss');
+    const viewSpy: jest.SpyInstance = jest.spyOn(viewCtrl, 'dismiss');
 
     loginPage.dismiss();
 
@@ -96,7 +96,10 @@ describe('Login Form', () => {
   test('should have require form field error', () => {
     fixture.detectChanges();
 
-    const usernameControl = loginPage.loginForm.controls.username;
+    const usernameControl: AbstractControl = loginPage
+      .loginForm
+      .controls
+      .username;
 
     usernameControl.markAsTouched();
 
@@ -110,24 +113,32 @@ describe('Login Form', () => {
       .fn()
       .mockReturnValue(of(mockUser()));
 
-    const formControls = loginPage.loginForm.controls;
+    const formControls: { [key: string]: AbstractControl }
+      = loginPage.loginForm.controls;
     formControls.username.setValue('test-user');
     formControls.password.setValue('abcdefghij1K%');
 
     expect(loginPage.loginForm.valid).toBe(true);
 
-    const toastSpy = jest.spyOn(toastService, 'presentToast');
-    const viewSpy = jest.spyOn(viewCtrl, 'dismiss');
+    const toastSpy: jest.SpyInstance = jest.spyOn(toastService, 'presentToast');
+    const viewSpy: jest.SpyInstance = jest.spyOn(viewCtrl, 'dismiss');
 
     loginPage.onSubmit();
 
-    const _mockUser = mockUser();
-    const response = {
+    const _mockUser: User = mockUser();
+    const response: { success: boolean, user: User} = {
       success: true,
       user: _mockUser
     };
+
     setTimeout(() => {
-      expect(toastSpy).toHaveBeenCalledWith(`Welcome ${response.user.username}!`, 1000, 'middle', 'bright-toast');
+      expect(toastSpy)
+        .toHaveBeenCalledWith(
+          `Welcome ${response.user.username}!`,
+          2000,
+          'middle',
+          'toast-bright'
+        );
       expect(viewSpy).toHaveBeenCalledWith(_mockUser);
       done();
     }, 10);
@@ -138,20 +149,29 @@ describe('Login Form', () => {
 
     userService.logIn = jest
       .fn()
-      .mockReturnValue(new ErrorObservable('<401> Username or Password is incorrect'));
+      .mockReturnValue(
+        new ErrorObservable('<401> Username or Password is incorrect')
+      );
 
-    const formControls = loginPage.loginForm.controls;
+    const formControls: { [key: string]: AbstractControl }
+      = loginPage.loginForm.controls;
     formControls.username.setValue('test-user');
     formControls.password.setValue('abcdefghij1K%');
 
     expect(loginPage.loginForm.valid).toBe(true);
 
-    const toastSpy = jest.spyOn(toastService, 'presentToast');
+    const toastSpy: jest.SpyInstance = jest.spyOn(toastService, 'presentToast');
 
     loginPage.onSubmit();
 
     setTimeout(() => {
-      expect(toastSpy).toHaveBeenCalledWith('<401> Username or Password is incorrect', 5000, 'bottom');
+      expect(toastSpy)
+        .toHaveBeenCalledWith(
+          '<401> Username or Password is incorrect',
+          6000,
+          'bottom',
+          'toast-error'
+        );
       done();
     }, 10);
   }); // end 'should submit a login form and get an error response' test

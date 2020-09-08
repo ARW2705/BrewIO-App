@@ -1,36 +1,44 @@
 /* Module imports */
-import { Component, ChangeDetectorRef, AfterViewInit } from '@angular/core';
-import { NavController, NavParams, ModalController, Events } from 'ionic-angular';
+import { Component, AfterViewInit, ChangeDetectorRef } from '@angular/core';
+import { Events, Modal, ModalController, NavController, NavParams } from 'ionic-angular';
 import { Subject } from 'rxjs/Subject';
-import { takeUntil } from 'rxjs/operators/takeUntil';
 import { take } from 'rxjs/operators/take';
+import { takeUntil } from 'rxjs/operators/takeUntil';
 
 /* Interface imports */
-import { RecipeVariant } from '../../../shared/interfaces/recipe-variant';
-import { RecipeMaster } from '../../../shared/interfaces/recipe-master';
 import { Grains, Hops, Yeast, Style } from '../../../shared/interfaces/library';
+import { GrainBill } from '../../../shared/interfaces/grain-bill';
 import { HopsSchedule } from '../../../shared/interfaces/hops-schedule';
+import { OtherIngredients } from '../../../shared/interfaces/other-ingredients';
+import { Process } from '../../../shared/interfaces/process';
+import { RecipeMaster } from '../../../shared/interfaces/recipe-master';
+import { RecipeVariant } from '../../../shared/interfaces/recipe-variant';
+import { YeastBatch } from '../../../shared/interfaces/yeast-batch';
 
 /* Default imports */
 import { defaultRecipeMaster } from '../../../shared/defaults/default-recipe-master';
 import { defaultStyle } from '../../../shared/defaults/default-style';
 
 /* Utility function imports */
-import { clone, toTitleCase, stripSharedProperties, getId } from '../../../shared/utility-functions/utilities';
+import { clone } from '../../../shared/utility-functions/clone';
+import { getId } from '../../../shared/utility-functions/id-helpers';
+import { normalizeErrorObservableMessage } from '../../../shared/utility-functions/observable-helpers';
+import { stripSharedProperties } from '../../../shared/utility-functions/strip-shared-properties';
+import { toTitleCase } from '../../../shared/utility-functions/utilities';
 
 /* Page imports */
 import { GeneralFormPage } from '../general-form/general-form';
-import { ProcessFormPage } from '../process-form/process-form';
 import { IngredientFormPage } from '../ingredient-form/ingredient-form';
 import { NoteFormPage } from '../note-form/note-form';
+import { ProcessFormPage } from '../process-form/process-form';
 
 /* Provider imports */
+import { ActionSheetProvider } from '../../../providers/action-sheet/action-sheet';
+import { CalculationsProvider } from '../../../providers/calculations/calculations';
+import { ClientIdProvider } from '../../../providers/client-id/client-id';
 import { LibraryProvider } from '../../../providers/library/library';
 import { RecipeProvider } from '../../../providers/recipe/recipe';
-import { CalculationsProvider } from '../../../providers/calculations/calculations';
 import { ToastProvider } from '../../../providers/toast/toast';
-import { ActionSheetProvider } from '../../../providers/action-sheet/action-sheet';
-import { ClientIdProvider } from '../../../providers/client-id/client-id';
 
 
 @Component({
@@ -38,58 +46,60 @@ import { ClientIdProvider } from '../../../providers/client-id/client-id';
   templateUrl: 'recipe-form.html',
 })
 export class RecipeFormPage implements AfterViewInit {
-  title: string = '';
-  processIcons = {'manual': 'hand', 'timer': 'timer', 'calendar': 'calendar'};
-  isLoaded: boolean = false;
-  formType: string = null;
-  formOptions: any = null;
-  mode: string = null;
-  docMethod: string = '';
-  grainsLibrary: Array<Grains> = null;
-  hopsLibrary: Array<Hops> = null;
-  yeastLibrary: Array<Yeast> = null;
-  styleLibrary: Array<Style> = null;
-  master: RecipeMaster = null;
-  variant: RecipeVariant = null;
-  textarea = '';
-  _headerNavPop: any;
   destroy$: Subject<boolean> = new Subject<boolean>();
+  docMethod: string = '';
+  formOptions: any = null;
+  formType: string = null;
+  grainsLibrary: Grains[] = null;
+  hopsLibrary: Hops[] = null;
+  isLoaded: boolean = false;
+  master: RecipeMaster = null;
+  mode: string = null;
+  processIcons: object = { manual: 'hand', timer: 'timer', calendar: 'calendar' };
+  styleLibrary: Style[] = null;
+  textarea = '';
+  title: string = '';
+  variant: RecipeVariant = null;
+  yeastLibrary: Yeast[] = null;
+  _headerNavPop: any;
 
   constructor(
-    public navCtrl: NavController,
-    public navParams: NavParams,
-    public modalCtrl: ModalController,
     public cdRef: ChangeDetectorRef,
     public events: Events,
+    public modalCtrl: ModalController,
+    public navCtrl: NavController,
+    public navParams: NavParams,
+    public actionService: ActionSheetProvider,
+    public calculator: CalculationsProvider,
+    public clientIdService: ClientIdProvider,
     public libraryService: LibraryProvider,
     public recipeService: RecipeProvider,
-    public calculator: CalculationsProvider,
-    public toastService: ToastProvider,
-    public actionService: ActionSheetProvider,
-    public clientIdService: ClientIdProvider
+    public toastService: ToastProvider
   ) {
     this._headerNavPop = this.headerNavPopEventHandler.bind(this);
-    this.setFormTypeConfiguration(
-      navParams.get('formType'),
-      navParams.get('mode'),
-      navParams.get('masterData'),
-      navParams.get('variantData'),
-      navParams.get('additionalData')
-    );
-    this.libraryService.getAllLibraries()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(([grainsLibrary, hopsLibrary, yeastLibrary, styleLibrary]) => {
-        this.grainsLibrary = grainsLibrary;
-        this.hopsLibrary = hopsLibrary;
-        this.yeastLibrary = yeastLibrary;
-        this.styleLibrary = styleLibrary;
-        this.isLoaded = true;
-      });
   }
 
   /***** Lifecycle Hooks *****/
 
   ngOnInit() {
+    this.setFormTypeConfiguration(
+      this.navParams.get('formType'),
+      this.navParams.get('mode'),
+      this.navParams.get('masterData'),
+      this.navParams.get('variantData'),
+      this.navParams.get('additionalData')
+    );
+    this.libraryService.getAllLibraries()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(
+        ([grainsLibrary, hopsLibrary, yeastLibrary, styleLibrary]) => {
+          this.grainsLibrary = <Grains[]>grainsLibrary;
+          this.hopsLibrary = <Hops[]>hopsLibrary;
+          this.yeastLibrary = <Yeast[]>yeastLibrary;
+          this.styleLibrary = <Style[]>styleLibrary;
+          this.isLoaded = true;
+        }
+      );
     this.events.subscribe('pop-header-nav', this._headerNavPop);
   }
 
@@ -115,7 +125,7 @@ export class RecipeFormPage implements AfterViewInit {
    * @return: none
   **/
   openGeneralModal(): void {
-    const data = {
+    const data: { formType: string, docMethod: string, data: object } = {
       formType: this.formType,
       docMethod: this.docMethod,
       data: {
@@ -144,8 +154,8 @@ export class RecipeFormPage implements AfterViewInit {
       }
     }
 
-    const modal = this.modalCtrl.create(GeneralFormPage, data);
-    modal.onDidDismiss(_data => {
+    const modal: Modal = this.modalCtrl.create(GeneralFormPage, data);
+    modal.onDidDismiss((_data: object) => {
       if (_data) {
         this.mode = 'update';
         this.updateDisplay(_data);
@@ -164,8 +174,8 @@ export class RecipeFormPage implements AfterViewInit {
    *
    * @return: none
   **/
-  openIngredientFormModal(type: string, toUpdate?: any): void {
-    const data = {
+  openIngredientFormModal(type: string, toUpdate?: object): void {
+    const data: { ingredientType: string, update: object } = {
       ingredientType: type,
       update: toUpdate
     };
@@ -181,15 +191,16 @@ export class RecipeFormPage implements AfterViewInit {
         data['library'] = this.yeastLibrary;
         break;
       default:
+        // No additional data needed for an 'other ingredient'
         break;
     };
 
-    const modal = this.modalCtrl.create(IngredientFormPage, {data: data});
-    modal.onDidDismiss(data => {
+    const modal: Modal = this.modalCtrl.create(IngredientFormPage, { data: data });
+    modal.onDidDismiss((data: object) => {
       if (data) {
-        this.updateIngredientList(data, type, toUpdate, data.delete);
+        this.updateIngredientList(data, type, toUpdate, data['delete']);
         this.calculator.calculateRecipeValues(this.variant);
-        if (data.hopsType !== undefined) {
+        if (data['hopsType'] !== undefined) {
           this.autoSetHopsAddition();
         }
       }
@@ -206,39 +217,41 @@ export class RecipeFormPage implements AfterViewInit {
    * @return: none
   **/
   openNoteModal(noteType: string, index?: number): void {
-    let toUpdate;
+    let toUpdate: string;
 
-    if (index === undefined) {
-      toUpdate = '';
+    if (index !== undefined) {
+      toUpdate = noteType === 'master'
+        ? this.master.notes[index]
+        : this.variant.notes[index];
     } else {
-      toUpdate = noteType === 'variant' ? this.master.notes[index]: this.variant.notes[index];
+      toUpdate = '';
     }
 
-    const options = {
+    const options: { noteType: string, formMethod: string, toUpdate: string } = {
       noteType: noteType,
-      formMethod: index === undefined ? 'create': 'update',
+      formMethod: index !== undefined ? 'update': 'create',
       toUpdate: toUpdate
     };
 
-    const modal = this.modalCtrl.create(NoteFormPage, options);
-    modal.onDidDismiss(data => {
+    const modal: Modal = this.modalCtrl.create(NoteFormPage, options);
+    modal.onDidDismiss((data: object) => {
       if (data) {
-        if (data.method === 'create') {
-          if (noteType === 'variant') {
-            this.master.notes.push(data.note);
-          } else if (noteType === 'batch') {
-            this.variant.notes.push(data.note);
+        if (data['method'] === 'create') {
+          if (noteType === 'master') {
+            this.master.notes.push(data['note']);
+          } else if (noteType === 'variant') {
+            this.variant.notes.push(data['note']);
           }
-        } else if (data.method === 'update') {
-          if (noteType === 'variant') {
-            this.master.notes[index] = data.note;
-          } else if (noteType === 'batch') {
-            this.variant.notes[index] = data.note;
+        } else if (data['method'] === 'update') {
+          if (noteType === 'master') {
+            this.master.notes[index] = data['note'];
+          } else if (noteType === 'variant') {
+            this.variant.notes[index] = data['note'];
           }
-        } else if (data.method === 'delete') {
-          if (noteType === 'variant') {
+        } else if (data['method'] === 'delete') {
+          if (noteType === 'master') {
             this.master.notes.splice(index, 1);
-          } else if (noteType === 'batch') {
+          } else if (noteType === 'variant') {
             this.variant.notes.splice(index, 1);
           }
         }
@@ -256,22 +269,22 @@ export class RecipeFormPage implements AfterViewInit {
    *
    * @return: none
   **/
-  openProcessModal(processType: string, toUpdate?: any, index?: number): void {
-    const options = {
-      processType: toUpdate === undefined ? processType: toUpdate.type,
+  openProcessModal(processType: string, toUpdate?: object, index?: number): void {
+    const options: { processType: string, update: object, formMode: string } = {
+      processType: toUpdate ? toUpdate['type']: processType,
       update: toUpdate,
-      formMode: toUpdate === undefined ? 'create': 'update'
+      formMode: toUpdate ? 'update': 'create'
     };
 
-    const modal = this.modalCtrl.create(ProcessFormPage, options);
-    modal.onDidDismiss(data => {
+    const modal: Modal = this.modalCtrl.create(ProcessFormPage, options);
+    modal.onDidDismiss((data: object) => {
       if (data) {
-        if (data.delete) {
+        if (data['delete']) {
           this.variant.processSchedule.splice(index, 1);
-        } else if (data.update) {
-          this.variant.processSchedule[index] = data.update;
+        } else if (data['update']) {
+          this.variant.processSchedule[index] = data['update'];
         } else {
-          this.variant.processSchedule.push(data);
+          this.variant.processSchedule.push(<Process>data);
         }
       }
     });
@@ -365,10 +378,12 @@ export class RecipeFormPage implements AfterViewInit {
    *
    * @return: none
   **/
-  autoSetBoilMashDuration(data: any): void {
-    const mashIndex = this.variant.processSchedule.findIndex(process => {
-      return process.name === 'Mash';
-    });
+  autoSetBoilMashDuration(data: object): void {
+    const mashIndex: number = this.variant.processSchedule
+      .findIndex((process: Process) => {
+        return process.name === 'Mash';
+      });
+
     if (mashIndex === -1) {
       // add mash timer if one does not already exist
       this.variant.processSchedule.push({
@@ -376,15 +391,16 @@ export class RecipeFormPage implements AfterViewInit {
         type: 'timer',
         name: 'Mash',
         description: 'Mash grains',
-        duration: data.mashDuration,
+        duration: data['mashDuration'],
         concurrent: false,
         splitInterval: 1
       });
     }
 
-    const boilIndex = this.variant.processSchedule.findIndex(process => {
-      return process.name === 'Boil';
-    });
+    const boilIndex: number = this.variant.processSchedule
+      .findIndex((process: Process) => {
+        return process.name === 'Boil';
+      });
     if (boilIndex === -1) {
       // add boil timer if one does not already exist
       this.variant.processSchedule.push({
@@ -392,7 +408,7 @@ export class RecipeFormPage implements AfterViewInit {
         type: 'timer',
         name: 'Boil',
         description: 'Boil wort',
-        duration: data.boilDuration,
+        duration: data['boilDuration'],
         concurrent: false,
         splitInterval: 1
       });
@@ -407,44 +423,55 @@ export class RecipeFormPage implements AfterViewInit {
    * @return: none
   **/
   autoSetHopsAddition(): void {
-    // remove existing hops timers
-    this.variant.processSchedule = this.variant.processSchedule.filter(process => {
-      return !process.name.match(/^(Add).*(hops)$/);
-    });
+    // if the boil step has not been set, do not auto add the timer
+    const boilStep: Process = this.variant.processSchedule
+      .find((process: Process) => {
+        return process.name === 'Boil';
+      });
 
-    // add hops timers for each hops instance
-    // ignore dry hop additions
-    // combine hops additions that occur at the same time
-    const hopsForTimers = this.variant.hops.filter(hops => {
-      return !hops.dryHop;
-    });
+    if (boilStep !== undefined) {
+      // remove existing hops timers
+      this.variant.processSchedule = this.variant.processSchedule
+        .filter((process: Process) => {
+          return !process.name.match(/^(Add).*(hops)$/);
+        });
 
-    // sort timers in descending order
-    hopsForTimers.sort((h1, h2) => {
-      if (h1.addAt < h2.addAt) {
-        return 1;
-      } else if (h1.addAt > h2.addAt) {
-        return -1;
-      }
-      return 0;
-    });
+      // add hops timers for each hops instance
+      // ignore dry hop additions
+      // combine hops additions that occur at the same time
+      const hopsForTimers = this.variant.hops
+        .filter((hops: HopsSchedule) => {
+          return !hops.dryHop;
+        });
 
-    hopsForTimers.forEach(hopsAddition => {
-      this.variant.processSchedule.push({
-        cid: this.clientIdService.getNewId(),
-        type: 'timer',
-        name: `Add ${hopsAddition.hopsType.name} hops`,
-        concurrent: true,
-        description: `Hops addition: ${hopsAddition.quantity} oz`,
-        duration: this.getHopsTimeRemaining(hopsAddition.addAt)
-      })
-    });
+      // sort timers in descending order
+      hopsForTimers.sort(
+        (h1: HopsSchedule, h2: HopsSchedule) => {
+          if (h1.addAt < h2.addAt) {
+            return 1;
+          } else if (h1.addAt > h2.addAt) {
+            return -1;
+          }
+          return 0;
+        }
+      );
 
-    // set boil timer to concurrent
-    const boilStep = this.variant.processSchedule.find(process => {
-      return process.name === 'Boil';
-    });
-    boilStep.concurrent = true;
+      hopsForTimers.forEach(
+        (hopsAddition: HopsSchedule) => {
+          this.variant.processSchedule.push({
+            cid: this.clientIdService.getNewId(),
+            type: 'timer',
+            name: `Add ${hopsAddition.hopsType.name} hops`,
+            concurrent: true,
+            description: `Hops addition: ${hopsAddition.quantity} oz`,
+            duration: this.getHopsTimeRemaining(hopsAddition.addAt)
+          })
+        }
+      );
+
+      // set boil timer to concurrent
+      boilStep.concurrent = true;
+    }
   }
 
   /***** End form value auto-generation *****/
@@ -471,8 +498,10 @@ export class RecipeFormPage implements AfterViewInit {
    * @return: difference between boil time and addAt time point
   **/
   getHopsTimeRemaining(addAt: number): number {
-    const boilStep = this.variant.processSchedule.find(process => process.name === 'Boil');
-    const boilTime = boilStep ? boilStep.duration: 60;
+    const boilStep: Process = this.variant.processSchedule
+      .find((process: Process) => process.name === 'Boil');
+    // TODO handle missing boil step
+    const boilTime: number = boilStep ? boilStep.duration: 60;
     return boilTime - addAt;
   }
 
@@ -501,11 +530,10 @@ export class RecipeFormPage implements AfterViewInit {
    * @return: total weight of grain bill
   **/
   getTotalGristWeight(): number {
-    let total = 0;
-    for (let i=0; i < this.variant.grains.length; i++) {
-      total += this.variant.grains[i].quantity;
-    }
-    return total;
+    return this.variant.grains
+      .reduce((acc, curr) => {
+        return acc + curr.quantity;
+      }, 0);
   }
 
   /**
@@ -530,8 +558,8 @@ export class RecipeFormPage implements AfterViewInit {
    *
    * @return: structured form data for service
   **/
-  constructPayload(): any {
-    let payload;
+  constructPayload(): object {
+    let payload: object;
 
     if (this.formType === 'master') {
       if (this.docMethod === 'create') {
@@ -582,9 +610,12 @@ export class RecipeFormPage implements AfterViewInit {
    * @return: none
   **/
   onSubmit(): void {
-    const payload = this.constructPayload();
+    const payload: object = this.constructPayload();
 
-    const message = toTitleCase(`${this.formType} ${this.docMethod} Successful!`);
+    const message: string = toTitleCase(
+      `${this.formType} ${this.docMethod} Successful!`
+    );
+
     if (this.docMethod === 'create') {
       this.submitCreationPost(payload, message);
     } else if (this.docMethod === 'update') {
@@ -595,7 +626,8 @@ export class RecipeFormPage implements AfterViewInit {
   /**
    * Set form configuration from nav params
    *
-   * @params: formType - either 'master' for RecipeMaster or 'variant' for RecipeVariant
+   * @params: formType - either 'master' for RecipeMaster or 'variant' for
+   *          RecipeVariant
    * @params: mode - CRUD mode
    * @params: master - RecipeMaster instance
    * @params: variant - RecipeVariant instance
@@ -617,22 +649,27 @@ export class RecipeFormPage implements AfterViewInit {
 
     if (formType === 'master') {
       if (mode === 'create') {
+        // Start master and variant with default values
         this.title = 'Create Recipe';
-        this.master = defaultRecipeMaster();
-        this.variant = defaultRecipeMaster().variants[0];
+        const _defaultRecipeMaster: RecipeMaster = defaultRecipeMaster();
+        this.master = _defaultRecipeMaster;
+        this.variant = _defaultRecipeMaster.variants[0];
       } else {
+        // Start master and variant with existing values
         this.title = `Update ${master.name}`;
         this.master = clone(master);
         this.variant = clone(master.variants.find(elem => elem.isMaster));
       }
     } else {
       if (mode === 'create') {
+        // Start master with given master and variant with the master variant
         this.title = `Add Variant to ${master.name}`;
         this.master = master;
         this.variant = clone(master.variants.find(elem => elem.isMaster));
         stripSharedProperties(this.variant);
         this.variant.variantName = '< Add Variant Name >';
       } else {
+        // Start master and variant with existing values
         this.title = `Update ${variant.variantName}`;
         this.master = clone(master);
         this.variant = clone(variant);
@@ -648,36 +685,57 @@ export class RecipeFormPage implements AfterViewInit {
    *
    * @return: none
   **/
-  submitCreationPost(payload: any, message: string): void {
+  submitCreationPost(payload: object, message: string): void {
     if (this.formType === 'master') {
       this.recipeService.postRecipeMaster(payload)
         .pipe(take(1))
         .subscribe(
-          () => {
+          (): void => {
             console.log('master create success');
             this.toastService.presentToast(message);
-            this.events.publish('update-nav-header', {caller: 'recipe form page', other: 'form-submit-complete'});
+            this.events.publish(
+              'update-nav-header',
+              {
+                caller: 'recipe form page',
+                other: 'form-submit-complete'
+              }
+            );
           },
-          error => {
+          (error: string): void => {
             this.toastService.presentToast(error);
             if (!RegExp('Client Validation Error', 'g').test(error)) {
-              this.events.publish('update-nav-header', {caller: 'recipe form page', other: 'form-submit-complete'});
+              this.events.publish(
+                'update-nav-header',
+                {
+                  caller: 'recipe form page',
+                  other: 'form-submit-complete'
+                }
+              );
             }
           }
         );
     } else if (this.formType === 'variant') {
-      this.recipeService.postRecipeToMasterById(getId(this.master), payload)
-        .pipe(take(1))
-        .subscribe(
-          () => {
-            console.log('variant create success');
-            this.toastService.presentToast(message);
-            this.events.publish('update-nav-header', {caller: 'recipe form page', other: 'form-submit-complete'});
-          },
-          error => {
-            this.toastService.presentToast(error);
-          }
-        );
+      this.recipeService.postRecipeToMasterById(
+        getId(this.master),
+        <RecipeVariant>payload
+      )
+      .pipe(take(1))
+      .subscribe(
+        (): void => {
+          console.log('variant create success');
+          this.toastService.presentToast(message);
+          this.events.publish(
+            'update-nav-header',
+            {
+              caller: 'recipe form page',
+              other: 'form-submit-complete'
+            }
+          );
+        },
+        (error: string): void => {
+          this.toastService.presentToast(error);
+        }
+      );
     }
   }
 
@@ -689,31 +747,47 @@ export class RecipeFormPage implements AfterViewInit {
    *
    * @return: none
   **/
-  submitPatchUpdate(payload: any, message: string): void {
+  submitPatchUpdate(payload: object, message: string): void {
     if (this.formType === 'master') {
       this.recipeService.patchRecipeMasterById(getId(this.master), payload)
         .pipe(take(1))
         .subscribe(
-          () => {
+          (): void => {
             this.toastService.presentToast(message);
-            this.events.publish('update-nav-header', {caller: 'recipe form page', other: 'form-submit-complete'});
+            this.events.publish(
+              'update-nav-header',
+              {
+                caller: 'recipe form page',
+                other: 'form-submit-complete'
+              }
+            );
           },
-          error => {
+          (error: string): void => {
             this.toastService.presentToast(error);
           }
         );
     } else if (this.formType === 'variant') {
-      this.recipeService.patchRecipeVariantById(getId(this.master), getId(this.variant), payload)
-        .pipe(take(1))
-        .subscribe(
-          () => {
-            this.toastService.presentToast(message);
-            this.events.publish('update-nav-header', {caller: 'recipe form page', other: 'form-submit-complete'});
-          },
-          error => {
-            this.toastService.presentToast(error);
-          }
-        );
+      this.recipeService.patchRecipeVariantById(
+        getId(this.master),
+        getId(this.variant),
+        payload
+      )
+      .pipe(take(1))
+      .subscribe(
+        (): void => {
+          this.toastService.presentToast(message);
+          this.events.publish(
+            'update-nav-header',
+            {
+              caller: 'recipe form page',
+              other: 'form-submit-complete'
+            }
+          );
+        },
+        (error: string): void => {
+          this.toastService.presentToast(error);
+        }
+      );
     }
   }
 
@@ -783,69 +857,78 @@ export class RecipeFormPage implements AfterViewInit {
    *
    * @return: none
   **/
-  updateIngredientList(ingredient: any, type: string, toUpdate?: any, deletion?: boolean): void {
+  updateIngredientList(
+    ingredient: object,
+    type: string,
+    toUpdate?: object,
+    deletion?: boolean
+  ): void {
     switch(type) {
       case 'grains':
         if (toUpdate) {
           const index = this.variant.grains.findIndex(elem => {
-            return elem.grainType._id === toUpdate.grainType._id;
+            return elem.grainType._id === toUpdate['grainType']._id;
           });
           if (deletion) {
             this.variant.grains.splice(index, 1);
           } else {
-            this.variant.grains[index] = ingredient;
+            this.variant.grains[index] = <GrainBill>ingredient;
           }
         } else {
-          this.variant.grains.push(ingredient);
+          this.variant.grains.push(<GrainBill>ingredient);
         }
         this.sortIngredients('grains');
         break;
       case 'hops':
         if (toUpdate) {
           const index = this.variant.hops.findIndex(elem => {
-            return elem.hopsType._id === toUpdate.hopsType._id;
+            return elem.hopsType._id === toUpdate['hopsType']._id;
           });
           if (deletion) {
             this.variant.hops.splice(index, 1);
           } else {
-            this.variant.hops[index] = ingredient;
+            this.variant.hops[index] = <HopsSchedule>ingredient;
           }
         } else {
-          this.variant.hops.push(ingredient);
+          this.variant.hops.push(<HopsSchedule>ingredient);
         }
         this.sortIngredients('hops');
         break;
       case 'yeast':
         if (toUpdate) {
           const index = this.variant.yeast.findIndex(elem => {
-            return elem.yeastType._id === toUpdate.yeastType._id;
+            return elem.yeastType._id === toUpdate['yeastType']._id;
           });
           if (deletion) {
             this.variant.yeast.splice(index, 1);
           } else {
-            this.variant.yeast[index] = ingredient;
+            this.variant.yeast[index] = <YeastBatch>ingredient;
           }
         } else {
-          this.variant.yeast.push(ingredient);
+          this.variant.yeast.push(<YeastBatch>ingredient);
         }
         this.sortIngredients('yeast');
         break;
       case 'otherIngredients':
         if (toUpdate) {
           const index = this.variant.otherIngredients.findIndex(elem => {
-            return elem.name === toUpdate.name;
+            return elem.name === toUpdate['name'];
           });
           if (deletion) {
             this.variant.otherIngredients.splice(index, 1);
           } else {
-            this.variant.otherIngredients[index] = ingredient;
+            this.variant.otherIngredients[index] = <OtherIngredients>ingredient;
           }
         } else {
-          this.variant.otherIngredients.push(ingredient);
+          this.variant.otherIngredients.push(<OtherIngredients>ingredient);
         }
         break;
       default:
-        this.toastService.presentToast(`Unknown ingredient type '${type}'`, 2000, 'middle');
+        this.toastService.presentToast(
+          `Unknown ingredient type '${type}'`,
+          2000,
+          'middle'
+        );
         break;
     }
     this.cdRef.detectChanges();
@@ -859,11 +942,13 @@ export class RecipeFormPage implements AfterViewInit {
   /**
    * Handle header nav pop event
    *
-   * @params: none
+   * @params: data - nav data
    * @return: none
   **/
-  headerNavPopEventHandler(): void {
-    this.navCtrl.pop();
+  headerNavPopEventHandler(data: object): void {
+    if (data['origin'] === 'RecipeDetailPage') {
+      this.navCtrl.pop();
+    }
   }
 
   /**
@@ -884,7 +969,7 @@ export class RecipeFormPage implements AfterViewInit {
    *
    * @return: none
   **/
-  updateDisplay(data: any): void {
+  updateDisplay(data: object): void {
     for (const key in data) {
       if (this.master.hasOwnProperty(key)) {
         this.master[key] = data[key];

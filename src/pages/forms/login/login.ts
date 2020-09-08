@@ -1,13 +1,13 @@
 /* Module imports */
 import { Component, OnInit } from '@angular/core';
-import { NavController, NavParams, ViewController } from 'ionic-angular';
-import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { ViewController } from 'ionic-angular';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subject } from 'rxjs/Subject';
 import { take } from 'rxjs/operators/take';
 
 /* Provider imports */
-import { UserProvider } from '../../../providers/user/user';
 import { ToastProvider } from '../../../providers/toast/toast';
+import { UserProvider } from '../../../providers/user/user';
 
 
 @Component({
@@ -15,17 +15,15 @@ import { ToastProvider } from '../../../providers/toast/toast';
   templateUrl: 'login.html',
 })
 export class LoginPage implements OnInit {
-  loginForm: FormGroup;
-  showPassword: boolean = false;
   destroy$: Subject<boolean> = new Subject<boolean>();
+  loginForm: FormGroup = null;
+  showPassword: boolean = false;
 
   constructor(
-    public navCtrl: NavController,
-    public navParams: NavParams,
-    public viewCtrl: ViewController,
     public formBuilder: FormBuilder,
-    public userService: UserProvider,
-    public toastService: ToastProvider
+    public viewCtrl: ViewController,
+    public toastService: ToastProvider,
+    public userService: UserProvider
   ) { }
 
   /***** Lifecycle Hooks *****/
@@ -57,9 +55,9 @@ export class LoginPage implements OnInit {
   **/
   initForm() {
     this.loginForm = this.formBuilder.group({
-      username: ['', Validators.required],
       password: ['', Validators.required],
-      remember: false
+      remember: false,
+      username: ['', Validators.required]
     });
   }
 
@@ -74,11 +72,21 @@ export class LoginPage implements OnInit {
       .pipe(take(1))
       .subscribe(
         user => {
-          this.toastService.presentToast(`Welcome ${user.username}!`, 1000, 'middle', 'bright-toast');
+          this.toastService.presentToast(
+            `Welcome ${user.username}!`,
+            2000,
+            'middle',
+            'toast-bright'
+          );
           this.viewCtrl.dismiss(user);
         },
         error => {
-          this.toastService.presentToast(error, 5000, 'bottom');
+          this.toastService.presentToast(
+            error,
+            6000,
+            'bottom',
+            'toast-error'
+          );
         }
       );
   }

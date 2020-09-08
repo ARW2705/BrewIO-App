@@ -1,20 +1,20 @@
 /* Module imports */
 import { Component, OnInit } from '@angular/core';
-import { NavController, NavParams, ViewController } from 'ionic-angular';
+import { NavParams, ViewController } from 'ionic-angular';
 import { FormControl, Validators } from '@angular/forms';
+
 
 @Component({
   selector: 'page-note-form',
   templateUrl: 'note-form.html',
 })
 export class NoteFormPage implements OnInit {
-  title: string = '';
-  note: FormControl = null;
   formMethod: string = '';
+  note: FormControl = null;
   noteType: string = '';
+  title: string = '';
 
   constructor(
-    public navCtrl: NavController,
     public navParams: NavParams,
     public viewCtrl: ViewController
   ) { }
@@ -25,7 +25,9 @@ export class NoteFormPage implements OnInit {
     this.formMethod = this.navParams.get('formMethod');
     this.noteType = this.navParams.get('noteType');
     this.title = this.noteType;
-    this.note = new FormControl(this.navParams.get('toUpdate'), [Validators.maxLength(120)]);
+    this.note = new FormControl(
+      this.navParams.get('toUpdate'), [Validators.maxLength(120)]
+    );
   }
 
   /***** End Lifecycle Hooks *****/

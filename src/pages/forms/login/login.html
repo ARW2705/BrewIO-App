@@ -4,67 +4,98 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding>
+<ion-content  padding
+              class="sub-page">
+
   <form [formGroup]="loginForm">
 
     <!-- Username Input -->
     <ion-item>
-      <ion-label floating>Username</ion-label>
-      <ion-input  type="text"
-                  formControlName="username"
+
+      <ion-label floating>
+        Username
+      </ion-label>
+
+      <ion-input  formControlName="username"
+                  type="text"
                   autocapitalize="off"
                   spellcheck="false"
                   autofocus>
       </ion-input>
+
     </ion-item>
 
     <!-- Password Input -->
     <ion-item>
-      <ion-label floating>Password</ion-label>
-      <ion-input  type="{{ showPassword ? 'text': 'password' }}"
-                  formControlName="password"
+
+      <ion-label floating>
+        Password
+      </ion-label>
+
+      <ion-input  formControlName="password"
+                  type="{{ showPassword ? 'text': 'password' }}"
                   autocapitalize="off"
                   spellcheck="false">
       </ion-input>
+      
     </ion-item>
 
     <!-- Toggle display password in plain text -->
     <ion-item>
-      <ion-label>Show Password</ion-label>
+
+      <ion-label>
+        Show Password
+      </ion-label>
+
       <ion-checkbox (ionChange)="togglePasswordVisible()"></ion-checkbox>
+
     </ion-item>
 
     <!-- Set to remember user in storage -->
     <ion-item>
-      <ion-label>Remember Me</ion-label>
+
+      <ion-label>
+        Remember Me
+      </ion-label>
+
       <ion-checkbox formControlName="remember"></ion-checkbox>
+
     </ion-item>
+
   </form>
 
+  <!-- Form Buttons -->
   <ion-grid>
+
     <ion-row>
 
       <!-- Form cancel button -->
       <ion-col>
+
         <button ion-button
                 color="primary"
-                class="form-button"
-                (click)="dismiss()">
+                (click)="dismiss()"
+                class="form-button">
           Cancel
         </button>
+
       </ion-col>
 
       <!-- Log in submit button -->
       <ion-col>
+
         <button ion-button
                 color="primary"
-                class="form-button"
                 (click)="onSubmit()"
+                class="form-button"
                 [disabled]="!loginForm.valid">
           Log In
         </button>
+
       </ion-col>
+
     </ion-row>
+
   </ion-grid>
 
 </ion-content>

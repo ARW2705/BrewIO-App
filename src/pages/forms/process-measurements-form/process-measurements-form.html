@@ -1,0 +1,99 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>Measurements</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content  no-padding
+              class="sub-page">
+
+  <ion-grid no-padding>
+
+    <ion-row  *ngIf="areAllRequired"
+              justify-content-center
+              id="heading">
+      Verify Measurements
+    </ion-row>
+
+    <ion-row>
+
+      <form [formGroup]="measurementsForm">
+
+        <!-- Original Gravity Input -->
+        <ion-item>
+
+          <ion-label position="floating">
+            Original Gravity
+          </ion-label>
+
+          <ion-input  formControlName="originalGravity"
+                      type="number">
+          </ion-input>
+
+        </ion-item>
+
+        <!-- Final Gravity Input -->
+        <ion-item>
+
+          <ion-label position="floating">
+            Final Gravity
+          </ion-label>
+
+          <ion-input  formControlName="finalGravity"
+                      type="number">
+          </ion-input>
+
+        </ion-item>
+
+        <!-- Batch Volume Input -->
+        <ion-item>
+
+          <ion-label position="floating">
+            Batch Volume
+          </ion-label>
+
+          <ion-input  formControlName="batchVolume"
+                      type="number">
+          </ion-input>
+
+        </ion-item>
+
+        <ion-grid>
+
+          <ion-row>
+
+            <ion-col *ngIf="!areAllRequired">
+              <!-- Form cancel button -->
+              <button ion-button
+                      color="primary"
+                      (click)="dismiss()"
+                      class="form-button">
+                Cancel
+              </button>
+
+            </ion-col>
+
+            <!-- Form submit button -->
+            <ion-col>
+
+              <button ion-button
+                      color="primary"
+                      (click)="onSubmit()"
+                      class="form-button"
+                      [disabled]="!measurementsForm.valid">
+                Submit
+              </button>
+
+            </ion-col>
+
+          </ion-row>
+
+        </ion-grid>
+
+      </form>
+
+    </ion-row>
+
+  </ion-grid>
+
+</ion-content>

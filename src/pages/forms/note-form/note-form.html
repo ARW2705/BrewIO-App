@@ -4,56 +4,68 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding>
+<ion-content  padding
+              class="sub-page">
   <ion-grid>
 
     <!-- Form text area -->
     <ion-row id="form-container">
+
       <form>
-        <ion-textarea id="textarea"
+
+        <ion-textarea [formControl]="note"
+                      id="textarea"
                       rows="8"
-                      autofocus
-                      [formControl]="note">
+                      autofocus>
         </ion-textarea>
+
       </form>
+
     </ion-row>
 
-    <div id="button-container">
-      <ion-row>
+    <ion-row>
 
-        <!-- Form cancel button -->
-        <ion-col>
-          <button ion-button
-                  class="note-button"
-                  color="primary"
-                  (click)="dismiss()">
-            Cancel
-          </button>
-        </ion-col>
+      <!-- Form cancel button -->
+      <ion-col>
 
-        <!-- Form delete note button -->
-        <ion-col *ngIf="formMethod == 'update'">
-          <button ion-button
-                  class="note-button"
-                  color="secondary"
-                  (click)="onDelete()">
-            Delete
-          </button>
-        </ion-col>
-      </ion-row>
+        <button ion-button
+                color="primary"
+                (click)="dismiss()"
+                class="form-button">
+          Cancel
+        </button>
 
-      <!-- Form Submit button -->
-      <ion-row>
-        <ion-col>
-          <button ion-button
-                  class="note-button"
-                  color="primary"
-                  (click)="onSubmit()">
-            Submit
-          </button>
-        </ion-col>
-      </ion-row>
-      
-    </div>
+      </ion-col>
+
+      <!-- Form submit button -->
+      <ion-col>
+
+        <button ion-button
+                color="primary"
+                (click)="onSubmit()"
+                class="form-button">
+          Submit
+        </button>
+
+      </ion-col>
+
+    </ion-row>
+
+    <ion-row *ngIf="formMethod === 'update'">
+
+      <ion-col>
+
+        <button ion-button
+                color="danger"
+                (click)="onDelete()"
+                class="form-button">
+          Delete
+        </button>
+
+      </ion-col>
+
+    </ion-row>
+
   </ion-grid>
+
 </ion-content>

@@ -1,25 +1,12 @@
 page-recipe-form {
   #calculated-values {
-    /* Children */
-
     .col-header {
       /* Text */
       font-size: 1.2em;
     }
 
-    .left-col {
-      /* Text */
-      text-align: left;
-    }
-
-    .right-col {
-      /* Text */
-      text-align: right;
-    }
-
     ion-col {
       /* Text */
-      text-align: left;
       font-size: 0.8em;
     }
   }
@@ -115,6 +102,7 @@ page-recipe-form {
       /* Display */
       padding: 0 !important;
     }
+
     ion-label {
       /* Display */
       margin: 0;
@@ -150,7 +138,6 @@ page-recipe-form {
   }
 
   .process-item {
-    /* Children */
     button {
       /* Display */
       background: transparent;
@@ -166,7 +153,7 @@ page-recipe-form {
 
   .scroll-content {
     /* Display */
-    margin: 60px 0 120px;
+    margin-bottom: 116px !important;
   }
 
   ion-grid {

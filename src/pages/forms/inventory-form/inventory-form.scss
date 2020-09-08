@@ -1,24 +1,22 @@
-page-signup {
+page-inventory-form {
   .form-button {
     /* Display */
     display: block;
     margin: 20px auto 0;
   }
 
-  .form-error {
+  .form-input {
     /* Display */
-    padding-top: 4px;
-    padding-left: 16px;
-
-    /* Color */
-    font-size: 1.2em;
-
-    /* Text */
-    color: map-get($colors, danger);
+    padding-left: 0;
   }
 
   .scroll-content {
     /* Display */
     margin-bottom: 0;
+  }
+
+  form {
+    /* Display */
+    width: 100%;
   }
 }

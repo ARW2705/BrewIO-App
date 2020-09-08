@@ -1,7 +1,10 @@
 /* Module imports */
 import { Component, OnInit } from '@angular/core';
-import { NavController, NavParams, ViewController } from 'ionic-angular';
-import { FormGroup, FormBuilder, FormControl, Validators } from '@angular/forms';
+import { NavParams, ViewController } from 'ionic-angular';
+import { AbstractControl, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+
+/* Interface imports */
+import { Process } from '../../../shared/interfaces/process';
 
 
 @Component({
@@ -9,17 +12,17 @@ import { FormGroup, FormBuilder, FormControl, Validators } from '@angular/forms'
   templateUrl: 'process-form.html',
 })
 export class ProcessFormPage implements OnInit {
+  formMode: string = '';
+  processForm: FormGroup = null;
+  myDate: string = (new Date()).toISOString();
+  stepType: string = '';
   title: string = '';
-  myDate = (new Date()).toISOString();
-  stepType: string;
-  processForm: FormGroup;
-  formMode: string;
 
   constructor(
-    public navCtrl: NavController,
-    public navParams: NavParams,
     public formBuilder: FormBuilder,
-    public viewCtrl: ViewController) { }
+    public navParams: NavParams,
+    public viewCtrl: ViewController
+  ) { }
 
   /***** Lifecycle Hooks *****/
 
@@ -63,10 +66,13 @@ export class ProcessFormPage implements OnInit {
    *
    * @return: none
   **/
-  initForm(data: any): void {
+  initForm(data: Process): void {
     this.processForm = this.formBuilder.group({
       type: this.stepType,
-      name: ['', [Validators.minLength(2), Validators.maxLength(25), Validators.required]],
+      name: [
+        '',
+        [Validators.minLength(2), Validators.maxLength(25), Validators.required]
+      ],
       description: ['']
     });
 
@@ -83,17 +89,17 @@ export class ProcessFormPage implements OnInit {
 
     // Populate form fields with provided data, if available
     if (data) {
-      const control = this.processForm.controls;
-      control.name.setValue(data.name);
-      control.description.setValue(data.description);
+      const control: {[key: string]: AbstractControl} = this.processForm.controls;
+      control['name'].setValue(data.name);
+      control['description'].setValue(data.description);
       if (data.type === 'manual') {
-        control.expectedDuration.setValue(data.expectedDuration);
+        control['expectedDuration'].setValue(data.expectedDuration);
       } else {
         if (data.type === 'timer') {
-          control.concurrent.setValue(data.concurrent);
-          control.splitInterval.setValue(data.splitInterval);
+          control['concurrent'].setValue(data.concurrent);
+          control['splitInterval'].setValue(data.splitInterval);
         }
-        control.duration.setValue(data.duration);
+        control['duration'].setValue(data.duration);
       }
     }
   }

@@ -1,13 +1,17 @@
 /* Module imports */
 import { ComponentFixture, TestBed, async } from '@angular/core/testing';
-import { IonicModule, NavController, NavParams, ViewController } from 'ionic-angular';
+import { IonicModule, NavParams, ViewController } from 'ionic-angular';
+import { AbstractControl } from '@angular/forms';
 
 /* Test configuration imports */
 import { configureTestBed } from '../../../../test-config/configureTestBed';
 
 /* Mock imports */
 import { mockStyles } from '../../../../test-config/mockmodels/mockStyles';
-import { NavMock, NavParamsMock, ViewControllerMock } from '../../../../test-config/mocks-ionic';
+import { NavParamsMock, ViewControllerMock } from '../../../../test-config/mocks-ionic';
+
+/* Interface imports */
+import { Style } from '../../../shared/interfaces/library';
 
 /* Page imports */
 import { GeneralFormPage } from './general-form';
@@ -27,7 +31,6 @@ describe('General Form', () => {
         IonicModule.forRoot(GeneralFormPage)
       ],
       providers: [
-        { provide: NavController, useClass: NavMock },
         { provide: NavParams, useClass: NavParamsMock },
         { provide: ViewController, useClass: ViewControllerMock }
       ]
@@ -66,9 +69,9 @@ describe('General Form', () => {
     test('should compare ion-select items', () => {
       fixture.detectChanges();
 
-      const o1a = {_id: 1};
-      const o1b = {_id: 1};
-      const o2 = {_id: 2};
+      const o1a: object = { _id: 1 };
+      const o1b: object = { _id: 1 };
+      const o2:  object = { _id: 2 };
 
       expect(generalPage.compareWithFn(o1a, o1b)).toBe(true);
       expect(generalPage.compareWithFn(o1a, o2)).toBe(false);
@@ -77,7 +80,8 @@ describe('General Form', () => {
     test('should convert form numbers from strings to actual numbers', () => {
       fixture.detectChanges();
 
-      const form = generalPage.generalForm.controls;
+      const form: { [key: string]: AbstractControl }
+        = generalPage.generalForm.controls;
       form.efficiency.setValue('60')
       form.batchVolume.setValue('5');
       form.boilVolume.setValue('5');
@@ -98,7 +102,8 @@ describe('General Form', () => {
     test('should dismiss the modal', () => {
       fixture.detectChanges();
 
-      const viewSpy = jest.spyOn(generalPage.viewCtrl, 'dismiss');
+      const viewSpy: jest.SpyInstance = jest
+        .spyOn(generalPage.viewCtrl, 'dismiss');
 
       generalPage.dismiss();
 
@@ -108,7 +113,7 @@ describe('General Form', () => {
     test('should update the selected style', () => {
       fixture.detectChanges();
 
-      const _mockStyle = mockStyles()[0];
+      const _mockStyle: Style = mockStyles()[0];
 
       expect(generalPage.styleSelection).toBeUndefined();
 
@@ -120,10 +125,12 @@ describe('General Form', () => {
     test('should submit the form', () => {
       fixture.detectChanges();
 
-      const viewSpy = jest.spyOn(generalPage.viewCtrl, 'dismiss');
+      const viewSpy: jest.SpyInstance = jest
+        .spyOn(generalPage.viewCtrl, 'dismiss');
 
-      const form = generalPage.generalForm.controls;
-      const _mockStyle = mockStyles()[0];
+      const form: { [key: string]: AbstractControl }
+        = generalPage.generalForm.controls;
+      const _mockStyle: Style = mockStyles()[0];
       form.name.setValue('some name');
       form.style.setValue(_mockStyle);
       form.brewingType.setValue('biab');
@@ -172,7 +179,7 @@ describe('General Form', () => {
 
     test('should init form with given values', () => {
       fixture.detectChanges();
-      
+
       expect(generalPage.generalForm.value).toStrictEqual({
         variantName: '',
         style: mockStyles()[1],

@@ -1,6 +1,7 @@
 /* Module imports */
 import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/testing';
-import { IonicModule, NavController, NavParams, ViewController, ToastController } from 'ionic-angular';
+import { AbstractControl } from '@angular/forms';
+import { IonicModule, ViewController, ToastController } from 'ionic-angular';
 import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 import { of } from 'rxjs/observable/of';
 
@@ -9,7 +10,10 @@ import { configureTestBed } from '../../../../test-config/configureTestBed';
 
 /* Mock imports */
 import { mockUser } from '../../../../test-config/mockmodels/mockUser';
-import { NavMock, NavParamsMock, ViewControllerMock, ToastControllerMock } from '../../../../test-config/mocks-ionic';
+import { ViewControllerMock, ToastControllerMock } from '../../../../test-config/mocks-ionic';
+
+/* Interface imports */
+import { User } from '../../../shared/interfaces/user';
 
 /* Page imports */
 import { SignupPage } from './signup';
@@ -41,8 +45,6 @@ describe('Signup Form', () => {
         { provide: UserProvider, useValue: {} },
         { provide: ToastProvider, useValue: {} },
         { provide: FormValidatorProvider, useValue: {} },
-        { provide: NavController, useClass: NavMock },
-        { provide: NavParams, useClass: NavParamsMock },
         { provide: ViewController, useClass: ViewControllerMock },
         { provide: ToastController, useClass: ToastControllerMock },
       ]
@@ -52,7 +54,10 @@ describe('Signup Form', () => {
   .then(done)
   .catch(done.fail));
 
-  beforeEach(async(() => {
+  beforeEach(() => {
+    fixture = TestBed.createComponent(SignupPage);
+    signupPage = fixture.componentInstance;
+
     injector = getTestBed();
     toastService = injector.get(ToastProvider);
     userService = injector.get(UserProvider);
@@ -60,11 +65,6 @@ describe('Signup Form', () => {
 
     toastService.presentToast = jest
       .fn();
-  }));
-
-  beforeEach(() => {
-    fixture = TestBed.createComponent(SignupPage);
-    signupPage = fixture.componentInstance;
   });
 
   test('should create component', () => {
@@ -79,20 +79,6 @@ describe('Signup Form', () => {
     expect(signupPage.signupForm).toBeDefined();
   }); // end 'should initialize the form' test
 
-  test('should detect changes in the form', () => {
-    fixture.detectChanges();
-
-    expect(signupPage.preferredUnits).toMatch('EN');
-
-    signupPage.signupForm.controls.preferredUnits.setValue(false);
-
-    expect(signupPage.preferredUnits).toMatch('M');
-
-    signupPage.signupForm.controls.preferredUnits.setValue(true);
-
-    expect(signupPage.preferredUnits).toMatch('EN');
-  }); // end 'should detect changes in the form' test
-
   test('should be invalid when form is empty', () => {
     fixture.detectChanges();
 
@@ -102,7 +88,7 @@ describe('Signup Form', () => {
   test('should close the modal', () => {
     fixture.detectChanges();
 
-    const viewSpy = jest.spyOn(viewCtrl, 'dismiss');
+    const viewSpy: jest.SpyInstance = jest.spyOn(viewCtrl, 'dismiss');
 
     signupPage.dismiss();
 
@@ -112,7 +98,10 @@ describe('Signup Form', () => {
   test('should have required field error', () => {
     fixture.detectChanges();
 
-    const usernameControl = signupPage.signupForm.controls.username;
+    const usernameControl: AbstractControl = signupPage
+      .signupForm
+      .controls
+      .username;
 
     expect(usernameControl.valid).toBe(false);
 
@@ -124,7 +113,10 @@ describe('Signup Form', () => {
   test('should have minlength field error', () => {
     fixture.detectChanges();
 
-    const usernameControl = signupPage.signupForm.controls.username;
+    const usernameControl: AbstractControl = signupPage
+      .signupForm
+      .controls
+      .username;
 
     expect(usernameControl.valid).toBe(false);
 
@@ -136,7 +128,10 @@ describe('Signup Form', () => {
   test('shoud have maxlength field error', () => {
     fixture.detectChanges();
 
-    const usernameControl = signupPage.signupForm.controls.username;
+    const usernameControl: AbstractControl = signupPage
+      .signupForm
+      .controls
+      .username;
 
     expect(usernameControl.valid).toBe(false);
 
@@ -148,7 +143,7 @@ describe('Signup Form', () => {
   test('should have email field error', () => {
     fixture.detectChanges();
 
-    const emailControl = signupPage.signupForm.controls.email;
+    const emailControl: AbstractControl = signupPage.signupForm.controls.email;
 
     expect(emailControl.valid).toBe(false);
 
@@ -160,7 +155,10 @@ describe('Signup Form', () => {
   test('should have password pattern field error', () => {
     fixture.detectChanges();
 
-    const passwordControl = signupPage.signupForm.controls.password;
+    const passwordControl: AbstractControl = signupPage
+      .signupForm
+      .controls
+      .password;
 
     passwordControl.setValue('a');
 
@@ -186,8 +184,14 @@ describe('Signup Form', () => {
   test('should have password match field error', () => {
     fixture.detectChanges();
 
-    const passwordControl = signupPage.signupForm.controls.password;
-    const passwordConfirmationControl = signupPage.signupForm.controls.passwordConfirmation;
+    const passwordControl: AbstractControl = signupPage
+      .signupForm
+      .controls
+      .password;
+    const passwordConfirmationControl: AbstractControl = signupPage
+      .signupForm
+      .controls
+      .passwordConfirmation;
 
     passwordControl.setValue('abcdefghij1K&');
     passwordConfirmationControl.setValue('abcdefghij1k$');
@@ -202,7 +206,10 @@ describe('Signup Form', () => {
   test('should check for a form control error', () => {
     fixture.detectChanges();
 
-    const usernameControl = signupPage.signupForm.controls['username'];
+    const usernameControl: AbstractControl = signupPage
+      .signupForm
+      .controls
+      .username;
 
     usernameControl.markAsTouched();
 
@@ -216,20 +223,29 @@ describe('Signup Form', () => {
   test('should get all error messages for a control', () => {
     fixture.detectChanges();
 
-    const passwordControl = signupPage.signupForm.controls.password;
+    const passwordControl: AbstractControl = signupPage
+      .signupForm
+      .controls
+      .password;
     passwordControl.setValue('a');
-    const errors = signupPage.getFormErrors('password');
+    const errors: string[] = signupPage.getFormErrors('password');
 
     expect(errors.length).toBe(2);
-    expect(errors[0]).toMatch('Password must be at least 8 characters');
-    expect(errors[1]).toMatch('Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character (!@#$%^&*)');
+    expect(errors[0])
+      .toMatch('Password must be at least 8 characters');
+    expect(errors[1])
+      .toMatch(
+        'Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character (!@#$%^&*)'
+      );
   }); // end 'should get all error messages for a control' test
 
   test('should submit a signup form and get a success response', done => {
     fixture.detectChanges();
 
-    const _mockUser = mockUser();
-    const formControls = signupPage.signupForm.controls;
+    const _mockUser: User = mockUser();
+    const formControls: { [key: string]: AbstractControl } = signupPage
+      .signupForm
+      .controls;
     formControls.username.setValue(_mockUser.username);
     formControls.password.setValue('abcdefghij1K%');
     formControls.passwordConfirmation.setValue('abcdefghij1K%');
@@ -241,14 +257,18 @@ describe('Signup Form', () => {
 
     expect(signupPage.signupForm.valid).toBe(true);
 
-    const toastSpy = jest.spyOn(toastService, 'presentToast');
-    const viewSpy = jest.spyOn(viewCtrl, 'dismiss');
+    const toastSpy: jest.SpyInstance = jest.spyOn(toastService, 'presentToast');
+    const viewSpy: jest.SpyInstance = jest.spyOn(viewCtrl, 'dismiss');
 
     signupPage.onSubmit();
 
     setTimeout(() => {
-      expect(toastSpy).toHaveBeenCalledWith('Sign up complete!', 1500, 'bright-toast');
-      expect(viewSpy).toHaveBeenCalledWith(_mockUser);
+      expect(toastSpy).toHaveBeenCalledWith(
+        'Sign up complete!',
+        1500,
+        'toast-bright'
+      );
+      expect(viewSpy).toHaveBeenCalled();
       done();
     }, 10);
   }); // end 'should submit a signup form and get a success response' test
@@ -260,7 +280,9 @@ describe('Signup Form', () => {
       .fn()
       .mockReturnValue(new ErrorObservable('<400> Username already exists'));
 
-    const formControls = signupPage.signupForm.controls;
+    const formControls: { [key: string]: AbstractControl } = signupPage
+      .signupForm
+      .controls;
     formControls.username.setValue('test-user');
     formControls.password.setValue('abcdefghij1K%');
     formControls.passwordConfirmation.setValue('abcdefghij1K%');
@@ -268,12 +290,15 @@ describe('Signup Form', () => {
 
     expect(signupPage.signupForm.valid).toBe(true);
 
-    const toastSpy = jest.spyOn(toastService, 'presentToast');
+    const toastSpy: jest.SpyInstance = jest.spyOn(toastService, 'presentToast');
 
     signupPage.onSubmit();
 
     setTimeout(() => {
-      expect(toastSpy).toHaveBeenCalledWith('<400> Username already exists', 2000);
+      expect(toastSpy).toHaveBeenCalledWith(
+        '<400> Username already exists',
+        2000
+      );
       done();
     }, 10);
   }); // end 'should submit a signup form and get an error response' test
