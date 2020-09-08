@@ -1,9 +1,9 @@
 import { RecipeVariant } from '../interfaces/recipe-variant';
 
 export const defaultRecipeVariant = () => {
-  const def: RecipeVariant = {
+  const _default: RecipeVariant = {
     cid: '0',
-    variantName: 'Initial Batch',
+    variantName: 'Initial Recipe',
     notes: [],
     isFavorite: false,
     isMaster: false,
@@ -25,5 +25,5 @@ export const defaultRecipeVariant = () => {
     otherIngredients: [],
     processSchedule: []
   };
-  return def;
+  return _default;
 };
