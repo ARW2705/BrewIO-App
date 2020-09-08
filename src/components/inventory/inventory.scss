@@ -1,0 +1,67 @@
+inventory {
+  #search-option-list {
+    /* Display */
+    width: 100%;
+  }
+
+  .expand-button {
+    /* Display */
+    padding-left: 0;
+    border-bottom: 2px solid map-get($colors, primary) !important;
+
+    /* Text */
+    text-align: left !important;
+
+    /* Children */
+    > .item-inner {
+      border: none !important;
+    }
+  }
+
+  .form-button {
+    /* Display */
+    width: 100%;
+    margin: 10px;
+  }
+
+  .inventory-card {
+    /* Display */
+    border: 2px solid map-get($colors, primary);
+    border-radius: 5px;
+
+    /* Color */
+    background-color: map-get($colors, gray-scale-4);
+  }
+
+  .item-description {
+    /* Display */
+    padding: 5px;
+    margin-top: 5px;
+    border: 1px solid map-get($colors, gray-scale-10);
+    border-radius: 3px;
+
+    /* Children */
+    > p {
+      color: map-get($colors, gray-scale-8);
+      font-size: 1.6rem;
+    }
+  }
+
+  .item-details {
+    /* Text */
+    font-size: 1.1em;
+  }
+
+  .no-items {
+    /* Display */
+    margin: 10px;
+
+    /* Text */
+    font-size: 2rem;
+  }
+
+  .right-col {
+    /* Text */
+    font-weight: 500;
+  }
+}

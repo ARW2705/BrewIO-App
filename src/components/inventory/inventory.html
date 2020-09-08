@@ -1,0 +1,282 @@
+<ion-grid>
+
+  <ion-row  *ngIf="inventoryList === null"
+            class="no-items">
+    Loading Inventory
+    <ion-spinner></ion-spinner>
+  </ion-row>
+
+  <ion-row  *ngIf="inventoryList !== null && !displayList.length"
+            class="no-items"
+            justify-content-center>
+    No Items in Inventory
+  </ion-row>
+
+  <ng-container *ngIf="inventoryList !== null && displayList.length">
+
+    <ion-row>
+
+      <ion-list id="search-option-list">
+
+        <!-- Sorting Selection -->
+        <ion-item>
+
+          <ion-label>
+            Sort
+          </ion-label>
+
+          <ion-select [ngModel]="sortBy"
+                      (ionChange)="onSortChange($event)"
+                      okText="Okay"
+                      cancelText="Dismiss"
+                      class="inventory-select">
+
+            <ion-option [value]="alphabetical">
+              Alphabetical
+            </ion-option>
+
+            <ion-option [value]="remaining">
+              Remaining
+            </ion-option>
+
+            <ion-option [value]="source">
+              Source
+            </ion-option>
+
+          </ion-select>
+
+        </ion-item>
+
+        <!-- Order Selection -->
+        <ion-item>
+
+          <ion-label>
+            Order
+          </ion-label>
+
+          <ion-select [ngModel]="isAscending"
+                      (ionChange)="onDirectionChange($event)"
+                      class="inventory-select">
+
+            <ion-option [value]="true">
+              Ascending
+            </ion-option>
+
+            <ion-option [value]="false">
+              Descending
+            </ion-option>
+
+          </ion-select>
+
+        </ion-item>
+
+      </ion-list>
+
+    </ion-row>
+
+    <!-- Open Inventory form for third party items -->
+    <ion-row>
+
+      <button ion-button
+              color="primary"
+              (click)="openInventoryFormModal({})"
+              class="form-button">
+        Add Custom Item
+      </button>
+
+    </ion-row>
+
+    <!-- Inventory list -->
+    <ion-row>
+
+      <ion-col col-12>
+
+        <ion-list id="inventory-list">
+
+          <ng-container *ngFor="let item of displayList; index as i">
+
+            <!-- Slide left to quick decrement count and right for edit button -->
+            <ion-item-sliding #slidingItems
+                              [ngClass]="{
+                                'inventory-item': true,
+                                'source-self': item.sourceType === 'self',
+                                'source-other': item.sourceType === 'otherUser',
+                                'source-third': item.sourceType === 'thirdParty'
+                              }">
+
+              <!-- Open inventory form to edit item -->
+              <ion-item-options side="left">
+
+                <button ion-button
+                        color="secondary"
+                        (click)="openInventoryFormModal({item: item})">
+                  <ion-icon name="menu"></ion-icon>
+                  Edit
+                </button>
+
+              </ion-item-options>
+
+              <!-- Toggle inventory list button -->
+              <button detail-none
+                      ion-item
+                      (click)="expandItem(i)"
+                      class="expand-button"
+                      lines="none">
+                {{ item.itemName }} | {{ item.itemStyleName }}
+              </button>
+
+              <!-- Decrement item count -->
+              <ion-item-options side="right">
+
+                <button ion-button
+                        color="primary"
+                        (click)="decrementCount(item)">
+                  <ion-icon name="beer"></ion-icon>
+                  Enjoy
+                </button>
+
+              </ion-item-options>
+
+            </ion-item-sliding>
+
+            <!-- Inventory list -->
+            <accordion [expanded]="itemIndex === i">
+
+              <ion-card class="inventory-card">
+
+                <ion-card-content>
+
+                  <ion-grid no-padding>
+
+                    <ion-row  class="item-details">
+
+                      <ion-col col-7 no-padding>
+
+                        <ion-row>
+
+                          <!-- Left column field names -->
+                          <ion-col class="col-left" no-padding>
+
+                            <ion-row>
+                              Stock
+                            </ion-row>
+
+                            <ion-row>
+                              ABV
+                            </ion-row>
+
+                            <ion-row *ngIf="item.optionalItemData.itemIBU !== undefined">
+                              IBU
+                            </ion-row>
+
+                            <ion-row *ngIf="item.optionalItemData.itemSRM !== undefined">
+                              SRM
+                            </ion-row>
+
+                          </ion-col>
+
+                          <!-- Right column field values -->
+                          <ion-col class="col-right" no-padding>
+
+                            <ion-row  [innerText]="getStockTypeDisplayText(item)"
+                                      [ngStyle]="getQuantityStyle(item)">
+                            </ion-row>
+
+                            <ion-row [ngStyle]="getABVStyle(item)">
+                              {{ item.itemABV.toFixed(1) }}%
+                            </ion-row>
+
+                            <ion-row  *ngIf="item.optionalItemData.itemIBU !== undefined"
+                                      [ngStyle]="getIBUStyle(item)">
+                              {{ item.optionalItemData.itemIBU }}
+                            </ion-row>
+
+                            <ion-row  *ngIf="item.optionalItemData.itemSRM !== undefined">
+
+                              <span>
+                                {{ item.optionalItemData.itemSRM }}
+                              </span>
+
+                              <ion-icon name="pint"
+                                        [ngStyle]="getSRMStyle(item)">
+                              </ion-icon>
+
+                            </ion-row>
+
+                          </ion-col>
+
+                        </ion-row>
+
+                      </ion-col>
+
+                      <ion-col col-5 no-padding>
+
+                        <!-- Item label image -->
+                        <ion-row>
+
+                          <picture>
+                            <source [srcset]="getImageSource(item.itemLabelImageURL)">
+                            <img src="assets/imgs/no-label-image-240.png" alt="label art">
+                          </picture>
+
+                        </ion-row>
+
+                        <!-- Item supplier info -->
+                        <ion-row>
+
+                          <ion-col align-self-center>
+
+                            <a  *ngIf="item.supplierURL !== undefined"
+                                [href]="item.supplierURL"
+                                target="blank">
+                              {{ item.supplierName }}
+                            </a>
+
+                            <ng-container *ngIf="item.supplierURL === undefined">
+                              {{ item.supplierName }}
+                            </ng-container>
+
+                          </ion-col>
+
+                          <!-- Item supplier image -->
+                          <ion-col>
+
+                            <picture>
+                              <source [srcset]="getImageSource(item.supplierLabelImageURL)">
+                              <img src="assets/imgs/no-label-image-240.png" alt="label art">
+                            </picture>
+
+                          </ion-col>
+                        </ion-row>
+
+                      </ion-col>
+
+                    </ion-row>
+
+                    <!-- Item description -->
+                    <ion-row  *ngIf="item.description.length"
+                              class="item-description">
+
+                      <p>{{ item.description }}</p>
+
+                    </ion-row>
+
+                  </ion-grid>
+
+                </ion-card-content>
+
+              </ion-card>
+
+            </accordion>
+
+          </ng-container>
+
+        </ion-list>
+
+      </ion-col>
+
+    </ion-row>
+
+  </ng-container>
+
+</ion-grid>
