@@ -2,75 +2,117 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Events } from 'ionic-angular';
-import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
-import { _throw as throwError } from 'rxjs/observable/throw';
-import { map } from 'rxjs/operators/map';
+import { Observable } from 'rxjs/Observable';
 import { catchError } from 'rxjs/operators/catchError';
-import { mergeMap } from 'rxjs/operators/mergeMap';
-import { of } from 'rxjs/observable/of';
 import { concat } from 'rxjs/observable/concat';
+import { of } from 'rxjs/observable/of';
+import { map } from 'rxjs/operators/map';
+import { mergeMap } from 'rxjs/operators/mergeMap';
+import { _throw as throwError } from 'rxjs/observable/throw';
 
 /* Constants imports */
-import { baseURL } from '../../shared/constants/base-url';
-import { apiVersion } from '../../shared/constants/api-version';
-import { syncMethods } from '../../shared/constants/sync-methods';
+import { API_VERSION } from '../../shared/constants/api-version';
+import { BASE_URL } from '../../shared/constants/base-url';
 
 /* Interface imports */
-import { RecipeMaster } from '../../shared/interfaces/recipe-master';
-import { RecipeVariant } from '../../shared/interfaces/recipe-variant';
+import { Author } from '../../shared/interfaces/author';
 import { GrainBill } from '../../shared/interfaces/grain-bill';
 import { HopsSchedule } from '../../shared/interfaces/hops-schedule';
-import { YeastBatch } from '../../shared/interfaces/yeast-batch';
 import { OtherIngredients } from '../../shared/interfaces/other-ingredients';
 import { Process } from '../../shared/interfaces/process';
-import { SyncResponse } from '../../shared/interfaces/sync-response';
+import { RecipeMaster } from '../../shared/interfaces/recipe-master';
+import { RecipeVariant } from '../../shared/interfaces/recipe-variant';
+import { SyncData, SyncMetadata, SyncResponse } from '../../shared/interfaces/sync';
 import { User } from '../../shared/interfaces/user';
+import { YeastBatch } from '../../shared/interfaces/yeast-batch';
 
 /* Utility function imports */
-import {
-  getIndexById,
-  getArrayFromObservables,
-  getId,
-  hasId,
-  missingServerId,
-  hasDefaultIdType
-} from '../../shared/utility-functions/utilities';
+import { getId, getIndexById, hasDefaultIdType, hasId, isMissingServerId } from '../../shared/utility-functions/id-helpers';
+import { getArrayFromObservables, normalizeErrorObservableMessage } from '../../shared/utility-functions/observable-helpers';
 
 /* Provider imports */
+import { ClientIdProvider } from '../client-id/client-id';
+import { ConnectionProvider } from '../connection/connection';
 import { ProcessHttpErrorProvider } from '../process-http-error/process-http-error';
 import { StorageProvider } from '../storage/storage';
-import { UserProvider } from '../user/user';
-import { ConnectionProvider } from '../connection/connection';
 import { SyncProvider } from '../sync/sync';
-import { ClientIdProvider } from '../client-id/client-id';
+import { UserProvider } from '../user/user';
 
 
 @Injectable()
 export class RecipeProvider {
-  recipeMasterList$: BehaviorSubject<Array<BehaviorSubject<RecipeMaster>>> = new BehaviorSubject<Array<BehaviorSubject<RecipeMaster>>>([]);
-  syncErrors = [];
-  syncKey = 'recipe';
-  syncBaseRoute = 'recipes/private';
+  recipeMasterList$: BehaviorSubject<BehaviorSubject<RecipeMaster>[]>
+    = new BehaviorSubject<BehaviorSubject<RecipeMaster>[]>([]);
+  syncBaseRoute: string = 'recipes/private';
+  syncErrors: string[] = [];
+  syncKey: string = 'recipe';
 
   constructor(
-    public http: HttpClient,
     public events: Events,
+    public http: HttpClient,
+    public clientIdService: ClientIdProvider,
+    public connectionService: ConnectionProvider,
     public processHttpError: ProcessHttpErrorProvider,
     public storageService: StorageProvider,
-    public userService: UserProvider,
-    public connectionService: ConnectionProvider,
     public syncService: SyncProvider,
-    public clientIdService: ClientIdProvider
+    public userService: UserProvider
   ) {
-    this.events.subscribe('init-data', this.initializeRecipeMasterList.bind(this));
+    this.events.subscribe('init-recipes', this.initializeRecipeMasterList.bind(this));
     this.events.subscribe('clear-data', this.clearRecipes.bind(this));
-    this.events.subscribe('sync-on-signup', this.syncOnSignup.bind(this));
+    this.events.subscribe('sync-recipes-on-signup', this.syncOnSignup.bind(this));
     this.events.subscribe('connected', this.syncOnReconnect.bind(this, false));
   }
 
   /***** Public api access methods *****/
+
+  /**
+   * Get recipe author data
+   *
+   * @params: masterId - recipe master to use as base for user search
+   *
+   * @return: observable of author data
+  **/
+  getPublicAuthorByRecipeId(masterId: string): Observable<Author> {
+    let searchId: string = masterId;
+
+    const master$: BehaviorSubject<RecipeMaster>
+      = this.getRecipeMasterById(searchId);
+
+    const user$: BehaviorSubject<User> = this.userService.getUser();
+    const user: User = user$.value;
+
+    if (hasId(user, master$.value.owner)) {
+      return of({
+        username: user.username,
+        userImageURL: user.userImage,
+        labelImageURL: user.labelImage
+      });
+    }
+
+    if (hasDefaultIdType(searchId)) {
+      searchId = master$.value._id;
+      if (searchId === undefined) {
+        return throwError('Missing server id');
+      }
+    }
+
+    return this.http.get<Author>(
+      `${BASE_URL}/${API_VERSION}/recipes/public/master/${searchId}/author`
+    )
+    .pipe(
+      catchError((error: HttpErrorResponse): Observable<Author> => {
+        console.log('Error fetching author', error);
+        const author: Author ={
+          username: 'Not Found',
+          userImageURL: '',
+          labelImageURL: ''
+        };
+        return of(author);
+      })
+    );
+  }
 
   /**
    * Get a public recipe master by its id
@@ -80,8 +122,14 @@ export class RecipeProvider {
    * @return: Observable of recipe master
   **/
   getPublicRecipeMasterById(masterId: string): Observable<RecipeMaster> {
-    return this.http.get(`${baseURL}/${apiVersion}/recipes/public/master/${masterId}`)
-      .pipe(catchError((error: HttpErrorResponse) => this.processHttpError.handleError(error)));
+    return this.http.get(
+      `${BASE_URL}/${API_VERSION}/recipes/public/master/${masterId}`
+    )
+    .pipe(
+      catchError((error: HttpErrorResponse): ErrorObservable => {
+        return this.processHttpError.handleError(error);
+      })
+    );
   }
 
   /**
@@ -91,9 +139,15 @@ export class RecipeProvider {
    *
    * @return: Observable of an array of recipe masters
   **/
-  getPublicRecipeMasterListByUser(userId: string): Observable<Array<RecipeMaster>> {
-    return this.http.get(`${baseURL}/${apiVersion}/recipes/public/${userId}`)
-      .pipe(catchError((error: HttpErrorResponse) => this.processHttpError.handleError(error)));
+  getPublicRecipeMasterListByUser(userId: string): Observable<RecipeMaster[]> {
+    return this.http.get(
+      `${BASE_URL}/${API_VERSION}/recipes/public/${userId}`
+    )
+    .pipe(
+      catchError((error: HttpErrorResponse): ErrorObservable => {
+        return this.processHttpError.handleError(error);
+      })
+    );
   }
 
   /**
@@ -104,9 +158,18 @@ export class RecipeProvider {
    *
    * @return: Observable of recipe
   **/
-  getPublicRecipeVariantById(masterId: string, variantId: string): Observable<RecipeVariant> {
-    return this.http.get(`${baseURL}/${apiVersion}/recipes/public/master/${masterId}/variant/${variantId}`)
-      .pipe(catchError((error: HttpErrorResponse) => this.processHttpError.handleError(error)));
+  getPublicRecipeVariantById(
+    masterId: string,
+    variantId: string
+  ): Observable<RecipeVariant> {
+    return this.http.get(
+      `${BASE_URL}/${API_VERSION}/recipes/public/master/${masterId}/variant/${variantId}`
+    )
+    .pipe(
+      catchError((error: HttpErrorResponse): ErrorObservable => {
+        return this.processHttpError.handleError(error);
+      })
+    );
   }
 
   /***** END public api access methods *****/
@@ -123,24 +186,36 @@ export class RecipeProvider {
    *
    * @return: Observable - success does not need data, using for error throw/handling
   **/
-  deleteRecipeVariantById(masterId: string, variantId: string): Observable<boolean> {
-    const master$: BehaviorSubject<RecipeMaster> = this.getMasterById(masterId);
+  deleteRecipeVariantById(
+    masterId: string,
+    variantId: string
+  ): Observable<boolean> {
+    const master$: BehaviorSubject<RecipeMaster>
+      = this.getRecipeMasterById(masterId);
 
-    if (master$ === undefined) return throwError(`Recipe master with id ${masterId} not found`);
+    if (master$ === undefined) {
+      return throwError(`Recipe master with id ${masterId} not found`);
+    }
 
-    if (master$.value.variants.length < 2) return throwError('At least one recipe must remain');
+    if (master$.value.variants.length < 2) {
+      return throwError('At least one recipe must remain');
+    }
 
     if (this.connectionService.isConnected() && this.userService.isLoggedIn()) {
-      return this.http.delete(`${baseURL}/${apiVersion}/recipes/private/master/${masterId}/variant/${variantId}`)
-        .pipe(
-          mergeMap(() => {
-            return this.removeRecipeFromMasterInList(master$, variantId);
-          }),
-          catchError((error: HttpErrorResponse) => this.processHttpError.handleError(error))
-        );
-    } else {
-      this.addSyncFlag('update', masterId);
+      return this.http.delete(
+        `${BASE_URL}/${API_VERSION}/recipes/private/master/${masterId}/variant/${variantId}`
+      )
+      .pipe(
+        mergeMap((): Observable<boolean> => {
+          return this.removeRecipeFromMasterInList(master$, variantId);
+        }),
+        catchError((error: HttpErrorResponse): ErrorObservable => {
+          return this.processHttpError.handleError(error);
+        })
+      );
     }
+
+    this.addSyncFlag('update', masterId);
     return this.removeRecipeFromMasterInList(master$, variantId);
   }
 
@@ -154,16 +229,20 @@ export class RecipeProvider {
   **/
   deleteRecipeMasterById(masterId: string): Observable<boolean> {
     if (this.connectionService.isConnected() && this.userService.isLoggedIn()) {
-      return this.http.delete(`${baseURL}/${apiVersion}/recipes/private/master/${masterId}`)
-        .pipe(
-          mergeMap(() => {
-            return this.removeRecipeMasterFromList(masterId);
-          }),
-          catchError((error: HttpErrorResponse) => this.processHttpError.handleError(error))
-        );
-    } else {
-      this.addSyncFlag('delete', masterId);
+      return this.http.delete(
+        `${BASE_URL}/${API_VERSION}/recipes/private/master/${masterId}`
+      )
+      .pipe(
+        mergeMap((): Observable<boolean> => {
+          return this.removeRecipeMasterFromList(masterId);
+        }),
+        catchError((error: HttpErrorResponse): ErrorObservable => {
+          return this.processHttpError.handleError(error);
+        })
+      );
     }
+
+    this.addSyncFlag('delete', masterId);
     return this.removeRecipeMasterFromList(masterId);
   }
 
@@ -181,39 +260,53 @@ export class RecipeProvider {
    * @return: none
   **/
   initializeRecipeMasterList(): void {
+    console.log('init recipes', this.recipeMasterList$.value);
     // Get recipes from storage
     this.storageService.getRecipes()
       .subscribe(
-        (recipeMasterList: Array<RecipeMaster>) => {
+        (recipeMasterList: Array<RecipeMaster>): void => {
           console.log('recipes from storage');
-          if (this.recipeMasterList$.value.length === 0 && recipeMasterList.length > 0) {
+          if (!this.recipeMasterList$.value.length && recipeMasterList.length) {
             this.mapRecipeMasterArrayToSubjects(recipeMasterList);
           }
         },
-        (error: ErrorObservable) => console.log(`${error}: awaiting data from server`)
+        (error: ErrorObservable): void => {
+          console.log(
+            `${normalizeErrorObservableMessage(error)}: awaiting data from server`
+          );
+        }
       );
 
     // Process sync flags if present, then get recipes from server
     if (this.connectionService.isConnected() && this.userService.isLoggedIn()) {
+      console.log('try concat')
       concat(
         this.syncOnConnection(true),
-        this.http.get(`${baseURL}/${apiVersion}/recipes/private`)
+        this.http.get(`${BASE_URL}/${API_VERSION}/recipes/private`)
           .pipe(
-            map((recipeMasterArrayResponse: Array<RecipeMaster>) => {
+            map((recipeMasterArrayResponse: Array<RecipeMaster>): void => {
               console.log('recipes from server');
               this.mapRecipeMasterArrayToSubjects(recipeMasterArrayResponse);
               this.updateRecipeStorage();
             }),
-            catchError((error: HttpErrorResponse) => this.processHttpError.handleError(error))
+            catchError((error: HttpErrorResponse): ErrorObservable => {
+              return this.processHttpError.handleError(error);
+            })
           )
       )
       .subscribe(
-        () => {}, // Nothing further required if successful
-        error => {
+        (): void => {
+          this.events.publish('init-batches');
+        },
+        (error: ErrorObservable): void => {
           // TODO error feedback (toast?)
-          console.log(error);
+          console.log(
+            `Initialization error: ${normalizeErrorObservableMessage(error)}`
+          );
         }
       );
+    } else {
+      this.events.publish('init-batches');
     }
   }
 
@@ -227,30 +320,51 @@ export class RecipeProvider {
    * @return: observable of updated recipe master
   **/
   patchRecipeMasterById(masterId: string, update: object): Observable<RecipeMaster> {
-    let requestId = masterId;
+    let requestId: string = masterId;
+
     if (this.connectionService.isConnected() && this.userService.isLoggedIn()) {
       // A server id is required for request; if a cid is given, try to find the
       // associated document's server id
       if (hasDefaultIdType(masterId)) {
-        const master$: BehaviorSubject<RecipeMaster> = this.getMasterById(masterId);
-        if (master$ === undefined) return throwError(`Recipe with id: ${masterId} not found`);
-        const id = getId(master$.value);
+        const master$: BehaviorSubject<RecipeMaster>
+          = this.getRecipeMasterById(masterId);
+
+        if (master$ === undefined) {
+          return throwError(`Recipe with id: ${masterId} not found`);
+        }
+
+        const id: string = getId(master$.value);
+
         if (hasDefaultIdType(id)) {
-          return throwError(`Found recipe with id: ${masterId}, but unable to perform request at this time`);
+          return throwError(
+            `Found recipe with id: ${masterId}, but unable to perform request at this time`
+          );
         } else {
           requestId = id;
         }
       }
-      return this.http.patch(`${baseURL}/${apiVersion}/recipes/private/master/${requestId}`, update)
-        .pipe(
-          mergeMap((updatedRecipeMasterResponse: RecipeMaster) => {
-            return this.updateRecipeMasterInList(masterId, updatedRecipeMasterResponse);
-          }),
-          catchError((error: HttpErrorResponse) => this.processHttpError.handleError(error))
-        );
-    } else {
-      this.addSyncFlag('update', masterId);
+
+      return this.http.patch(
+        `${BASE_URL}/${API_VERSION}/recipes/private/master/${requestId}`,
+        update
+      )
+      .pipe(
+        mergeMap(
+          (updatedRecipeMasterResponse: RecipeMaster)
+          : Observable<RecipeMaster> => {
+            return this.updateRecipeMasterInList(
+              masterId,
+              updatedRecipeMasterResponse
+            );
+          }
+        ),
+        catchError((error: HttpErrorResponse): ErrorObservable => {
+          return this.processHttpError.handleError(error);
+        })
+      );
     }
+
+    this.addSyncFlag('update', masterId);
     return this.updateRecipeMasterInList(masterId, update);
   }
 
@@ -264,10 +378,17 @@ export class RecipeProvider {
    *
    * @return: observable of the updated recipe
   **/
-  patchRecipeVariantById(masterId: string, variantId: string, update: object): Observable<RecipeVariant> {
-    const master$: BehaviorSubject<RecipeMaster> = this.getMasterById(masterId);
+  patchRecipeVariantById(
+    masterId: string,
+    variantId: string,
+    update: object
+  ): Observable<RecipeVariant> {
+    const master$: BehaviorSubject<RecipeMaster>
+      = this.getRecipeMasterById(masterId);
 
-    if (master$ === undefined) return throwError(`Recipe master with id ${masterId} not found`);
+    if (master$ === undefined) {
+      return throwError(`Recipe master with id ${masterId} not found`);
+    }
 
     // ensure at least one recipe is marked as master
     if (
@@ -279,17 +400,27 @@ export class RecipeProvider {
     }
 
     if (this.connectionService.isConnected() && this.userService.isLoggedIn()) {
-      return this.http.patch(`${baseURL}/${apiVersion}/recipes/private/master/${masterId}/variant/${variantId}`, update)
-        .pipe(
-          mergeMap((updatedRecipeResponse: RecipeVariant) => {
-            return this.updateRecipeOfMasterInList(master$, variantId, updatedRecipeResponse);
+      return this.http.patch(
+        `${BASE_URL}/${API_VERSION}/recipes/private/master/${masterId}/variant/${variantId}`,
+        update
+      )
+      .pipe(
+        mergeMap(
+          (updatedRecipeResponse: RecipeVariant): Observable<RecipeVariant> => {
+            return this.updateRecipeVariantOfMasterInList(
+              master$,
+              variantId,
+              updatedRecipeResponse
+            );
           }),
-          catchError((error: HttpErrorResponse) => this.processHttpError.handleError(error))
-        );
-    } else {
-      this.addSyncFlag('update', masterId);
+        catchError((error: HttpErrorResponse): ErrorObservable => {
+          return this.processHttpError.handleError(error);
+        })
+      );
     }
-    return this.updateRecipeOfMasterInList(master$, variantId, update);
+
+    this.addSyncFlag('update', masterId);
+    return this.updateRecipeVariantOfMasterInList(master$, variantId, update);
   }
 
   /**
@@ -304,27 +435,34 @@ export class RecipeProvider {
   postRecipeMaster(newMasterValues: object): Observable<RecipeMaster> {
     try {
       const newMaster: RecipeMaster = this.formatNewRecipeMaster(newMasterValues);
-      const list = this.recipeMasterList$.value;
+      const list: BehaviorSubject<RecipeMaster>[] = this.getMasterList().value;
 
-      if (this.connectionService.isConnected() && this.userService.isLoggedIn()) {
+      if (
+        this.connectionService.isConnected()
+        && this.userService.isLoggedIn()
+      ) {
         delete newMaster.variants[0].owner;
-        return this.http.post<RecipeMaster>(`${baseURL}/${apiVersion}/recipes/private`, newMaster)
-          .pipe(
-            map((newMasterResponse: RecipeMaster) => {
-              list.push(new BehaviorSubject<RecipeMaster>(newMasterResponse));
-              this.recipeMasterList$.next(list);
-              this.updateRecipeStorage();
-              return newMasterResponse;
-            }),
-            catchError((error: HttpErrorResponse) => this.processHttpError.handleError(error))
-          );
-      } else {
-        this.addSyncFlag('create', newMaster.cid);
+        return this.http.post<RecipeMaster>(
+          `${BASE_URL}/${API_VERSION}/recipes/private`,
+          newMaster
+        )
+        .pipe(
+          map((newMasterResponse: RecipeMaster): RecipeMaster => {
+            list.push(new BehaviorSubject<RecipeMaster>(newMasterResponse));
+            this.emitListUpdate();
+            this.updateRecipeStorage();
+            return newMasterResponse;
+          }),
+          catchError((error: HttpErrorResponse): ErrorObservable => {
+            return this.processHttpError.handleError(error);
+          })
+        );
       }
+      this.addSyncFlag('create', newMaster.cid);
 
       // if not connected, add new subject with offline '_id's set
       list.push(new BehaviorSubject<RecipeMaster>(newMaster));
-      this.recipeMasterList$.next(list);
+      this.emitListUpdate();
       this.updateRecipeStorage();
       return of(newMaster);
     } catch(error) {
@@ -341,18 +479,31 @@ export class RecipeProvider {
    *
    * @return: observable of new variant
   **/
-  postRecipeToMasterById(masterId: string, variant: RecipeVariant): Observable<RecipeVariant> {
+  postRecipeToMasterById(
+    masterId: string,
+    variant: RecipeVariant
+  ): Observable<RecipeVariant> {
     if (this.connectionService.isConnected() && this.userService.isLoggedIn()) {
-      return this.http.post(`${baseURL}/${apiVersion}/recipes/private/master/${masterId}`, variant)
-        .pipe(
-          mergeMap((newRecipeResponse: RecipeVariant) => {
-            return this.addRecipeVariantToMasterInList(masterId, newRecipeResponse);
-          }),
-          catchError((error: HttpErrorResponse) => this.processHttpError.handleError(error))
-        );
-    } else {
-      this.addSyncFlag('update', masterId);
+      return this.http.post(
+        `${BASE_URL}/${API_VERSION}/recipes/private/master/${masterId}`,
+        variant
+      )
+      .pipe(
+        mergeMap(
+          (newRecipeResponse: RecipeVariant): Observable<RecipeVariant> => {
+            return this.addRecipeVariantToMasterInList(
+              masterId,
+              newRecipeResponse
+            );
+          }
+        ),
+        catchError((error: HttpErrorResponse): ErrorObservable => {
+          return this.processHttpError.handleError(error);
+        })
+      );
     }
+
+    this.addSyncFlag('update', masterId);
     return this.addRecipeVariantToMasterInList(masterId, variant);
   }
 
@@ -409,13 +560,15 @@ export class RecipeProvider {
    *
    * @return: Array of behavior subjects of recipe masters
   **/
-  getFlaggedRecipeMasters(): Array<BehaviorSubject<RecipeMaster>> {
+  getFlaggedRecipeMasters(): BehaviorSubject<RecipeMaster>[] {
     return this.getMasterList()
       .value
-      .filter(recipeMaster$ => {
-        return this.syncService.getAllSyncFlags().some(syncFlag => {
-          return hasId(recipeMaster$.value, syncFlag.docId);
-        });
+      .filter((recipeMaster$: BehaviorSubject<RecipeMaster>): boolean => {
+        return this.syncService
+          .getAllSyncFlags()
+          .some((syncFlag: SyncMetadata): boolean => {
+            return hasId(recipeMaster$.value, syncFlag.docId);
+          });
       });
   }
 
@@ -427,22 +580,24 @@ export class RecipeProvider {
    *
    * @return: none
   **/
-  processSyncSuccess(syncData: Array<any>): void {
-    syncData.forEach(_syncData => {
-      if (_syncData.isDeleted) {
-        this.removeRecipeMasterFromList(_syncData.data._id);
-      } else {
-        const recipeMaster$ = this.getMasterById(_syncData.cid);
+  processSyncSuccess(syncData: (RecipeMaster | SyncData)[]): void {
+    syncData.forEach((_syncData: (RecipeMaster | SyncData)): void => {
+      if (_syncData['isDeleted'] === undefined) {
+        const recipeMaster$: BehaviorSubject<RecipeMaster>
+          = this.getRecipeMasterById((<RecipeMaster>_syncData).cid);
+
         if (recipeMaster$ === undefined) {
-          this.syncErrors.push(`Recipe with id: '${_syncData.cid}' not found`);
+          this.syncErrors.push(
+            `Recipe with id: '${(<RecipeMaster>_syncData).cid}' not found`
+          );
         } else {
-          recipeMaster$.next(_syncData);
+          recipeMaster$.next(<RecipeMaster>_syncData);
         }
       }
     });
 
     // Must call next on the list subject to trigger subscribers with new data
-    this.getMasterList().next(this.getMasterList().value);
+    this.emitListUpdate();
   }
 
   /**
@@ -454,34 +609,97 @@ export class RecipeProvider {
   **/
   syncOnConnection(onLogin: boolean): Observable<boolean> {
     // Ignore reconnects if not logged in
-    if (!onLogin && !this.userService.isLoggedIn()) return of(false);
+    if (!onLogin && !this.userService.isLoggedIn()) {
+      return of(false);
+    }
 
-    const requests = [];
-    this.syncService.getSyncFlagsByType('recipe').forEach(syncFlag => {
-      const recipeMaster$ = this.getMasterById(syncFlag.docId);
-      if (syncMethods.includes(syncFlag.method)) {
+    const requests
+      : (Observable<
+          HttpErrorResponse
+          | RecipeMaster
+          | SyncData
+        >)[] = [];
+
+    this.syncService.getSyncFlagsByType('recipe')
+      .forEach((syncFlag: SyncMetadata): void => {
+        const recipeMaster$: BehaviorSubject<RecipeMaster>
+          = this.getRecipeMasterById(syncFlag.docId);
+
         if (recipeMaster$ === undefined && syncFlag.method !== 'delete') {
-          requests.push(throwError(`Sync error: Recipe master with id '${syncFlag.docId}' not found`));
-        } else if (syncFlag.method === 'update' && missingServerId(recipeMaster$.value._id)) {
-          requests.push(throwError(`Recipe with id: ${recipeMaster$.value.cid} is missing its server id`));
-        } else if (syncFlag.method === 'create') {
-          recipeMaster$.value['forSync'] = true;
-          requests.push(this.syncService.postSync(this.syncBaseRoute, recipeMaster$.value));
-        } else if (syncFlag.method === 'update' && !missingServerId(recipeMaster$.value._id)) {
-          requests.push(this.syncService.patchSync(`${this.syncBaseRoute}/master/${recipeMaster$.value._id}`, recipeMaster$.value));
+          requests.push(
+            throwError(
+              `Sync error: Recipe master with id '${syncFlag.docId}' not found`
+            )
+          );
+          return;
         } else if (syncFlag.method === 'delete') {
-          requests.push(this.syncService.deleteSync(`${this.syncBaseRoute}/master/${syncFlag.docId}`));
+          requests.push(
+            this.syncService.deleteSync(
+              `${this.syncBaseRoute}/master/${syncFlag.docId}`
+            )
+          );
+          return;
         }
-      } else {
-        requests.push(throwError(`Sync error: Unknown sync flag method '${syncFlag.method}'`));
-      }
-    });
+
+        const recipeMaster: RecipeMaster = recipeMaster$.value;
+
+        if (hasDefaultIdType(recipeMaster.owner)) {
+          const user$: BehaviorSubject<User> = this.userService.getUser();
+
+          if (user$ === undefined || user$.value._id === undefined) {
+            requests.push(
+              throwError(
+                'Sync error: Cannot get recipe owner\'s id'
+              )
+            );
+            return;
+          }
+          recipeMaster.owner = user$.value._id;
+        }
+
+        if (
+          syncFlag.method === 'update'
+          && isMissingServerId(recipeMaster._id)
+        ) {
+          requests.push(
+            throwError(
+              `Recipe with id: ${recipeMaster.cid} is missing its server id`
+            )
+          );
+        } else if (syncFlag.method === 'create') {
+          recipeMaster['forSync'] = true;
+          requests.push(
+            this.syncService.postSync(
+              this.syncBaseRoute,
+              recipeMaster
+            )
+          );
+        } else if (
+          syncFlag.method === 'update'
+          && !isMissingServerId(recipeMaster._id)
+        ) {
+          requests.push(
+            this.syncService.patchSync(
+              `${this.syncBaseRoute}/master/${recipeMaster._id}`,
+              recipeMaster
+            )
+          );
+        } else {
+          requests.push(
+            throwError(
+              `Sync error: Unknown sync flag method '${syncFlag.method}'`
+            )
+          );
+        }
+      });
 
     return this.syncService.sync('recipe', requests)
       .pipe(
-        map((responses: SyncResponse) => {
+        map((responses: SyncResponse): boolean => {
           if (!onLogin) {
-            this.processSyncSuccess(responses.successes);
+            this.processSyncSuccess(
+              <(RecipeMaster | SyncData)[]>responses.successes
+            );
             this.updateRecipeStorage();
           }
           this.syncErrors = responses.errors;
@@ -500,10 +718,12 @@ export class RecipeProvider {
   syncOnReconnect(): void {
     this.syncOnConnection(false)
       .subscribe(
-        () => {}, // Nothing further required if successful
-        error => {
+        (): void => {}, // Nothing further required if successful
+        (error: ErrorObservable): void => {
           // TODO error feedback (toast?)
-          console.log(error);
+          console.log(
+            `${normalizeErrorObservableMessage(error)}: error on reconnect sync`
+          );
         }
       );
   }
@@ -515,22 +735,44 @@ export class RecipeProvider {
    * @return: none
   **/
   syncOnSignup(): void {
-    const requests = [];
+    const requests: (Observable<HttpErrorResponse | RecipeMaster>)[] = [];
 
-    const masterList$ = this.getMasterList();
-    const masterList = masterList$.value;
+    const masterList$: BehaviorSubject<BehaviorSubject<RecipeMaster>[]>
+      = this.getMasterList();
 
-    masterList.forEach(recipeMaster$ => {
-      const payload = recipeMaster$.value;
-      payload['forSync'] = true;
-      requests.push(this.syncService.postSync(`${this.syncBaseRoute}`, payload));
-    });
+    const masterList: BehaviorSubject<RecipeMaster>[] = masterList$.value;
+    const user$: BehaviorSubject<User> = this.userService.getUser();
+
+    if (user$ === undefined || user$.value._id === undefined) {
+      requests.push(
+        throwError(
+          'Sync error: Cannot get recipe owner\'s id'
+        )
+      );
+    } else {
+      masterList.forEach(
+        (recipeMaster$: BehaviorSubject<RecipeMaster>): void => {
+          const payload: RecipeMaster = recipeMaster$.value;
+          payload['owner'] = user$.value._id;
+          payload['forSync'] = true;
+          requests.push(
+            this.syncService.postSync(
+              `${this.syncBaseRoute}`,
+              payload
+            )
+          );
+        }
+      );
+    }
 
     this.syncService.sync('recipe', requests)
-      .subscribe((responses: SyncResponse) => {
-        this.processSyncSuccess(responses.successes);
+      .subscribe((responses: SyncResponse): void => {
+        this.processSyncSuccess(
+          <(RecipeMaster | SyncData)[]>responses.successes
+        );
         this.syncErrors = responses.errors;
         this.updateRecipeStorage();
+        this.events.publish('sync-batches-on-signup');
       });
   }
 
@@ -553,7 +795,7 @@ export class RecipeProvider {
       throw new Error('Client Validation Error: Missing User ID');
     }
 
-    const recipeMasterId = this.clientIdService.getNewId();
+    const recipeMasterId: string = this.clientIdService.getNewId();
     const initialRecipe: RecipeVariant = newMasterValues['variant'];
 
     this.populateRecipeIds(initialRecipe);
@@ -561,15 +803,14 @@ export class RecipeProvider {
     initialRecipe.isMaster = true;
     initialRecipe.owner = recipeMasterId;
 
-    const masterData = newMasterValues['master'];
+    const masterData: object = newMasterValues['master'];
     const newMaster: RecipeMaster = {
       cid: recipeMasterId,
-      name: masterData.name,
-      style: masterData.style,
-      notes: masterData.notes,
-      master: getId(initialRecipe),
+      name: masterData['name'],
+      style: masterData['style'],
+      notes: masterData['notes'],
+      master: initialRecipe.cid,
       owner: getId(user),
-      hasActiveBatch: false,
       isPublic: false,
       isFriendsOnly: false,
       variants: [ initialRecipe ]
@@ -586,12 +827,18 @@ export class RecipeProvider {
    *
    * @return: Observable of new recipe
   **/
-  addRecipeVariantToMasterInList(masterId: string, variant: RecipeVariant): Observable<RecipeVariant> {
-    const master$: BehaviorSubject<RecipeMaster> = this.getMasterById(masterId);
+  addRecipeVariantToMasterInList(
+    masterId: string,
+    variant: RecipeVariant
+  ): Observable<RecipeVariant> {
+    const master$: BehaviorSubject<RecipeMaster>
+      = this.getRecipeMasterById(masterId);
 
-    if (master$ === undefined) return throwError(`Recipe master with id ${masterId} not found`);
+    if (master$ === undefined) {
+      return throwError(`Recipe master with id ${masterId} not found`);
+    }
 
-    const master = master$.value;
+    const master: RecipeMaster = master$.value;
     variant.owner = getId(master);
 
     this.populateRecipeIds(variant);
@@ -603,6 +850,7 @@ export class RecipeProvider {
     }
 
     master$.next(master);
+    this.emitListUpdate();
     this.updateRecipeStorage();
 
     return of(variant);
@@ -615,11 +863,56 @@ export class RecipeProvider {
    * @return: none
   **/
   clearRecipes(): void {
-    this.recipeMasterList$.value.forEach(recipeMaster$ => {
-      recipeMaster$.complete();
-    });
-    this.recipeMasterList$.next([]);
+    this.getMasterList().value
+      .forEach((recipeMaster$: BehaviorSubject<RecipeMaster>) => {
+        recipeMaster$.complete();
+      });
+    this.getMasterList().next([]);
     this.storageService.removeRecipes();
+  }
+
+  /**
+   * Trigger an emit event of the master list behavior subject
+   *
+   * @params: none
+   * @return: none
+  **/
+  emitListUpdate(): void {
+    const masterList$ = this.getMasterList();
+    masterList$.next(masterList$.value);
+  }
+
+  /**
+   * Combine hops schedule instances of the same type; e.g. if the hops
+   * schedule contains two separate additions of the same type of hops (say
+   * cascade), combine the two addition amounts and keep one instance of that
+   * type of hops
+   *
+   * @params: hopsSchedule - the recipe's hops schedule
+   *
+   * @return: combined hops schedule
+  **/
+  getCombinedHopsSchedule(hopsSchedule: HopsSchedule[]): HopsSchedule[] {
+    if (hopsSchedule === undefined) {
+      return undefined;
+    }
+
+    const combined: HopsSchedule[] = [];
+
+    hopsSchedule.forEach((hops: HopsSchedule): void => {
+      const _combined: HopsSchedule = combined
+        .find((combinedHops: HopsSchedule): boolean => {
+          return hops.hopsType._id === combinedHops.hopsType._id;
+        });
+
+      if (_combined === undefined) {
+        combined.push(hops);
+      } else {
+        _combined.quantity += hops.quantity;
+      }
+    });
+
+    return combined;
   }
 
   /**
@@ -629,10 +922,11 @@ export class RecipeProvider {
    *
    * @return: the recipe master subject if found, else undefined
   **/
-  getMasterById(masterId: string): BehaviorSubject<RecipeMaster> {
-    return this.recipeMasterList$.value.find(recipeMaster$ => {
-      return hasId(recipeMaster$.value, masterId);
-    });
+  getRecipeMasterById(masterId: string): BehaviorSubject<RecipeMaster> {
+    return this.getMasterList().value
+      .find((recipeMaster$: BehaviorSubject<RecipeMaster>): boolean => {
+        return hasId(recipeMaster$.value, masterId);
+      });
   }
 
   /**
@@ -642,7 +936,7 @@ export class RecipeProvider {
    *
    * @return: subject of array of recipe master subjects
   **/
-  getMasterList(): BehaviorSubject<Array<BehaviorSubject<RecipeMaster>>> {
+  getMasterList(): BehaviorSubject<BehaviorSubject<RecipeMaster>[]> {
     return this.recipeMasterList$;
   }
 
@@ -654,13 +948,20 @@ export class RecipeProvider {
    *
    * @return: observable of requested recipe variant
   **/
-  getRecipeVariantById(masterId: string, variantId: string): Observable<RecipeVariant> {
-    const master$: BehaviorSubject<RecipeMaster> = this.getMasterById(masterId);
+  getRecipeVariantById(
+    masterId: string,
+    variantId: string
+  ): Observable<RecipeVariant> {
+    const master$: BehaviorSubject<RecipeMaster>
+      = this.getRecipeMasterById(masterId);
 
-    if (master$ === undefined) return throwError(`Recipe master with id ${masterId} not found`);
+    if (master$ === undefined) {
+      return throwError(`Recipe master with id ${masterId} not found`);
+    }
 
     return of(
-      master$.value.variants.find(_recipe => hasId(_recipe, variantId))
+      master$.value.variants
+        .find((_recipe: RecipeVariant): boolean => hasId(_recipe, variantId))
     );
   }
 
@@ -673,10 +974,11 @@ export class RecipeProvider {
   **/
   getRecipeMasterByRecipeId(variantId: string): BehaviorSubject<RecipeMaster> {
     return this.recipeMasterList$.value
-      .find(recipeMaster$ => {
-        return recipeMaster$.value.variants.some(variant => {
-          return hasId(variant, variantId);
-        });
+      .find((recipeMaster$: BehaviorSubject<RecipeMaster>): boolean => {
+        return recipeMaster$.value.variants
+          .some((variant: RecipeVariant): boolean => {
+            return hasId(variant, variantId);
+          });
       });
   }
 
@@ -690,8 +992,8 @@ export class RecipeProvider {
   **/
   isRecipeProcessPresent(variant: RecipeVariant): boolean {
     return  variant
-            && variant.processSchedule !== undefined
-            && variant.processSchedule.length > 0;
+      && variant.processSchedule !== undefined
+      && variant.processSchedule.length > 0;
   }
 
   /**
@@ -703,12 +1005,16 @@ export class RecipeProvider {
    *
    * @return: none
   **/
-  mapRecipeMasterArrayToSubjects(recipeMasterList: Array<RecipeMaster>): void {
-    const currentMasterList$ = this.getMasterList();
-    const syncList = this.getFlaggedRecipeMasters();
+  mapRecipeMasterArrayToSubjects(recipeMasterList: RecipeMaster[]): void {
+    const currentMasterList$: BehaviorSubject<BehaviorSubject<RecipeMaster>[]>
+      = this.getMasterList();
+
+    const syncList: BehaviorSubject<RecipeMaster>[]
+      = this.getFlaggedRecipeMasters();
+
     currentMasterList$.next(
       recipeMasterList
-        .map(recipeMaster => {
+        .map((recipeMaster: RecipeMaster): BehaviorSubject<RecipeMaster> => {
           return new BehaviorSubject<RecipeMaster>(recipeMaster);
         })
         .concat(syncList)
@@ -724,11 +1030,21 @@ export class RecipeProvider {
   **/
   populateRecipeIds(variant: RecipeVariant): void {
     variant.cid = this.clientIdService.getNewId();
-    if (variant.grains.length > 0) this.populateRecipeNestedIds(variant.grains);
-    if (variant.hops.length > 0) this.populateRecipeNestedIds(variant.hops);
-    if (variant.yeast.length > 0) this.populateRecipeNestedIds(variant.yeast);
-    if (variant.otherIngredients.length > 0) this.populateRecipeNestedIds(variant.otherIngredients);
-    if (variant.processSchedule.length > 0) this.populateRecipeNestedIds(variant.processSchedule);
+    if (variant.grains.length) {
+      this.populateRecipeNestedIds(variant.grains);
+    }
+    if (variant.hops.length) {
+      this.populateRecipeNestedIds(variant.hops);
+    }
+    if (variant.yeast.length) {
+      this.populateRecipeNestedIds(variant.yeast);
+    }
+    if (variant.otherIngredients.length) {
+      this.populateRecipeNestedIds(variant.otherIngredients);
+    }
+    if (variant.processSchedule.length) {
+      this.populateRecipeNestedIds(variant.processSchedule);
+    }
   }
 
   /**
@@ -738,10 +1054,18 @@ export class RecipeProvider {
    *
    * @return: none
   **/
-  populateRecipeNestedIds(innerArr: Array<GrainBill | HopsSchedule | YeastBatch | OtherIngredients | Process>): void {
-    innerArr.forEach(item => {
-      item.cid = this.clientIdService.getNewId();
-    });
+  populateRecipeNestedIds(
+    innerArr
+    : (GrainBill | HopsSchedule | YeastBatch | OtherIngredients | Process)[]
+  ): void {
+    innerArr.forEach(
+      (
+        item
+        : GrainBill | HopsSchedule | YeastBatch | OtherIngredients | Process
+      ): void => {
+        item.cid = this.clientIdService.getNewId();
+      }
+    );
   }
 
   /**
@@ -752,15 +1076,21 @@ export class RecipeProvider {
    *
    * @return: Observable - success requires no data, using for error throw/handling
   **/
-  removeRecipeFromMasterInList(master$: BehaviorSubject<RecipeMaster>, variantId: string): Observable<boolean> {
-    const master = master$.value;
-    const recipeIndex = getIndexById(variantId, master.variants);
+  removeRecipeFromMasterInList(
+    master$: BehaviorSubject<RecipeMaster>,
+    variantId: string
+  ): Observable<boolean> {
+    const master: RecipeMaster = master$.value;
+    const recipeIndex: number = getIndexById(variantId, master.variants);
 
-    if (recipeIndex === -1) return throwError(`Delete error: recipe with id ${variantId} not found`);
+    if (recipeIndex === -1) {
+      return throwError(`Delete error: recipe with id ${variantId} not found`);
+    }
 
     this.removeRecipeAsMaster(master, recipeIndex);
     master.variants.splice(recipeIndex, 1);
     master$.next(master);
+    this.emitListUpdate();
     this.updateRecipeStorage();
 
     return of(true);
@@ -774,14 +1104,23 @@ export class RecipeProvider {
    * @return: Observable - success requires no data, using for error throw/handling
   **/
   removeRecipeMasterFromList(masterId: string): Observable<boolean> {
-    const masterList = this.recipeMasterList$.value;
-    const indexToRemove = getIndexById(masterId, getArrayFromObservables(masterList));
+    const masterList: BehaviorSubject<RecipeMaster>[]
+      = this.getMasterList().value;
 
-    if (indexToRemove === -1) return throwError(`Delete error: Recipe master with id ${masterId} not found`);
+    const indexToRemove: number = getIndexById(
+      masterId,
+      getArrayFromObservables(masterList)
+    );
+
+    if (indexToRemove === -1) {
+      return throwError(
+        `Delete error: Recipe master with id ${masterId} not found`
+      );
+    }
 
     masterList[indexToRemove].complete();
     masterList.splice(indexToRemove, 1);
-    this.recipeMasterList$.next(masterList);
+    this.emitListUpdate();
     this.updateRecipeStorage();
 
     return of(true);
@@ -801,7 +1140,10 @@ export class RecipeProvider {
   removeRecipeAsMaster(recipeMaster: RecipeMaster, changeIndex: number): void {
     if (recipeMaster.variants.length > 1) {
       recipeMaster.variants[changeIndex].isMaster = false;
-      const newMaster = recipeMaster.variants[changeIndex === 0 ? 1: 0];
+
+      const newMaster: RecipeVariant
+        = recipeMaster.variants[changeIndex === 0 ? 1: 0];
+
       newMaster.isMaster = true;
       recipeMaster.master = newMaster._id || newMaster.cid;
     }
@@ -817,9 +1159,10 @@ export class RecipeProvider {
    * @return: none
   **/
   setRecipeAsMaster(recipeMaster: RecipeMaster, changeIndex: number): void {
-    recipeMaster.variants.forEach((recipe, index) => {
-      recipe.isMaster = (index === changeIndex);
-    });
+    recipeMaster.variants
+      .forEach((recipe: RecipeVariant, index: number): void => {
+        recipe.isMaster = (index === changeIndex);
+      });
     recipeMaster.master = recipeMaster.variants[changeIndex].cid;
   }
 
@@ -831,15 +1174,20 @@ export class RecipeProvider {
   **/
   updateRecipeStorage(): void {
     this.storageService.setRecipes(
-      this.recipeMasterList$.value.map(
-        (recipeMaster$: BehaviorSubject<RecipeMaster>) => {
-          return recipeMaster$.value;
-        }
-      )
+      this.recipeMasterList$.value
+        .map(
+          (recipeMaster$: BehaviorSubject<RecipeMaster>): RecipeMaster => {
+            return recipeMaster$.value;
+          }
+        )
     )
     .subscribe(
-      () => console.log('stored recipes'),
-      (error: ErrorObservable) => console.log('recipe store error', error)
+      (): void => console.log('stored recipes'),
+      (error: ErrorObservable): void => {
+        console.log(
+          `recipe store error: ${normalizeErrorObservableMessage(error)}`
+        )
+      }
     );
   }
 
@@ -851,16 +1199,27 @@ export class RecipeProvider {
    *
    * @return: Observable of updated recipe master
   **/
-  updateRecipeMasterInList(masterId: string, update: RecipeMaster | object): Observable<RecipeMaster> {
-    const masterList = this.recipeMasterList$.value;
-    const masterIndex = masterList.findIndex(recipeMaster$ => {
-      return hasId(recipeMaster$.value, masterId);
-    });
+  updateRecipeMasterInList(
+    masterId: string,
+    update: RecipeMaster | object
+  ): Observable<RecipeMaster> {
+    const masterList: BehaviorSubject<RecipeMaster>[]
+      = this.getMasterList().value;
 
-    if (masterIndex === -1) return throwError(`Update error: Recipe master with id ${masterId} not found`);
+    const masterIndex: number = masterList
+      .findIndex((recipeMaster$: BehaviorSubject<RecipeMaster>): boolean => {
+        return hasId(recipeMaster$.value, masterId);
+      });
+
+    if (masterIndex === -1) {
+      return throwError(
+        `Update error: Recipe master with id ${masterId} not found`
+      );
+    }
 
     const master$: BehaviorSubject<RecipeMaster> = masterList[masterIndex];
-    const master = master$.value;
+    const master: RecipeMaster = master$.value;
+
     for (const key in update) {
       if (master.hasOwnProperty(key) && key !== 'variants') {
         master[key] = update[key];
@@ -868,7 +1227,7 @@ export class RecipeProvider {
     }
 
     master$.next(master);
-    this.recipeMasterList$.next(masterList);
+    this.emitListUpdate();
     this.updateRecipeStorage();
 
     return of(master);
@@ -883,33 +1242,40 @@ export class RecipeProvider {
    *
    * @return: Observable of updated recipe
   **/
-  updateRecipeOfMasterInList(master$: BehaviorSubject<RecipeMaster>, variantId: string, update: RecipeVariant | object): Observable<RecipeVariant> {
-    const master = master$.value;
+  updateRecipeVariantOfMasterInList(
+    master$: BehaviorSubject<RecipeMaster>,
+    variantId: string,
+    update: RecipeVariant | object
+  ): Observable<RecipeVariant> {
+    const master: RecipeMaster = master$.value;
 
-    const recipeIndex = getIndexById(variantId, master.variants);
+    const recipeIndex: number = getIndexById(variantId, master.variants);
 
-    if (recipeIndex === -1) return throwError(`Recipe with id ${variantId} not found`);
+    if (recipeIndex === -1) {
+      return throwError(`Recipe with id ${variantId} not found`);
+    }
 
-    const recipe = master.variants[recipeIndex];
+    const variant: RecipeVariant = master.variants[recipeIndex];
 
     if (update.hasOwnProperty('isMaster')) {
       if (update['isMaster']) {
         this.setRecipeAsMaster(master, recipeIndex);
-      } else if (!update['isMaster'] && recipe.isMaster) {
+      } else if (!update['isMaster'] && variant.isMaster) {
         this.removeRecipeAsMaster(master, recipeIndex);
       }
     }
 
     for (const key in update) {
-      if (recipe.hasOwnProperty(key)) {
-        recipe[key] = update[key];
+      if (variant.hasOwnProperty(key)) {
+        variant[key] = update[key];
       }
     }
 
     master$.next(master);
+    this.emitListUpdate();
     this.updateRecipeStorage();
 
-    return of(recipe);
+    return of(variant);
   }
 
   /***** End utility methods *****/
