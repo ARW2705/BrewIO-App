@@ -4,57 +4,103 @@
 
     <!-- Main decoration image -->
     <ion-row>
+
       <img id="home-img"
            src="assets/imgs/beer-glass.jpg"
-           alt="A glass of beer">
+           alt="A glass of beer"/>
+
     </ion-row>
 
     <!-- Welcome header -->
     <ion-row justify-content-center>
-      <h2 [innerText]="getWelcomeMessage()"></h2>
-    </ion-row>
 
-    <!-- List of active batches -->
-    <ion-row class="messages-header">
-      <h3>Active Batches</h3>
-    </ion-row>
-    <active-batches></active-batches>
+      <h2 id="welcome-message"
+          [innerText]="getWelcomeMessage()">
+      </h2>
 
-    <!-- TODO: implement notifications -->
-    <!-- <ion-row class="messages-header">
-      <h3>Notifications</h3>
     </ion-row>
-    <ion-row *ngIf="!notifications.length"
-             justify-content-center>
-      No notifications
-    </ion-row>
-    <ion-row *ngIf="notifications.length">
-      Notifications shown here
-    </ion-row> -->
 
     <!-- If user not logged in -->
     <ng-container *ngIf="!isLoggedIn()">
-      <ion-row justify-content-around>
+
+      <ion-row  justify-content-around
+                id="user-buttons">
 
         <!-- Open login modal button -->
-        <ion-col col-4 class="user-button-container">
+        <ion-col  col-4
+                  class="user-button-container">
+
           <button ion-button
                   color="primary"
                   (click)="openLogin()">
             Log In
           </button>
+
         </ion-col>
 
         <!-- Open signup modal button -->
-        <ion-col col-4 class="user-button-container">
+        <ion-col  col-4
+                  class="user-button-container">
+
           <button ion-button
                   color="primary"
                   (click)="openSignup()">
             Sign Up
           </button>
+
         </ion-col>
+
       </ion-row>
+
     </ng-container>
+
+    <!-- List of active batches -->
+    <ion-row justify-content-center>
+
+      <button ion-item
+              detail-none
+              (click)="toggleActiveBatches()"
+              class="expand-button"
+              lines="none">
+        {{ showActiveBatches ? 'Hide': 'Show' }} Active Batches
+      </button>
+
+    </ion-row>
+
+    <ion-row justify-content-center>
+
+      <accordion  [expanded]="showActiveBatches"
+                  class="home-list">
+
+        <active-batches></active-batches>
+
+      </accordion>
+
+    </ion-row>
+
+    <!-- List inventory -->
+    <ion-row justify-content-center>
+
+      <button ion-item
+              detail-none
+              (click)="toggleInventory()"
+              class="expand-button"
+              lines="none">
+        {{ showInventory ? 'Hide': 'Show' }} Inventory
+      </button>
+
+    </ion-row>
+
+    <ion-row justify-content-center>
+
+      <accordion  [expanded]="showInventory"
+                  class="home-list">
+
+        <inventory></inventory>
+
+      </accordion>
+
+    </ion-row>
 
   </ion-grid>
 

@@ -15,6 +15,7 @@ import { NavMock } from '../../../test-config/mocks-ionic';
 
 /* Interface imports */
 import { RecipeMaster } from '../../shared/interfaces/recipe-master';
+import { RecipeVariant } from '../../shared/interfaces/recipe-variant';
 import { User } from '../../shared/interfaces/user';
 
 /* Page imports */
@@ -72,8 +73,9 @@ describe('Home Page', () => {
   }));
 
   describe('User not logged in', () => {
+
     beforeEach(async(() => {
-      const _mockUser = mockUser();
+      const _mockUser: User = mockUser();
       _mockUser.token = '';
       userService.getUser = jest
         .fn()
@@ -104,7 +106,7 @@ describe('Home Page', () => {
     test('should open signup modal', () => {
       fixture.detectChanges();
 
-      const modalSpy = jest.spyOn(modalService, 'openSignup');
+      const modalSpy: jest.SpyInstance = jest.spyOn(modalService, 'openSignup');
 
       homePage.openSignup();
 
@@ -114,7 +116,7 @@ describe('Home Page', () => {
     test('should open login modal', () => {
       fixture.detectChanges();
 
-      const modalSpy = jest.spyOn(modalService, 'openLogin');
+      const modalSpy: jest.SpyInstance = jest.spyOn(modalService, 'openLogin');
 
       homePage.openLogin();
 
@@ -127,6 +129,7 @@ describe('Home Page', () => {
       expect(homePage.getWelcomeMessage()).toMatch('Welcome test to BrewIO');
 
       homePage.user = null;
+
       expect(homePage.getWelcomeMessage()).toMatch('Welcome to BrewIO');
     }); // end 'should get a welcome message when not logged in' test
 
@@ -144,7 +147,7 @@ describe('Home Page', () => {
       recipeService.getMasterList = jest
         .fn()
         .mockReturnValue(
-          new BehaviorSubject<Array<BehaviorSubject<RecipeMaster>>>(
+          new BehaviorSubject<BehaviorSubject<RecipeMaster>[]>(
             [
               new BehaviorSubject<RecipeMaster>(mockRecipeMasterActive())
             ]
@@ -167,19 +170,19 @@ describe('Home Page', () => {
     test('should navigate to active brew process', () => {
       fixture.detectChanges();
 
-      const navSpy = jest.spyOn(navCtrl, 'push');
+      const navSpy: jest.SpyInstance = jest.spyOn(navCtrl, 'push');
 
-      const _mockRecipe = mockRecipeVariantComplete();
-      const _mockRecipeMaster = mockRecipeMasterActive();
+      const _mockRecipeVariant: RecipeVariant = mockRecipeVariantComplete();
+      const _mockRecipeMaster: RecipeMaster = mockRecipeMasterActive();
 
-      homePage.navToBrewProcess(_mockRecipe);
+      homePage.navToBrewProcess(_mockRecipeVariant);
 
       expect(navSpy).toHaveBeenCalledWith(
         ProcessPage,
         {
           master: _mockRecipeMaster,
           requestedUserId: _mockRecipeMaster.owner,
-          selectedRecipeId: _mockRecipe._id
+          selectedRecipeId: _mockRecipeVariant._id
         }
       )
     }); // end 'should navigate to active brew process' test
@@ -193,6 +196,34 @@ describe('Home Page', () => {
 
       expect(homePage.getWelcomeMessage()).toMatch('Welcome mockUser to BrewIO');
     }); // end 'should get a welcome message when logged in' test
+
+    test('should toggle show active batches flag', () => {
+      fixture.detectChanges();
+
+      expect(homePage.showActiveBatches).toBe(false);
+
+      homePage.toggleActiveBatches();
+
+      expect(homePage.showActiveBatches).toBe(true);
+
+      homePage.toggleActiveBatches();
+
+      expect(homePage.showActiveBatches).toBe(false);
+    }); // end 'should toggle show active batches flag' test
+
+    test('should toggle show inventory flag', () => {
+      fixture.detectChanges();
+
+      expect(homePage.showInventory).toBe(false);
+
+      homePage.toggleInventory();
+
+      expect(homePage.showInventory).toBe(true);
+
+      homePage.toggleInventory();
+
+      expect(homePage.showInventory).toBe(false);
+    }); // end 'should toggle show inventory flag' test
 
   }); // end 'User logged in' section
 

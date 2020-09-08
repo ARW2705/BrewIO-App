@@ -22,6 +22,18 @@ page-home {
     text-align: center;
   }
 
+  #user-buttons {
+    /* Display */
+    padding-top: 5%;
+    padding-bottom: 5%;
+  }
+
+  #welcome-message {
+    /* Display */
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
   .active-batch-summary {
     /* Text */
     text-align: center;
@@ -37,9 +49,18 @@ page-home {
     margin-top: 56px;
   }
 
+  .expand-button {
+    /* Text */
+    text-align: center;
+  }
+
+  .home-list {
+    /* Display */
+    width: 100%;
+  }
+
   .messages-header {
-    /* Children */
-    h3 {
+    > h3 {
       /* Display */
       width: 100%;
 
