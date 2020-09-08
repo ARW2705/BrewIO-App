@@ -1,5 +1,5 @@
 // API generated properties
-export const sharedProperties = [
+export const SHARED_PROPERTIES: string[] = [
   '_id',
   'createdAt',
   'updatedAt'

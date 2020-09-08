@@ -1,1 +1,1 @@
-export const defaultIdTypeRegex = RegExp(/^[\d]{13}$/);
+export const DEFAULT_ID_TYPE_REGEX: RegExp = RegExp(/^[\d]{13}$/);

@@ -1,1 +1,5 @@
-export const syncMethods: Array<string> = ['create', 'update', 'delete'];
+export const SYNC_METHODS: string[] = [
+  'create',
+  'update',
+  'delete'
+];
