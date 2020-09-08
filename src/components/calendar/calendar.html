@@ -1,119 +1,133 @@
 <ion-card id="calendar-card">
 
   <!-- Calendar header -->
-
   <ion-card-header no-padding>
+
     <ion-card-title>
+
       <ion-grid>
 
         <ion-row align-items-center>
 
           <!-- Go back month button -->
-
           <ion-col col-2>
+
             <button (click)="changeMonthYear('prev', 'months')"
                     class="change-month-button">
-              <ion-icon color="primary"
-                        name="arrow-dropleft-circle"></ion-icon>
+
+              <ion-icon name="arrow-dropleft-circle"
+                        color="primary">
+              </ion-icon>
+
             </button>
+
           </ion-col>
 
           <!-- Displayed month -->
-
           <ion-col class="header-month">
             {{ currentDate.format('MMMM') }}
           </ion-col>
 
           <!-- Go forward month button -->
-
           <ion-col col-2>
+
             <button (click)="changeMonthYear('next', 'months')"
                     class="change-month-button">
-              <ion-icon color="primary"
-                        name="arrow-dropright-circle"></ion-icon>
+
+              <ion-icon name="arrow-dropright-circle"
+                        color="primary">
+              </ion-icon>
+
             </button>
+
           </ion-col>
 
         </ion-row>
 
+
         <ion-row>
 
           <!-- Toggle select start button -->
-
           <ion-col>
-            <button ion-button
-                    color="primary"
-                    [ngClass]="{
+
+            <button [ngClass]="{
                       'select-button': true,
-                      'active': editType == 'start'
+                      'active': editType === 'start'
                     }"
+                    ion-button
+                    color="primary"
                     (click)="toggleEdit('start')">
               Select Start
             </button>
+
           </ion-col>
 
           <!-- Toggle select alerts button -->
-
           <ion-col>
-            <button ion-button
-                    color="primary"
-                    class="select-button"
-                    [ngClass]="{
+
+            <button [ngClass]="{
                       'select-button': true,
-                      'active': editType == 'alerts'
+                      'active': editType === 'alerts'
                     }"
-                    (click)="toggleEdit('alerts')">
+                    ion-button
+                    color="primary"
+                    (click)="toggleEdit('alerts')"
+                    class="select-button">
               Select Alerts
             </button>
+
           </ion-col>
 
         </ion-row>
 
       </ion-grid>
+
     </ion-card-title>
+
   </ion-card-header>
 
   <!-- Calendar dates -->
-
   <ion-card-content no-padding>
+
     <ion-grid>
 
       <!-- Display week day markers -->
-
       <ion-row>
-        <ion-col *ngFor="let day of weekdays"
-                 class="day-header">
+
+        <ion-col  *ngFor="let day of weekdays"
+                  class="day-header">
           {{ day }}
         </ion-col>
+
       </ion-row>
 
-      <ion-row *ngFor="let week of month"
-               class="week-row">
+      <ion-row  *ngFor="let week of month"
+                class="week-row">
 
-        <ion-col *ngFor="let day of week"
-                 [ngClass]="{
-                   'projected': day.isProjected,
-                   'start': day.isStart,
-                   'month': day.isMonth
-                 }">
+        <ion-col  *ngFor="let day of week"
+                  [ngClass]="{
+                    'projected': day.isProjected,
+                    'start': day.isStart,
+                    'month': day.isMonth
+                  }">
 
           <!-- Button if in select start edit mode -->
-          <button *ngIf="editType == 'start'"
+          <button *ngIf="editType === 'start'"
                   (click)="selectStartDate(day)"
                   class="day day-button">
             {{ day.mDate.date() }}
           </button>
 
           <!-- Button if in select alert edit mode -->
-          <button *ngIf="editType == 'alerts'"
+          <button *ngIf="editType === 'alerts'"
                   (click)="toggleProjectedDate(day)"
                   class="day day-button">
             {{ day.mDate.date() }}
           </button>
 
           <!-- Date marker if not in any edit mode -->
-          <span *ngIf="editType == ''"
-                  class="day day-span">
+          <span *ngIf="editType === ''"
+                class="day day-span">
             {{ day.mDate.date() }}
           </span>
 
@@ -122,5 +136,7 @@
       </ion-row>
 
     </ion-grid>
+
   </ion-card-content>
+
 </ion-card>

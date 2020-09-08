@@ -1,13 +1,13 @@
 /* Module imports */
-import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, SimpleChange, SimpleChanges } from '@angular/core';
 import * as moment from 'moment';
-import * as _ from 'lodash';
 
 /* Utility imports */
-import { getId } from '../../shared/utility-functions/utilities';
+import { getId } from '../../shared/utility-functions/id-helpers';
 
 /* Interface imports */
 import { CalendarDate } from '../../shared/interfaces/calendar-date';
+
 
 @Component({
   selector: 'calendar',
@@ -15,14 +15,14 @@ import { CalendarDate } from '../../shared/interfaces/calendar-date';
 })
 export class CalendarComponent implements OnInit, OnChanges {
   @Input('data') stepData;
-  weekdays: Array<string> = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-  selectedDay: CalendarDate = null;
-  month: Array<Array<CalendarDate>> = [];
-  projectedDates: Array<CalendarDate> = [];
-  startDate: CalendarDate = null;
   currentDate: moment.Moment = null;
-  isProjectedSelection: boolean = false;
   editType: string = '';
+  isProjectedSelection: boolean = false;
+  month: CalendarDate[][] = [];
+  projectedDates: CalendarDate[] = [];
+  selectedDay: CalendarDate = null;
+  startDate: CalendarDate = null;
+  weekdays: string[] = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
   constructor() {
     this.currentDate = moment();
@@ -35,17 +35,21 @@ export class CalendarComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes.stepData.previousValue === undefined
-        || getId(changes.stepData.currentValue) === getId(changes.stepData.previousValue)) return;
-    this.stepData = changes.stepData.currentValue;
-    this.initCalendar();
+    const change: SimpleChange = changes.stepData;
+
+    if (change.previousValue !== undefined
+        && (getId(change.currentValue) !== getId(change.previousValue))) {
+      this.stepData = change.currentValue;
+      this.initCalendar();
+    }
   }
 
   /***** End Lifecycle hooks *****/
 
 
   /**
-   * Mark calendar date as a projected date and add to projected dates array
+   * Mark calendar date as a projected date and add to projected dates array;
+   * Projected dates cannot be the start date
    *
    * @params: date - a calendar date to use as projected
    *
@@ -65,48 +69,58 @@ export class CalendarComponent implements OnInit, OnChanges {
    *
    * @return: none
   **/
-  changeMonthYear(direction: string, timeframe: moment.unitOfTime.DurationConstructor): void {
-    this.currentDate =
-      direction === 'next'
-      ? moment(this.currentDate).add(1, timeframe)
-      : moment(this.currentDate).subtract(1, timeframe);
+  changeMonthYear(
+    direction: string,
+    timeframe: moment.unitOfTime.DurationConstructor
+  ): void {
+    this.currentDate =  direction === 'next'
+                        ? moment(this.currentDate).add(1, timeframe)
+                        : moment(this.currentDate).subtract(1, timeframe);
     this.populateCalendar();
     this.updateView();
   }
 
   /**
-   * Generate the calendar as a 7 x 6 grid containing the days of the current month
-   * and filling out the remaining grid positions with days of the previous month
-   * on the top row and days of the next month on the bottom row
+   * Generate the calendar as a 7 x 6 grid containing the days of the current
+   * month and filling out the remaining grid positions with days of the
+   * previous month on the top row and days of the next month on the bottom row
    *
    * @params: currentMoment - current datetime
    *
    * @return: array of 42 Calendar dates
   **/
-  fillDates(currentMoment: moment.Moment): Array<CalendarDate> {
-    const firstOfMonth = moment(currentMoment).startOf('month').day();
-    const firstOfGrid = moment(currentMoment).startOf('month').subtract(firstOfMonth, 'days');
-    const start = firstOfGrid.date();
-    return _.range(start, start + 42)
-      .map((date: number): CalendarDate => {
-        const _date = moment(firstOfGrid).date(date);
-        return {
-          isToday: this.isToday(_date),
-          isStart: this.isStart(_date),
-          isProjected: this.isProjected(_date),
-          mDate: _date
-        };
-      });
+  fillDates(currentMoment: moment.Moment): CalendarDate[] {
+    const firstOfMonth: number = moment(currentMoment)
+      .startOf('month')
+      .day();
+
+    const firstOfGrid: moment.Moment = moment(currentMoment)
+      .startOf('month')
+      .subtract(firstOfMonth, 'days');
+
+    const start: number = firstOfGrid.date();
+
+    const populatedCalendar: CalendarDate[] = [];
+    for (let i=start; i < start + 42; i++) {
+      const _date: moment.Moment = moment(firstOfGrid).date(i);
+      populatedCalendar.push({
+        isToday: this.isToday(_date),
+        isStart: this.isStart(_date),
+        isProjected: this.isProjected(_date),
+        mDate: _date
+      })
+    }
+    return populatedCalendar;
   }
 
   /**
-   * Get calendar data at start of a calendar process
+   * Get calendar data to use at the start of a calendar process step
    *
    * @params: none
    *
    * @return: object with step id, start datetime, and any alerts
   **/
-  getFinal(): any {
+  getFinal(): object {
     return {
       _id: getId(this.stepData),
       startDatetime: this.startDate.mDate.toISOString(),
@@ -128,18 +142,20 @@ export class CalendarComponent implements OnInit, OnChanges {
    * @return: none
   **/
   initCalendar(): void {
-    const today = {
+    const today: CalendarDate = {
       mDate: this.currentDate,
       isStart: true,
       isProjected: false,
       isToday: true,
     };
-    const end = {
+
+    const end: CalendarDate = {
       mDate: this.currentDate.clone().add(this.stepData.duration, 'days'),
       isStart: false,
       isProjected: true,
       isToday: false
     };
+
     this.startDate = today;
     this.populateCalendar();
     this.addToProjectedDates(end);
@@ -166,9 +182,9 @@ export class CalendarComponent implements OnInit, OnChanges {
    * @return: true if given datetime is a projected date
   **/
   isProjected(date: moment.Moment): boolean {
-    return _.findIndex(this.projectedDates, projectedDate => {
+    return this.projectedDates.some((projectedDate: CalendarDate) => {
       return moment(date).isSame(projectedDate.mDate, 'day');
-    }) !== -1;
+    });
   }
 
   /**
@@ -194,14 +210,14 @@ export class CalendarComponent implements OnInit, OnChanges {
   }
 
   /**
-   * Assemble calendar to display
+   * Assemble 7x6 calendar for display
    *
    * @params: none
    * @return: none
   **/
   populateCalendar(): void {
-    const dates: Array<CalendarDate> = this.fillDates(this.currentDate);
-    const month: Array<Array<CalendarDate>> = [];
+    const dates: CalendarDate[] = this.fillDates(this.currentDate);
+    const month: CalendarDate[][] = [];
     for (let i=0; i < 6; i++) {
       month.push(dates.slice(i * 7, i * 7 + 7));
     }
@@ -209,14 +225,17 @@ export class CalendarComponent implements OnInit, OnChanges {
   }
 
   /**
-   * Set given date as start date
+   * Set given date as start date as long as it is not in the past
    *
    * @params: date - datetime to set as start
    *
    * @return: none
   **/
   selectStartDate(date: CalendarDate): void {
-    if (moment(date.mDate).isBefore(this.currentDate, 'day')) return;
+    if (moment(date.mDate).isBefore(this.currentDate, 'day')) {
+      return;
+    }
+
     this.startDate = date;
     this.resetProjectedDates();
     this.updateView();
@@ -230,6 +249,7 @@ export class CalendarComponent implements OnInit, OnChanges {
   **/
   resetProjectedDates(): void {
     this.projectedDates = [];
+
     this.addToProjectedDates({
       mDate: this.startDate.mDate.clone().add(this.stepData.duration, 'days'),
       isStart: false,
@@ -259,10 +279,12 @@ export class CalendarComponent implements OnInit, OnChanges {
   **/
   toggleProjectedDate(date: CalendarDate): void {
     if (date.mDate.isSameOrBefore(this.startDate.mDate, 'day')) return;
-    const index = _.findIndex(this.projectedDates, pDate => {
+
+    const index: number = this.projectedDates.findIndex((pDate: CalendarDate) => {
       return moment(pDate.mDate).isSame(date.mDate);
     });
-    if (index == -1) {
+
+    if (index === -1) {
       // add date
       date.isProjected = true;
       date.isStart = false;
@@ -285,13 +307,19 @@ export class CalendarComponent implements OnInit, OnChanges {
     this.month.forEach(week => {
       week.forEach(day => {
         day.isMonth = this.isMonth(day.mDate);
+
+        // set isStart status
         if (moment(day.mDate).isSame(this.startDate.mDate, 'day')) {
           day.isStart = true;
           day.isProjected = false;
         } else {
           day.isStart = false;
         }
-        if (this.projectedDates.some(date => moment(date.mDate).isSame(day.mDate, 'day'))) {
+
+        // set isProjected status
+        if (this.projectedDates.some(date => {
+          return moment(date.mDate).isSame(day.mDate, 'day')
+        })) {
           day.isStart = false;
           day.isProjected = true;
         } else {

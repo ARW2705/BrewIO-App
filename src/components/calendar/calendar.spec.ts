@@ -1,7 +1,7 @@
 /* Module imports */
-import { ComponentFixture, TestBed, async } from '@angular/core/testing';
-import { IonicModule, Config, App } from 'ionic-angular';
-import { SimpleChange } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { IonicModule, Config } from 'ionic-angular';
+import { SimpleChange, SimpleChanges } from '@angular/core';
 import * as moment from 'moment';
 
 /* Test configuration imports */
@@ -14,6 +14,7 @@ import { ConfigMock } from '../../../test-config/mocks-ionic';
 
 /* interface imports */
 import { CalendarDate } from '../../shared/interfaces/calendar-date';
+import { Process } from '../../shared/interfaces/process';
 
 /* Component imports */
 import { CalendarComponent } from './calendar';
@@ -59,9 +60,9 @@ describe('Calendar Component', () => {
     const now: moment.Moment = moment();
     calendar.currentDate = now;
 
-    const popSpy = jest.spyOn(calendar, 'populateCalendar');
-    const addSpy = jest.spyOn(calendar, 'addToProjectedDates');
-    const selectSpy = jest.spyOn(calendar, 'selectStartDate');
+    const popSpy: jest.SpyInstance = jest.spyOn(calendar, 'populateCalendar');
+    const addSpy: jest.SpyInstance = jest.spyOn(calendar, 'addToProjectedDates');
+    const selectSpy: jest.SpyInstance = jest.spyOn(calendar, 'selectStartDate');
 
     calendar.initCalendar();
 
@@ -74,15 +75,16 @@ describe('Calendar Component', () => {
   test('should update stepData', () => {
     fixture.detectChanges();
 
-    const oldStepData = mockCalendarStep();
-    const newStepData = {
+    const oldStepData: Process = mockCalendarStep();
+    const newStepData: Process = {
       _id: 'different-step',
+      cid: '0123456789013',
       type: 'calendar',
       name: 'different-calendar-step',
       description: 'a different mock calendar step',
       duration: 10
     };
-    const stepDataChange = {
+    const stepDataChange: SimpleChanges = {
       stepData: new SimpleChange(oldStepData, newStepData, false)
     };
 
@@ -95,46 +97,48 @@ describe('Calendar Component', () => {
   test('should add a date to projected dates array', () => {
     fixture.detectChanges();
 
-    const currentProjectedDatesLength = calendar.projectedDates.length;
+    const currentProjectedDatesLength: number = calendar.projectedDates.length;
 
     calendar.addToProjectedDates(mockCalendarDate());
 
     expect(calendar.projectedDates.length).toBe(currentProjectedDatesLength + 1);
-    expect(calendar.projectedDates[currentProjectedDatesLength].isProjected).toBe(true);
-    expect(calendar.projectedDates[currentProjectedDatesLength].isStart).toBe(false);
+    expect(calendar.projectedDates[currentProjectedDatesLength].isProjected)
+      .toBe(true);
+    expect(calendar.projectedDates[currentProjectedDatesLength].isStart)
+      .toBe(false);
   }); // end 'should add a date to projected dates array' test
 
   test('should change month to be displayed', () => {
     fixture.detectChanges();
 
     const now: moment.Moment = mockCalendarDate().mDate;
-    const month = now.month();
+    const month: number = now.month();
     calendar.currentDate = now;
     calendar.changeMonthYear('next', 'month');
 
-    expect(calendar.currentDate.month()).toBe(month + 1);
+    expect(calendar.currentDate.month()).toEqual(month + 1);
 
     calendar.currentDate = now;
     calendar.changeMonthYear('prev', 'month');
 
-    expect(calendar.currentDate.month()).toBe(month - 1);
+    expect(calendar.currentDate.month()).toEqual(month - 1);
   }); // end 'should change month to be displayed' test
 
   test('should change year to be displayed', () => {
     fixture.detectChanges();
 
     const now: moment.Moment = mockCalendarDate().mDate;
-    const year = now.year();
+    const year: number = now.year();
     calendar.currentDate = now;
 
     calendar.changeMonthYear('next', 'year');
 
-    expect(calendar.currentDate.year()).toBe(year + 1);
+    expect(calendar.currentDate.year()).toEqual(year + 1);
 
     calendar.currentDate = now;
     calendar.changeMonthYear('prev', 'year');
 
-    expect(calendar.currentDate.year()).toBe(year - 1);
+    expect(calendar.currentDate.year()).toEqual(year - 1);
   }); // end 'should change year to be displayed' test
 
   test('should fill dates of calendar display', () => {
@@ -144,18 +148,18 @@ describe('Calendar Component', () => {
     calendar.currentDate = now;
     calendar.month = [];
 
-    const dates = calendar.fillDates(now);
+    const dates: CalendarDate[] = calendar.fillDates(now);
 
-    expect(dates[0].mDate.month()).toBe(0);
-    expect(dates[0].mDate.date()).toBe(26);
-    expect(dates[41].mDate.month()).toBe(2);
-    expect(dates[41].mDate.date()).toBe(7);
+    expect(dates[0].mDate.month()).toEqual(0);
+    expect(dates[0].mDate.date()).toEqual(26);
+    expect(dates[41].mDate.month()).toEqual(2);
+    expect(dates[41].mDate.date()).toEqual(7);
   }); // end 'should fill dates of calendar display' test
 
   test('should return final data to parent component', () => {
     fixture.detectChanges();
 
-    const _mockCalendarStep = mockCalendarStep();
+    const _mockCalendarStep: Process = mockCalendarStep();
     const now: moment.Moment = mockCalendarDate().mDate;
     const later: moment.Moment = now.clone().add(1, 'days');
     calendar.currentDate = now;
@@ -174,19 +178,25 @@ describe('Calendar Component', () => {
       }
     ];
 
-    const returnData = calendar.getFinal();
+    const returnData: object = calendar.getFinal();
 
-    expect(returnData._id).toMatch(_mockCalendarStep._id);
-    expect(returnData.startDatetime).toMatch(now.toISOString());
-    expect(returnData.alerts[0].datetime).toMatch(later.toISOString());
+    expect(returnData['_id']).toMatch(_mockCalendarStep._id);
+    expect(returnData['startDatetime']).toMatch(now.toISOString());
+    expect(returnData['alerts'][0].datetime).toMatch(later.toISOString());
   }); // end 'should return final data to parent component' test
 
   test('should check if given month is the current month', () => {
     fixture.detectChanges();
 
     const now: moment.Moment = mockCalendarDate().mDate;
-    const dateWithCurrentMonth: moment.Moment = moment().year(2020).month(1).date(10);
-    const dateWithOtherMonth: moment.Moment = moment().year(2020).month(2).date(7);
+    const dateWithCurrentMonth: moment.Moment = moment()
+      .year(2020)
+      .month(1)
+      .date(10);
+    const dateWithOtherMonth: moment.Moment = moment()
+      .year(2020)
+      .month(2)
+      .date(7);
     calendar.currentDate = now;
 
     expect(calendar.isMonth(dateWithCurrentMonth)).toBe(true);
@@ -233,7 +243,10 @@ describe('Calendar Component', () => {
     };
 
     expect(calendar.isStart(now)).toBe(true);
-    expect(calendar.isStart(now.clone().add(mockCalendarStep().duration, 'days'))).toBe(false);
+    expect(
+      calendar.isStart(now.clone().add(mockCalendarStep().duration, 'days'))
+    )
+    .toBe(false);
   }); // end 'should check if given date is the start date' test
 
   test('should check if given date is the current date', () => {
@@ -247,13 +260,14 @@ describe('Calendar Component', () => {
     fixture.detectChanges();
 
     calendar.month = [];
-    const fillSpy = jest.spyOn(calendar, 'fillDates');
+
+    const fillSpy: jest.SpyInstance = jest.spyOn(calendar, 'fillDates');
 
     calendar.populateCalendar();
 
     expect(fillSpy).toHaveBeenCalled();
-    expect(calendar.month.length).toBe(6);
-    expect(calendar.month[0].length).toBe(7);
+    expect(calendar.month.length).toEqual(6);
+    expect(calendar.month[0].length).toEqual(7);
   }); // end 'should split the calendar dates into weeks' test
 
   test('should select a start date', () => {
@@ -264,8 +278,9 @@ describe('Calendar Component', () => {
     pastDate.mDate = now.mDate.clone().subtract(1, 'days');
     calendar.currentDate = now.mDate;
 
-    const projectedSpy = jest.spyOn(calendar, 'resetProjectedDates');
-    const updateSpy = jest.spyOn(calendar, 'updateView');
+    const projectedSpy: jest.SpyInstance = jest
+      .spyOn(calendar, 'resetProjectedDates');
+    const updateSpy: jest.SpyInstance = jest.spyOn(calendar, 'updateView');
 
     calendar.selectStartDate(pastDate);
 
@@ -283,12 +298,16 @@ describe('Calendar Component', () => {
     fixture.detectChanges();
 
     const _mockCalendarDate: CalendarDate = mockCalendarDate();
-    calendar.projectedDates = [_mockCalendarDate, _mockCalendarDate, _mockCalendarDate];
+    calendar.projectedDates = [
+      _mockCalendarDate,
+      _mockCalendarDate,
+      _mockCalendarDate
+    ];
     calendar.currentDate = _mockCalendarDate.mDate;
 
     calendar.resetProjectedDates();
 
-    expect(calendar.projectedDates.length).toBe(1);
+    expect(calendar.projectedDates.length).toEqual(1);
   }); // end 'should reset projected dates' test
 
   test('should toggle edit mode', () => {
@@ -313,8 +332,10 @@ describe('Calendar Component', () => {
     fixture.detectChanges();
 
     const _mockCalendarDate: CalendarDate = mockCalendarDate();
+
     const newDate: CalendarDate = mockCalendarDate();
     newDate.mDate = _mockCalendarDate.mDate.clone().add(2, 'days');
+
     const later: moment.Moment = _mockCalendarDate.mDate.clone().add(7, 'days');
     calendar.currentDate = _mockCalendarDate.mDate;
 
@@ -335,7 +356,7 @@ describe('Calendar Component', () => {
 
     calendar.toggleProjectedDate(newDate);
 
-    expect(calendar.projectedDates.length).toBe(2);
+    expect(calendar.projectedDates.length).toEqual(2);
     expect(calendar.projectedDates[1].mDate).toStrictEqual(newDate.mDate);
     expect(calendar.projectedDates[1].isProjected).toBe(true);
   }); // end 'should add a date to projected dates' test
@@ -344,8 +365,10 @@ describe('Calendar Component', () => {
     fixture.detectChanges();
 
     const _mockCalendarDate: CalendarDate = mockCalendarDate();
+
     const newDate: CalendarDate = mockCalendarDate();
     newDate.mDate = _mockCalendarDate.mDate.clone().add(2, 'days');
+
     calendar.currentDate = _mockCalendarDate.mDate;
 
     calendar.startDate = {
@@ -359,7 +382,7 @@ describe('Calendar Component', () => {
 
     calendar.toggleProjectedDate(newDate);
 
-    expect(calendar.projectedDates.length).toBe(1);
+    expect(calendar.projectedDates.length).toEqual(1);
     expect(calendar.projectedDates[0].mDate).not.toStrictEqual(newDate.mDate);
   }); // end 'should remove a date from projected dates' test
 
@@ -367,13 +390,15 @@ describe('Calendar Component', () => {
     fixture.detectChanges();
 
     const _mockCalendarDate: CalendarDate = mockCalendarDate();
+
     const newDate: CalendarDate = mockCalendarDate();
     newDate.mDate = _mockCalendarDate.mDate.clone().subtract(2, 'days');
+
     calendar.currentDate = _mockCalendarDate.mDate;
 
     calendar.toggleProjectedDate(newDate);
 
-    expect(calendar.projectedDates.length).toBe(1);
+    expect(calendar.projectedDates.length).toEqual(1);
     expect(calendar.projectedDates[0].mDate).not.toStrictEqual(newDate.mDate);
   }); // end 'should not change projected dates if a past date is given' test
 
@@ -381,22 +406,31 @@ describe('Calendar Component', () => {
     fixture.detectChanges();
 
     const _mockCalendarDate: CalendarDate = mockCalendarDate();
-    const dateIndex = [1 , 4];
-    const projectedDateIndex = [2, 4];
+
+    const dateIndex: number[] = [1 , 4];
+
+    const projectedDateIndex: number[] = [2, 4];
+
     const _mockNewDate: CalendarDate = mockCalendarDate();
     _mockNewDate.mDate = _mockNewDate.mDate.clone().add(2, 'days');
+
     calendar.currentDate = _mockCalendarDate.mDate;
     calendar.startDate = _mockCalendarDate;
 
     calendar.initCalendar();
 
-    const shouldChangeToNotStarted = calendar.month[0][0];
+    const shouldChangeToNotStarted: CalendarDate = calendar.month[0][0];
     shouldChangeToNotStarted.isStart = true;
-    const shouldChangeToNotProjected = calendar.month[1][1];
+
+    const shouldChangeToNotProjected: CalendarDate = calendar.month[1][1];
     shouldChangeToNotProjected.isProjected = true;
-    const shouldChangeToStarted = calendar.month[dateIndex[0]][dateIndex[1]]
+
+    const shouldChangeToStarted: CalendarDate = calendar
+      .month[dateIndex[0]][dateIndex[1]]
     shouldChangeToStarted.isStart = false;
-    const shouldChangeToProjected = calendar.month[projectedDateIndex[0]][projectedDateIndex[1]]
+
+    const shouldChangeToProjected: CalendarDate = calendar
+      .month[projectedDateIndex[0]][projectedDateIndex[1]]
     shouldChangeToProjected.isProjected = false;
 
     calendar.updateView();
