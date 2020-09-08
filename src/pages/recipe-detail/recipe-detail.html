@@ -6,56 +6,71 @@
 
       <!-- Recipe master style name -->
       <ion-row>
+
         <ion-col id="style-name">
           {{ recipeMaster.style.name }}
         </ion-col>
+
       </ion-row>
 
       <!-- Open form to update recipe master button -->
       <ion-row>
+
         <button ion-button
-                class="form-button"
                 color="primary"
-                (click)="navToRecipeForm('master')">
+                (click)="navToRecipeForm('master')"
+                class="form-button">
           Update {{ recipeMaster.name }}
         </button>
+
       </ion-row>
 
       <!-- Open form to create new recipe for master -->
       <ion-row>
+
         <button ion-button
-                class="form-button"
                 color="primary"
-                (click)="navToRecipeForm('variant')">
+                (click)="navToRecipeForm('variant')"
+                class="form-button">
           Create New Variant
         </button>
+
       </ion-row>
 
       <!-- Recipe master notes -->
       <ion-row *ngIf="recipeMaster.notes.length">
+
         <ion-col col-12
                  id="note-name">
 
           <!-- Toggle recipe master notes visible button -->
           <button ion-button
-                  class="form-button"
                   color="primary"
-                  (click)="expandNoteMain()">
-            <span>Notes for {{ recipeMaster.name }}</span>
+                  (click)="expandNoteMain()"
+                  class="form-button">
+
+            <span>
+              Notes for {{ recipeMaster.name }}
+            </span>
+
             <ion-icon [name]="showNotesIcon"></ion-icon>
+
           </button>
+
         </ion-col>
 
         <ion-col col-12>
+
           <accordion [expanded]="showNotes">
 
             <!-- Recipe master notes list -->
             <ion-list id="note-list">
+
               <ng-container *ngFor="let note of recipeMaster.notes; index as i">
 
                 <!-- Toggle note full text visibility -->
-                <button class="expand-button note-button"
-                        (click)="expandNote(i)">
+                <button (click)="expandNote(i)"
+                        class="expand-button note-button">
                   • {{ note }}
                 </button>
 
@@ -77,106 +92,142 @@
                             (click)="updateNote(i)">
                       Update
                     </button>
+
                   </div>
+
                 </accordion>
 
               </ng-container>
+
             </ion-list>
 
           </accordion>
+
         </ion-col>
+
       </ion-row>
 
       <ion-row>
+
         <ion-list id="variant-list">
-          <ng-container *ngFor="let recipe of recipeMaster.variants; index as i">
+
+          <ng-container *ngFor="let variant of variantList; index as i">
 
             <!-- Recipe variant list -->
             <ion-item-sliding #slidingItems>
 
               <!-- Delete recipe variant button -->
-              <ion-item-options side="left"
-                                *ngIf="recipeMaster.variants.length > 1">
+              <ion-item-options *ngIf="variantList.length > 1"
+                                side="left">
+
                 <button ion-button
                         color="danger"
-                        [disabled]="!canDelete()"
-                        (click)="deleteRecipe(recipe)">
+                        (click)="deleteRecipe(variant)"
+                        [disabled]="!canDelete()">
+
                   <ion-icon name="trash"></ion-icon>
+
                   Delete
+
                 </button>
+
               </ion-item-options>
 
               <!-- Toggle recipe ingredient list button -->
-              <button detail-none
-                      class="expand-button"
+              <button ion-item
+                      detail-none
                       (click)="expandRecipe(i)"
-                      ion-item
+                      class="expand-button"
                       lines="none">
 
                 <!-- Recipe variant quick info -->
                 <ion-grid no-padding>
+
                   <ion-row class="recipe-summary-header">
+
                     <ion-col>
-                      {{ recipe.variantName | titlecase }}
+
+                      {{ variant.variantName | titlecase }}
 
                       <!-- Star icon if variant is the master -->
-                      <ion-icon *ngIf="recipe.isMaster"
+                      <ion-icon *ngIf="variant.isMaster"
                                 name="star"
-                                color="primary" ></ion-icon>
+                                color="primary">
+                      </ion-icon>
 
                       <!-- Filled heart icon if variant is not the master, but is a favorite -->
-                      <ion-icon *ngIf="!recipe.isMaster && recipe.isFavorite"
+                      <ion-icon *ngIf="!variant.isMaster && variant.isFavorite"
                                 name="heart"
-                                color="danger"></ion-icon>
+                                color="danger">
+                      </ion-icon>
 
                       <!-- Outlined heart icon if variant is not the master or a favorite -->
-                      <ion-icon *ngIf="!recipe.isMaster && !recipe.isFavorite"
+                      <ion-icon *ngIf="!variant.isMaster && !variant.isFavorite"
                                 name="heart-outline"
-                                color="danger"></ion-icon>
+                                color="danger">
+                      </ion-icon>
+
                     </ion-col>
+
                   </ion-row>
 
                   <!-- Recipe variant quick info -->
                   <ion-row class="recipe-summary-subheader">
+
                     <ion-col>
+
                       <p>
-                        {{ recipe.batchVolume }} gal
-                         • {{ recipe.brewingType | titlecase }}
-                         • {{ recipe.ABV.toFixed(1) }}% ABV
-                         • {{ recipe.IBU.toFixed(1) }} IBU
-                         • {{ recipe.SRM.toFixed(1) }} SRM
+                        {{ variant.batchVolume }} gal
+                         • {{ variant.brewingType | titlecase }}
+                         • {{ variant.ABV.toFixed(1) }}% ABV
+                         • {{ variant.IBU.toFixed(1) }} IBU
+                         • {{ variant.SRM.toFixed(1) }} SRM
                       </p>
+
                     </ion-col>
+
                   </ion-row>
+
                 </ion-grid>
+
               </button>
 
               <ion-item-options side="right">
 
                 <!-- Toggle favorite if not the master -->
-                <button ion-button
+                <button *ngIf="!variant.isMaster"
+                        ion-button
                         color="heart"
-                        *ngIf="!recipe.isMaster"
-                        (click)="toggleFavorite(recipe)">
+                        (click)="toggleFavorite(variant)">
+
                   <ion-icon name="heart"></ion-icon>
+
                   Fav
+
                 </button>
 
                 <!-- Start a new brew session with this variant -->
                 <button ion-button
                         color="primary"
-                        (click)="navToBrewProcess(recipe)">
+                        (click)="navToBrewProcess(variant)">
+
                   <ion-icon name="beer"></ion-icon>
+
                   Brew
+
                 </button>
 
                 <!-- Open recipe form to edit -->
                 <button ion-button
                         color="secondary"
-                        (click)="navToRecipeForm('variant', recipe)">
+                        (click)="navToRecipeForm('variant', variant)">
+
                   <ion-icon name="menu"></ion-icon>
+
                   Edit
+
                 </button>
+
               </ion-item-options>
 
             </ion-item-sliding>
@@ -184,64 +235,151 @@
             <accordion [expanded]="showExpandedRecipe(i)">
 
               <ion-card class="variant-card">
+
                 <ion-card-content>
 
                   <!-- Recipe variant ingredients list -->
                   <ion-list>
 
                     <!-- Grain bill -->
-                    <ion-item-group *ngIf="recipe.grains.length">
-                      <ion-item-divider color="primary" class="card-divider">
+                    <ion-item-group *ngIf="variant.grains.length">
+
+                      <ion-item-divider color="primary"
+                                        class="card-divider">
                         Grains
                       </ion-item-divider>
-                      <ion-item *ngFor="let grains of recipe.grains">
-                        <span item-start>{{ grains.grainType.name }}</span>
-                        <span item-end>{{ grains.quantity }} lbs</span>
-                      </ion-item>
+
+                      <ion-grid>
+
+                        <ion-row  *ngFor="let grains of variantList[i].grains"
+                                  justify-content-between
+                                  align-items-center
+                                  class="ingredient-row">
+
+                          <ion-col col-7>
+                            {{ grains.grainType.name }}
+                          </ion-col>
+
+                          <ion-col col-4>
+                            {{ grains.quantity }} lbs
+                          </ion-col>
+
+                        </ion-row>
+
+                      </ion-grid>
+
                     </ion-item-group>
 
                     <!-- Hops schedule -->
-                    <ion-item-group *ngIf="recipe.hops.length">
-                      <ion-item-divider color="primary" class="card-divider">
+                    <ion-item-group *ngIf="variant.hops.length">
+
+                      <ion-item-divider color="primary"
+                                        class="card-divider">
                         Hops
                       </ion-item-divider>
-                      <ion-item *ngFor="let hops of recipe.hops">
-                        <span item-start>{{ hops.hopsType.name }}</span>
-                        <span item-end>{{ hops.quantity }} oz</span>
-                      </ion-item>
+
+                      <ion-grid>
+
+                        <ion-row  *ngFor="let hops of variant.hops"
+                                  justify-content-between
+                                  align-items-center
+                                  class="ingredient-row">
+
+                          <ion-col col-7>
+                            {{ hops.hopsType.name }}
+                          </ion-col>
+
+                          <ion-col  col-4
+                                    col-right >
+                            {{ hops.quantity }} oz
+                          </ion-col>
+
+                        </ion-row>
+
+                      </ion-grid>
+
                     </ion-item-group>
 
                     <!-- Yeast batch -->
-                    <ion-item-group *ngIf="recipe.yeast.length">
-                      <ion-item-divider color="primary" class="card-divider">
+                    <ion-item-group *ngIf="variant.yeast.length">
+
+                      <ion-item-divider color="primary"
+                                        class="card-divider">
                         Yeast
                       </ion-item-divider>
-                      <ion-item *ngFor="let yeast of recipe.yeast">
-                        <span item-start>{{ yeast.yeastType.name }}</span>
-                        <span item-end>{{ yeast.quantity }} pack</span>
-                      </ion-item>
+
+                      <ion-grid>
+
+                        <ion-row  *ngFor="let yeast of variant.yeast"
+                                  justify-content-between
+                                  align-items-center
+                                  class="ingredient-row">
+
+                          <ion-col col-7>
+                            {{ yeast.yeastType.name }}
+                          </ion-col>
+
+                          <ion-col col-4>
+                            {{ yeast.quantity }} pack
+                          </ion-col>
+
+                        </ion-row>
+
+                      </ion-grid>
+
                     </ion-item-group>
 
                     <!-- Other ingredients -->
-                    <ion-item-group *ngIf="recipe.otherIngredients.length">
-                      <ion-item-divider color="primary" class="card-divider">
+                    <ion-item-group *ngIf="variant.otherIngredients.length">
+
+                      <ion-item-divider color="primary"
+                                        class="card-divider">
                         Other Ingredients
                       </ion-item-divider>
-                      <ion-item *ngFor="let other of recipe.otherIngredients">
-                        <span item-start>{{ other.name }}</span>
-                        <span item-end>{{ other.type }}</span>
-                        <span>{{ other.description }}</span>
-                      </ion-item>
+
+                      <ion-grid>
+
+                        <ion-row  *ngFor="let other of variant.otherIngredients"
+                                  justify-content-between
+                                  class="ingredient-row">
+
+                          <ion-col  col-7
+                                    class="col-left">
+                            {{ other.name }}
+                          </ion-col>
+
+                          <ion-col  col-4
+                                    class="col-right">
+                            {{ other.type }}
+                          </ion-col>
+
+                          <ion-row>
+
+                            <ion-col  col-12
+                                      class="col-left">
+                              {{ other.description }}
+                            </ion-col>
+
+                          </ion-row>
+
+                        </ion-row>
+
+                      </ion-grid>
+
                     </ion-item-group>
 
                   </ion-list>
+
                 </ion-card-content>
+
               </ion-card>
 
             </accordion>
 
           </ng-container>
+
         </ion-list>
+        
       </ion-row>
 
     </ng-container>

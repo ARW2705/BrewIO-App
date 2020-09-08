@@ -1,21 +1,23 @@
 /* Module imports */
-import { Component, OnInit, OnDestroy, ViewChildren, QueryList } from '@angular/core';
-import { NavController, NavParams, Events, ItemSliding } from 'ionic-angular';
-import { Observable } from 'rxjs/Observable';
+import { Component, OnInit, OnDestroy, QueryList, ViewChildren } from '@angular/core';
+import { Events, ItemSliding, NavController, NavParams } from 'ionic-angular';
+import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 import { Subject } from 'rxjs/Subject';
-import { takeUntil } from 'rxjs/operators/takeUntil';
 import { take } from 'rxjs/operators/take';
+import { takeUntil } from 'rxjs/operators/takeUntil';
 
 /* Interface imports */
 import { RecipeMaster } from '../../shared/interfaces/recipe-master';
 import { RecipeVariant } from '../../shared/interfaces/recipe-variant';
 
 /* Utility imports */
-import { getId } from '../../shared/utility-functions/utilities';
+import { clone } from '../../shared/utility-functions/clone';
+import { getId } from '../../shared/utility-functions/id-helpers';
+import { normalizeErrorObservableMessage } from '../../shared/utility-functions/observable-helpers';
 
 /* Page imports */
-import { RecipeFormPage } from '../forms/recipe-form/recipe-form';
 import { ProcessPage } from '../process/process';
+import { RecipeFormPage } from '../forms/recipe-form/recipe-form';
 
 /* Provider imports */
 import { RecipeProvider } from '../../providers/recipe/recipe';
@@ -28,38 +30,42 @@ import { ToastProvider } from '../../providers/toast/toast';
 })
 export class RecipeDetailPage implements OnInit, OnDestroy {
   @ViewChildren('slidingItems') slidingItems: QueryList<ItemSliding>;
-  recipeMasterId: string = null;
-  recipeMaster: RecipeMaster = null;
-  recipeMaster$: Observable<RecipeMaster> = null;
+  deletionInProgress: boolean = false;
   destroy$: Subject<boolean> = new Subject<boolean>();
-  hasActiveBatch: boolean = false;
-  recipeIndex: number = -1;
   noteIndex: number = -1;
+  recipeIndex: number = -1;
+  recipeMaster: RecipeMaster = null;
+  recipeMasterId: string = null;
   showNotes: boolean = false;
   showNotesIcon: string = 'arrow-down';
-  deletionInProgress: boolean = false;
+  variantList: RecipeVariant[] = null;
   _headerNavPop: any;
 
   constructor(
+    public events: Events,
     public navCtrl: NavController,
     public navParams: NavParams,
-    public events: Events,
     public recipeService: RecipeProvider,
     public toastService: ToastProvider
   ) {
     this.recipeMasterId = this.navParams.get('masterId');
-    this.recipeMaster$ = this.recipeService.getMasterById(this.recipeMasterId);
     this._headerNavPop = this.headerNavPopEventHandler.bind(this);
   }
 
   /***** Lifecycle Hooks *****/
 
   ngOnInit() {
-    this.recipeMaster$
+    this.recipeService.getRecipeMasterById(this.recipeMasterId)
       .pipe(takeUntil(this.destroy$))
-      .subscribe(recipeMaster => {
-        this.recipeMaster = recipeMaster;
-      });
+      .subscribe(
+        (recipeMaster: RecipeMaster) => {
+          this.recipeMaster = recipeMaster;
+          this.mapVariantList();
+        },
+        (error: ErrorObservable) => {
+          // TODO provide user feedback
+          console.log(`Recipe detail page error: ${normalizeErrorObservableMessage(error)}`);
+        });
     this.events.subscribe('pop-header-nav', this._headerNavPop);
   }
 
@@ -86,12 +92,16 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
    *
    * @return: none
   **/
-  headerNavPopEventHandler(data: any): void {
-    if (data.origin === 'RecipePage') {
-      this.navCtrl.pop();
-    } else if (data.origin === 'RecipeDetailPage') {
+  headerNavPopEventHandler(data: object): void {
+    if (data['origin'] === 'RecipeDetailPage') {
       // update header title with current recipeMaster name
-      this.events.publish('update-nav-header', {caller: 'recipe details page', destTitle: this.recipeMaster.name});
+      this.events.publish(
+        'update-nav-header',
+        {
+          caller: 'recipe details page',
+          destTitle: this.recipeMaster.name
+        }
+      );
     }
   }
 
@@ -111,13 +121,18 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
         destTitle: variant.variantName,
         origin: this.navCtrl.getActive().name
       });
+
       this.navCtrl.push(ProcessPage, {
         master: this.recipeMaster,
         requestedUserId: this.recipeMaster.owner,
         selectedRecipeId: variant.cid
       });
     } else {
-      this.toastService.presentToast('Recipe missing a process guide!', 2000, 'error-toast');
+      this.toastService.presentToast(
+        'Recipe missing a process guide!',
+        2000,
+        'toast-error'
+      );
     }
   }
 
@@ -130,13 +145,17 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
    *
    * @return: none
   **/
-  navToRecipeForm(formType: string, variant?: RecipeVariant, additionalData?: any): void {
+  navToRecipeForm(
+    formType: string,
+    variant?: RecipeVariant,
+    additionalData?: object
+  ): void {
     const options: object = {
       formType: formType,
       additionalData: additionalData
     };
 
-    let title;
+    let title: string;
 
     if (formType === 'master') {
       options['masterData'] = this.recipeMaster;
@@ -153,7 +172,11 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
         title = 'Add a Variant';
       }
     } else {
-      this.toastService.presentToast('Invalid form type detected', 3000, 'error-toast');
+      this.toastService.presentToast(
+        'Invalid form type detected',
+        3000,
+        'toast-error'
+      );
       return;
     }
 
@@ -178,11 +201,11 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
    *
    * @params: none
    *
-   * @return: true if there are at least 2 recipes present and requested recipe is not in progress
+   * @return: true if there are at least 2 recipes present and requested recipe
+   *          is not in progress
   **/
   canDelete(): boolean {
-    return  this.recipeMaster.variants.length > 1
-            && !this.deletionInProgress;
+    return this.recipeMaster.variants.length && !this.deletionInProgress;
   }
 
   /**
@@ -193,18 +216,28 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
    * @return: none
   **/
   deleteNote(index: number): void {
-    const forDeletion = this.recipeMaster.notes.splice(index, 1);
-    this.recipeService.patchRecipeMasterById(getId(this.recipeMaster), {notes: this.recipeMaster.notes})
-      .subscribe(
-        () => {
-          this.toastService.presentToast('Note deleted', 1000);
-        },
-        error => {
-          console.log(error);
-          this.recipeMaster.notes.splice(index, 0, forDeletion[0]);
-          this.toastService.presentToast('Error while deleting note', 1500, 'error-toast');
-        }
-      );
+    const forDeletion: string[] = this.recipeMaster.notes.splice(index, 1);
+    this.recipeService.patchRecipeMasterById(
+      getId(this.recipeMaster),
+      { notes: this.recipeMaster.notes }
+    )
+    .subscribe(
+      () => {
+        this.toastService.presentToast(
+          'Note deleted',
+          1000
+        );
+      },
+      (error: ErrorObservable) => {
+        console.log(error);
+        this.recipeMaster.notes.splice(index, 0, forDeletion[0]);
+        this.toastService.presentToast(
+          'Error while deleting note',
+          1500,
+          'toast-error'
+        );
+      }
+    );
   }
 
   /**
@@ -216,18 +249,25 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
   **/
   deleteRecipe(variant: RecipeVariant): void {
     this.deletionInProgress = true;
-    this.recipeService.deleteRecipeVariantById(getId(this.recipeMaster), getId(variant))
-      .pipe(take(1))
-      .subscribe(
-        () => {
-          this.toastService.presentToast('Recipe deleted!', 1500);
-          this.deletionInProgress = false;
-        },
-        error => {
-          // TODO add error feedback
-          console.log(error);
-        }
-      );
+
+    this.recipeService.deleteRecipeVariantById(
+      getId(this.recipeMaster),
+      getId(variant)
+    )
+    .pipe(take(1))
+    .subscribe(
+      () => {
+        this.toastService.presentToast(
+          'Recipe deleted!',
+          1500
+        );
+        this.deletionInProgress = false;
+      },
+      (error: ErrorObservable) => {
+        // TODO add error feedback
+        console.log(error);
+      }
+    );
   }
 
   /***** End deletion handling *****/
@@ -276,7 +316,7 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
    * @return: none
   **/
   updateNote(index: number): void {
-    this.navToRecipeForm('master', null, {noteIndex: index});
+    this.navToRecipeForm('master', null, { noteIndex: index });
   }
 
   /***** End notes *****/
@@ -288,7 +328,7 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
    * Select recipe variant to expand
    *
    * @params: index - index for variant to expand, if index matches recipeIndex,
-   *  set recipeIndex to -1 instead
+   *          set recipeIndex to -1 instead
    *
    * @return: none
   **/
@@ -308,6 +348,26 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
   }
 
   /**
+   * Map recipe variants to their own list;
+   * Combine hops instances of the same type
+   *
+   * @params: none
+   *
+   * @return: none
+  **/
+  mapVariantList(): void {
+    this.variantList = this.recipeMaster.variants
+      .map((variant: RecipeVariant) => {
+        const selected: RecipeVariant = clone(variant);
+        selected.hops = this.recipeService.getCombinedHopsSchedule(selected.hops);
+        return selected;
+      })
+      .filter((variant: RecipeVariant) => {
+        return variant !== undefined;
+      });
+  }
+
+  /**
    * Toggle recipe master public property
    *
    * @params: none
@@ -319,10 +379,10 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
       { isPublic: !this.recipeMaster.isPublic }
     )
     .subscribe(
-      response => {
+      (response: RecipeMaster) => {
         this.recipeMaster.isPublic = response.isPublic;
       },
-      error => {
+      (error: ErrorObservable) => {
         // TODO add error feedback
         console.log(error);
       }
@@ -355,14 +415,23 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
     )
     .pipe(take(1))
     .subscribe(
-      updatedRecipe => {
-        if (updatedRecipe) {
-          this.toastService.presentToast(`${updatedRecipe.isFavorite ? 'Added to': 'Removed from'} favorites`, 1500);
+      (updatedRecipeVariant: RecipeVariant) => {
+        if (updatedRecipeVariant) {
+          this.toastService.presentToast(
+            `${updatedRecipeVariant.isFavorite ? 'Added to': 'Removed from'} favorites`,
+            1500,
+            'bottom',
+            'toast-fav'
+          );
         }
       },
-      error => {
+      (error: ErrorObservable) => {
         console.log(error);
-        this.toastService.presentToast(`Unable to ${ !variant.isFavorite ? 'add to': 'remove from'} favorites`, 1500, 'error-toast');
+        this.toastService.presentToast(
+          `Unable to ${ !variant.isFavorite ? 'add to': 'remove from'} favorites`,
+          1500,
+          'toast-error'
+        );
       }
     );
   }
