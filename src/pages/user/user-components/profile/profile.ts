@@ -1,11 +1,14 @@
 /* Module imports */
-import { Component, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { TextInput } from 'ionic-angular';
-import { Observable } from 'rxjs/Observable';
+import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 import { Subject } from 'rxjs/Subject';
 import { takeUntil } from 'rxjs/operators/takeUntil';
 import { take } from 'rxjs/operators/take';
+
+/* Utility imports */
+import { normalizeErrorObservableMessage } from '../../../../shared/utility-functions/observable-helpers';
 
 /* Page imports */
 import { User } from '../../../../shared/interfaces/user';
@@ -23,22 +26,21 @@ export class ProfileComponent {
   @ViewChild('email') emailField: TextInput;
   @ViewChild('firstname') firstnameField: TextInput;
   @ViewChild('lastname') lastnameField: TextInput;
-  user$: Observable<User> = null;
   destroy$: Subject<boolean> = new Subject<boolean>();
-  user: User = null;
-  userForm: FormGroup = null;
-  editing = '';
-  originalValues = {
+  editing: string = '';
+  originalValues: { email: string, firstname: string, lastname: string } = {
     email: '',
     firstname: '',
     lastname: ''
   };
+  user: User = null;
+  userForm: FormGroup = null;
 
   constructor(
-    public formBuilder: FormBuilder,
     public cdRef: ChangeDetectorRef,
-    public userService: UserProvider,
-    public toastService: ToastProvider
+    public formBuilder: FormBuilder,
+    public toastService: ToastProvider,
+    public userService: UserProvider
   ) { }
 
   /***** Lifecycle Hooks *****/
@@ -46,10 +48,15 @@ export class ProfileComponent {
   ngOnInit() {
     this.userService.getUser()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(user => {
-        this.user = user;
-        this.initForm(user);
-      });
+      .subscribe(
+        (user: User) => {
+          this.user = user;
+          this.initForm(user);
+        },
+        (error: ErrorObservable) => {
+          console.log(`Error getting user: ${normalizeErrorObservableMessage(error)}`);
+        }
+      );
   }
 
   ngOnDestroy() {
@@ -144,7 +151,7 @@ export class ProfileComponent {
    *
    * @return: none
   **/
-  mapOriginalValues(values: any): void {
+  mapOriginalValues(values: object): void {
     for (const key in this.originalValues) {
       if (values.hasOwnProperty(key)) {
         this.originalValues[key] = values[key];

@@ -11,7 +11,7 @@ import { ModalProvider } from '../../providers/modal/modal';
   templateUrl: 'user.html'
 })
 export class UserPage {
-  expandedContent = '';
+  expandedContent: string = '';
 
   constructor(
     public userService: UserProvider,

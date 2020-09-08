@@ -1,3 +1,37 @@
 profile {
+  #form {
+    /* Display */
+    width: 100%;
+    padding: 5px 0;
+  }
 
+  .profile-field-button {
+    /* Display */
+    width: 100%;
+
+    /* Color */
+    background: transparent;
+    color: map-get($colors, gray-scale-8);
+
+    /* Text */
+    font-size: 0.8em;
+    text-align: left;
+
+    /* Children */
+    > span {
+      /* Display */
+      padding-left: 4px;
+
+      /* Text */
+      font-size: 1.2em;
+    }
+  }
+
+  .user-button-container {
+    > button {
+      /* Display */
+      display: block;
+      margin: 5px auto;
+    }
+  }
 }

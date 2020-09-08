@@ -43,7 +43,10 @@ describe('User Page', () => {
   .then(done)
   .catch(done.fail));
 
-  beforeAll(async(() => {
+  beforeEach(() => {
+    fixture = TestBed.createComponent(UserPage);
+    userPage = fixture.componentInstance;
+
     injector = getTestBed();
     userService = injector.get(UserProvider);
     modalService = injector.get(ModalProvider);
@@ -55,11 +58,6 @@ describe('User Page', () => {
       .fn();
     modalService.openSignup = jest
       .fn();
-  }));
-
-  beforeEach(() => {
-    fixture = TestBed.createComponent(UserPage);
-    userPage = fixture.componentInstance;
   });
 
   test('should create the component', () => {
@@ -95,7 +93,8 @@ describe('User Page', () => {
   test('should open the login modal', () => {
     fixture.detectChanges();
 
-    const modalSpy = jest.spyOn(userPage.modalService, 'openLogin');
+    const modalSpy: jest.SpyInstance = jest
+      .spyOn(userPage.modalService, 'openLogin');
 
     userPage.openLogin();
 
@@ -105,7 +104,8 @@ describe('User Page', () => {
   test('should open the signup modal', () => {
     fixture.detectChanges();
 
-    const modalSpy = jest.spyOn(userPage.modalService, 'openSignup');
+    const modalSpy: jest.SpyInstance = jest
+      .spyOn(userPage.modalService, 'openSignup');
 
     userPage.openSignup();
 

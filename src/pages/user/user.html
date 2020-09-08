@@ -2,108 +2,110 @@
 
   <ion-grid>
 
-    <ion-list no-lines>
+    <ion-list *ngIf="isLoggedIn()"
+              no-lines>
 
-      <!-- Preferences section -->
-
-      <ion-row class="section-row">
-        <button ion-item
-                class="dropdown-button"
-                (click)="toggleExpandContent('preferences')">
-          <ion-row  justify-content-center
-                    class="expand-header">
-            <h2>Preferences</h2>
-          </ion-row>
-          <ion-row  justify-content-center
-                    class="expand-hint">
-            <ion-icon name="arrow-dropdown"></ion-icon>
-          </ion-row>
-        </button>
-      </ion-row>
-
-      <accordion [expanded]="showExpandedContent('preferences')">
-        <preferences></preferences>
-      </accordion>
 
       <!-- Profile section -->
 
-      <ion-row  *ngIf="isLoggedIn()"
-                class="section-row">
+      <ion-row class="section-row">
+
         <button ion-item
-                class="dropdown-button"
-                (click)="toggleExpandContent('profile')">
+                (click)="toggleExpandContent('profile')"
+                class="dropdown-button">
+
           <ion-row  justify-content-center
                     class="expand-header">
-            <h2>Profile</h2>
+
+            <h2>
+              Profile
+            </h2>
+
           </ion-row>
+
           <ion-row  justify-content-center
                     class="expand-hint">
+
             <ion-icon name="arrow-dropdown"></ion-icon>
+
           </ion-row>
+
         </button>
+
       </ion-row>
 
       <accordion [expanded]="showExpandedContent('profile')">
+
         <profile></profile>
+
       </accordion>
 
       <!-- Friends section -->
 
-      <ion-row  *ngIf="isLoggedIn()"
-                class="section-row">
+      <ion-row class="section-row">
+
         <button ion-item
-                class="dropdown-button"
-                (click)="toggleExpandContent('friends')">
+                (click)="toggleExpandContent('friends')"
+                class="dropdown-button">
+
           <ion-row  justify-content-center
                     class="expand-header">
-            <h2>Friends</h2>
+
+            <h2>
+              Friends
+            </h2>
+
           </ion-row>
+
           <ion-row  justify-content-center
                     class="expand-hint">
+
             <ion-icon name="arrow-dropdown"></ion-icon>
+
           </ion-row>
+
         </button>
+
       </ion-row>
 
       <accordion [expanded]="showExpandedContent('friends')">
+
         <friends></friends>
+
       </accordion>
-
-      <!-- About section -->
-
-      <ion-row class="section-row">
-        <button ion-item
-                class="dropdown-button"
-                (click)="toggleExpandContent('about')">
-          <ion-row  justify-content-center
-                    class="expand-header">
-            <h2>About</h2>
-          </ion-row>
-          <ion-row  justify-content-center
-                    class="expand-hint">
-            <ion-icon name="arrow-dropdown"></ion-icon>
-          </ion-row>
-        </button>
-      </ion-row>
-
-      <accordion [expanded]="showExpandedContent('about')">
-        <about></about>
-      </accordion>
-
-      <!-- Signup section -->
-
-      <ion-row  *ngIf="!isLoggedIn()"
-                class="section-row">
-        <ion-col>
-          <button ion-button
-                  color="primary"
-                  (click)="openSignup()">
-            Sign Up
-          </button>
-        </ion-col>
-      </ion-row>
 
     </ion-list>
+
+    <!-- Signup section -->
+
+    <ion-row  *ngIf="!isLoggedIn()"
+              class="section-row">
+
+      <ion-col col-12>
+        Log in or Sign up to view more options
+      </ion-col>
+
+      <ion-col>
+
+        <button ion-button
+                color="primary"
+                (click)="openLogin()">
+          Log In
+        </button>
+
+      </ion-col>
+
+      <ion-col>
+
+        <button ion-button
+                color="primary"
+                (click)="openSignup()">
+          Sign Up
+        </button>
+
+      </ion-col>
+      
+    </ion-row>
 
   </ion-grid>
 

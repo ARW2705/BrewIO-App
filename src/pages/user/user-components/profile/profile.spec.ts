@@ -52,7 +52,10 @@ describe('Profile Component', () => {
   .then(done)
   .catch(done.fail));
 
-  beforeEach(async(() => {
+  beforeEach(() => {
+    fixture = TestBed.createComponent(ProfileComponent);
+    profilePage = fixture.componentInstance;
+
     injector = getTestBed();
     userService = injector.get(UserProvider);
     toastService = injector.get(ToastProvider);
@@ -66,11 +69,6 @@ describe('Profile Component', () => {
 
     toastService.presentToast = jest
       .fn();
-  }));
-
-  beforeEach(() => {
-    fixture = TestBed.createComponent(ProfileComponent);
-    profilePage = fixture.componentInstance;
   });
 
   test('should create the component', () => {
@@ -86,6 +84,18 @@ describe('Profile Component', () => {
 
     expect(profilePage.hasValuesToUpdate()).toBe(true);
   }); // end 'should have new updated values' test
+
+  test('should get error when trying to get user', () => {
+    const consoleSpy: jest.SpyInstance = jest.spyOn(console, 'log');
+
+    userService.getUser = jest
+      .fn()
+      .mockReturnValue(new ErrorObservable('user error'));
+
+    fixture.detectChanges();
+
+    expect(consoleSpy).toHaveBeenCalledWith('Error getting user: user error');
+  }); // end 'should get error when trying to get user' test
 
   test('should not have new updated values', () => {
     fixture.detectChanges();
@@ -106,11 +116,14 @@ describe('Profile Component', () => {
   test('should init form with user', () => {
     fixture.detectChanges();
 
-    const _mockUser = mockUser();
+    const _mockUser: User = mockUser();
 
-    expect(profilePage.userForm.controls.email.value).toMatch(_mockUser.email);
-    expect(profilePage.userForm.controls.firstname.value).toMatch(_mockUser.firstname);
-    expect(profilePage.userForm.controls.lastname.value).toMatch(_mockUser.lastname);
+    expect(profilePage.userForm.controls.email.value)
+      .toMatch(_mockUser.email);
+    expect(profilePage.userForm.controls.firstname.value)
+      .toMatch(_mockUser.firstname);
+    expect(profilePage.userForm.controls.lastname.value)
+      .toMatch(_mockUser.lastname);
   }); // end 'should init form with user' test
 
   test('should init form without a user', () => {
@@ -126,7 +139,7 @@ describe('Profile Component', () => {
   test('should be in editing for field', () => {
     fixture.detectChanges();
 
-    const field = 'firstname';
+    const field: string = 'firstname';
 
     profilePage.editing = field;
 
@@ -136,7 +149,7 @@ describe('Profile Component', () => {
   test('should not be in editing for field', () => {
     fixture.detectChanges();
 
-    const field = 'email';
+    const field: string = 'email';
 
     profilePage.editing = '';
 
@@ -184,7 +197,7 @@ describe('Profile Component', () => {
   test('should map new values to original values', () => {
     fixture.detectChanges();
 
-    const newValues = {
+    const newValues: object = {
       email: 'new-email',
       firstname: 'new-firstname',
       lastname: 'new-lastname',
@@ -193,14 +206,17 @@ describe('Profile Component', () => {
 
     profilePage.mapOriginalValues(newValues);
 
-    expect(profilePage.originalValues.email).toMatch(newValues.email);
-    expect(profilePage.originalValues.firstname).toMatch(newValues.firstname);
-    expect(profilePage.originalValues.lastname).toMatch(newValues.lastname);
+    expect(profilePage.originalValues.email)
+      .toMatch(newValues['email']);
+    expect(profilePage.originalValues.firstname)
+      .toMatch(newValues['firstname']);
+    expect(profilePage.originalValues.lastname)
+      .toMatch(newValues['lastname']);
     expect(profilePage.originalValues['ignore']).toBeUndefined();
   }); // end 'should map new values to original values' test
 
   test('should submit an update', () => {
-    const _mockUser = mockUser();
+    const _mockUser: User = mockUser();
 
     userService.updateUserProfile = jest
       .fn()
@@ -211,8 +227,8 @@ describe('Profile Component', () => {
 
     fixture.detectChanges();
 
-    const updateSpy = jest.spyOn(profilePage, 'updateForm');
-    const toastSpy = jest.spyOn(toastService, 'presentToast');
+    const updateSpy: jest.SpyInstance = jest.spyOn(profilePage, 'updateForm');
+    const toastSpy: jest.SpyInstance = jest.spyOn(toastService, 'presentToast');
 
     profilePage.onUpdate();
 
@@ -227,7 +243,7 @@ describe('Profile Component', () => {
       .fn()
       .mockReturnValue(new ErrorObservable('update error'));
 
-    const toastSpy = jest.spyOn(toastService, 'presentToast');
+    const toastSpy: jest.SpyInstance = jest.spyOn(toastService, 'presentToast');
 
     profilePage.onUpdate();
 

@@ -1,10 +1,4 @@
 page-user {
-  #form {
-    /* Display */
-    width: 100%;
-    padding: 5px 0;
-  }
-
   #user-router-nav {
     /* Display */
     margin: 15px 0;
@@ -70,40 +64,9 @@ page-user {
     padding-right: 16px;
   }
 
-  .profile-field-button {
-    /* Display */
-    width: 100%;
-
-    /* Color */
-    background: transparent;
-    color: map-get($colors, gray-scale-8);
-
-    /* Text */
-    font-size: 0.8em;
-    text-align: left;
-
-    /* Children */
-    span {
-      /* Display */
-      padding-left: 4px;
-
-      /* Text */
-      font-size: 1.2em;
-    }
-  }
-
   .section-row {
     /* Display */
     margin: 5% 0;
-  }
-
-  .user-button-container {
-    /* Children */
-    button {
-      /* Display */
-      display: block;
-      margin: 5px auto;
-    }
   }
 
   ion-list {
