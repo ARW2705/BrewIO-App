@@ -1,7 +1,8 @@
 /* Module imports */
-import { Component, OnInit, OnDestroy, ViewChildren, QueryList } from '@angular/core';
-import { NavController, Events, ItemSliding } from 'ionic-angular';
-import { Observable } from 'rxjs/Observable';
+import { Component, OnInit, OnDestroy, QueryList, ViewChildren } from '@angular/core';
+import { Events, ItemSliding, NavController } from 'ionic-angular';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 import { Subject } from 'rxjs/Subject';
 import { takeUntil } from 'rxjs/operators/takeUntil';
 
@@ -10,9 +11,9 @@ import { RecipeMaster } from '../../shared/interfaces/recipe-master';
 import { RecipeVariant } from '../../shared/interfaces/recipe-variant';
 
 /* Utility function imports */
-import { getArrayFromObservables } from '../../shared/utility-functions/utilities';
-import { getId } from '../../shared/utility-functions/utilities';
-import { hasId } from '../../shared/utility-functions/utilities';
+import { clone } from '../../shared/utility-functions/clone';
+import { getArrayFromObservables } from '../../shared/utility-functions/observable-helpers';
+import { getId, hasId } from '../../shared/utility-functions/id-helpers';
 
 /* Page imports */
 import { RecipeDetailPage } from '../recipe-detail/recipe-detail';
@@ -20,9 +21,9 @@ import { RecipeFormPage } from '../forms/recipe-form/recipe-form';
 import { ProcessPage } from '../process/process';
 
 /* Provider imports */
-import { UserProvider } from '../../providers/user/user';
 import { RecipeProvider } from '../../providers/recipe/recipe';
 import { ToastProvider } from '../../providers/toast/toast';
+import { UserProvider } from '../../providers/user/user';
 
 
 @Component({
@@ -31,22 +32,19 @@ import { ToastProvider } from '../../providers/toast/toast';
 })
 export class RecipePage implements OnInit, OnDestroy {
   @ViewChildren('slidingItems') slidingItems: QueryList<ItemSliding>;
-  destroy$: Subject<boolean> = new Subject<boolean>();
-  masterList$: Observable<Array<Observable<RecipeMaster>>> = null;
-  masterList: Array<RecipeMaster> = null;
-  variantList: Array<RecipeVariant> = null;
-  masterIndex: number = -1;
   creationMode: boolean = false;
+  destroy$: Subject<boolean> = new Subject<boolean>();
+  masterIndex: number = -1;
+  masterList: RecipeMaster[] = null;
+  variantList: RecipeVariant[] = null;
 
   constructor(
-    public navCtrl: NavController,
     public events: Events,
-    public userService: UserProvider,
+    public navCtrl: NavController,
     public recipeService: RecipeProvider,
     public toastService: ToastProvider,
-  ) {
-    this.masterList$ = this.recipeService.getMasterList();
-  }
+    public userService: UserProvider
+  ) { }
 
   /***** Lifecycle Hooks *****/
 
@@ -61,9 +59,9 @@ export class RecipePage implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.masterList$
+    this.recipeService.getMasterList()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(_masterList => {
+      .subscribe((_masterList: BehaviorSubject<RecipeMaster>[]) => {
         this.masterList = getArrayFromObservables(_masterList);
         this.mapMasterRecipes();
       });
@@ -84,9 +82,10 @@ export class RecipePage implements OnInit, OnDestroy {
    * @return: none
   **/
   navToBrewProcess(master: RecipeMaster): void {
-    const variant: RecipeVariant = master.variants.find(variant => {
-      return hasId(variant, master.master)
-    });
+    const variant: RecipeVariant = master.variants
+      .find(variant => {
+        return hasId(variant, master.master);
+      });
 
     if (this.recipeService.isRecipeProcessPresent(variant)) {
       this.events.publish('update-nav-header', {
@@ -96,6 +95,7 @@ export class RecipePage implements OnInit, OnDestroy {
         destTitle: variant.variantName,
         origin: this.navCtrl.getActive().name
       });
+
       this.navCtrl.push(ProcessPage, {
         master: master,
         requestedUserId: master.owner,
@@ -116,15 +116,21 @@ export class RecipePage implements OnInit, OnDestroy {
   navToDetails(index: number): void {
     if (-1 < index && index < this.masterList.length) {
       const recipeMaster: RecipeMaster = this.masterList[index];
+
       this.events.publish('update-nav-header', {
         caller: 'recipe page',
+        dest: 'recipe-details',
         destType: 'page',
         destTitle: recipeMaster.name,
         origin: this.navCtrl.getActive().name
       });
+
       this.navCtrl.push(RecipeDetailPage, { masterId: getId(recipeMaster) });
     } else {
-      this.toastService.presentToast('Error: invalid Recipe Master list index', 2000);
+      this.toastService.presentToast(
+        'Error: invalid Recipe Master list index',
+        2000
+      );
     }
   }
 
@@ -142,6 +148,7 @@ export class RecipePage implements OnInit, OnDestroy {
       destTitle: 'Create Recipe',
       origin: this.navCtrl.getActive().name
     });
+
     this.navCtrl.push(RecipeFormPage, {formType: 'master', mode: 'create'});
   }
 
@@ -158,20 +165,19 @@ export class RecipePage implements OnInit, OnDestroy {
    * @return: none
   **/
   deleteMaster(master: RecipeMaster): void {
-    if (master.hasActiveBatch) {
-      this.toastService.presentToast('Cannot delete a recipe master with a batch in progress', 3000);
-    } else {
-      this.recipeService.deleteRecipeMasterById(getId(master))
-        .subscribe(
-          () => {
-            this.toastService.presentToast('Deleted Recipe', 1000);
-          },
-          error => {
-            console.log(error);
-            this.toastService.presentToast('An error occured during recipe deletion', 2000);
-          }
-        );
-    }
+    this.recipeService.deleteRecipeMasterById(getId(master))
+      .subscribe(
+        () => {
+          this.toastService.presentToast('Deleted Recipe', 1000);
+        },
+        (error: ErrorObservable) => {
+          console.log('Error deleting recipe master', error);
+          this.toastService.presentToast(
+            'An error occured during recipe deletion',
+            2000
+          );
+        }
+      );
   }
 
   /**
@@ -183,17 +189,6 @@ export class RecipePage implements OnInit, OnDestroy {
   **/
   expandMaster(index: number): void {
     this.masterIndex = this.masterIndex === index ? -1: index;
-  }
-
-  /**
-   * Check if an active batch is present
-   *
-   * @params: none
-   *
-   * @return: true if at least one recipe has an active batch
-  **/
-  hasActiveBatch(): boolean {
-    return this.masterList.some(master => master.hasActiveBatch);
   }
 
   /**
@@ -217,10 +212,14 @@ export class RecipePage implements OnInit, OnDestroy {
   mapMasterRecipes(): void {
     this.variantList = this.masterList
       .map((master: RecipeMaster) => {
-        const selected = master.variants.find(variant => {
-          return getId(variant) === master.master;
-        });
-        return selected === undefined ? master.variants[0]: selected;
+        const selected: RecipeVariant = clone(master.variants.find(variant => {
+          return hasId(variant, master.master);
+        }));
+        selected.hops = this.recipeService.getCombinedHopsSchedule(selected.hops);
+        return selected;
+      })
+      .filter((variant: RecipeVariant) => {
+        return variant !== undefined;
       });
   }
 
@@ -234,8 +233,8 @@ export class RecipePage implements OnInit, OnDestroy {
   showExpandedMaster(index: number): boolean {
     if (index > -1 && index < this.masterList.length) {
       return  index === this.masterIndex
-              && this.masterList[index].variants
-                  .some(variant => variant.processSchedule.length > 0);
+        && this.masterList[index].variants
+          .some(variant => variant.processSchedule.length > 0);
     } else {
       return false;
     }

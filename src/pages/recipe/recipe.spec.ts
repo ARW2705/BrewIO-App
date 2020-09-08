@@ -1,7 +1,7 @@
 /* Module imports */
 import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { IonicModule, NavController, Events } from 'ionic-angular';
+import { IonicModule, NavController, Events, ItemSliding } from 'ionic-angular';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 import { of } from 'rxjs/observable/of';
@@ -77,13 +77,23 @@ describe('Recipe Page', () => {
 
     navCtrl.push = jest
       .fn();
+    recipeService.getCombinedHopsSchedule = jest
+      .fn()
+      .mockImplementation(
+        (input: any): any => {
+          return input;
+        }
+      );
   }));
 
-  beforeEach(async(() => {
+  beforeEach(() => {
+    fixture = TestBed.createComponent(RecipePage);
+    recipePage = fixture.componentInstance;
+
     recipeService.getMasterList = jest
       .fn()
       .mockReturnValue(
-        new BehaviorSubject<Array<BehaviorSubject<RecipeMaster>>>(
+        new BehaviorSubject<BehaviorSubject<RecipeMaster>[]>(
           [
             new BehaviorSubject<RecipeMaster>(mockRecipeMasterActive()),
             new BehaviorSubject<RecipeMaster>(mockRecipeMasterInactive())
@@ -96,14 +106,10 @@ describe('Recipe Page', () => {
       .mockReturnValueOnce(false);
     toastService.presentToast = jest
       .fn();
-  }));
-
-  beforeEach(() => {
-    fixture = TestBed.createComponent(RecipePage);
-    recipePage = fixture.componentInstance;
   });
 
   describe('Component creation', () => {
+
     test('should create the component', () => {
       fixture.detectChanges();
 
@@ -116,6 +122,24 @@ describe('Recipe Page', () => {
       expect(recipePage.masterList.length).toBe(2);
     }); // end 'should have a list of recipe masters' test
 
+    test('should close all sliding items on exit', () => {
+      fixture.detectChanges();
+
+      const slideSpies: jest.SpyInstance[] = recipePage
+        .slidingItems
+        .map((slidingItem: ItemSliding): jest.SpyInstance => {
+          return jest.spyOn(slidingItem, 'close');
+        });
+
+      recipePage.ionViewDidLeave();
+
+      slideSpies.forEach(
+        (slideSpy: jest.SpyInstance): void => {
+          expect(slideSpy).toHaveBeenCalled();
+        }
+      );
+    }); // end 'should close all sliding items on exit' test
+
   }); // end 'Component creation' section
 
   describe('Navigation handling', () => {
@@ -127,9 +151,9 @@ describe('Recipe Page', () => {
         .fn()
         .mockReturnValue(true);
 
-      const _mockRecipeMaster = mockRecipeMasterActive();
+      const _mockRecipeMaster: RecipeMaster = mockRecipeMasterActive();
 
-      const navSpy = jest.spyOn(recipePage.navCtrl, 'push');
+      const navSpy: jest.SpyInstance = jest.spyOn(recipePage.navCtrl, 'push');
 
       recipePage.navToBrewProcess(_mockRecipeMaster);
 
@@ -150,10 +174,11 @@ describe('Recipe Page', () => {
         .fn()
         .mockReturnValue(false);
 
-      const _mockRecipeMaster = mockRecipeMasterActive();
+      const _mockRecipeMaster: RecipeMaster = mockRecipeMasterActive();
       _mockRecipeMaster.master = 'expect-none';
 
-      const toastSpy = jest.spyOn(toastService, 'presentToast');
+      const toastSpy: jest.SpyInstance = jest
+        .spyOn(toastService, 'presentToast');
 
       recipePage.navToBrewProcess(_mockRecipeMaster);
 
@@ -166,9 +191,9 @@ describe('Recipe Page', () => {
     test('should navigate to recipe master details page for master at given index', () => {
       fixture.detectChanges();
 
-      const _mockRecipeMaster = mockRecipeMasterInactive();
+      const _mockRecipeMaster: RecipeMaster = mockRecipeMasterInactive();
 
-      const navSpy = jest.spyOn(recipePage.navCtrl, 'push');
+      const navSpy: jest.SpyInstance = jest.spyOn(recipePage.navCtrl, 'push');
 
       recipePage.navToDetails(1);
 
@@ -183,18 +208,21 @@ describe('Recipe Page', () => {
     test('should fail to navigate to the recipe master details page with an invalid index', () => {
       fixture.detectChanges();
 
-      const toastSpy = jest.spyOn(recipePage.toastService, 'presentToast');
+      const toastSpy: jest.SpyInstance = jest
+        .spyOn(recipePage.toastService, 'presentToast');
 
       recipePage.navToDetails(2);
 
-      expect(toastSpy.mock.calls[0][0]).toMatch('Error: invalid Recipe Master list index');
-      expect(toastSpy.mock.calls[0][1]).toBe(2000);
+      expect(toastSpy).toHaveBeenCalledWith(
+        'Error: invalid Recipe Master list index',
+        2000
+      );
     }); // end 'should fail to navigate to the recipe master details page with an invalid index' test
 
     test('should navigate to the recipe form in creation mode', () => {
       fixture.detectChanges();
 
-      const navSpy = jest.spyOn(recipePage.navCtrl, 'push');
+      const navSpy: jest.SpyInstance = jest.spyOn(recipePage.navCtrl, 'push');
 
       recipePage.navToRecipeForm();
 
@@ -209,7 +237,9 @@ describe('Recipe Page', () => {
 
   }); // end 'Navigation handling' section
 
+
   describe('Utility methods', () => {
+
     test('should delete a recipe master', done => {
       fixture.detectChanges();
 
@@ -217,31 +247,24 @@ describe('Recipe Page', () => {
         .fn()
         .mockReturnValue(of({}));
 
-      const recipeSpy = jest.spyOn(recipeService, 'deleteRecipeMasterById');
-      const toastSpy = jest.spyOn(toastService, 'presentToast');
+      const recipeSpy: jest.SpyInstance = jest
+        .spyOn(recipeService, 'deleteRecipeMasterById');
+      const toastSpy: jest.SpyInstance = jest
+        .spyOn(toastService, 'presentToast');
 
-      const _mockRecipeMasterInactive = mockRecipeMasterInactive();
+      const _mockRecipeMasterInactive: RecipeMaster = mockRecipeMasterInactive();
 
       recipePage.deleteMaster(_mockRecipeMasterInactive);
 
       setTimeout(() => {
         expect(recipeSpy).toHaveBeenCalled();
-        expect(toastSpy.mock.calls[0][0]).toMatch('Deleted Recipe');
-        expect(toastSpy.mock.calls[0][1]).toBe(1000);
+        expect(toastSpy).toHaveBeenCalledWith(
+          'Deleted Recipe',
+          1000
+        );
         done();
       }, 10);
     }); // end 'should delete a recipe master' test
-
-    test('should fail to delete a recipe master if a batch is active', () => {
-      fixture.detectChanges();
-
-      const toastSpy = jest.spyOn(recipePage.toastService, 'presentToast');
-
-      recipePage.deleteMaster(mockRecipeMasterActive());
-
-      expect(toastSpy.mock.calls[0][0]).toMatch('Cannot delete a recipe master with a batch in progress');
-      expect(toastSpy.mock.calls[0][1]).toBe(3000);
-    }); // end 'should fail to delete a recipe master if a batch is active' test
 
     test('should display error feedback if a recipe master failed to be deleted', done => {
       fixture.detectChanges();
@@ -250,16 +273,18 @@ describe('Recipe Page', () => {
         .fn()
         .mockReturnValue(new ErrorObservable('delete error'));
 
-      const toastSpy = jest.spyOn(recipePage.toastService, 'presentToast');
+      const toastSpy: jest.SpyInstance = jest
+        .spyOn(recipePage.toastService, 'presentToast');
 
-      const _mockRecipeMaster = mockRecipeMasterActive();
-      _mockRecipeMaster.hasActiveBatch = false;
+      const _mockRecipeMaster: RecipeMaster = mockRecipeMasterActive();
 
       recipePage.deleteMaster(_mockRecipeMaster);
 
       setTimeout(() => {
-        expect(toastSpy.mock.calls[0][0]).toMatch('An error occured during recipe deletion');
-        expect(toastSpy.mock.calls[0][1]).toBe(2000);
+        expect(toastSpy).toHaveBeenCalledWith(
+          'An error occured during recipe deletion',
+          2000
+        );
         done();
       }, 10);
     }); // end 'should display error feedback if a recipe master failed to be deleted' test

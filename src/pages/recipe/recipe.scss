@@ -1,8 +1,17 @@
 page-recipe {
   #create-button {
     /* Display */
-    width: 100%;
-    margin: 5% 0;
+    margin: 10px;
+  }
+
+  #heading {
+    /* Display */
+    padding: 1%;
+    margin-top: 14px;
+    border-bottom: 2px solid map-get($colors, gray-scale-9);
+
+    /* Text */
+    font-size: 1.9em;
   }
 
   #no-active-batch-header > h2 {
@@ -25,31 +34,20 @@ page-recipe {
     border-bottom: 0 !important;
   }
 
-  .content {
-    /* Display */
-    margin-top: 56px;
-  }
-
-  .expand-button {
-    /* Display */
-    padding: 0 10px;
-
-    /* Children */
-    ion-label {
-      /* Display */
-      margin: 13px 0 6px;
-    }
-  }
-
   .ingredient-row {
     /* Text */
     font-size: 1.2em;
     text-align: left;
 
     /* Children */
-    ion-col:not(:first-child) {
+    > ion-col:not(:first-child) {
       /* Text */
       text-align: right;
+    }
+
+    > ion-row {
+      /* Display */
+      border-top: 1px solid map-get($colors, gray-scale-9);
     }
   }
 
@@ -69,18 +67,15 @@ page-recipe {
 
     /* Children */
     .master-summary-header {
-      /* Children */
-      ion-col {
+      > ion-col {
         /* Color */
         color: map-get($colors, gray-scale-2);
       }
     }
 
     .master-summary-subheader {
-      /* Children */
-      ion-col {
-        /* Children */
-        p {
+      > ion-col {
+        > p {
           /* Color */
           color: map-get($colors, gray-scale-2);
         }
@@ -89,8 +84,7 @@ page-recipe {
   }
 
   .master-summary-header {
-    /* Children */
-    ion-col {
+    > ion-col {
       /* Display */
       flex-grow: 0;
       padding-right: 5px !important;
@@ -104,10 +98,8 @@ page-recipe {
   }
 
   .master-summary-subheader {
-    /* Children */
-    ion-col {
-      /* Children */
-      p {
+    > ion-col {
+      > p {
         /* Color */
         color: map-get($colors, gray-scale-7);
       }
@@ -115,8 +107,7 @@ page-recipe {
   }
 
   .messages-header {
-    /* Children */
-    h3 {
+    > h3 {
       /* Display */
       width: 100%;
 
@@ -133,20 +124,23 @@ page-recipe {
     box-shadow: inset 0 0 40px 20px map-get($colors, gray-scale-3);
 
     /* Children */
-    ion-card-header {
+    > ion-card-header {
       /* Display */
       padding: 0;
     }
-    ion-item-divider {
+
+    > ion-item-divider {
       /* Color */
       background-color: map-get($colors, primary);
     }
-    ion-item {
+
+    > ion-item {
       /* Color */
       color: map-get($colors, gray-scale-9);
       background-color: transparent;
     }
-    ion-item:not(:last-child) {
+
+    > ion-item:not(:last-child) {
       /* Display */
       border-bottom: 1px solid map-get($colors, gray-scale-7);
     }
@@ -155,6 +149,12 @@ page-recipe {
   .recipe-master-item {
     /* Display */
     margin-bottom: 10px;
+
+    /* Children */
+    > .item-inner {
+      /* Display */
+      border-bottom: 2px solid map-get($colors, primary) !important;
+    }
   }
 
   .recipe-name {
