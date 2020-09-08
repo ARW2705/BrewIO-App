@@ -49,20 +49,20 @@ describe('Accordion Component', () => {
 
     const accElem = fixture.debugElement.query(By.css('.expand-accordion'));
 
-    expect(accElem.properties['@slideUpDown'].value).toMatch('collapsed');
-    expect(accElem.properties['@slideUpDown'].params.height).toBe(0);
+    expect(accElem.properties['@expandUpDown'].value).toMatch('collapsed');
+    expect(accElem.properties['@expandUpDown'].params.height).toBe(0);
 
     accordion.ngOnChanges({ expanded: new SimpleChange(false, true, false) });
 
     fixture.detectChanges();
 
-    expect(accElem.properties['@slideUpDown'].value).toMatch('expanded');
+    expect(accElem.properties['@expandUpDown'].value).toMatch('expanded');
 
     accordion.ngOnChanges({ expanded: new SimpleChange(false, false, false) });
 
     fixture.detectChanges();
 
-    expect(accElem.properties['@slideUpDown'].value).toMatch('collapsed');
+    expect(accElem.properties['@expandUpDown'].value).toMatch('collapsed');
   }); // end 'should toggle expansion' test
 
 });

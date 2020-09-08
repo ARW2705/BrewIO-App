@@ -1,20 +1,21 @@
 /* Module imports */
-import { Component, Input, ViewChild, OnChanges, SimpleChanges, ElementRef } from '@angular/core';
+import { Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 
 /* Animation imports */
-import { slideUpDown } from '../../animations/slide';
+import { expandUpDown } from '../../animations/expand';
+
 
 @Component({
   selector: 'accordion',
   templateUrl: 'accordion.html',
   animations: [
-    slideUpDown()
+    expandUpDown()
   ]
 })
 export class AccordionComponent implements OnChanges {
   @Input('expanded') expanded;
   @ViewChild('accordionContainer', {read: ElementRef}) container;
-  expand = {
+  expand: object = {
     value: 'collapsed',
     params: {
       height: 0
