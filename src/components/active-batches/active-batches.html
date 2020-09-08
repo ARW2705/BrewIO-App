@@ -1,61 +1,70 @@
-<ion-grid no-padding>
+<ion-grid>
 
-  <ion-row *ngIf="user && activeBatchesList.length">
+  <ion-row  *ngIf="!activeBatchesList.length"
+            justify-content-center
+            class="no-item">
+    No Active Batches
+  </ion-row>
 
+  <ion-row *ngIf="activeBatchesList.length">
+
+    <!-- Batch List -->
     <ion-list id="batch-list">
+
       <ng-container *ngFor="let batch of getArrayFromObservables(activeBatchesList)">
 
         <!-- Active batches as sliding items -->
-
-        <ion-item-sliding #slidingItems class="sliding-item">
+        <ion-item-sliding #slidingItems
+                          class="sliding-item">
 
           <ion-item class="active-batch-summary">
 
             <!-- Left icon -->
-
             <ion-icon name="beer"
                       color="primary">
             </ion-icon>
 
             <!-- Text information -->
+            <div>
 
-            <div  fxFlex="grow"
-                  fxLayout="column">
-              <p>
-                {{ getRecipeMasterName(batch) | titlecase }} • {{ getRecipeName(batch) | titlecase }}
+              <p id="test">
+                {{ batch.contextInfo.recipeMasterName | titlecase }} • {{ batch.contextInfo.recipeVariantName | titlecase }}
               </p>
+
               <p>
-                Next Step: {{ getBatchCurrentStep(batch) | titlecase }}
+                Next Step: {{ batch.process.schedule[batch.process.currentStep].name | titlecase }}
               </p>
+
               <p>
-                Started on {{ getBatchStartDate(batch) | date:'EEEE, MMMM d' }}
+                Started on {{ batch.createdAt | date:'EEEE, MMMM d' }}
               </p>
+
             </div>
+
           </ion-item>
 
           <!-- slide out button to navigate to brew process -->
-
           <ion-item-options side="right">
+
             <button ion-button
                     color="secondary"
-                    class="sliding-button"
-                    (click)="navToBrewProcess(batch)">
+                    (click)="navToBrewProcess(batch)"
+                    class="sliding-button">
+
               <ion-icon name="list-box"></ion-icon>
+
               Go to Step
+
             </button>
+
           </ion-item-options>
 
         </ion-item-sliding>
 
       </ng-container>
+
     </ion-list>
 
-  </ion-row>
-
-  <!-- Logged in, but no active batches present message -->
-
-  <ion-row class="no-active-message" *ngIf="!activeBatchesList.length">
-    No Active Batches
   </ion-row>
 
 </ion-grid>

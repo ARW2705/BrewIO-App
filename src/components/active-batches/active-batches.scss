@@ -10,16 +10,13 @@ active-batches {
     .item-inner {
       /* Display */
       padding: 0 !important;
-      margin-right: 16px !important;
       border-bottom: 2px solid map-get($colors, primary) !important;
     }
 
     ion-label {
-      /* Position */
-      align-items: center;
-
       /* Display */
       display: flex;
+      align-items: center;
 
       /* Children */
       div {
@@ -32,7 +29,7 @@ active-batches {
         margin-right: 10px;
 
         /* Text */
-        font-size: 1.5em;
+        font-size: 2.3em;
       }
 
       p {
@@ -47,9 +44,20 @@ active-batches {
 
   }
 
+  .item-md {
+    /* Display */
+    padding: 0;
+  }
+
   .no-active-message {
-    /* Position */
+    /* Display */
+    display: inline;
     align-self: center;
+  }
+
+  .no-item {
+    /* Text */
+    text-align: center;
   }
 
   .sliding-button {
