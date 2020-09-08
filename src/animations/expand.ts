@@ -1,7 +1,16 @@
-import { animate, state, style, transition, trigger } from '@angular/animations';
+import {
+  animate,
+  state,
+  style,
+  transition,
+  trigger
+} from '@angular/animations';
 
-export function slideUpDown() {
-  return trigger('slideUpDown', [
+/**
+ * Expand or collapse vertically while also transitioning opacity
+**/
+export function expandUpDown() {
+  return trigger('expandUpDown', [
     state('collapsed', style({
       height: 0,
       margin: 0,
