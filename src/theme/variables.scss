@@ -79,140 +79,6 @@ $text-color: map-get($colors, gray-scale-8);
 $toolbar-background: map-get($colors, gray-scale-2);
 
 
-.alert-md [aria-checked=true] {
-  background-color: map-get($colors, gray-scale-4);
-}
-
-.alert-md .alert-button-group {
-  background-color: map-get($colors, gray-scale-2);
-
-  .alert-button {
-    background-color: transparent;
-  }
-}
-
-.alert-md .alert-head {
-  color: map-get($colors, primary);
-  background-color: map-get($colors, gray-scale-2);
-}
-
-.alert-md .alert-radio-group {
-  border: none !important;
-}
-
-.button-md-primary {
-  color: map-get($colors, gray-scale-2) !important;
-}
-
-.button-md-secondary {
-  color: map-get($colors, gray-scale-2) !important;
-}
-
-.button-md-danger {
-  color: map-get($colors, gray-scale-1) !important;
-}
-
-.button-md-heart {
-  color: map-get($colors, gray-scale-2) !important;
-}
-
-.tabs-md .tab-button[aria-selected=true] {
-  background-color: map-get($colors, primary) !important;
-}
-
-.tabs-md .tab-button[aria-selected=false] {
-  background-color: map-get($colors, gray-scale-8) !important;
-}
-
-.item-md-primary,
-.item-divider-md-primary {
-  color: map-get($colors, gray-scale-1) !important;
-}
-
-.action-sheet-group { overflow: auto; }
-
-.scroll-content {
-  overflow-y: auto !important;
-}
-
-.item-inner {
-  box-shadow: none !important;
-}
-
-.item.item-block.item-md.item-toggle {
-  height: 100%;
-}
-
-.item-checkbox {
-  .item-inner {
-    border: none !important;
-  }
-}
-
-.left-col {
-  text-align: left;
-}
-.right-col {
-  text-align: right;
-}
-
-.toggle-md .toggle-inner {
-  background-color: map-get($colors, gray-scale-4) !important;
-  width: 25px !important;
-  height: 25px !important;
-  top: -5px !important;
-  left: -2px !important;
-}
-
-.toggle-md.toggle-checked .toggle-inner {
-  background-color: map-get($colors, primary) !important;
-}
-
-button {
-  min-height: 48px;
-}
-
-.main-toast {
-  .toast-wrapper {
-    background: transparent !important;
-  }
-  .toast-message {
-    border-radius: 8px;
-    font-size: 1.25em !important;
-    margin: 0 5px 6px;
-    padding: 12px !important;
-    text-align: center;
-    color: map-get($colors, gray-scale-9) !important;
-    @include background-opacity(map-get($colors, gray-scale-1), 0.9);
-  }
-}
-
-.bright-toast {
-  .toast-message {
-    color: map-get($colors, gray-scale-1) !important;
-    background-color: map-get($colors, primary) !important;
-  }
-}
-
-.error-toast {
-  .toast-message {
-    color: map-get($colors, gray-scale-10) !important;
-    background-color: map-get($colors, danger) !important;
-  }
-}
-
-.main-action-sheet {
-  .action-sheet-title {
-    text-align: center !important;
-  }
-  button {
-    span {
-      display: inline-block;
-      text-align: center !important;
-    }
-  }
-}
-
 // App iOS Variables
 // --------------------------------------------------
 // iOS only Sass variables can go here
@@ -249,6 +115,7 @@ $button-ios-small-font-size: 1.5rem;
 $button-ios-small-icon-font-size: 1.6rem;
 $button-ios-text-color: map-get($colors, gray-scale-1);
 
+$card-ios-border-radius: 12px;
 $card-ios-font-size: 1.6rem;
 $card-ios-header-font-size: 1.8rem;
 $card-ios-title-font-size: 2.6rem;
@@ -316,6 +183,7 @@ $button-md-small-font-size: 1.5rem;
 $button-md-small-icon-font-size: 1.6rem;
 $button-md-text-color: map-get($colors, gray-scale-1);
 
+$card-md-border-radius: 12px;
 $card-md-font-size: 1.6rem;
 $card-md-header-font-size: 1.8rem;
 $card-md-title-font-size: 2.6rem;
