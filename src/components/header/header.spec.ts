@@ -1,7 +1,7 @@
 /* Module imports */
 import { TestBed, getTestBed, async, ComponentFixture } from '@angular/core/testing';
 import { IonicModule, Events } from 'ionic-angular';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { NO_ERRORS_SCHEMA, DebugElement } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
@@ -30,6 +30,8 @@ describe('Header Component', () => {
   let eventService: Events;
   let userService: UserProvider;
   let modalService: ModalProvider;
+  let originalOnInit: any;
+  let originalOnDestroy: any;
   configureTestBed();
 
   beforeAll(done => (async() => {
@@ -54,18 +56,28 @@ describe('Header Component', () => {
   .then(done)
   .catch(done.fail));
 
-  beforeEach(async(() => {
+  beforeAll(async(() => {
     injector = getTestBed();
-    eventService = injector.get(Events);
     userService = injector.get(UserProvider);
     modalService = injector.get(ModalProvider);
-
-    eventService.publish = jest
-      .fn();
 
     modalService.openLogin = jest
       .fn();
   }));
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(HeaderComponent);
+    header = fixture.componentInstance;
+    eventService = injector.get(Events);
+
+    originalOnInit = header.ngOnInit;
+    header.ngOnInit = jest
+      .fn();
+
+    originalOnDestroy = header.ngOnDestroy;
+    header.ngOnDestroy = jest
+      .fn();
+  });
 
   describe('User not logged in', () => {
 
@@ -81,27 +93,19 @@ describe('Header Component', () => {
         .mockReturnValue(false);
     }));
 
-    beforeEach(() => {
-      fixture = TestBed.createComponent(HeaderComponent);
-      header = fixture.componentInstance;
-    });
-
     test('should create the component', () => {
+      header.ngOnInit = originalOnInit;
+      header.ngOnDestroy = originalOnDestroy;
+
       fixture.detectChanges();
 
       expect(header).toBeDefined();
     }); // end 'should create the component' test
 
-    test('should be logged out', () => {
-      fixture.detectChanges();
-
-      expect(header.isLoggedIn()).toBe(false);
-    }); // end 'should be logged out' test
-
     test('should handle a back navigation call with empty nav stack', () => {
       fixture.detectChanges();
 
-      const eventSpy = jest.spyOn(eventService, 'publish');
+      const eventSpy: jest.SpyInstance = jest.spyOn(eventService, 'publish');
 
       header.goBack();
 
@@ -114,7 +118,7 @@ describe('Header Component', () => {
     test('should handle a back navigation call with items in nav stack', () => {
       fixture.detectChanges();
 
-      const eventSpy = jest.spyOn(eventService, 'publish');
+      const eventSpy: jest.SpyInstance = jest.spyOn(eventService, 'publish');
 
       header.navStack = ['second-most-recent', 'most-recent'];
       header.isTabPage = false;
@@ -132,23 +136,21 @@ describe('Header Component', () => {
     test('should push an origin to the nav stack', () => {
       fixture.detectChanges();
 
-      expect(header.navStack.length).toBe(0);
+      expect(header.navStack.length).toEqual(0);
 
       header.headerNavUpdateEventHandler({origin: 'new-origin'});
 
-      expect(header.navStack.length).toBe(1);
+      expect(header.navStack.length).toEqual(1);
       expect(header.navStack[0]).toMatch('new-origin');
     }); // end 'should push an origin to the nav stack' test
 
-    test('should set the current tab name', () => {
+    test('should set a destination view', () => {
       fixture.detectChanges();
 
-      expect(header.currentTab).toMatch('');
+      header.headerNavUpdateEventHandler({dest: 'process'});
 
-      header.headerNavUpdateEventHandler({dest: 'new-nav'});
-
-      expect(header.currentTab).toMatch('new-nav');
-    }); // end 'should set the current tab name' test
+      expect(header.currentView).toMatch('process');
+    }); // end 'should set a destination view' test
 
     test('should set a tab destination', () => {
       fixture.detectChanges();
@@ -158,7 +160,7 @@ describe('Header Component', () => {
 
       header.headerNavUpdateEventHandler({destType: 'tab'});
 
-      expect(header.navStack.length).toBe(0);
+      expect(header.navStack.length).toEqual(0);
       expect(header.isTabPage).toBe(true);
     }); // end 'should set a tab destination' test
 
@@ -183,7 +185,7 @@ describe('Header Component', () => {
     test('should call goBack if a \'batch-end\' flag is set', () => {
       fixture.detectChanges();
 
-      const navSpy = jest.spyOn(header, 'goBack');
+      const navSpy: jest.SpyInstance = jest.spyOn(header, 'goBack');
 
       header.headerNavUpdateEventHandler({other: 'batch-end'});
 
@@ -193,27 +195,18 @@ describe('Header Component', () => {
     test('should call goBack if a \'form-submit-complete\' flag is set', () => {
       fixture.detectChanges();
 
-      const navSpy = jest.spyOn(header, 'goBack');
+      const navSpy: jest.SpyInstance = jest.spyOn(header, 'goBack');
 
       header.headerNavUpdateEventHandler({other: 'form-submit-complete'});
 
       expect(navSpy).toHaveBeenCalled();
     }); // end 'should call goBack if a \'form-submit-complete\' flag is set' test
 
-    test('should check if current tab is the user tab', () => {
-      fixture.detectChanges();
-
-      expect(header.isUserTab()).toBe(false);
-
-      header.currentTab = 'user';
-
-      expect(header.isUserTab()).toBe(true);
-    }); // end 'should check if current tab is the user tab' test
-
     test('should open login modal', () => {
       fixture.detectChanges();
 
-      const modalSpy = jest.spyOn(header.modalService, 'openLogin');
+      const modalSpy: jest.SpyInstance = jest
+        .spyOn(header.modalService, 'openLogin');
 
       header.openLogin();
 
@@ -223,7 +216,9 @@ describe('Header Component', () => {
     test('should not have a back button if on a \'tab\' page', () => {
       fixture.detectChanges();
 
-      const backButton = fixture.debugElement.query(By.css('.header-button-back'));
+      const backButton: DebugElement = fixture
+        .debugElement
+        .query(By.css('.header-button-back'));
 
       expect(backButton).toBeNull();
     }); // end 'should not have a back button if on a \'tab\' page' test
@@ -233,29 +228,36 @@ describe('Header Component', () => {
 
       fixture.detectChanges();
 
-      const backButton = fixture.debugElement.query(By.css('.header-button-back'));
+      const backButton: DebugElement = fixture
+        .debugElement
+        .query(By.css('.header-button-back'));
 
-      expect(backButton).toBeTruthy();
+      expect(backButton).toBeDefined();
     }); // end 'should have back button if not on a \'tab\' page' test
 
     test('should have a login button if not logged in', () => {
       fixture.detectChanges();
 
-      const loginIconButton = fixture.debugElement.query(By.css('#log-in-icon'));
+      const loginIconButton: DebugElement = fixture
+        .debugElement
+        .query(By.css('#log-in-icon'));
 
-      expect(loginIconButton).toBeTruthy();
+      expect(loginIconButton).toBeDefined();
     }); // end 'should have a login button if not logged in' test
 
     test('should not have a logout button if not logged in', () => {
+      header.currentView = 'user';
+
       fixture.detectChanges();
 
-      const buttons = fixture.debugElement.queryAll(By.css('.header-button'));
+      const buttons: DebugElement[] = fixture
+        .debugElement
+        .queryAll(By.css('.header-button'));
 
-      const logoutButton = buttons.find(button => {
-        return (button.childNodes[0] as any).childNodes[2].name !== 'ion-icon';
-      });
-
-      expect(logoutButton).toBeUndefined();
+      // Should only have one header button, only the login button has an ion-icon
+      expect(buttons.length).toEqual(1);
+      expect(buttons[0].childNodes[0]['childNodes'][1]['name'])
+        .toMatch('ion-icon');
     }); // end 'should not have a logout button if not logged in' test
 
   }); // end 'User not logged in' section
@@ -285,21 +287,21 @@ describe('Header Component', () => {
       expect(header.user).not.toBeNull();
     }); // end 'should have a user' test
 
-    test('should be logged in', () => {
-      fixture.detectChanges();
-
-      expect(header.isLoggedIn()).toBe(true);
-    }); // end 'should be logged in' test
-
     test('should have a log out button', () => {
-      header.currentTab = 'user';
+      header.currentView = 'user';
 
       fixture.detectChanges();
 
-      const buttons = fixture.debugElement.queryAll(By.css('.header-button'));
-      const logoutButton = buttons.find(button => {
-        return !(button.childNodes[0] as any).childNodes.some(node => node.name === 'ion-icon');
-      });
+      const buttons: DebugElement[] = fixture
+        .debugElement
+        .queryAll(By.css('.header-button'));
+
+      const logoutButton: DebugElement = buttons
+        .find((button: DebugElement): boolean => {
+          return !(<DebugElement>button.childNodes[0])
+            .childNodes
+            .some((node: DebugElement) => node.name === 'ion-icon');
+        });
 
       expect(logoutButton).toBeDefined();
     }); // end 'should have a log out button' test
@@ -307,7 +309,9 @@ describe('Header Component', () => {
     test('should not have a log in button', () => {
       fixture.detectChanges();
 
-      const loginIconButton = fixture.debugElement.query(By.css('#log-in-icon'));
+      const loginIconButton: DebugElement = fixture
+        .debugElement
+        .query(By.css('#log-in-icon'));
 
       expect(loginIconButton).toBeNull();
     }); // end 'should not have a log in button' test
@@ -315,15 +319,17 @@ describe('Header Component', () => {
     test('should show username as logged in', () => {
       fixture.detectChanges();
 
-      const loginMessage = fixture.debugElement.queryAll(By.css('.login-header-text'));
+      const loginMessage: DebugElement[] = fixture
+        .debugElement
+        .queryAll(By.css('.login-header-text'));
 
-      expect(loginMessage.length).toBe(2);
+      expect(loginMessage.length).toEqual(2);
     }); // end 'should show username as logged in' test
 
     test('should log out', () => {
       fixture.detectChanges();
 
-      const userSpy = jest.spyOn(userService, 'logOut');
+      const userSpy: jest.SpyInstance = jest.spyOn(userService, 'logOut');
 
       header.logout();
 

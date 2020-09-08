@@ -1,70 +1,90 @@
 <ion-header>
+
   <ion-navbar>
+
     <ion-grid no-padding>
+
       <ion-row  justify-content-between
                 no-wrap>
 
         <!-- Back button -->
+        <ion-col  *ngIf="!isTabPage"
+                  col-1
+                  align-self-center>
 
-        <ion-col  col-1
-                  align-self-center
-                  *ngIf="!isTabPage">
           <button ion-button
-                  class="header-button-back"
-                  (click)="goBack()">
+                  (click)="goBack()"
+                  class="header-button-back">
+
             <ion-icon name="arrow-round-back"
                       color="primary">
             </ion-icon>
+
           </button>
+
         </ion-col>
 
         <!-- Header title -->
-
         <ion-col  col-6
                   align-self-center>
-          <ion-title>{{ title }}</ion-title>
+
+          <ion-title id="header-title">
+            {{ title }}
+          </ion-title>
+
         </ion-col>
 
         <!-- Log In/Out -->
-
         <ion-col  col-5
                   align-self-center>
 
-          <button ion-button
+          <!-- Log In button -->
+          <button *ngIf="!isLoggedIn"
+                  ion-button
                   float-right
-                  class="header-button"
-                  *ngIf="!isLoggedIn()"
-                  (click)="openLogin()">
-            <!-- Log In -->
+                  (click)="openLogin()"
+                  class="header-button">
+
             <ion-icon id="log-in-icon"
                       name="log-in">
             </ion-icon>
+
           </button>
 
-          <button ion-button
+          <!-- Log Out button -->
+          <button *ngIf="isLoggedIn && currentView === 'user'"
+                  ion-button
                   float-right
-                  class="header-button"
-                  *ngIf="isLoggedIn() && isUserTab()"
-                  (click)="logout()">
+                  (click)="logout()"
+                  class="header-button">
             Log out
           </button>
 
           <!-- Show username when logged in -->
+          <ion-row *ngIf="user && user.username && currentView !== 'user'">
 
-          <ion-row *ngIf="user && user.username && !isUserTab()">
-            <ion-col col-12
-                     class="login-header-text">
+            <ion-col  col-12
+                      class="login-header-text">
               Logged in as...
             </ion-col>
-            <ion-col col-12
-                     class="login-header-text">
-              {{ user.username }}
+
+            <ion-col  col-12
+                      class="login-header-text">
+
+              <span>
+                {{ user.username }}
+              </span>
+
             </ion-col>
+
           </ion-row>
 
         </ion-col>
 
       </ion-row>
+
     </ion-grid>
+
   </ion-navbar>
+
 </ion-header>
