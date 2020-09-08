@@ -1,3 +1,4 @@
+/* Module imports */
 import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
@@ -12,7 +13,7 @@ export class SortPipe implements PipeTransform {
    *
    * @return: array - sorted array, returns undefined if something other than array is passed
   **/
-  transform(array: any, sortBy: string): Array<any> {
+  transform(array: any, sortBy: string): any[] {
     if (!Array.isArray(array)) {
       return;
     }
