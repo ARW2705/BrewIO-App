@@ -32,9 +32,9 @@ describe('Client ID Provider', () => {
   }); // end 'should initialize with unix timestamp' test
 
   test('should get different ids', () => {
-    const id1 = clientIdService.getNewId();
-    const id2 = clientIdService.getNewId();
-    const id3 = clientIdService.getNewId();
+    const id1: string = clientIdService.getNewId();
+    const id2: string = clientIdService.getNewId();
+    const id3: string = clientIdService.getNewId();
 
     expect(id1).toMatch(RegExp(/^[\d]{13,23}$/g));
     expect(id2).toMatch(RegExp(/^[\d]{13,23}$/g));

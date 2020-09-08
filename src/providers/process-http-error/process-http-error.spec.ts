@@ -26,7 +26,7 @@ describe('Process HTTP Error Service', () => {
     processHttpService = injector.get(ProcessHttpErrorProvider);
   });
 
-  test('should get 401 HttpErrorResponse', () => {
+  test('should get 401 HttpErrorResponse', done => {
     const errorResponse: HttpErrorResponse = new HttpErrorResponse({
       status: 401,
       statusText: '',
@@ -39,12 +39,18 @@ describe('Process HTTP Error Service', () => {
 
     processHttpService.handleError(errorResponse)
       .subscribe(
-        _ => { },
-        error => expect(error).toMatch('Not authorized')
+        (response: any): void => {
+          console.log('Should not get a response', response);
+          expect(true).toBe(false);
+        },
+        (error: string): void => {
+          expect(error).toMatch('Not authorized');
+          done();
+        }
       );
   }); // end 'should get 401 HttpErrorResponse' test
 
-  test('should get 500 HttpErrorResponse', () => {
+  test('should get 500 HttpErrorResponse', done => {
     const errorResponse: HttpErrorResponse = new HttpErrorResponse({
       status: 500,
       statusText: 'test 500 error',
@@ -55,12 +61,18 @@ describe('Process HTTP Error Service', () => {
 
     processHttpService.handleError(errorResponse)
       .subscribe(
-        _ => { },
-        error => expect(error).toMatch('<500> test 500 error')
+        (response: any): void => {
+          console.log('Should not get a response', response);
+          expect(true).toBe(false);
+        },
+        (error: string): void => {
+          expect(error).toMatch('<500> test 500 error');
+          done();
+        }
       );
   }) // end 'should get 500 HttpErrorResponse' test
 
-  test('should get ValidationError', () => {
+  test('should get ValidationError', done => {
     const errorResponse: HttpErrorResponse = new HttpErrorResponse({
       status: 500,
       statusText: 'test validation error',
@@ -72,30 +84,48 @@ describe('Process HTTP Error Service', () => {
 
     processHttpService.handleError(errorResponse)
       .subscribe(
-        _ => { },
-        error => expect(error).toMatch('<500> test validation error')
+        (response: any): void => {
+          console.log('Should not get a response', response);
+          expect(true).toBe(false);
+        },
+        (error: string): void => {
+          expect(error).toMatch('<500> test validation error');
+          done();
+        }
       );
   }); // end 'should get ValidationError' test
 
-  test('should get 503 generic error with message', () => {
-    const error = {
+  test('should get 503 generic error with message', done => {
+    const error: object = {
       status: 503,
       message: 'generic error message'
     };
 
     processHttpService.handleError(error).subscribe(
-      _ => { },
-      error => expect(error).toMatch('generic error message')
+      (response: any): void => {
+        console.log('Should not get a response', response);
+        expect(true).toBe(false);
+      },
+      (error: string): void => {
+        expect(error).toMatch('generic error message');
+        done();
+      }
     );
   }); // end 'should get 503 generic error with message' test
 
-  test('should get 500 generic error', () => {
-    const genericError = '500 Internal Server Error';
+  test('should get 500 generic error', done => {
+    const genericError: string = '500 Internal Server Error';
 
     processHttpService.handleError(genericError)
       .subscribe(
-        _ => { },
-        error => expect(error).toMatch(genericError)
+        (response: any): void => {
+          console.log('Should not get a response', response);
+          expect(true).toBe(false);
+        },
+        (error: string): void => {
+          expect(error).toMatch(genericError);
+          done();
+        }
       );
   }); // end 'should get 500 generic error' test
 

@@ -39,7 +39,7 @@ describe('Modal Provider', () => {
   });
 
   test('should create and open login modal', () => {
-    const modalSpy = jest.spyOn(modalCtrl, 'create');
+    const modalSpy: jest.SpyInstance = jest.spyOn(modalCtrl, 'create');
 
     modalService.openLogin();
 
@@ -47,7 +47,7 @@ describe('Modal Provider', () => {
   }); // end 'should create and open login modal' test
 
   test('should create and open signup modal', () => {
-    const modalSpy = jest.spyOn(modalCtrl, 'create');
+    const modalSpy: jest.SpyInstance = jest.spyOn(modalCtrl, 'create');
 
     modalService.openSignup();
 

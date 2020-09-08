@@ -1,13 +1,14 @@
 /* Module imports */
 import { Injectable } from '@angular/core';
-import { AbstractControl, FormGroup, ValidatorFn } from '@angular/forms';
+import { AbstractControl, FormGroup, ValidatorFn, Validators } from '@angular/forms';
 
 /* Constants import */
-import { passwordPattern } from '../../shared/constants/password-pattern';
+import { PASSWORD_PATTERN } from '../../shared/constants/password-pattern';
+
 
 @Injectable()
 export class FormValidatorProvider {
-  static formErrorMessages = {
+  static formErrorMessages: object = {
     username: {
       required: 'Username is required',
       minlength: 'Username must be at least 6 characters',
@@ -38,22 +39,51 @@ export class FormValidatorProvider {
   constructor() { }
 
   /**
+   * Get the corresponding validator error message
+   *
+   * @params: control - form control name
+   * @params: errorType - error type in the control
+   *
+   * @return: error message
+  **/
+  static GetErrorMessage(control: string, errorType: string): string {
+    return FormValidatorProvider
+      .formErrorMessages[control][errorType]
+      .replace('{}', );
+  }
+
+  /**
+   * Conditionally set required validator
+   *
+   * @params: isRequired - true if control should be required
+   *
+   * @return: ValidatorFn - @params control to attach validator
+  **/
+  static RequiredIfValidator(isRequired: boolean): ValidatorFn {
+    return (control: AbstractControl): {[key: string]: any} | null => {
+      return isRequired ? Validators.required(control): null;
+    }
+  }
+
+  /**
    * Password and password confirmation matching validator
    *
    * @params: none
    *
-   * @return: ValidatorFn - @params FormGroup to pull password and confirmation
+   * @return: ValidatorFn - @params group to pull password and confirmation
    * strings
   **/
   static PasswordMatch(): ValidatorFn {
     return (group: FormGroup): {[key: string]: any} | null => {
-      const password = group.get('password');
-      const confirmation = group.get('passwordConfirmation');
+      const password: AbstractControl = group.get('password');
+      const confirmation: AbstractControl = group.get('passwordConfirmation');
+
       if (!confirmation.value) {
         confirmation.setErrors({required: true});
       } else if (password.value !== confirmation.value) {
         confirmation.setErrors({mismatch: true});
       }
+      
       return null;
     }
   }
@@ -63,24 +93,13 @@ export class FormValidatorProvider {
    *
    * @params: none
    *
-   * @return: ValidatorFn - @params FormControl to pull password string
+   * @return: ValidatorFn - @params control to pull password string
   **/
   static PasswordPattern(): ValidatorFn {
     return (control: AbstractControl): {[key: string]: any} | null => {
-      return passwordPattern.test(control.value) ? null: {passwordInvalid: true};
+      return PASSWORD_PATTERN
+        .test(control.value) ? null: {passwordInvalid: true};
     }
-  }
-
-  /**
-   * Get the corresponding validator error message
-   *
-   * @params: control - form control name
-   * @params: errorType - error type in the control
-   *
-   * @return: error message
-  **/
-  static GetErrorMessage(control: string, errorType: string): string {
-    return FormValidatorProvider.formErrorMessages[control][errorType].replace('{}', );
   }
 
 }

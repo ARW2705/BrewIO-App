@@ -1,7 +1,7 @@
 /* Module imports */
 import { Injectable } from '@angular/core';
-import { Platform, Events } from 'ionic-angular';
-import { Network } from '@ionic-native/network/ngx';
+import { Events, Platform } from 'ionic-angular';
+import { Network } from '@ionic-native/network';
 
 
 @Injectable()
@@ -9,9 +9,9 @@ export class ConnectionProvider {
   connection: boolean = false;
 
   constructor(
+    public events: Events,
     public network: Network,
-    public platform: Platform,
-    public events: Events
+    public platform: Platform
   ) {
     if (this.platform.is('cordova')) {
       this.monitor();
@@ -19,6 +19,14 @@ export class ConnectionProvider {
       // only runs outside of cordova in dev
       console.log('Connection in dev mode');
       this.connection = true;
+    }
+  }
+
+  // For testing purposes only
+  toggleConnection(): void {
+    this.connection = !this.connection;
+    if (this.connection) {
+      this.events.publish('connected');
     }
   }
 
@@ -40,15 +48,15 @@ export class ConnectionProvider {
    * @return: none
   **/
   monitor(): void {
-    console.log('Begin monitoring');
+    console.log('Begin monitoring', this.network.onConnect, Network);
     this.network.onConnect()
-      .subscribe(() => {
+      .subscribe((): void => {
         console.log('on connect');
         this.connection = true;
         this.events.publish('connected');
       });
     this.network.onDisconnect()
-      .subscribe(() => {
+      .subscribe((): void => {
         console.log('on disconnect');
         this.connection = false;
         this.events.publish('disconnected');

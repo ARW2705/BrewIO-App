@@ -17,8 +17,8 @@ import { ActionSheetProvider } from './action-sheet';
 
 
 describe('Action sheet provider', () => {
-  let injector;
-  let actionService;
+  let injector: TestBed;
+  let actionService: ActionSheetProvider;
   configureTestBed();
 
   beforeAll(async(() => {
@@ -34,29 +34,38 @@ describe('Action sheet provider', () => {
     actionService = injector.get(ActionSheetProvider);
   }));
 
-  test('should create action buttons', () => {
-    const buttons: Array<ActionSheetButton> = actionService.generateActionSheetButtons(mockActionSheetButtons());
-    expect(buttons[0].text).toMatch('Choice 1');
-    expect(buttons[4].role).toMatch('cancel');
-  }); // end 'should create action buttons' test
+  test('should open action sheet with default class', () => {
+    const createSpy: jest.SpyInstance = jest
+      .spyOn(actionService.actionCtrl, 'create');
 
-  test('should have an action button handler', () => {
-    const buttons: Array<ActionSheetButton> = actionService.generateActionSheetButtons(mockActionSheetButtons());
-    const handler = buttons[buttons.length - 1].handler;
-    const consoleSpy = jest.spyOn(console, 'log');
-    handler();
-    expect(consoleSpy).toHaveBeenCalledWith('Action Sheet cancelled');
-  }); // end 'should have an action button hanlder' test
+    const _mockActionSheetButtons: ActionSheetButton[]
+      = mockActionSheetButtons();
 
-  test('should open action sheet', () => {
-    const createSpy = jest.spyOn(actionService.actionCtrl, 'create');
-    const _mockActionSheetButtons = mockActionSheetButtons();
-
-    actionService.openActionSheet('title', _mockActionSheetButtons, 'custom-class');
+    actionService.openActionSheet('title', _mockActionSheetButtons);
 
     expect(createSpy.mock.calls[0][0].title).toMatch('title');
-    expect(createSpy.mock.calls[0][0].buttons[0].text).toMatch(_mockActionSheetButtons[0].text);
-    expect(createSpy.mock.calls[0][0].cssClass).toMatch('custom-class');
-  }); // end 'should open action sheet' test
+    expect(createSpy.mock.calls[0][0].buttons[0].text)
+      .toMatch(_mockActionSheetButtons[0].text);
+    expect(createSpy.mock.calls[0][0].cssClass).toMatch('action-sheet-main');
+  }); // end 'should open action sheet with default class' test
+
+  test('should open action sheet with custom class', () => {
+    const createSpy: jest.SpyInstance = jest
+      .spyOn(actionService.actionCtrl, 'create');
+      
+    const _mockActionSheetButtons: ActionSheetButton[]
+      = mockActionSheetButtons();
+
+    actionService.openActionSheet(
+      'custom-title',
+      _mockActionSheetButtons,
+      'custom-class'
+    );
+
+    expect(createSpy.mock.calls[1][0].title).toMatch('custom-title');
+    expect(createSpy.mock.calls[1][0].buttons[0].text)
+      .toMatch(_mockActionSheetButtons[0].text);
+    expect(createSpy.mock.calls[1][0].cssClass).toMatch('custom-class');
+  }); // end 'should open action sheet with custom class' test
 
 });

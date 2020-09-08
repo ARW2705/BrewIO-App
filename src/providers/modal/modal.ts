@@ -1,10 +1,11 @@
 /* Module imports */
 import { Injectable } from '@angular/core';
-import { ModalController } from 'ionic-angular';
+import { Modal, ModalController } from 'ionic-angular';
 
 /* Page imports */
 import { LoginPage } from '../../pages/forms/login/login';
 import { SignupPage } from '../../pages/forms/signup/signup';
+
 
 @Injectable()
 export class ModalProvider {
@@ -18,7 +19,7 @@ export class ModalProvider {
    * @return: none
   **/
   openLogin(): void {
-    const modal = this.modalCtrl.create(LoginPage);
+    const modal: Modal = this.modalCtrl.create(LoginPage);
     modal.present({keyboardClose: false});
   }
 
@@ -29,7 +30,7 @@ export class ModalProvider {
    * @return: none
   **/
   openSignup(): void {
-    const modal = this.modalCtrl.create(SignupPage);
+    const modal: Modal = this.modalCtrl.create(SignupPage);
     modal.present({keyboardClose: false});
   }
 

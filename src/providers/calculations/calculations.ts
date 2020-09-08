@@ -21,28 +21,71 @@ export class CalculationsProvider {
   constructor() { }
 
   /**
-   * Calculate original gravity, final gravity, IBU, SRM, and ABV for a given recipe
+   * Calculate mash efficiency from grain bill, and measured original gravity
+   * with measured batch volume
+   *
+   * @params: grainBill - array of grains instances
+   * @params: measuredOriginalGravity - measured original gravity after mash out
+   * @params: measuredBatchVolume - measured volume added to the fermenter
+   *
+   * @return: updated mash efficiency
+  **/
+  calculateMashEfficiency(
+    grainBill: GrainBill[],
+    measuredOriginalGravity: number,
+    measuredBatchVolume: number
+  ): number {
+    const maxEfficiencyGravity: number = this.calculateTotalOriginalGravity(
+      measuredBatchVolume,
+      1,
+      grainBill
+    );
+
+    return Math.round(
+      (measuredOriginalGravity - 1) / (maxEfficiencyGravity - 1) * 100
+    );
+  }
+
+  /**
+   * Calculate original gravity, final gravity, IBU, SRM,
+   * and ABV for a given recipe
    *
    * @params: variant - recipe variant values to calculate with
    *
    * @return: none
   **/
   calculateRecipeValues(variant: RecipeVariant): void {
-    let og = 1;
-    let fg = 1;
-    let ibu = 0;
-    let srm = 0;
-    let abv = 0;
+    let og: number = 1;
+    let fg: number = 1;
+    let ibu: number = 0;
+    let srm: number = 0;
+    let abv: number = 0;
+
     if (variant.grains.length) {
-      og = this.calculateTotalOriginalGravity(variant.batchVolume, (variant.efficiency / 100), variant.grains);
-      const attenuationRate = variant.yeast.length ? this.getAverageAttenuation(variant.yeast): 75;
+      const attenuationRate: number
+        = variant.yeast.length
+          ? this.getAverageAttenuation(variant.yeast)
+          : 75;
+
+      og = this.calculateTotalOriginalGravity(
+        variant.batchVolume,
+        (variant.efficiency / 100),
+        variant.grains
+      );
       fg = this.getFinalGravity(og, attenuationRate);
       srm = this.calculateTotalSRM(variant.grains, variant.batchVolume);
       abv = this.getABV(og, fg);
     }
+
     if (variant.hops.length) {
-      ibu = this.calculateTotalIBU(variant.hops, og, variant.batchVolume, variant.boilVolume);
+      ibu = this.calculateTotalIBU(
+        variant.hops,
+        og,
+        variant.batchVolume,
+        variant.boilVolume
+      );
     }
+
     variant.originalGravity = og;
     variant.finalGravity = fg;
     variant.IBU = ibu;
@@ -53,23 +96,33 @@ export class CalculationsProvider {
   /**
    * Get original gravity for all grains instances
    *
-   * @params: batchVolume - volume in gallons to add to fermenter
+   * @params: batchVolume - volume to add to fermenter
    * @params: efficiency - expected mash efficiency as decimal between 0 - 1
    * @params: grainBill - array of grains instances
    *
    * @return: total original gravity
   **/
-  calculateTotalOriginalGravity(batchVolume: number, efficiency: number, grainBill: Array<GrainBill>): number {
+  calculateTotalOriginalGravity(
+    batchVolume: number,
+    efficiency: number,
+    grainBill: GrainBill[]
+  ): number {
+    if (!grainBill.length) {
+      return 0;
+    }
+
     return roundToDecimalPlace(
-      grainBill
-        .map((grainsItem: GrainBill) => {
+      (grainBill
+        .map((grainsItem: GrainBill): number => {
           return this.getOriginalGravity(
             grainsItem.grainType.gravity,
             grainsItem.quantity,
             batchVolume,
             efficiency);
         })
-        .reduce((arr: number, curr: number) => arr + curr - 1), 3
+        .reduce((arr: number, curr: number): number => arr + curr - 1)
+      ),
+      3
     );
   }
 
@@ -83,34 +136,47 @@ export class CalculationsProvider {
    *
    * @return: total IBUs
   **/
-  calculateTotalIBU(hopsSchedule: Array<HopsSchedule>, og: number, batchVolume: number, boilVolume: number): number {
+  calculateTotalIBU(
+    hopsSchedule: HopsSchedule[],
+    og: number,
+    batchVolume: number,
+    boilVolume: number
+  ): number {
+    if (!hopsSchedule.length) {
+      return 0;
+    }
+
     return roundToDecimalPlace(
       hopsSchedule
-        .map(hops => {
+        .map((hops: HopsSchedule): number => {
           if (hops.dryHop) return 0;
           return this.getIBU(hops.hopsType, hops, og, batchVolume, boilVolume);
         })
-        .reduce((arr: number, curr: number) => arr + curr),
+        .reduce((arr: number, curr: number): number => arr + curr),
       1
     );
   }
 
   /**
-   * Get total SRM for all grains instances
+   * Get total Standard Reference Method for all grains instances
    *
    * @params: grainBill - array of grains instances
    * @params: batchVolume - volume in gallons to add to fermenter
    *
    * @return: total SRM value for batch
   **/
-  calculateTotalSRM(grainBill: Array<GrainBill>, batchVolume: number): number {
+  calculateTotalSRM(grainBill: GrainBill[], batchVolume: number): number {
+    if (!grainBill.length) {
+      return 0;
+    }
+
     return roundToDecimalPlace(
       this.getSRM(
         grainBill
-          .map(grains => {
+          .map((grains: GrainBill): number => {
             return this.getMCU(grains.grainType, grains, batchVolume);
           })
-          .reduce((arr: number, curr: number) => arr + curr)
+          .reduce((arr: number, curr: number): number => arr + curr)
       ),
       1
     );
@@ -123,12 +189,12 @@ export class CalculationsProvider {
    *
    * @return: average attenuation of yeast types in whole numbers
   **/
-  getAverageAttenuation(yeast: Array<YeastBatch>): number {
-    let total = 0;
-    let count = 0;
-    yeast.forEach(item => {
-      item.yeastType.attenuation.forEach(type => {
-        total += type;
+  getAverageAttenuation(yeast: YeastBatch[]): number {
+    let total: number = 0;
+    let count: number = 0;
+    yeast.forEach((yeastInstance: YeastBatch): void => {
+      yeastInstance.yeastType.attenuation.forEach((attn: number): void => {
+        total += attn;
         count++;
       })
     });
@@ -136,7 +202,7 @@ export class CalculationsProvider {
   }
 
   /**
-   * Get ABV value from gravities
+   * Get ABV value from original and final gravities
    *
    * @params: og - original gravity
    * @params: fg - final gravity
@@ -147,8 +213,15 @@ export class CalculationsProvider {
   **/
   getABV(og: number, fg: number): number {
     return roundToDecimalPlace(
-      (Constant.ABVFactors[0] * (og - fg) / (Constant.ABVFactors[1] - og)) * (fg / Constant.ABVFactors[2])
-      , 3
+      (
+        (
+          Constant.ABV_FACTORS[0]
+          * (og - fg)
+          / (Constant.ABV_FACTORS[1] - og)
+        )
+        * (fg / Constant.ABV_FACTORS[2])
+      ),
+      3
     );
   }
 
@@ -164,8 +237,16 @@ export class CalculationsProvider {
    *
    * @example: (1.037, 10, 5, 0.7) => 1.052
   **/
-  getOriginalGravity(pps: number, quantity: number, batchVolume: number, efficiency: number): number {
-      return roundToDecimalPlace(1 + ((pps - 1) * quantity * efficiency / batchVolume), 3);
+  getOriginalGravity(
+    pps: number,
+    quantity: number,
+    batchVolume: number,
+    efficiency: number
+  ): number {
+    return roundToDecimalPlace(
+      1 + ((pps - 1) * quantity * efficiency / batchVolume),
+      3
+    );
   }
 
   /**
@@ -179,11 +260,15 @@ export class CalculationsProvider {
    * @example: (1.050, 70) => 1.015
   **/
   getFinalGravity(og: number, attenuation: number): number {
-    return roundToDecimalPlace(1 + ((og - 1) * (1 - (attenuation / 100))), 3);
+    return roundToDecimalPlace(
+      1 + ((og - 1) * (1 - (attenuation / 100))),
+      3
+    );
   }
 
   /**
    * Get original gravity at start of boil
+   * Part of Tinseth formula for IBU
    *
    * @params: og - original gravity
    * @params: batchVolume - volume in gallons to add to fermenter
@@ -194,11 +279,15 @@ export class CalculationsProvider {
    * @example: (1.050, 5, 6) => 0.041666667
   **/
   getBoilGravity(og: number, batchVolume: number, boilVolume: number): number {
-    return roundToDecimalPlace((batchVolume / boilVolume) * (og - 1), 9);
+    return roundToDecimalPlace(
+      (batchVolume / boilVolume) * (og - 1),
+      9
+    );
   }
 
   /**
    * Get factor for reduced utilization from wort gravity
+   * Part of Tinseth formula for IBU
    *
    * @params: boilGravity - original gravity at start of boil
    *
@@ -207,11 +296,15 @@ export class CalculationsProvider {
    * @example: (0.041666667) => 1.134632433
   **/
   getBignessFactor(boilGravity: number) {
-    return roundToDecimalPlace(Constant.BignessFactor * Math.pow(Constant.BignessBase, boilGravity), 9);
+    return roundToDecimalPlace(
+      Constant.BIGNESS_FACTOR * Math.pow(Constant.BIGNESS_BASE, boilGravity),
+      9
+    );
   }
 
   /**
    * Get factor for change in utilization from boil time
+   * Part of Tinseth formula for IBU
    *
    * @params: boilTime - the boil time in minutes
    *
@@ -220,18 +313,25 @@ export class CalculationsProvider {
    * @example: (60) => 0.219104108
   **/
   getBoilTimeFactor(boilTime: number): number {
-    return roundToDecimalPlace((1 - Math.pow(Math.E, (Constant.BoilTimeExp * boilTime))) / Constant.BoilTimeFactor, 9);
+    return roundToDecimalPlace(
+      (
+        (1 - Math.pow(Math.E, (Constant.BOIL_TIME_EXP * boilTime)))
+        / Constant.BOIL_TIME_FACTOR
+      ),
+      9
+    );
   }
 
   /**
    * Get utilization of hops for given bigness and boil time factors
+   * Part of Tinseth formula for IBU
    *
    * @params: bignessFactor - calculated bigness factor
    * @params: boilTimeFactor - calculated boil time factor
    *
    * @return: utilization factor
    *
-   * @example: 1.134632433, 0.219104108) => 0.248602627
+   * @example: (1.134632433, 0.219104108) => 0.248602627
   **/
   getUtilization(bignessFactor: number, boilTimeFactor: number): number {
     return roundToDecimalPlace(bignessFactor * boilTimeFactor, 9);
@@ -239,6 +339,7 @@ export class CalculationsProvider {
 
   /**
    * Get IBU for hops instance
+   * Use Tinseth formula
    *
    * @params: hops - hops-type information
    * @params: hopsInstance - a hops instance
@@ -248,22 +349,32 @@ export class CalculationsProvider {
    *
    * @return: IBUs for hops instance
   **/
-  getIBU(hops: Hops, hopsInstance: HopsSchedule, og: number, batchVolume: number, boilVolume: number): number {
-    const bignessFactor = this.getBignessFactor(this.getBoilGravity(og, batchVolume, boilVolume));
-    const boilTimeFactor = this.getBoilTimeFactor(hopsInstance.addAt);
+  getIBU(
+    hops: Hops,
+    hopsInstance: HopsSchedule,
+    og: number,
+    batchVolume: number,
+    boilVolume: number
+  ): number {
+    const bignessFactor: number = this.getBignessFactor(
+      this.getBoilGravity(og, batchVolume, boilVolume)
+    );
+    const boilTimeFactor: number = this.getBoilTimeFactor(hopsInstance.addAt);
 
     return roundToDecimalPlace(
-      hops.alphaAcid
-      * hopsInstance.quantity
-      * this.getUtilization(bignessFactor, boilTimeFactor)
-      * Constant.IBUFactor
-      / batchVolume,
+      (
+        hops.alphaAcid
+        * hopsInstance.quantity
+        * this.getUtilization(bignessFactor, boilTimeFactor)
+        * Constant.IBU_FACTOR
+        / batchVolume
+      ),
       1
     );
   }
 
   /**
-   * Get MCU value of given grains instance
+   * Get Malt Color Units value of given grains instance
    *
    * @params: grains - grains-type information
    * @params: grainsInstance - grains instance
@@ -271,19 +382,28 @@ export class CalculationsProvider {
    *
    * @return: MCU value for grains instance
   **/
-  getMCU(grains: Grains, grainsInstance: GrainBill, batchVolume: number): number {
-    return roundToDecimalPlace(grains.lovibond * grainsInstance.quantity / batchVolume, 2);
+  getMCU(
+    grains: Grains,
+    grainsInstance: GrainBill,
+    batchVolume: number
+  ): number {
+    return roundToDecimalPlace(
+      grains.lovibond * grainsInstance.quantity / batchVolume, 2
+    );
   }
 
   /**
-   * Calculate SRM value from MCU
+   * Calculate Standard Reference Method value from MCU
    *
    * @params: mcu - batch mcu value
    *
    * @return: SRM value rounded to whole number
   **/
   getSRM(mcu: number): number {
-    return roundToDecimalPlace(Constant.SRMFactor * (Math.pow(mcu, Constant.SRMExp)), 1);
+    return roundToDecimalPlace(
+      Constant.SRM_FACTOR * (Math.pow(mcu, Constant.SRM_EXP)),
+      1
+    );
   }
 
 }

@@ -1,7 +1,7 @@
 /* Module imports */
 import { TestBed, getTestBed, async } from '@angular/core/testing';
 import { Platform, Events } from 'ionic-angular';
-import { Network } from '@ionic-native/network/ngx';
+import { Network } from '@ionic-native/network';
 
 /* Test configuration import */
 import { configureTestBed } from '../../../test-config/configureTestBed';
@@ -85,7 +85,7 @@ describe('Connection Provider', () => {
 
     test('should get connection event in cordova', done => {
       setTimeout(() => {
-        const callCount = consoleSpy.mock.calls.length;
+        const callCount: number = consoleSpy.mock.calls.length;
         expect(consoleSpy.mock.calls[callCount - 1][0]).toMatch('on connect');
         expect(connectionService.connection).toBe(true);
         done();
@@ -94,7 +94,7 @@ describe('Connection Provider', () => {
 
     test('should get disconnect event in cordova', done => {
       setTimeout(() => {
-        const callCount = consoleSpy.mock.calls.length;
+        const callCount: number = consoleSpy.mock.calls.length;
         expect(consoleSpy.mock.calls[callCount - 1][0]).toMatch('on disconnect');
         expect(connectionService.connection).toBe(false);
         done();

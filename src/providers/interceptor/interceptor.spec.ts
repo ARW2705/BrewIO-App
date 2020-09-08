@@ -1,12 +1,12 @@
 /* Module Imports */
 import { TestBed, getTestBed, async } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpClientTestingModule, HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 /* Constant imports */
-import { baseURL } from '../../shared/constants/base-url';
-import { apiVersion } from '../../shared/constants/api-version';
+import { API_VERSION } from '../../shared/constants/api-version';
+import { BASE_URL } from '../../shared/constants/base-url';
 
 /* Test configuration imports */
 import { configureTestBed } from '../../../test-config/configureTestBed';
@@ -42,8 +42,16 @@ describe('HTTP Interceptor service', () => {
         HttpMock,
         { provide: UserProvider, useValue: {} },
         { provide: ToastProvider, useValue: {} },
-        { provide: HTTP_INTERCEPTORS, useClass: AuthorizedInterceptor, multi: true },
-        { provide: HTTP_INTERCEPTORS, useClass: UnauthorizedInterceptor, multi: true}
+        {
+          provide: HTTP_INTERCEPTORS,
+          useClass: AuthorizedInterceptor,
+          multi: true
+        },
+        {
+          provide: HTTP_INTERCEPTORS,
+          useClass: UnauthorizedInterceptor,
+          multi: true
+        }
       ]
     });
   }));
@@ -66,7 +74,7 @@ describe('HTTP Interceptor service', () => {
   describe('Authorized interceptor', () => {
 
     beforeAll(() => {
-      const _mockUser = mockUser();
+      const _mockUser: User = mockUser();
       userService.getUser = jest
         .fn()
         .mockReturnValue(new BehaviorSubject<User>(_mockUser));
@@ -76,7 +84,7 @@ describe('HTTP Interceptor service', () => {
     });
 
     test('should have authorization header with token', done => {
-      const mockResponse = {
+      const mockResponse: object = {
         status: 200,
         statusText: 'OK'
       };
@@ -87,9 +95,13 @@ describe('HTTP Interceptor service', () => {
           done();
         });
 
-      const req = httpMock.expectOne(`${baseURL}/${apiVersion}/mock`);
+      const req: TestRequest = httpMock
+        .expectOne(`${BASE_URL}/${API_VERSION}/mock`);
+
       expect(req.request.headers.has('Authorization')).toBeTruthy();
-      expect(req.request.headers.get('Authorization')).toMatch('bearer testtoken');
+      expect(req.request.headers.get('Authorization'))
+        .toMatch('bearer testtoken');
+
       req.flush(mockResponse);
     }); // end 'should have authorization header with token' test
 
@@ -106,51 +118,102 @@ describe('HTTP Interceptor service', () => {
         .mockReturnValue(undefined);
     });
 
-    test('should have authorization header of undefined and 401 error', done => {
-      const toastSpy = jest.spyOn(toastService, 'presentToast');
+    test('should have authorization header of undefined and 401 error (logged in)', done => {
+      userService.isLoggedIn = jest
+        .fn()
+        .mockReturnValue(true);
+
+      const toastSpy: jest.SpyInstance = jest
+        .spyOn(toastService, 'presentToast');
 
       mockHttpService.get()
         .subscribe(
-          response => {
+          (response: any): void => {
             console.log('Should have no response', response);
             expect(true).toBe(false);
             done();
           },
-          error => {
-            expect(error.status).toBe(401);
-            expect(error.statusText).toMatch('Not Authorized');
-            expect(toastSpy.mock.calls[toastSpy.mock.calls.length - 1][0]).toMatch('Not Authorized. Please log in');
+          (error: object): void => {
+            expect(error['status']).toEqual(401);
+            expect(error['statusText']).toMatch('Not Authorized');
+            expect(toastSpy.mock.calls[toastSpy.mock.calls.length - 1][0])
+              .toMatch('Not Authorized. Please log in');
             done();
           }
         );
 
-      const req = httpMock.expectOne(`${baseURL}/${apiVersion}/mock`);
+      const req: TestRequest = httpMock
+        .expectOne(`${BASE_URL}/${API_VERSION}/mock`);
+
       expect(req.request.headers.has('Authorization')).toBeTruthy();
       expect(req.request.headers.get('Authorization')).toMatch('undefined');
+
       req.flush(null, mockErrorResponse(401, 'Not Authorized'));
-    }); // end 'should have authorization header of undefined and 401 error' test
+    }); // end 'should have authorization header of undefined and 401 error (logged in)' test
+
+    test('should have authorization header of undefined and 401 error (not logged in)', done => {
+      userService.isLoggedIn = jest
+        .fn()
+        .mockReturnValue(false);
+
+      const toastSpy: jest.SpyInstance = jest
+        .spyOn(toastService, 'presentToast');
+
+      mockHttpService.get()
+        .subscribe(
+          (response: any): void => {
+            console.log('Should have no response', response);
+            expect(true).toBe(false);
+            done();
+          },
+          (error: object): void => {
+            expect(error['status']).toEqual(401);
+            expect(error['statusText']).toMatch('Not Authorized');
+            expect(toastSpy.mock.calls[toastSpy.mock.calls.length - 1][0])
+              .toMatch('Authorization Error');
+            done();
+          }
+        );
+
+      const req: TestRequest = httpMock
+        .expectOne(`${BASE_URL}/${API_VERSION}/mock`);
+
+      expect(req.request.headers.has('Authorization')).toBeTruthy();
+      expect(req.request.headers.get('Authorization')).toMatch('undefined');
+
+      req.flush(null, mockErrorResponse(401, 'Not Authorized'));
+    }); // end 'should have authorization header of undefined and 401 error (not logged in)' test
 
     test('should have authorization header of undefined and a non-401 error', done => {
-      const toastSpy = jest.spyOn(toastService, 'presentToast');
+      userService.isLoggedIn = jest
+        .fn()
+        .mockReturnValue(false);
+
+      const toastSpy: jest.SpyInstance = jest
+        .spyOn(toastService, 'presentToast');
 
       mockHttpService.get()
         .subscribe(
-          response => {
+          (response: any): void => {
             console.log('Should have no response', response);
             expect(true).toBe(false);
             done();
           },
-          error => {
-            expect(error.status).toBe(400);
-            expect(error.statusText).toMatch('Bad Request');
-            expect(toastSpy.mock.calls[toastSpy.mock.calls.length - 1][0]).toMatch('An unexpected error occured: <400> Bad Request');
+          (error: object): void => {
+            expect(error['status']).toEqual(400);
+            expect(error['statusText']).toMatch('Bad Request');
+            expect(toastSpy.mock.calls[toastSpy.mock.calls.length - 1][0])
+              .toMatch('An unexpected error occured: <400> Bad Request');
             done();
           }
         );
 
-      const req = httpMock.expectOne(`${baseURL}/${apiVersion}/mock`);
+      const req: TestRequest = httpMock
+        .expectOne(`${BASE_URL}/${API_VERSION}/mock`);
+
       expect(req.request.headers.has('Authorization')).toBeTruthy();
       expect(req.request.headers.get('Authorization')).toMatch('undefined');
+
       req.flush(null, mockErrorResponse(400, 'Bad Request'));
     }); // end 'should have authorization header of undefined and a non-401 error' test
 
