@@ -1,21 +1,18 @@
 /* Module imports */
-import { Component, OnInit, OnDestroy, ViewChildren, QueryList } from '@angular/core';
-import { NavController, Events, ItemSliding } from 'ionic-angular';
+import { Component, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/core';
+import { Events, ItemSliding, NavController } from 'ionic-angular';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import { takeUntil } from 'rxjs/operators/takeUntil';
 
 /* Interface imports */
-import { RecipeMaster } from '../../shared/interfaces/recipe-master';
 import { Batch } from '../../shared/interfaces/batch';
-import { User } from '../../shared/interfaces/user';
+import { RecipeMaster } from '../../shared/interfaces/recipe-master';
 
 /* Utility function imports */
-import {
-  getArrayFromObservables,
-  getId,
-  hasId
-} from '../../shared/utility-functions/utilities';
+import { getId, hasId } from '../../shared/utility-functions/id-helpers';
+import { getArrayFromObservables } from '../../shared/utility-functions/observable-helpers';
 
 /* Page imports */
 import { ProcessPage } from '../../pages/process/process';
@@ -24,7 +21,6 @@ import { ProcessPage } from '../../pages/process/process';
 import { ProcessProvider } from '../../providers/process/process';
 import { RecipeProvider } from '../../providers/recipe/recipe';
 import { ToastProvider } from '../../providers/toast/toast';
-import { UserProvider } from '../../providers/user/user';
 
 
 @Component({
@@ -33,43 +29,29 @@ import { UserProvider } from '../../providers/user/user';
 })
 export class ActiveBatchesComponent implements OnInit, OnDestroy {
   @ViewChildren('slidingItems') slidingItems: QueryList<ItemSliding>;
+  activeBatchesList: Observable<Batch>[] = [];
   destroy$: Subject<boolean> = new Subject<boolean>();
-  user: User = null;
-  activeBatchesList: Array<Observable<Batch>> = [];
-  masterList: Array<Observable<RecipeMaster>> = [];
   getArrayFromObservables = getArrayFromObservables;
   _updateHeaderNav: any;
 
   constructor(
-    public navCtrl: NavController,
     public events: Events,
+    public navCtrl: NavController,
     public processService: ProcessProvider,
     public recipeService: RecipeProvider,
-    public toastService: ToastProvider,
-    public userService: UserProvider)
-  {
+    public toastService: ToastProvider
+  ) {
     this._updateHeaderNav = this.updateHeaderNavEventHandler.bind(this);
   }
 
   /***** Lifecycle Hooks *****/
 
   ngOnInit() {
-    this.userService.getUser()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(user => {
-        this.user = user;
-      });
-
-    this.processService.getActiveBatchesList()
+    // retrieve active batches only
+    this.processService.getBatchList(true)
       .pipe(takeUntil(this.destroy$))
       .subscribe(activeBatchesList => {
         this.activeBatchesList = activeBatchesList;
-      });
-
-    this.recipeService.getMasterList()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(masterList => {
-        this.masterList = masterList;
       });
 
     this.events.subscribe('update-nav-header', this._updateHeaderNav);
@@ -83,107 +65,34 @@ export class ActiveBatchesComponent implements OnInit, OnDestroy {
 
   /***** End lifecycle hooks *****/
 
-
-  /**
-   * Get the name of the next process step for given batch
-   *
-   * @params: batch - requested batch to get name
-   *
-   * @return: none
-  **/
-  getBatchCurrentStep(batch: Batch): string {
-    return batch.schedule[batch.currentStep].name;
-  }
-
-  /**
-   * Get the start datetime of the given batch
-   *
-   * @params: batch - requested batch to get start datetime
-   *
-   * @return: ISO date string
-  **/
-  getBatchStartDate(batch: Batch): string {
-    return batch.createdAt;
-  }
-
-  /**
-   * Find the recipe master associated with given batch
-   *
-   * @params: batch - requested batch to use to find master
-   *
-   * @return: the recipe master or undefined if not present
-  **/
-  getMasterByBatch(batch: Batch): RecipeMaster {
-    const list = getArrayFromObservables(this.masterList);
-    const master = list.find(_master => {
-      return _master.variants.some(_recipe => {
-        return hasId(_recipe, batch.recipe);
-      })
-    });
-    return master;
-  }
-
-  /**
-   * Get the recipe master name associated with given batch
-   *
-   * @params: batch - requested batch to use to find recipe master
-   *
-   * @return: recipe master name as string, an empty string if
-   *  recipe master is not found
-  **/
-  getRecipeMasterName(batch: Batch): string {
-    const master = this.getMasterByBatch(batch);
-    return (master !== undefined) ? master.name: '';
-  }
-
-  /**
-   * Get the recipe variant name associated with given batch
-   *
-   * @params: batch - requested batch to use to find recipe
-   *
-   * @return: recipe variant name as string, an empty string if
-   *  recipe or master not found
-  **/
-  getRecipeName(batch: Batch): string {
-    let recipe = undefined;
-    const master = this.getMasterByBatch(batch);
-    if (master !== undefined) {
-      recipe = master.variants.find(recipe => hasId(recipe, batch.recipe));
-    }
-    return (recipe !== undefined) ? recipe.variantName: '';
-  }
-
-  /**
-   * Get user login status from user service
-   *
-   * @params: none
-   *
-   * @return: true if logged in
-  **/
-  isLoggedIn(): boolean {
-    return this.userService.isLoggedIn();
-  }
-
   /**
    * Navigate to Process Page
    * Ensure there is a recipe master for the given batch
    * Update header of navigation event
-   * Pass the recipe master, the owner's id, selected recipe's id, and the selected batch id
+   * Pass the recipe master, the owner's id, selected recipe's id, and the
+   *  selected batch id
    *
    * @params: batch - the batch instance to use in brew process
    *
    * @return: none
   **/
   navToBrewProcess(batch: Batch): void {
-    const master = this.getMasterByBatch(batch)
-    if (master) {
+    const master$: BehaviorSubject<RecipeMaster> = this.recipeService
+      .getRecipeMasterById(batch.recipeMasterId);
+
+    if (master$ !== undefined) {
+      const master: RecipeMaster = master$.value;
+
       this.events.publish('update-nav-header', {
         caller: 'active batches component',
         dest: 'process',
         destType: 'page',
-        destTitle: master.variants.find(recipe => hasId(recipe, batch.recipe)).variantName,
+        destTitle: master.variants.find(recipe => {
+            return hasId(recipe, batch.recipeVariantId)
+          }).variantName,
         origin: this.navCtrl.getActive().name
       });
+
       this.navCtrl.push(ProcessPage, {
         master: master,
         requestedUserId: master.owner,
@@ -196,13 +105,13 @@ export class ActiveBatchesComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Close sliding items when navigating from current view
+   * Close all sliding items when navigating away from current view
    *
    * @params: none
    * @return: none
   **/
   updateHeaderNavEventHandler(): void {
-    this.slidingItems.forEach(slidingItem => slidingItem.close());
+    this.slidingItems.forEach((slidingItem: ItemSliding) => slidingItem.close());
   }
 
 }
