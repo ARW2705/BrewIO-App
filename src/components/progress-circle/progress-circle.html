@@ -1,6 +1,8 @@
 <div class="progress-circle-container">
+
   <svg [attr.height]="settings.height"
        [attr.width]="settings.width">
+       
     <circle #circle
             class="progress-circle"
             [attr.stroke-dasharray]="settings.circle.strokeDasharray"
@@ -11,6 +13,7 @@
             [attr.r]="settings.circle.radius"
             [attr.cx]="settings.circle.originX"
             [attr.cy]="settings.circle.originY"/>
+
     <text #timerText
           [attr.x]="settings.text.textX"
           [attr.y]="settings.text.textY"
@@ -21,6 +24,7 @@
           [attr.dy]="settings.text.dY">
       {{ settings.text.content }}
     </text>
+
     <text #nameText
           [attr.x]="settings.text.textX"
           [attr.y]="settings.text.textY"
@@ -31,5 +35,7 @@
           [attr.dy]="settings.text.smallDY">
       {{ settings.text.name }}
     </text>
+
   </svg>
+
 </div>
