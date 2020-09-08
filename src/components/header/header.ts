@@ -1,6 +1,6 @@
 /* Module Imports */
-import { Component, Input, OnInit, OnDestroy } from '@angular/core';
-import { NavController, Events } from 'ionic-angular';
+import { Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { Events } from 'ionic-angular';
 import { Subject } from 'rxjs/Subject';
 import { takeUntil } from 'rxjs/operators/takeUntil';
 
@@ -8,8 +8,9 @@ import { takeUntil } from 'rxjs/operators/takeUntil';
 import { User } from '../../shared/interfaces/user';
 
 /* Provider Imports */
-import { UserProvider } from '../../providers/user/user';
 import { ModalProvider } from '../../providers/modal/modal';
+import { UserProvider } from '../../providers/user/user';
+
 
 @Component({
   selector: 'app-header',
@@ -17,18 +18,20 @@ import { ModalProvider } from '../../providers/modal/modal';
 })
 export class HeaderComponent implements OnInit, OnDestroy {
   @Input() title: string;
+  currentView: string = '';
   destroy$: Subject<boolean> = new Subject<boolean>();
-  user: User = null;
+  isLoggedIn: boolean = false;
   isTabPage: boolean = true;
-  currentTab: string = '';
-  navStack: Array<string> = [];
+  navStack: string[] = [];
+  user: User = null;
   _headerNavUpdate: any;
+  _removeLastInstanceOfStackByName: any;
 
   constructor(
     public events: Events,
-    public userService: UserProvider,
-    public modalService: ModalProvider)
-  {
+    public modalService: ModalProvider,
+    public userService: UserProvider
+  ) {
     this._headerNavUpdate = this.headerNavUpdateEventHandler.bind(this);
   }
 
@@ -45,23 +48,28 @@ export class HeaderComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(_user => {
         this.user = _user;
+        this.isLoggedIn = this.userService.isLoggedIn();
       });
     this.events.subscribe('update-nav-header', this._headerNavUpdate);
   }
 
   /***** End lifecycle hooks *****/
 
+
   /**
-   * Header back button, publish event with nav destination
+   * Header back button, publish event with nav destination. If current page is
+   * a tab page, leave the origin blank to start a new nav stack, otherwise
+   * get the origin from the top of the nav stack. Set isTabPage to true if
+   * stack is empty or last item is a tab
    *
    * @params: none
    * @return: none
   **/
   goBack(): void {
-    console.log('calling header go back');
     this.events.publish('pop-header-nav', {
       origin: this.isTabPage ? '': this.navStack.pop()
     });
+
     this.isTabPage =  !this.navStack.length
                       || this.navStack[this.navStack.length - 1] === 'tab';
   }
@@ -78,9 +86,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
       // add previous page/tab to nav stack
       this.navStack.push(data.origin);
     }
+
     if (data.dest) {
-      this.currentTab = data.dest;
+      this.currentView = data.dest;
     }
+
     if (data.destType) {
       // tab destinations should clear stack
       if (data.destType === 'tab') {
@@ -90,38 +100,17 @@ export class HeaderComponent implements OnInit, OnDestroy {
         this.isTabPage = false;
       }
     }
+
     if (data.destTitle) {
       this.title = data.destTitle;
     }
+
     if (data.other === 'batch-end' || data.other === 'form-submit-complete') {
       // if on process page and batch has been completed,
       // or a form submission has completed,
-      // automatically go back
-      // console.log(data.caller);
+      // automatically navigate back
       this.goBack();
     }
-  }
-
-  /**
-   * Check if user is logged in
-   *
-   * @params: none
-   *
-   * @return: true if a user is logged in
-  **/
-  isLoggedIn(): boolean {
-    return this.userService.isLoggedIn();
-  }
-
-  /**
-   * Check if on user tab
-   *
-   * @params: none
-   *
-   * @return: true if currently on user tab
-  **/
-  isUserTab(): boolean {
-    return this.currentTab === 'user';
   }
 
   /**
