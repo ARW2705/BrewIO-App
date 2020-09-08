@@ -1,15 +1,31 @@
-export interface InventoryItem {
+import { Syncable } from './sync';
+
+export interface InventoryItem extends Syncable {
   _id?: string;
   createdAt?: string;
   updatedAt?: string;
   cid: string;
-  stockCount: number;
-  stockQuantity: number;
+  supplierName: string;
   stockType: string;
-  labelImageUrl: string;
-  packageDate: string;
-  itemDetails: {
-    master: string;
-    recipe: string;
-  }
+  initialQuantity: number;
+  currentQuantity: number;
+  description: string;
+  itemName: string;
+  itemStyleId: string;
+  itemStyleName: string;
+  itemABV: number;
+  sourceType: string;
+  optionalItemData: OptionalItemData;
+};
+
+export interface OptionalItemData {
+  batchId?: string;
+  supplierURL?: string;
+  supplierLabelImageURL?: string;
+  itemIBU?: number;
+  itemSRM?: number;
+  itemLabelImageURL?: string;
+  itemSubname?: string;
+  packagingDate?: string;
+  originalRecipeId?: string;
 };

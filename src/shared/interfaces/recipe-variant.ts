@@ -8,7 +8,7 @@ export interface RecipeVariant {
   _id?: string;
   cid: string;
   variantName: string;
-  notes: Array<string>;
+  notes: string[];
   isFavorite: boolean;
   isMaster: boolean;
   rating?: number;
@@ -25,9 +25,9 @@ export interface RecipeVariant {
   ABV: number;
   IBU: number;
   SRM: number;
-  grains: Array<GrainBill>;
-  hops: Array<HopsSchedule>;
-  yeast: Array<YeastBatch>;
-  otherIngredients: Array<OtherIngredients>;
-  processSchedule: Array<Process>;
+  grains: GrainBill[];
+  hops: HopsSchedule[];
+  yeast: YeastBatch[];
+  otherIngredients: OtherIngredients[];
+  processSchedule: Process[];
 };

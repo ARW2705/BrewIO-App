@@ -15,5 +15,5 @@ export interface Timer {
 
 export interface BatchTimer {
   batchId: string;
-  timers: Array<BehaviorSubject<Timer>>;
+  timers: BehaviorSubject<Timer>[];
 };
