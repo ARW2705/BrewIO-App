@@ -62,15 +62,13 @@ describe('Timer Process Component', () => {
   beforeEach(async(() => {
     fixture = TestBed.createComponent(TimerProcessComponent);
     timerPage = fixture.componentInstance;
+
+    timerService.getTimersByProcessId = jest
+      .fn()
+      .mockReturnValue([ new BehaviorSubject<Timer>(mockTimer()) ]);
   }));
 
   describe('Non-Concurrent Timer', () => {
-
-    beforeEach(async(() => {
-      timerService.getTimersByProcessId = jest
-        .fn()
-        .mockReturnValue([ new BehaviorSubject<Timer>(mockTimer()) ]);
-    }));
 
     beforeEach(() => {
       timerPage.stepData = [mockProcessSchedule()[10]];

@@ -1,70 +1,78 @@
 /* Module imports */
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
-import { NavController, NavParams, Platform, Events } from 'ionic-angular';
+import { Events, Modal, ModalController, NavController, NavParams, Platform, ViewController } from 'ionic-angular';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 import { Subject } from 'rxjs/Subject';
-import { takeUntil } from 'rxjs/operators/takeUntil';
 import { take } from 'rxjs/operators/take';
+import { takeUntil } from 'rxjs/operators/takeUntil';
 
 /* Interface imports */
+import { Alert } from '../../shared/interfaces/alert';
+import { Batch } from '../../shared/interfaces/batch';
+import { PrimaryValues } from '../../shared/interfaces/primary-values';
+import { Process } from '../../shared/interfaces/process';
 import { RecipeMaster } from '../../shared/interfaces/recipe-master';
 import { RecipeVariant } from '../../shared/interfaces/recipe-variant';
-import { Batch } from '../../shared/interfaces/batch';
-import { Alert } from '../../shared/interfaces/alert';
-import { Process } from '../../shared/interfaces/process';
 
 /* Utility function imports */
-import { getId } from '../../shared/utility-functions/utilities';
-import { hasId } from '../../shared/utility-functions/utilities';
-
-/* Animation imports */
-import { slideUpDown } from '../../animations/slide';
+import { getId, hasId } from '../../shared/utility-functions/id-helpers';
+import { normalizeErrorObservableMessage } from '../../shared/utility-functions/observable-helpers';
 
 /* Component imports */
 import { CalendarProcessComponent } from './process-components/calendar-process/calendar-process';
 
+/* Page imports */
+import { InventoryWrapperPage } from '../extras/components/inventory-wrapper/inventory-wrapper';
+import { ProcessMeasurementsFormPage } from '../forms/process-measurements-form/process-measurements-form';
+
 /* Provider imports */
-import { RecipeProvider } from '../../providers/recipe/recipe';
 import { ProcessProvider } from '../../providers/process/process';
-import { UserProvider } from '../../providers/user/user';
-import { ToastProvider } from '../../providers/toast/toast';
 import { TimerProvider } from '../../providers/timer/timer';
+import { ToastProvider } from '../../providers/toast/toast';
+import { UserProvider } from '../../providers/user/user';
+
 
 @Component({
   selector: 'page-process',
-  templateUrl: 'process.html',
-  animations: [
-    slideUpDown()
-  ]
+  templateUrl: 'process.html'
 })
 export class ProcessPage implements OnInit, OnDestroy {
   @ViewChild('calendar') calendarRef: CalendarProcessComponent;
-  selectedBatch$: BehaviorSubject<Batch> = null;
-  selectedBatch: Batch = null;
-  destroy$: Subject<boolean> = new Subject<boolean>();
-  master: RecipeMaster = null;
-  recipe: RecipeVariant = null;
+  alerts: Alert[] = [];
+  atViewEnd: boolean = false;
+  atViewStart: boolean = true;
   batchId: string = null;
-  requestedUserId: string = null;
-  viewStepIndex: number = 0;
+  destroy$: Subject<boolean> = new Subject<boolean>();
+  isCalendarInProgress: boolean = false;
   isConcurrent: boolean = false;
-  _headerNavPop: any;
+  recipeMaster: RecipeMaster = null;
+  recipeVariant: RecipeVariant = null;
+  requestedUserId: string = null;
+  selectedBatch: Batch = null;
+  selectedBatch$: BehaviorSubject<Batch> = null;
+  stepData: any = null;
+  stepType: string = '';
+  viewStepIndex: number = 0;
   _changeDate: any;
+  _headerNavPop: any;
 
   constructor(
+    public events: Events,
+    public modalCtrl: ModalController,
     public navCtrl: NavController,
     public navParams: NavParams,
+    public viewCtrl: ViewController,
     public platform: Platform,
-    public events: Events,
-    public recipeService: RecipeProvider,
     public processService: ProcessProvider,
-    public userService: UserProvider,
+    public timerService: TimerProvider,
     public toastService: ToastProvider,
-    public timerService: TimerProvider
+    public userService: UserProvider
   ) {
-    this.master = navParams.get('master');
+    this.recipeMaster = navParams.get('master');
     this.requestedUserId = navParams.get('requestedUserId');
-    this.recipe = this.master.variants.find(variant => hasId(variant, navParams.get('selectedRecipeId')));
+    this.recipeVariant = this.recipeMaster.variants
+      .find(variant => hasId(variant, navParams.get('selectedRecipeId')));
     this.batchId = navParams.get('selectedBatchId');
     this._headerNavPop = this.headerNavPopEventHandler.bind(this);
     this._changeDate = this.changeDateEventHandler.bind(this);
@@ -78,37 +86,68 @@ export class ProcessPage implements OnInit, OnDestroy {
 
     if (!this.batchId) {
       // Start a new batch
-      console.log('starting batch');
-      this.processService.startNewBatch(this.requestedUserId, getId(this.master), getId(this.recipe))
-        .subscribe(
-          newBatch => {
-            this.selectedBatch$ = this.processService.getActiveBatchById(getId(newBatch));
+      console.log('starting batch', this.requestedUserId);
+      this.processService.startNewBatch(
+        this.requestedUserId,
+        getId(this.recipeMaster),
+        getId(this.recipeVariant)
+      )
+      .pipe(take(1))
+      .subscribe(
+        (newBatch: Batch) => {
+          this.selectedBatch$ = this.processService
+            .getBatchById(getId(newBatch));
 
-            if (this.selectedBatch$ === null) {
-              this.toastService.presentToast('Internal error: Batch not found', 3000, 'bottom');
-              setTimeout(() => {
-                this.events.publish('update-nav-header', {caller: 'process page', other: 'batch-end'});
-              }, 3000);
-            } else {
-              this.selectedBatch$
-                .pipe(takeUntil(this.destroy$))
-                .subscribe((selectedBatch: Batch) => {
+          if (!this.selectedBatch$) {
+            this.toastService.presentToast(
+              'Internal error: Batch not found',
+              3000,
+              'bottom'
+            );
+            setTimeout(() => {
+              this.events.publish(
+                'update-nav-header',
+                {
+                  caller: 'process page',
+                  other: 'batch-end'
+                }
+              );
+            }, 3000);
+          } else {
+            this.selectedBatch$
+              .pipe(takeUntil(this.destroy$))
+              .subscribe((selectedBatch: Batch) => {
+                if (this.selectedBatch === null) {
+                  console.log('starting batch and timer');
                   this.selectedBatch = selectedBatch;
                   this.batchId = getId(selectedBatch);
-                  this.updateRecipeMasterActive(true);
                   this.timerService.addBatchTimer(selectedBatch);
-                });
+                }
+                this.selectedBatch = selectedBatch;
+                this.updateViewData();
+              });
+          }
+        },
+        (error: ErrorObservable): void => {
+          // TODO change toast to error message in view, then call go back
+          this.toastService.presentToast(
+            normalizeErrorObservableMessage(error),
+            3000,
+            'toast-error'
+          );
+          this.events.publish(
+            'update-nav-header',
+            {
+              caller: 'process page',
+              other: 'batch-end'
             }
-          },
-          error => {
-            // TODO change toast to error message in view, then call go back
-            this.toastService.presentToast(error);
-            this.events.publish('update-nav-header', {caller: 'process page', other: 'batch-end'});
-        });
+          );
+      });
     } else {
       // Continue an existing batch
       console.log('continuing batch', this.batchId);
-      this.selectedBatch$ = this.processService.getActiveBatchById(this.batchId);
+      this.selectedBatch$ = this.processService.getBatchById(this.batchId);
+
       this.selectedBatch$
         .pipe(takeUntil(this.destroy$))
         .subscribe(
@@ -120,7 +159,13 @@ export class ProcessPage implements OnInit, OnDestroy {
           error => {
             // TODO change toast to error message in view, then call go back
             this.toastService.presentToast(error);
-            this.events.publish('update-nav-header', {caller: 'process page', other: 'batch-end'});
+            this.events.publish(
+              'update-nav-header',
+              {
+                caller: 'process page',
+                other: 'batch-end'
+              }
+            );
           });
     }
   }
@@ -144,33 +189,11 @@ export class ProcessPage implements OnInit, OnDestroy {
    *
    * @return: Array of alerts
   **/
-  getAlerts(): Array<Alert> {
-    return this.selectedBatch.alerts.filter((alert: Alert) => {
-      return  alert.title
-              === this.selectedBatch.schedule[this.selectedBatch.currentStep].name;
+  getAlerts(): Alert[] {
+    return this.selectedBatch.process.alerts.filter((alert: Alert) => {
+      return  alert.title === this.selectedBatch.process
+        .schedule[this.selectedBatch.process.currentStep].name;
     });
-  }
-
-  /**
-   * Get the selected batch cid
-   *
-   * @params: none
-   *
-   * @return: selected batch cid
-  **/
-  getBatchId(): string {
-    return this.selectedBatch.cid;
-  }
-
-  /**
-   * Get the process step at current view index
-   *
-   * @params: none
-   *
-   * @return: the current process
-  **/
-  getStepData(): Process {
-    return this.selectedBatch.schedule[this.viewStepIndex];
   }
 
   /**
@@ -180,93 +203,22 @@ export class ProcessPage implements OnInit, OnDestroy {
    *
    * @return: Array of processes
   **/
-  getTimerStepData(): Array<Process> {
-    const batch = this.selectedBatch;
+  getTimerStepData(): Process[] {
+    const batch: Batch = this.selectedBatch;
 
-    const start = this.viewStepIndex;
-    let end = start + 1;
+    const start: number = this.viewStepIndex;
+    let end: number = start + 1;
 
-    if (batch.schedule[start].concurrent) {
-      for (; end < batch.schedule.length; end++) {
-        if (!batch.schedule[end].concurrent) break;
+    if (batch.process.schedule[start].concurrent) {
+      for (; end < batch.process.schedule.length; end++) {
+        if (!batch.process.schedule[end].concurrent) break;
       }
     }
-    return batch.schedule.slice(start, end);
+
+    return batch.process.schedule.slice(start, end);
   }
-
-
-  /***** View Display Methods *****/
-
-  /**
-   * Check if the selected batch has been populated
-   *
-   * @params: none
-   *
-   * @return: true if the selected batch has been changed from null
-  **/
-  isBatchLoaded(): boolean {
-    return this.selectedBatch !== null;
-  }
-
-  /**
-   * Check if the current view step is a manual step
-   *
-   * @params: none
-   *
-   * @return: true if view step is a manual step
-  **/
-  isManualStepView(): boolean {
-    return this.getStepData().type === 'manual';
-  }
-
-  /**
-   * Check if the current view step is a timer step
-   *
-   * @params: none
-   *
-   * @return: true if view step is a timer step
-  **/
-  isTimerStepView(): boolean {
-    return this.getStepData().type === 'timer';
-  }
-
-  /**
-   * Check if the current view step is a calendar step
-   *
-   * @params: none
-   *
-   * @return: true if view step is a calendar step
-  **/
-  isCalendarStepView(): boolean {
-    return this.getStepData().type === 'calendar';
-  }
-
-  /**
-   * Check if the current view is also the current step or a preview
-   *
-   * @params: none
-   *
-   * @return: true if the view index is not the current step index
-  **/
-  isPreview(): boolean {
-    return this.selectedBatch.currentStep !== this.viewStepIndex;
-  }
-
-  /***** End View Display Methods *****/
-
 
   /***** View Navigation Methods *****/
-
-  /**
-   * Check if current view is at the beginning or end of process schedule
-   *
-   * @params: direction - either 'prev' or 'next'
-   *
-   * @return: true if current view index is at the beginning or end of schedule
-  **/
-  atViewEnd(direction: string): boolean {
-    return this.getStep(false, direction) === -1;
-  }
 
   /**
    * Change view index only, does not trigger step completion
@@ -276,10 +228,11 @@ export class ProcessPage implements OnInit, OnDestroy {
    * @return: none
   **/
   changeStep(direction: string): void {
-    const nextIndex = this.getStep(false, direction);
+    const nextIndex: number = this.getStep(false, direction);
     if (nextIndex !== -1) {
       this.viewStepIndex = nextIndex;
     }
+    this.updateViewData();
   }
 
   /**
@@ -291,29 +244,31 @@ export class ProcessPage implements OnInit, OnDestroy {
    * @return: none
   **/
   completeStep(): void {
-    const nextIndex = this.getStep(true);
-    const isFinished = nextIndex === -1;
+    const nextIndex: number = this.getStep(true);
+    const isFinished: boolean = nextIndex === -1;
 
-    this.processService.incrementCurrentStep(this.selectedBatch, nextIndex)
-      .pipe(take(1))
-      .subscribe(
-        () => {
-          if (isFinished) {
-            const batchId = this.selectedBatch.cid;
-            this.selectedBatch = null;
-            this.timerService.removeBatchTimer(batchId);
-            this.updateRecipeMasterActive(false);
-            this.toastService.presentToast('Enjoy!', 1000, 'bright-toast');
-            this.events.publish('update-nav-header', {caller: 'process page', other: 'batch-end'});
-          } else {
-            this.selectedBatch.currentStep = nextIndex;
-            this.viewStepIndex = nextIndex;
-          }
-        },
-        error => {
-          // TODO handle increment step error
-          this.toastService.presentToast(error);
-        });
+    this.processService.incrementCurrentStep(
+      getId(this.selectedBatch),
+      nextIndex
+    )
+    .pipe(take(1))
+    .subscribe(
+      () => {
+        if (isFinished) {
+          const batchId: string = this.selectedBatch.cid;
+          this.selectedBatch = null;
+          this.timerService.removeBatchTimer(batchId);
+          this.navToInventory(batchId);
+        } else {
+          this.selectedBatch.process.currentStep = nextIndex;
+          this.viewStepIndex = nextIndex;
+          this.updateViewData();
+        }
+      },
+      error => {
+        // TODO handle increment step error
+        this.toastService.presentToast(error);
+      });
   }
 
   /**
@@ -325,17 +280,17 @@ export class ProcessPage implements OnInit, OnDestroy {
    * @return: next index to use or -1 if at the beginning or end of schedule
   **/
   getIndexAfterSkippingConcurrent(direction: string, startIndex: number): number {
-    let nextIndex = -1;
+    let nextIndex: number = -1;
     if (direction === 'next') {
-      for (let i=startIndex; i < this.selectedBatch.schedule.length; i++) {
-        if (!this.selectedBatch.schedule[i].concurrent) {
+      for (let i=startIndex; i < this.selectedBatch.process.schedule.length; i++) {
+        if (!this.selectedBatch.process.schedule[i].concurrent) {
           nextIndex = i;
           break;
         }
       }
     } else {
       for (let i=startIndex - 1; i >= 0; i--) {
-        if (!this.selectedBatch.schedule[i].concurrent) {
+        if (!this.selectedBatch.process.schedule[i].concurrent) {
           nextIndex = i;
           break;
         }
@@ -353,12 +308,14 @@ export class ProcessPage implements OnInit, OnDestroy {
    * @return: next index to use or -1 if at the beginning or end of schedule
   **/
   getStep(onComplete: boolean = false, direction: string = 'next'): number {
-    let nextIndex = -1;
-    const viewIndex = onComplete ? this.selectedBatch.currentStep: this.viewStepIndex;
+    let nextIndex: number = -1;
+    const viewIndex: number = onComplete
+      ? this.selectedBatch.process.currentStep
+      : this.viewStepIndex;
 
     if (direction === 'next') {
-      if (viewIndex < this.selectedBatch.schedule.length - 1) {
-        if (this.selectedBatch.schedule[viewIndex].concurrent) {
+      if (viewIndex < this.selectedBatch.process.schedule.length - 1) {
+        if (this.selectedBatch.process.schedule[viewIndex].concurrent) {
           nextIndex = this.getIndexAfterSkippingConcurrent(direction, viewIndex);
         } else {
           nextIndex = viewIndex + 1;
@@ -366,7 +323,7 @@ export class ProcessPage implements OnInit, OnDestroy {
       }
     } else {
       if (viewIndex > 0) {
-        if (this.selectedBatch.schedule[viewIndex].concurrent) {
+        if (this.selectedBatch.process.schedule[viewIndex].concurrent) {
           nextIndex = this.getIndexAfterSkippingConcurrent(direction, viewIndex);
         } else {
           nextIndex = viewIndex - 1;
@@ -384,7 +341,33 @@ export class ProcessPage implements OnInit, OnDestroy {
    * @return: none
   **/
   goToActiveStep(): void {
-    this.viewStepIndex = this.selectedBatch.currentStep;
+    this.viewStepIndex = this.selectedBatch.process.currentStep;
+    this.updateViewData();
+  }
+
+  /**
+   * Set data to be displayed in current view
+   *
+   * @params: none
+   * @return: none
+  **/
+  updateViewData(): void {
+    const pendingStep: (Process | Process[])
+      = this.selectedBatch.process.schedule[this.viewStepIndex];
+
+    if (pendingStep.type === 'timer') {
+      this.stepData = this.getTimerStepData();
+      this.stepType = 'timer';
+    } else {
+      this.stepData = pendingStep;
+      this.stepType = pendingStep.type;
+      this.isCalendarInProgress = this.hasCalendarStarted();
+    }
+
+    this.alerts = this.getAlerts();
+    this.atViewStart = this.viewStepIndex === 0;
+    this.atViewEnd = this.viewStepIndex
+      === this.selectedBatch.process.schedule.length - 1;
   }
 
   /***** End View Navigation Methods *****/
@@ -400,7 +383,11 @@ export class ProcessPage implements OnInit, OnDestroy {
   **/
   changeDateEventHandler(): void {
     this.toastService.presentToast('Select new dates', 2000, 'top');
-    delete this.selectedBatch.schedule[this.selectedBatch.currentStep].startDatetime;
+    delete this.selectedBatch
+      .process
+      .schedule[this.selectedBatch.process.currentStep]
+      .startDatetime;
+    this.isCalendarInProgress = false;
     this.clearAlertsForCurrentStep();
   }
 
@@ -411,9 +398,13 @@ export class ProcessPage implements OnInit, OnDestroy {
    * @return: none
   **/
   clearAlertsForCurrentStep(): void {
-    this.selectedBatch.alerts = this.selectedBatch.alerts.filter(alert => {
-      return alert.title !== this.selectedBatch.schedule[this.selectedBatch.currentStep].name;
-    });
+    this.selectedBatch.process.alerts = this.selectedBatch.process.alerts
+      .filter(alert => {
+        return alert.title !== this.selectedBatch
+          .process
+          .schedule[this.selectedBatch.process.currentStep]
+          .name;
+      });
   }
 
   /**
@@ -423,9 +414,15 @@ export class ProcessPage implements OnInit, OnDestroy {
    *
    * @return: true if current step has a startDatetime property
   **/
-  isCalendarInProgress(): boolean {
-    return  this.selectedBatch.currentStep < this.selectedBatch.schedule.length
-            && this.selectedBatch.schedule[this.selectedBatch.currentStep].hasOwnProperty('startDatetime');
+  hasCalendarStarted(): boolean {
+    return (
+        this.selectedBatch.process.currentStep
+        < this.selectedBatch.process.schedule.length
+      )
+      && this.selectedBatch
+        .process
+        .schedule[this.selectedBatch.process.currentStep]
+        .hasOwnProperty('startDatetime');
   }
 
   /**
@@ -435,8 +432,8 @@ export class ProcessPage implements OnInit, OnDestroy {
    * @return: none
   **/
   startCalendar(): void {
-    const values = this.calendarRef.startCalendar();
-    this.processService.patchBatchStepById(this.selectedBatch, values['id'], values['update'])
+    const values: object = this.calendarRef.startCalendar();
+    this.processService.patchStepById(getId(this.selectedBatch), values)
       .pipe(take(1))
       .subscribe(() => {
         console.log('Started calendar');
@@ -454,28 +451,78 @@ export class ProcessPage implements OnInit, OnDestroy {
    * @params: none
    * @return: none
   **/
-  headerNavPopEventHandler(): void {
-    this.navCtrl.pop();
+  headerNavPopEventHandler(data?: any): void {
+    if (
+      data
+      && data.origin
+      && data.origin.toLowerCase().includes('wrapper')
+    ) {
+      this.navCtrl.pop();
+    }
   }
 
   /**
-   * Update recipe master active batch property on server
+   * Navigate to inventory page with id of batch
    *
-   * @params: start - true if recipe master has an active batch
+   * @params: sourceBatchId - batch id to use in inventory
    *
    * @return: none
   **/
-  updateRecipeMasterActive(start: boolean): void {
-    this.recipeService.patchRecipeMasterById(getId(this.master), {hasActiveBatch: start})
-      .pipe(take(1))
-      .subscribe(
-        master => {
-          console.log('Recipe master has active batch: ', master.hasActiveBatch);
-        },
-        error => {
-          console.log(error);
-        }
-      );
+  navToInventory(sourceBatchId: string): void {
+    this.events.publish('update-nav-header', {
+      caller: 'process page',
+      destType: 'page',
+      destTitle: 'Inventory',
+      origin: this.navCtrl.getViews()[this.navCtrl.length() - 2].name
+    });
+    this.navCtrl.push(
+      InventoryWrapperPage,
+      {
+        onInit: true,
+        sourceBatchId: sourceBatchId
+      }
+    );
+  }
+
+  /**
+   * Open batch measurements form
+   *
+   * @params: onBatchComplete - true if a complete form is required
+   *
+   * @return: none
+  **/
+  openMeasurementFormModal(onBatchComplete: boolean): void {
+    const options: object = {
+      areAllRequired: onBatchComplete,
+      batch: this.selectedBatch
+    };
+
+    const modal: Modal = this.modalCtrl.create(
+      ProcessMeasurementsFormPage,
+      options
+    );
+
+    modal.onDidDismiss((update: PrimaryValues) => {
+      if (update) {
+        this.processService.patchMeasuredValues(
+          !onBatchComplete,
+          getId(this.selectedBatch),
+          update
+        )
+        .pipe(take(1))
+        .subscribe(
+          (): void => {
+            this.toastService.presentToast('Measured Values Updated');
+          },
+          (error: ErrorObservable): void => {
+            console.log(
+              `Measurement form error: ${normalizeErrorObservableMessage(error)}`
+            );
+          })
+      }
+    });
+
+    modal.present();
   }
 
   /***** End Other *****/

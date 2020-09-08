@@ -1,7 +1,7 @@
 page-process {
   #process-grid {
     /* Display */
-    padding-top: 56px;
+    margin-bottom: 60px;
   }
 
   #step-control-buttons {
@@ -19,7 +19,7 @@ page-process {
 
   .description {
     /* Children */
-    p {
+    > p {
       /* Display */
       margin: 0 !important;
 

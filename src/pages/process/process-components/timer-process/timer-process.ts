@@ -1,7 +1,7 @@
 /* Module imports */
-import { Component, ViewChildren, Input, QueryList, ElementRef, OnInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
-import { Subject } from 'rxjs/Subject';
+import { Component, ElementRef, Input, OnInit, OnChanges, OnDestroy, QueryList, SimpleChange, SimpleChanges, ViewChildren } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { Subject } from 'rxjs/Subject';
 import { take } from 'rxjs/operators/take';
 import { takeUntil } from 'rxjs/operators/takeUntil';
 
@@ -10,10 +10,10 @@ import { Process } from '../../../../shared/interfaces/process';
 import { Timer } from '../../../../shared/interfaces/timer';
 
 /* Utility imports */
-import { hasId } from '../../../../shared/utility-functions/utilities';
+import { hasId } from '../../../../shared/utility-functions/id-helpers';
 
 /* Animation imports */
-import { slideUpDown } from '../../../../animations/slide';
+import { expandUpDown } from '../../../../animations/expand';
 
 /* Provider imports */
 import { TimerProvider } from '../../../../providers/timer/timer';
@@ -23,19 +23,18 @@ import { TimerProvider } from '../../../../providers/timer/timer';
   selector: 'timer-process',
   templateUrl: 'timer-process.html',
   animations: [
-    slideUpDown()
+    expandUpDown()
   ]
 })
 export class TimerProcessComponent implements OnInit, OnChanges, OnDestroy {
-  @Input() stepData: Array<Process>;
   @Input() batchId: string;
   @Input() isPreview: boolean;
+  @Input() stepData: Process[];
   @ViewChildren('slidingTimers') slidingTimers: QueryList<ElementRef>;
-
-  showDescription: boolean = false;
-  isConcurrent: boolean = false;
   destroy$: Subject<boolean> = new Subject<boolean>();
-  timers: Array<Timer> = [];
+  isConcurrent: boolean = false;
+  showDescription: boolean = false;
+  timers: Timer[] = [];
 
   constructor(public timerService: TimerProvider) { }
 
@@ -47,12 +46,13 @@ export class TimerProcessComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes.stepData !== undefined && changes.stepData.currentValue !== undefined) {
-      if (changes.stepData.currentValue.type !== 'timer') {
+      if (changes.stepData.currentValue[0].type !== 'timer') {
         this.destroy$.next(true);
+      } else if (this.hasChanges(changes.stepData)) {
+        this.stepData = changes.stepData.currentValue;
+        this.destroy$.next(true);
+        this.initTimers();
       }
-      this.stepData = changes.stepData.currentValue;
-      this.destroy$.next(true);
-      this.initTimers();
     }
     if (changes.isPreview !== undefined && changes.isPreview.currentValue !== undefined) {
       this.isPreview = changes.isPreview.currentValue;
@@ -66,42 +66,19 @@ export class TimerProcessComponent implements OnInit, OnChanges, OnDestroy {
 
   /***** End Lifecycle Hooks *****/
 
+
+  /***** Timer Controls *****/
+
   /**
-   * Initialize timers for the current step and subscribe to their subjects
+   * Add a minute to all timers for the current step
    *
    * @params: none
    * @return: none
   **/
-  initTimers(): void {
-    this.timers = [];
-    const timers: Array<BehaviorSubject<Timer>> = this.timerService.getTimersByProcessId(this.batchId, this.stepData[0].cid);
-
-    if (timers === undefined) return;
-
-    this.isConcurrent = timers.length > 1;
-    timers.forEach(timer$ => {
-      timer$
-        .pipe(takeUntil(this.destroy$))
-        .subscribe(timer => {
-          this.updateTimerInList(timer);
-        });
+  addToAllTimers(): void {
+    this.timers.forEach(timer => {
+      this.addToSingleTimer(timer);
     });
-  }
-
-  /**
-   * Update a timer in timers list or add to list if not present
-   *
-   * @params: timer - updated Timer
-   *
-   * @return: none
-  **/
-  updateTimerInList(timer: Timer): void {
-    const timerIndex: number = this.timers.findIndex(_timer => _timer.cid === timer.cid);
-    if (timerIndex === -1) {
-      this.timers.push(timer);
-    } else {
-      this.timers[timerIndex] = timer;
-    }
   }
 
   /**
@@ -125,61 +102,15 @@ export class TimerProcessComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   /**
-   * Trigger for slideUpDown animation
+   * Reset all timers for the current Step
    *
-   * @params: timer - Timer on which to trigger the animation
-   *
-   * @return: object - sets state value and params for animation
-  **/
-  isExpanded(timer: Timer): object {
-    if (this.slidingTimers === undefined) return {};
-    return {
-      value: timer.show ? 'expanded': 'collapsed',
-      params: {
-        height: this.slidingTimers.last.nativeElement.clientHeight,
-        speed: 250
-      }
-    };
-  }
-
-  /**
-   * Start a single timer instance
-   *
-   * @params: timer - the timer to start
-   *
+   * @params: none
    * @return: none
   **/
-  startSingleTimer(timer: Timer): void {
-    this.timerService.startTimer(this.batchId, timer.cid)
-      .pipe(take(1))
-      .subscribe(
-        () => {
-          console.log('started timer', timer.cid);
-        },
-        error => {
-          console.log('error starting timer', error);
-        }
-      );
-  }
-
-  /**
-   * Stop a single timer instance
-   *
-   * @params: timer - the timer to stop
-   *
-   * @return: none
-  **/
-  stopSingleTimer(timer: Timer): void {
-    this.timerService.stopTimer(this.batchId, timer.cid)
-      .pipe(take(1))
-      .subscribe(
-        () => {
-          console.log('stopped timer', timer.cid);
-        },
-        error => {
-          console.log('error stopping timer', error);
-        }
-      );
+  resetAllTimers(): void {
+    this.timers.forEach(timer => {
+      this.resetSingleTimer(timer);
+    });
   }
 
   /**
@@ -218,6 +149,26 @@ export class TimerProcessComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   /**
+   * Start a single timer instance
+   *
+   * @params: timer - the timer to start
+   *
+   * @return: none
+  **/
+  startSingleTimer(timer: Timer): void {
+    this.timerService.startTimer(this.batchId, timer.cid)
+      .pipe(take(1))
+      .subscribe(
+        () => {
+          console.log('started timer', timer.cid);
+        },
+        error => {
+          console.log('error starting timer', error);
+        }
+      );
+  }
+
+  /**
    * Stop all timers for the current step
    *
    * @params: none
@@ -230,27 +181,33 @@ export class TimerProcessComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   /**
-   * Add a minute to all timers for the current step
+   * Stop a single timer instance
    *
-   * @params: none
+   * @params: timer - the timer to stop
+   *
    * @return: none
   **/
-  addToAllTimers(): void {
-    this.timers.forEach(timer => {
-      this.addToSingleTimer(timer);
-    });
+  stopSingleTimer(timer: Timer): void {
+    this.timerService.stopTimer(this.batchId, timer.cid)
+      .pipe(take(1))
+      .subscribe(
+        () => {
+          console.log('stopped timer', timer.cid);
+        },
+        error => {
+          console.log('error stopping timer', error);
+        }
+      );
   }
 
   /**
-   * Reset all timers for the current Step
+   * Show or hide the current step description
    *
    * @params: none
    * @return: none
   **/
-  resetAllTimers(): void {
-    this.timers.forEach(timer => {
-      this.resetSingleTimer(timer);
-    });
+  toggleShowDescription(): void {
+    this.showDescription = !this.showDescription;
   }
 
   /**
@@ -264,15 +221,10 @@ export class TimerProcessComponent implements OnInit, OnChanges, OnDestroy {
     timer.show = !timer.show;
   }
 
-  /**
-   * Show or hide the current step description
-   *
-   * @params: none
-   * @return: none
-  **/
-  toggleShowDescription(): void {
-    this.showDescription = !this.showDescription;
-  }
+  /***** End Timer Controls *****/
+
+
+  /***** Timer Settings *****/
 
   /**
    * Get step duration to be used in description display
@@ -293,6 +245,77 @@ export class TimerProcessComponent implements OnInit, OnChanges, OnDestroy {
       result += `${duration} minute${duration > 1 ? 's': ''}`;
     }
     return result;
+  }
+
+  /**
+   * Initialize timers for the current step and subscribe to their subjects
+   *
+   * @params: none
+   * @return: none
+  **/
+  initTimers(): void {
+    this.timers = [];
+    const timers: BehaviorSubject<Timer>[] = this.timerService
+      .getTimersByProcessId(this.batchId, this.stepData[0].cid);
+
+    if (timers === undefined) return;
+
+    this.isConcurrent = timers.length > 1;
+    timers.forEach((timer$: BehaviorSubject<Timer>) => {
+      timer$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe((timer: Timer) => {
+          this.updateTimerInList(timer);
+        });
+    });
+  }
+
+  /**
+   * Update a timer in timers list or add to list if not present
+   *
+   * @params: timer - updated Timer
+   *
+   * @return: none
+  **/
+  updateTimerInList(timer: Timer): void {
+    const timerIndex: number = this.timers
+      .findIndex((_timer: Timer) => _timer.cid === timer.cid);
+
+    if (timerIndex === -1) {
+      this.timers.push(timer);
+    } else {
+      this.timers[timerIndex] = timer;
+    }
+  }
+
+  /***** End Timer Settings *****/
+
+
+  hasChanges(changes: SimpleChange): boolean {
+    return  JSON.stringify(changes.currentValue)
+            !== JSON.stringify(changes.previousValue);
+  }
+
+  /**
+   * Trigger for expandUpDown animation
+   *
+   * @params: timer - Timer on which to trigger the animation
+   *
+   * @return: object - sets state value and params for animation
+  **/
+  isExpanded(timer: Timer): object {
+    try {
+      const height: number = this.slidingTimers.last.nativeElement.clientHeight;
+      return {
+        value: timer.show ? 'expanded': 'collapsed',
+        params: {
+          height: height,
+          speed: 250
+        }
+      };
+    } catch(e) {
+      return {};
+    }
   }
 
 }

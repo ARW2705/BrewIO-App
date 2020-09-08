@@ -6,25 +6,36 @@
     <ion-col col-12>
 
       <!-- Toggle step description visibility -->
-      <button class="button expand-button"
-              (click)="toggleShowDescription()">
-        <h2>{{ stepData.name }}</h2>
+      <button (click)="toggleShowDescription()"
+              class="button expand-button">
+
+        <h2>
+          {{ stepData.name }}
+        </h2>
+
       </button>
+
     </ion-col>
 
     <!-- Step description -->
-    <ion-col  col-12
-              class="description"
-              *ngIf="isPreview || showDescription">
-      <p>{{ stepData.description }}</p>
+    <ion-col  *ngIf="isPreview || showDescription"
+              col-12
+              class="description">
+
+      <p>
+        {{ stepData.description }}
+      </p>
+
     </ion-col>
 
     <!-- If the calendar step has been started, show information about next part(s) of step -->
-    <ion-col  col-12
-              *ngIf="isCalendarInProgress()">
+    <ion-col  *ngIf="isCalendarInProgress()"
+              col-12>
 
       <!-- Description of task to do at end date -->
-      <p class="calendar-description">{{ stepData.description }}</p>
+      <p class="calendar-description">
+        {{ stepData.description }}
+      </p>
 
       <!-- List of next dates in calendar for a particular step -->
       <ion-list class="alert-list">
@@ -32,6 +43,7 @@
         <h3>Next Checks</h3>
 
         <ng-container *ngFor="let alert of alerts | sort:'datetime'">
+
           <ion-item [ngClass]="getAlertClass(alert)">
 
             <!-- Alert date -->
@@ -47,6 +59,7 @@
             </p> -->
 
           </ion-item>
+
         </ng-container>
 
       </ion-list>
@@ -65,6 +78,7 @@
               *ngIf="!isPreview && !isCalendarInProgress()"
               [data]="getCurrentStepCalendarData()">
     </calendar>
+    
   </ion-row>
 
 </div>

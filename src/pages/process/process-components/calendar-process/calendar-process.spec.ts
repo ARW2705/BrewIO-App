@@ -12,7 +12,7 @@ import { mockProcessSchedule } from '../../../../../test-config/mockmodels/mockP
 import { mockAlert, mockAlertPast, mockAlertFuture } from '../../../../../test-config/mockmodels/mockAlert';
 
 /* Utilitiy imports */
-import { getId } from '../../../../shared/utility-functions/utilities';
+import { getId } from '../../../../shared/utility-functions/id-helpers';
 
 /* Component imports */
 import { CalendarProcessComponent } from './calendar-process';
@@ -48,18 +48,16 @@ describe('Calendar Process Component', () => {
   .then(done)
   .catch(done.fail));
 
-  beforeAll(async(() => {
-    injector = getTestBed();
-  }));
-
   beforeEach(() => {
-    eventService = injector.get(Events);
     fixture = TestBed.createComponent(CalendarProcessComponent);
     cpPage = fixture.componentInstance;
     cpPage.stepData = mockProcessSchedule()[0];
     cpPage.isPreview = false;
     cpPage.alerts = [];
     cpPage.calendarRef = new CalendarComponent();
+    
+    injector = getTestBed();
+    eventService = injector.get(Events);
   });
 
   test('should create the component', () => {

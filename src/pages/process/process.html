@@ -1,23 +1,23 @@
 <ion-content>
 
   <ion-grid id="process-grid"
-            *ngIf="isBatchLoaded()">
+            *ngIf="selectedBatch">
 
     <!-- Manual Step View -->
-    <ion-row *ngIf="isManualStepView()">
+    <ion-row *ngIf="stepType === 'manual'">
 
-      <manual-process [stepData]="getStepData()"></manual-process>
+      <manual-process [stepData]="stepData"></manual-process>
 
     </ion-row>
     <!-- End Manual Step View -->
 
 
     <!-- Timer Step View -->
-    <ion-row *ngIf="isTimerStepView()">
+    <ion-row *ngIf="stepType === 'timer'">
 
-      <timer-process  [stepData]="getTimerStepData()"
-                      [batchId]="getBatchId()"
-                      [isPreview]="isPreview()">
+      <timer-process  [batchId]="selectedBatch.cid"
+                      [isPreview]="selectedBatch.process.currentStep !== viewStepIndex"
+                      [stepData]="stepData">
       </timer-process>
 
     </ion-row>
@@ -25,76 +25,116 @@
 
 
     <!-- Calendar Step View -->
-    <ion-row *ngIf="isCalendarStepView()">
+    <ion-row *ngIf="stepType === 'calendar'">
 
       <calendar-process #calendar
-                        [stepData]="getStepData()"
-                        [isPreview]="isPreview()"
-                        [alerts]="getAlerts()">
+                        [alerts]="alerts"
+                        [isPreview]="selectedBatch.process.currentStep !== viewStepIndex"
+                        [stepData]="stepData">
       </calendar-process>
 
     </ion-row>
     <!-- End Calendar Step View -->
 
 
+    <!-- Measurement Form Open Button -->
+
+    <ion-row  justify-content-center
+              id="measurement-form-button">
+
+      <ion-col>
+
+        <button ion-button
+                color="primary"
+                (click)="openMeasurementFormModal(false)">
+          Edit Measurements
+        </button>
+
+      </ion-col>
+
+    </ion-row>
+
+    <!-- End Measurement Form Open Button -->
+
+
     <!-- Step view navigation controls -->
-    <ion-row justify-content-between
-             id="step-control-buttons">
+    <ion-row  justify-content-between
+              id="step-control-buttons">
 
       <!-- View previous step if not at start -->
       <ion-col>
+
         <button ion-button
                 color="primary"
-                [disabled]="atViewEnd('prev')"
-                (click)="changeStep('prev')">
-          <ion-icon class="nav-process-button"
-                    name="arrow-dropleft"></ion-icon>
+                (click)="changeStep('prev')"
+                [disabled]="atViewStart">
+
+          <ion-icon name="arrow-dropleft"
+                    class="nav-process-button">
+          </ion-icon>
+
         </button>
+
       </ion-col>
 
       <!-- Complete the step button - only if on current step -->
-      <ion-col *ngIf="!isPreview()
-                      && (!isCalendarStepView() || isCalendarInProgress())">
+      <ion-col *ngIf="selectedBatch.process.currentStep === viewStepIndex
+                      && (
+                        stepData && stepData.type !== 'calendar'
+                        || isCalendarInProgress
+                      )">
+
         <button ion-button
-                class="nav-process-button"
                 color="primary"
-                (click)="completeStep()">
+                (click)="completeStep()"
+                class="nav-process-button">
           Done
         </button>
+
       </ion-col>
 
       <!-- Jump to current step - only if not on current step -->
-      <ion-col *ngIf="isPreview()">
+      <ion-col *ngIf="selectedBatch.process.currentStep !== viewStepIndex">
+
         <button ion-button
-                class="nav-process-button"
                 color="primary"
-                (click)="goToActiveStep()">
+                (click)="goToActiveStep()"
+                class="nav-process-button">
           Go To Active
         </button>
+
       </ion-col>
 
       <!-- If on calendar step and has not already been started -->
-      <ion-col *ngIf="!isPreview()
-                      && isCalendarStepView()
-                      && !isCalendarInProgress()">
+      <ion-col *ngIf="selectedBatch.process.currentStep === viewStepIndex
+                      && stepData && stepData.type === 'calendar'
+                      && !isCalendarInProgress">
+
         <button ion-button
-                class="nav-process-button"
                 color="primary"
-                (click)="startCalendar()">
+                (click)="startCalendar()"
+                class="nav-process-button">
           Start
         </button>
+
       </ion-col>
 
       <!-- View next step if not at end -->
       <ion-col>
+
         <button ion-button
                 color="primary"
-                [disabled]="atViewEnd('next')"
-                (click)="changeStep('next')">
+                (click)="changeStep('next')"
+                [disabled]="atViewEnd">
+
           <ion-icon class="nav-process-button"
-                    name="arrow-dropright"></ion-icon>
+                    name="arrow-dropright">
+          </ion-icon>
+
         </button>
+
       </ion-col>
+
     </ion-row>
 
   </ion-grid>

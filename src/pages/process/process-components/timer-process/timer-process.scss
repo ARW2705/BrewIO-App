@@ -40,7 +40,7 @@ timer-process {
     width: 100%;
 
     /* Children */
-    ion-col {
+    > ion-col {
       /* Display */
       z-index: 2;
 
@@ -48,7 +48,7 @@ timer-process {
       background-color: map-get($colors, gray-scale-2);
 
       /* Children */
-      h2 {
+      > h2 {
         /* Text */
         font-size: 2em;
         text-align: center;
