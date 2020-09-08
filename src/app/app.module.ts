@@ -1,110 +1,98 @@
+/* Package Modules */
 import { NgModule, ErrorHandler } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { IonicApp, IonicModule, IonicErrorHandler } from 'ionic-angular';
-import { MyApp } from './app.component';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { IonicStorageModule } from '@ionic/storage';
 import { CommonModule } from '@angular/common';
-import { Network } from '@ionic-native/network/ngx';
+import { Network } from '@ionic-native/network';
 import { BackgroundMode } from '@ionic-native/background-mode';
-import { ComponentsModule } from '../components/components.module';
-import { PipesModule } from '../pipes/pipes.module';
-import { UserPageModule } from '../pages/user/user.module';
-import { ProcessPageModule } from '../pages/process/process.module';
-
-import { HomePage } from '../pages/home/home';
-import { TabsPage } from '../pages/tabs/tabs';
-import { RecipePage } from '../pages/recipe/recipe';
-import { RecipeDetailPage } from '../pages/recipe-detail/recipe-detail';
-import { RecipeFormPage } from '../pages/forms/recipe-form/recipe-form';
-import { GeneralFormPage } from '../pages/forms/general-form/general-form';
-import { ProcessFormPage } from '../pages/forms/process-form/process-form';
-import { IngredientFormPage } from '../pages/forms/ingredient-form/ingredient-form';
-import { LoginPage } from '../pages/forms/login/login';
-import { SignupPage } from '../pages/forms/signup/signup';
-import { NoteFormPage } from '../pages/forms/note-form/note-form';
-import { InventoryPage } from '../pages/inventory/inventory';
-
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
-import { UserProvider } from '../providers/user/user';
-import { RecipeProvider } from '../providers/recipe/recipe';
-import { AuthorizedInterceptor, UnauthorizedInterceptor } from '../providers/interceptor/interceptor';
-import { ProcessHttpErrorProvider } from '../providers/process-http-error/process-http-error';
-import { LibraryProvider } from '../providers/library/library';
-import { CalculationsProvider } from '../providers/calculations/calculations';
-import { ProcessProvider } from '../providers/process/process';
-import { ModalProvider } from '../providers/modal/modal';
-import { FormValidatorProvider } from '../providers/form-validator/form-validator';
-import { ToastProvider } from '../providers/toast/toast';
+
+/* My Modules */
+import { ExtrasPageModule } from '../pages/extras/extras.module';
+import { HomePageModule } from '../pages/home/home.module';
+import { MyApp } from './app.component';
+import { MyFormsModule } from '../pages/forms/forms.module';
+import { PipesModule } from '../pipes/pipes.module';
+import { ProcessPageModule } from '../pages/process/process.module';
+import { RecipeDetailPageModule } from '../pages/recipe-detail/recipe-detail.module';
+import { RecipePageModule } from '../pages/recipe/recipe.module';
+import { TabsPageModule } from '../pages/tabs/tabs.module';
+import { UserPageModule } from '../pages/user/user.module';
+
+/* Providers */
 import { ActionSheetProvider } from '../providers/action-sheet/action-sheet';
-import { InventoryProvider } from '../providers/inventory/inventory';
-import { StorageProvider } from '../providers/storage/storage';
-import { ConnectionProvider } from '../providers/connection/connection';
-import { PreferencesProvider } from '../providers/preferences/preferences';
-import { SyncProvider } from '../providers/sync/sync';
+import { AuthorizedInterceptor, UnauthorizedInterceptor } from '../providers/interceptor/interceptor';
+import { CalculationsProvider } from '../providers/calculations/calculations';
 import { ClientIdProvider } from '../providers/client-id/client-id';
+import { ConnectionProvider } from '../providers/connection/connection';
+import { FormValidatorProvider } from '../providers/form-validator/form-validator';
+import { InventoryProvider } from '../providers/inventory/inventory';
+import { LibraryProvider } from '../providers/library/library';
+import { ModalProvider } from '../providers/modal/modal';
+import { PreferencesProvider } from '../providers/preferences/preferences';
+import { ProcessHttpErrorProvider } from '../providers/process-http-error/process-http-error';
+import { ProcessProvider } from '../providers/process/process';
+import { RecipeProvider } from '../providers/recipe/recipe';
+import { StorageProvider } from '../providers/storage/storage';
+import { SyncProvider } from '../providers/sync/sync';
 import { TimerProvider } from '../providers/timer/timer';
+import { ToastProvider } from '../providers/toast/toast';
+import { UserProvider } from '../providers/user/user';
+
 
 @NgModule({
-  declarations: [
-    MyApp,
-    HomePage,
-    TabsPage,
-    RecipePage,
-    RecipeDetailPage,
-    RecipeFormPage,
-    GeneralFormPage,
-    IngredientFormPage,
-    LoginPage,
-    ProcessFormPage,
-    SignupPage,
-    NoteFormPage,
-    InventoryPage
-  ],
+  declarations: [ MyApp ],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
+    CommonModule,
+    ExtrasPageModule,
+    HomePageModule,
+    HttpClientModule,
     IonicModule.forRoot(MyApp, {
       scrollAssist: false,
       scrollPadding: false
     }),
-    HttpClientModule,
     IonicStorageModule.forRoot(),
-    ComponentsModule,
-    CommonModule,
+    MyFormsModule,
     PipesModule,
-    UserPageModule,
-    ProcessPageModule
+    ProcessPageModule,
+    RecipeDetailPageModule,
+    RecipePageModule,
+    TabsPageModule,
+    UserPageModule
   ],
-  bootstrap: [IonicApp],
-  entryComponents: [
-    MyApp,
-    HomePage,
-    TabsPage,
-    RecipePage,
-    RecipeDetailPage,
-    RecipeFormPage,
-    GeneralFormPage,
-    IngredientFormPage,
-    LoginPage,
-    ProcessFormPage,
-    SignupPage,
-    NoteFormPage,
-    InventoryPage
-  ],
+  bootstrap: [ IonicApp ],
   providers: [
-    StatusBar,
-    SplashScreen,
-    Network,
+    ActionSheetProvider,
     BackgroundMode,
+    CalculationsProvider,
+    ClientIdProvider,
+    ConnectionProvider,
+    FormValidatorProvider,
+    InventoryProvider,
+    LibraryProvider,
+    Network,
+    ModalProvider,
+    PreferencesProvider,
+    ProcessHttpErrorProvider,
+    ProcessProvider,
+    RecipeProvider,
+    SplashScreen,
+    StatusBar,
+    StorageProvider,
+    SyncProvider,
+    TimerProvider,
+    ToastProvider,
+    UserProvider,
     {
       provide: ErrorHandler,
       useClass: IonicErrorHandler
     },
-    UserProvider,
-    RecipeProvider,
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthorizedInterceptor,
@@ -114,22 +102,7 @@ import { TimerProvider } from '../providers/timer/timer';
       provide: HTTP_INTERCEPTORS,
       useClass: UnauthorizedInterceptor,
       multi: true
-    },
-    ProcessHttpErrorProvider,
-    LibraryProvider,
-    CalculationsProvider,
-    ProcessProvider,
-    ModalProvider,
-    FormValidatorProvider,
-    ToastProvider,
-    ActionSheetProvider,
-    InventoryProvider,
-    StorageProvider,
-    ConnectionProvider,
-    PreferencesProvider,
-    SyncProvider,
-    ClientIdProvider,
-    TimerProvider
+    }
   ]
 })
 export class AppModule {}

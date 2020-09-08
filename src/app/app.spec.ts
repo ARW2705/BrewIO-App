@@ -1,17 +1,17 @@
 /* Module imports */
-import { async, TestBed, ComponentFixture } from '@angular/core/testing';
+import { async, getTestBed, TestBed, ComponentFixture } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { IonicModule, Platform } from 'ionic-angular';
 import { IonicStorageModule } from '@ionic/storage';
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
-import { Network } from '@ionic-native/network/ngx';
+import { Network } from '@ionic-native/network';
 
 /* Test configuration imports */
 import { configureTestBed } from '../../test-config/configureTestBed';
 
 /* Mock imports */
-import { PlatformMockDev, StatusBarMock, SplashScreenMock, StorageMock } from '../../test-config/mocks-ionic';
+import { NetworkMock, PlatformMockDev, StatusBarMock, SplashScreenMock, StorageMock } from '../../test-config/mocks-ionic';
 
 /* Component imports */
 import { MyApp } from './app.component';
@@ -41,11 +41,21 @@ describe('MyApp Component', () => {
         IonicStorageModule.forRoot()
       ],
       providers: [
-        LibraryProvider,
-        UserProvider,
-        StorageProvider,
-        Network,
-        ConnectionProvider,
+        {
+          provide: LibraryProvider,
+          useValue: {
+            fetchAllLibraries: function() {}
+          }
+        },
+        {
+          provide: UserProvider,
+          useValue: {
+            loadUserFromStorage: function() {}
+          }
+        },
+        { provide: StorageProvider, useValue: {} },
+        { provide: Network, useClass: NetworkMock },
+        { provide: ConnectionProvider, useValue: {} },
         { provide: PreferencesProvider, useValue: {} },
         { provide: ProcessProvider, useValue: {} },
         { provide: RecipeProvider, useValue: {} },
@@ -68,15 +78,21 @@ describe('MyApp Component', () => {
 
   test('should create MyApp component', () => {
     fixture.detectChanges();
+
     expect(appComponent).toBeDefined();
     expect(appComponent instanceof MyApp).toBe(true);
   }); // end 'should create MyApp component' test
 
   test('should initialize app', done => {
     fixture.detectChanges();
-    const statusBarSpy = jest.spyOn(appComponent.statusBar, 'styleDefault');
-    const splashScreenSpy = jest.spyOn(appComponent.splashScreen, 'hide');
+
+    const statusBarSpy: jest.SpyInstance = jest
+      .spyOn(appComponent.statusBar, 'styleDefault');
+    const splashScreenSpy: jest.SpyInstance = jest
+      .spyOn(appComponent.splashScreen, 'hide');
+
     appComponent.initializeApp();
+
     setTimeout(() => {
       expect(statusBarSpy).toHaveBeenCalled();
       expect(splashScreenSpy).toHaveBeenCalled();

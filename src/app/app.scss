@@ -14,3 +14,236 @@
 // To declare rules for a specific mode, create a child rule
 // for the .md, .ios, or .wp mode classes. The mode class is
 // automatically applied to the <body> element in the app.
+
+.action-sheet-group {
+  /* Display */
+  overflow: auto;
+}
+
+.action-sheet-main {
+  .action-sheet-title {
+    /* Text */
+    text-align: center !important;
+  }
+  button {
+    span {
+      /* Display */
+      display: inline-block;
+
+      /* Text */
+      text-align: center !important;
+    }
+  }
+}
+
+.alert-md [aria-checked=true] {
+  /* Color */
+  background-color: map-get($colors, gray-scale-4);
+}
+
+.alert-md .alert-button-group {
+  /* Color */
+  background-color: map-get($colors, gray-scale-2);
+
+  /* Children */
+  > .alert-button {
+    /* Color*/
+    background-color: transparent;
+  }
+}
+
+.alert-md {
+  .alert-head {
+    /* Color */
+    color: map-get($colors, primary);
+    background-color: map-get($colors, gray-scale-2);
+  }
+}
+
+.alert-md {
+  .alert-radio-group {
+    /* Display */
+    border: none !important;
+  }
+}
+
+.button-md-primary {
+  /* Color */
+  color: map-get($colors, gray-scale-2) !important;
+}
+
+.button-md-secondary {
+  /* Color */
+  color: map-get($colors, gray-scale-2) !important;
+}
+
+.button-md-danger {
+  color: map-get($colors, gray-scale-1) !important;
+}
+
+.button-md-heart {
+  /* Color */
+  color: map-get($colors, gray-scale-2) !important;
+}
+
+.col-left {
+  /* Text */
+  text-align: left;
+}
+
+.col-right {
+  /* Text */
+  text-align: right;
+}
+
+.content {
+  /* Display */
+  margin-top: 56px;
+}
+
+.expand-button {
+  /* Display */
+  padding: 0 10px;
+
+  /* Children */
+  ion-label {
+    /* Display */
+    margin: 13px 0 6px;
+  }
+}
+
+.form-button {
+  /* Display */
+  display: block;
+  margin: 20px auto 0;
+}
+
+.inner-header {
+  top: 56px;
+}
+
+.item-checkbox {
+  .item-inner {
+    /* Display */
+    border: none !important;
+  }
+}
+
+.item-inner {
+  /* Display */
+  box-shadow: none !important;
+}
+
+.item-md-primary,
+.item-divider-md-primary {
+  /* color */
+  color: map-get($colors, gray-scale-1) !important;
+}
+
+.item.item-block.item-md.item-toggle {
+  /* Display */
+  height: 100%;
+}
+
+.no-item {
+  font-size: 2rem;
+  margin: 10px;
+}
+
+.scroll-content {
+  /* Display */
+  overflow-y: auto !important;
+  margin-bottom: 116px;
+}
+
+.sub-page {
+  /* Display */
+  margin-top: 4px;
+}
+
+.tabs-md {
+  .tab-button[aria-selected=true] {
+    /* Color */
+    background-color: map-get($colors, primary) !important;
+  }
+}
+
+.tabs-md {
+  .tab-button[aria-selected=false] {
+    /* Color */
+    background-color: map-get($colors, gray-scale-8) !important;
+  }
+}
+
+.toast-bright {
+  .toast-message {
+    /* Color */
+    color: map-get($colors, gray-scale-1) !important;
+    background-color: map-get($colors, primary) !important;
+  }
+}
+
+.toast-main {
+  .toast-wrapper {
+    /* Color */
+    background: transparent !important;
+  }
+
+  .toast-message {
+    /* Display */
+    border-radius: 8px;
+    margin: 0 5px 6px;
+    padding: 12px !important;
+
+    /* Color */
+    color: map-get($colors, gray-scale-9);
+    @include background-opacity(map-get($colors, gray-scale-1), 0.9);
+
+    /* Text */
+    font-size: 1.25em !important;
+    text-align: center;
+  }
+}
+
+.toast-error {
+  .toast-message {
+    /* Color */
+    color: map-get($colors, gray-scale-10) !important;
+    background-color: map-get($colors, danger) !important;
+  }
+}
+
+.toast-fav {
+  .toast-message {
+    /* Color */
+    color: map-get($colors, gray-scale-1) !important;
+    background-color: map-get($colors, heart) !important;
+  }
+}
+
+.toggle-md {
+  .toggle-inner {
+    /* Position */
+    top: -5px !important;
+    left: -2px !important;
+
+    /* Display */
+    width: 25px !important;
+    height: 25px !important;
+
+    /* Color */
+    background-color: map-get($colors, gray-scale-4) !important;
+  }
+}
+
+.toggle-md.toggle-checked {
+  .toggle-inner {
+    /* Color */
+    background-color: map-get($colors, primary) !important;
+  }
+}
+
+button {
+  /* Display */
+  min-height: 48px;
+}
