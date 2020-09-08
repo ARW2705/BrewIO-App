@@ -1,0 +1,10 @@
+page-extras {
+
+  #extras-list {
+    .item-inner {
+      margin-left: 12px;
+      border-bottom: 2px solid map-get($colors, gray-scale-9);
+    }
+  }
+
+}
