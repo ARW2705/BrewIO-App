@@ -1,14 +1,15 @@
 /* Module imports */
 import { TestBed, getTestBed, async } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { Events } from 'ionic-angular';
-import { of } from 'rxjs/observable/of';
-import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
+import { HttpClientTestingModule, HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Events } from 'ionic-angular';
+import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
+import { Observable } from 'rxjs/Observable';
+import { of } from 'rxjs/observable/of';
 
 /* Constants imports */
-import { baseURL } from '../../shared/constants/base-url';
-import { apiVersion } from '../../shared/constants/api-version';
+import { BASE_URL } from '../../shared/constants/base-url';
+import { API_VERSION } from '../../shared/constants/api-version';
 
 /* Test configuration imports */
 import { configureTestBed } from '../../../test-config/configureTestBed';
@@ -18,6 +19,10 @@ import { mockRecipeMasterActive } from '../../../test-config/mockmodels/mockReci
 import { mockRecipeMasterInactive } from '../../../test-config/mockmodels/mockRecipeMasterInactive';
 import { mockErrorResponse } from '../../../test-config/mockmodels/mockErrorResponse';
 import { EventsMock } from '../../../test-config/mocks-ionic';
+
+/* Interface imports */
+import { RecipeMaster } from '../../shared/interfaces/recipe-master';
+import { SyncData, SyncMetadata, SyncableResponse, SyncResponse } from '../../shared/interfaces/sync';
 
 /* Provider imports */
 import { SyncProvider } from './sync';
@@ -60,31 +65,31 @@ describe('Sync Service', () => {
   });
 
   test('should clear sync flags', () => {
-    const storageSpy = jest.spyOn(storage, 'removeSyncFlags');
+    const storageSpy: jest.SpyInstance = jest.spyOn(storage, 'removeSyncFlags');
 
     syncService.syncFlags = [{ method: 'create', docId: '', docType: 'recipe' }];
 
     syncService.clearSyncData();
 
-    expect(syncService.syncFlags.length).toBe(0);
+    expect(syncService.syncFlags.length).toEqual(0);
     expect(storageSpy).toHaveBeenCalled();
   }); // end 'should clear sync flags' test
 
   test('should get all sync flags', () => {
-    const flags = [
+    const flags: SyncMetadata[] = [
       { method: 'update', docId: 'id', docType: 'recipe' },
       { method: 'create', docId: 'id', docType: 'batch' }
     ]
     syncService.syncFlags = flags;
 
-    const gotFlags = syncService.getAllSyncFlags();
+    const gotFlags: SyncMetadata[] = syncService.getAllSyncFlags();
 
     expect(gotFlags.length).toBe(2);
     expect(gotFlags[1]).toStrictEqual(flags[1]);
   }); // end 'should get all sync flags' test
 
   test('should get only flags of a given doc type', () => {
-    const flags = [
+    const flags: SyncMetadata[] = [
       { method: 'update', docId: 'id', docType: 'recipe' },
       { method: 'create', docId: 'id', docType: 'batch' },
       { method: 'update', docId: 'id', docType: 'recipe' },
@@ -95,8 +100,8 @@ describe('Sync Service', () => {
     ]
     syncService.syncFlags = flags;
 
-    const recipeFlags = syncService.getSyncFlagsByType('recipe');
-    const batchFlags = syncService.getSyncFlagsByType('batch');
+    const recipeFlags: SyncMetadata[] = syncService.getSyncFlagsByType('recipe');
+    const batchFlags: SyncMetadata[] = syncService.getSyncFlagsByType('batch');
 
     expect(recipeFlags.length).toBe(4);
     expect(recipeFlags[1]).toStrictEqual(flags[2]);
@@ -110,7 +115,8 @@ describe('Sync Service', () => {
     syncService.updateStorage = jest
       .fn();
 
-    const storageSpy = jest.spyOn(syncService, 'updateStorage');
+    const storageSpy: jest.SpyInstance = jest
+      .spyOn(syncService, 'updateStorage');
 
     syncService.addSyncFlag({ method: 'create', docId: 'id', docType: 'recipe' });
 
@@ -125,7 +131,8 @@ describe('Sync Service', () => {
     syncService.updateStorage = jest
       .fn();
 
-    const storageSpy = jest.spyOn(syncService, 'updateStorage');
+    const storageSpy: jest.SpyInstance = jest
+      .spyOn(syncService, 'updateStorage');
 
     syncService.addSyncFlag({ method: 'update', docId: 'id', docType: 'recipe' });
 
@@ -144,24 +151,28 @@ describe('Sync Service', () => {
     syncService.updateStorage = jest
       .fn();
 
-    const storageSpy = jest.spyOn(syncService, 'updateStorage');
+    const storageSpy: jest.SpyInstance = jest
+      .spyOn(syncService, 'updateStorage');
 
     syncService.syncFlags = [
       { method: 'create', docId: 'createId', docType: 'recipe' },
       { method: 'update', docId: 'updateId', docType: 'recipe' }
     ];
 
-    syncService.addSyncFlag({ method: 'delete', docId: 'id', docType: 'recipe' });
+    syncService
+      .addSyncFlag({ method: 'delete', docId: 'id', docType: 'recipe' });
 
     expect(syncService.syncFlags.length).toBe(3);
     expect(syncService.syncFlags[2].docId).toMatch('id');
 
-    syncService.addSyncFlag({ method: 'delete', docId: 'createId', docType: 'recipe' });
+    syncService
+      .addSyncFlag({ method: 'delete', docId: 'createId', docType: 'recipe' });
 
     expect(syncService.syncFlags.length).toBe(2);
     expect(syncService.syncFlags[0].docId).not.toMatch('createId');
 
-    syncService.addSyncFlag({ method: 'delete', docId: 'updateId', docType: 'recipe' });
+    syncService
+      .addSyncFlag({ method: 'delete', docId: 'updateId', docType: 'recipe' });
 
     expect(syncService.syncFlags.length).toBe(2);
     expect(syncService.syncFlags[0].method).toMatch('delete');
@@ -176,90 +187,134 @@ describe('Sync Service', () => {
 
   test('should make a sync delete http request', done => {
     syncService.deleteSync('delete-route')
-      .subscribe(response => {
-        expect(response['isDeleted']).toBe(true);
-        done();
-      });
+      .subscribe(
+        (response: SyncData): void => {
+          expect(response.isDeleted).toBe(true);
+          done();
+        },
+        (error: any): void => {
+          console.log('Should not get an error', error);
+          expect(true).toBe(false);
+        }
+      );
 
-    const deleteReq = httpMock.expectOne(`${baseURL}/${apiVersion}/delete-route`);
+    const deleteReq: TestRequest = httpMock
+      .expectOne(`${BASE_URL}/${API_VERSION}/delete-route`);
     deleteReq.flush({isDeleted: true});
   }); // end 'should make a sync delete http request test
 
   test('should catch a response error and return an observable of the error on sync delete http request', done => {
     syncService.deleteSync('delete-route')
-      .subscribe(response => {
-        expect(response instanceof HttpErrorResponse).toBe(true);
-        expect(response['status']).toBe(404);
-        done();
-      });
+      .subscribe(
+        (response: HttpErrorResponse): void => {
+          expect(response instanceof HttpErrorResponse).toBe(true);
+          expect(response['status']).toBe(404);
+          done();
+        },
+        (error: any): void => {
+          console.log('Should not get an error', error);
+          expect(true).toBe(false);
+        }
+      );
 
-    const deleteReq = httpMock.expectOne(`${baseURL}/${apiVersion}/delete-route`);
+    const deleteReq: TestRequest = httpMock
+      .expectOne(`${BASE_URL}/${API_VERSION}/delete-route`);
     deleteReq.flush(null, mockErrorResponse(404, 'Not found'));
   }); // end 'should catch a response error and return an observable of the error on sync delete http request' test
 
   test('should make a sync patch http request', done => {
-    const _mockRecipeMasterActive = mockRecipeMasterActive();
+    const _mockRecipeMasterActive: RecipeMaster = mockRecipeMasterActive();
     syncService.patchSync('patch-route', _mockRecipeMasterActive)
-      .subscribe(response => {
-        expect(response).toStrictEqual(_mockRecipeMasterActive);
-        done();
-      });
+      .subscribe(
+        (response: SyncableResponse): void => {
+          expect(response).toStrictEqual(_mockRecipeMasterActive);
+          done();
+        },
+        (error: any): void => {
+          console.log('Should not get an error', error);
+          expect(true).toBe(false);
+        }
+      );
 
-    const patchReq = httpMock.expectOne(`${baseURL}/${apiVersion}/patch-route`);
+    const patchReq: TestRequest = httpMock
+      .expectOne(`${BASE_URL}/${API_VERSION}/patch-route`);
     patchReq.flush(_mockRecipeMasterActive);
   }); // end 'should make a sync patch http request' test
 
   test('should catch a response error and return an observable of the error on sync patch http request', done => {
-    const _mockRecipeMasterActive = mockRecipeMasterActive();
+    const _mockRecipeMasterActive: RecipeMaster = mockRecipeMasterActive();
     syncService.patchSync('patch-route', _mockRecipeMasterActive)
-      .subscribe(response => {
-        expect(response instanceof HttpErrorResponse).toBe(true);
-        expect(response['status']).toBe(400);
-        done();
-      });
+      .subscribe(
+        (response: HttpErrorResponse): void => {
+          expect(response instanceof HttpErrorResponse).toBe(true);
+          expect(response['status']).toBe(400);
+          done();
+        },
+        (error: any): void => {
+          console.log('Should not get an error', error);
+          expect(true).toBe(false);
+        }
+      );
 
-    const patchReq = httpMock.expectOne(`${baseURL}/${apiVersion}/patch-route`);
+    const patchReq: TestRequest = httpMock
+      .expectOne(`${BASE_URL}/${API_VERSION}/patch-route`);
     patchReq.flush(null, mockErrorResponse(400, 'Bad request'));
   }); // end 'should catch a response error and return an observable of the error on sync patch http request' test
 
   test('should make a sync post http request', done => {
-    const _mockRecipeMasterActive = mockRecipeMasterActive();
+    const _mockRecipeMasterActive: RecipeMaster = mockRecipeMasterActive();
     syncService.postSync('post-route', _mockRecipeMasterActive)
-      .subscribe(response => {
-        expect(response).toStrictEqual(_mockRecipeMasterActive);
-        done();
-      });
+      .subscribe(
+        (response: SyncableResponse): void => {
+          expect(response).toStrictEqual(_mockRecipeMasterActive);
+          done();
+        },
+        (error: any): void => {
+          console.log('Should not get an error', error);
+          expect(true).toBe(false);
+        }
+      );
 
-    const postReq = httpMock.expectOne(`${baseURL}/${apiVersion}/post-route`);
+    const postReq: TestRequest = httpMock
+      .expectOne(`${BASE_URL}/${API_VERSION}/post-route`);
     postReq.flush(_mockRecipeMasterActive);
   }); // end 'should make a sync post http request' test
 
   test('should catch a response error and return an observable of the error on sync post http request', done => {
-    const _mockRecipeMasterActive = mockRecipeMasterActive();
+    const _mockRecipeMasterActive: RecipeMaster = mockRecipeMasterActive();
 
     syncService.postSync('post-route', _mockRecipeMasterActive)
-      .subscribe(response => {
-        expect(response instanceof HttpErrorResponse).toBe(true);
-        expect(response['status']).toBe(500);
-        done();
-      });
+      .subscribe(
+        (response: HttpErrorResponse): void => {
+          expect(response instanceof HttpErrorResponse).toBe(true);
+          expect(response['status']).toBe(500);
+          done();
+        },
+        (error: any): void => {
+          console.log('Should not get an error', error);
+          expect(true).toBe(false);
+        }
+      );
 
-    const postReq = httpMock.expectOne(`${baseURL}/${apiVersion}/post-route`);
+    const postReq: TestRequest = httpMock
+      .expectOne(`${BASE_URL}/${API_VERSION}/post-route`);
     postReq.flush(null, mockErrorResponse(500, 'Internal server error'));
   }); // end 'should catch a response error and return an observable of the error on sync post http request' test
 
   test('should process sync response errors', () => {
-    const _mockErrorNoStatus = mockErrorResponse(null, 'Unknown');
-    const _mockErrorWithAdditional = mockErrorResponse(
-      400,
-      'Bad request',
-      {
-        name: 'ValidationError',
-        message: 'Duplicate key error'
-      }
-    );
+    const _mockErrorNoStatus: HttpErrorResponse
+      = mockErrorResponse(null, 'Unknown');
+    const _mockErrorWithAdditional: HttpErrorResponse
+      = mockErrorResponse(
+        400,
+        'Bad request',
+        {
+          name: 'ValidationError',
+          message: 'Duplicate key error'
+        }
+      );
 
-    const errorData = [
+    const errorData: (HttpErrorResponse | Error)[] = [
       mockErrorResponse(400, 'Bad request'),
       mockErrorResponse(404, 'Not found'),
       new Error('Other error'),
@@ -267,7 +322,7 @@ describe('Sync Service', () => {
       _mockErrorWithAdditional
     ];
 
-    const errors = syncService.processSyncErrors(errorData);
+    const errors: string[] = syncService.processSyncErrors(errorData);
     expect(errors[0]).toMatch('<400> Bad request');
     expect(errors[1]).toMatch('<404> Not found');
     expect(errors[2]).toMatch('Other error');
@@ -276,8 +331,8 @@ describe('Sync Service', () => {
   }); // end 'should process sync response errors' test
 
   test('should process sync requests', done => {
-    const _mockCreateSync = mockRecipeMasterInactive();
-    const _mockUpdateSync = mockRecipeMasterInactive();
+    const _mockCreateSync: RecipeMaster = mockRecipeMasterInactive();
+    const _mockUpdateSync: RecipeMaster = mockRecipeMasterInactive();
 
     syncService.syncFlags = [
       { method: 'create', docId: '', docType: 'recipe' },
@@ -301,21 +356,29 @@ describe('Sync Service', () => {
       .fn()
       .mockReturnValue(of(mockErrorResponse(503, 'Service unavailable')));
 
-    const requests = [
+    const requests: (
+      Observable<SyncData | SyncableResponse | HttpErrorResponse>
+    )[] = [
       syncService.postSync('post-route', _mockCreateSync),
       syncService.patchSync('patch-route', _mockUpdateSync),
       syncService.deleteSync('error-route')
     ];
 
     syncService.sync('recipe', requests)
-      .subscribe(responses => {
-        expect(syncService.syncFlags.length).toBe(1);
-        expect(responses.successes.length).toBe(2);
-        expect(responses.successes[0]).toStrictEqual(_mockCreateSync);
-        expect(responses.errors.length).toBe(1);
-        expect(responses.errors[0]).toMatch('<503> Service unavailable');
-        done();
-      });
+      .subscribe(
+        (responses: SyncResponse): void => {
+          expect(syncService.syncFlags.length).toBe(1);
+          expect(responses.successes.length).toBe(2);
+          expect(responses.successes[0]).toStrictEqual(_mockCreateSync);
+          expect(responses.errors.length).toBe(1);
+          expect(responses.errors[0]).toMatch('<503> Service unavailable');
+          done();
+        },
+        (error: any): void => {
+          console.log('Should not get an error', error);
+          expect(true).toBe(false);
+        }
+      );
   }); // end 'should process sync requests' test
 
   test('should update sync flag storage', () => {
@@ -323,9 +386,9 @@ describe('Sync Service', () => {
       .fn()
       .mockReturnValue(of({}));
 
-    const storageSpy = jest.spyOn(storage, 'setSyncFlags');
+    const storageSpy: jest.SpyInstance = jest.spyOn(storage, 'setSyncFlags');
 
-    const flags = [
+    const flags: SyncMetadata[] = [
       { method: 'create', docId: 'id', docType: 'recipe' },
       { method: 'update', docId: 'id', docType: 'batch' }
     ];
@@ -342,13 +405,11 @@ describe('Sync Service', () => {
       .fn()
       .mockReturnValue(new ErrorObservable('new error'));
 
-    const consoleSpy = jest.spyOn(console, 'log');
+    const consoleSpy: jest.SpyInstance = jest.spyOn(console, 'log');
 
     syncService.updateStorage();
 
-    const callCount = consoleSpy.mock.calls.length;
-    expect(consoleSpy.mock.calls[callCount - 1][0]).toMatch('Sync flag store error');
-    expect(consoleSpy.mock.calls[callCount - 1][1]).toMatch('new error');
+    expect(consoleSpy).toHaveBeenCalledWith('Sync flag store error: new error');
   }); // end 'should get error updating sync flag storage' test
 
 });

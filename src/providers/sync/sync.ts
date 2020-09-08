@@ -1,27 +1,24 @@
 /* Module imports */
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Injectable } from '@angular/core';
 import { Events } from 'ionic-angular';
+import { Injectable } from '@angular/core';
+import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 import { Observable } from 'rxjs/Observable';
+import { catchError } from 'rxjs/operators/catchError';
 import { forkJoin } from 'rxjs/observable/forkJoin';
 import { map } from 'rxjs/operators/map';
-import { catchError } from 'rxjs/operators/catchError';
 import { of } from 'rxjs/observable/of';
-import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 
 /* Constants imports */
-import { baseURL } from '../../shared/constants/base-url';
-import { apiVersion } from '../../shared/constants/api-version';
+import { BASE_URL } from '../../shared/constants/base-url';
+import { API_VERSION } from '../../shared/constants/api-version';
 
 /* Interface imports */
-import { RecipeMaster } from '../../shared/interfaces/recipe-master';
-import { Batch } from '../../shared/interfaces/batch';
-import { User } from '../../shared/interfaces/user';
-import { SyncMetadata } from '../../shared/interfaces/sync-metadata';
-import { SyncResponse } from '../../shared/interfaces/sync-response';
+import { Syncable, SyncableResponse, SyncData, SyncMetadata, SyncResponse } from '../../shared/interfaces/sync';
 
 /* Utility imports */
-import { hasDefaultIdType } from '../../shared/utility-functions/utilities';
+import { hasDefaultIdType } from '../../shared/utility-functions/id-helpers';
+import { normalizeErrorObservableMessage } from '../../shared/utility-functions/observable-helpers';
 
 /* Provider imports */
 import { StorageProvider } from '../storage/storage';
@@ -29,8 +26,8 @@ import { StorageProvider } from '../storage/storage';
 
 @Injectable()
 export class SyncProvider {
-  syncFlags: Array<SyncMetadata> = [];
-  syncKey = 'sync';
+  syncFlags: SyncMetadata[] = [];
+  syncKey: string = 'sync';
 
   constructor(
     public http: HttpClient,
@@ -40,11 +37,12 @@ export class SyncProvider {
     this.events.subscribe('clear-data', this.clearSyncData.bind(this));
     this.storageService.getSyncFlags()
       .subscribe(
-        flags => {
+        (flags: SyncMetadata[]): void => {
+          console.log('sync flags', flags);
           this.syncFlags = flags;
         },
-        error => {
-          console.log('Sync error', error);
+        (error: ErrorObservable): void => {
+          console.log('Sync error', error.error);
         }
       );
   }
@@ -67,7 +65,7 @@ export class SyncProvider {
    *
    * @return: Array of all sync metadata
   **/
-  getAllSyncFlags(): Array<SyncMetadata> {
+  getAllSyncFlags(): SyncMetadata[] {
     return this.syncFlags;
   }
 
@@ -78,8 +76,11 @@ export class SyncProvider {
    *
    * @return: Array of sync metadata for given docTypes
   **/
-  getSyncFlagsByType(docType: string): Array<SyncMetadata> {
-    return this.syncFlags.filter(syncFlag => syncFlag.docType === docType);
+  getSyncFlagsByType(docType: string): SyncMetadata[] {
+    return this.syncFlags
+      .filter((syncFlag: SyncMetadata): boolean => {
+        return syncFlag.docType === docType
+      });
   }
 
   /**
@@ -105,17 +106,19 @@ export class SyncProvider {
     if (metadata.method === 'create') {
       this.syncFlags.push(metadata);
     } else if (metadata.method === 'update') {
-      const currentFlagIndex = this.syncFlags.findIndex(syncFlag => {
-        return syncFlag.docId === metadata.docId;
-      });
+      const currentFlagIndex = this.syncFlags
+        .findIndex((syncFlag: SyncMetadata): boolean => {
+          return syncFlag.docId === metadata.docId;
+        });
 
       if (currentFlagIndex === -1 && !hasDefaultIdType(metadata.docId)) {
         this.syncFlags.push(metadata);
       }
     } else if (metadata.method === 'delete') {
-      const currentFlagIndex = this.syncFlags.findIndex(syncFlag => {
-        return syncFlag.docId === metadata.docId;
-      });
+      const currentFlagIndex = this.syncFlags
+        .findIndex((syncFlag: SyncMetadata): boolean => {
+          return syncFlag.docId === metadata.docId;
+        });
 
       if (currentFlagIndex === -1) {
         this.syncFlags.push(metadata);
@@ -137,16 +140,20 @@ export class SyncProvider {
    *
    * @return: Observable of deletion flag on success or http error
   **/
-  deleteSync(route: string): Observable<object> {
-    return this.http.delete(`${baseURL}/${apiVersion}/${route}`)
+  deleteSync(route: string): Observable<SyncData | HttpErrorResponse> {
+    return this.http.delete(`${BASE_URL}/${API_VERSION}/${route}`)
       .pipe(
-        map(response => {
+        map((response: Syncable): SyncData => {
           return {
             isDeleted: true,
             data: response
-          }
+          };
         }),
-        catchError(error => of(error))
+        catchError(
+          (error: HttpErrorResponse): Observable<HttpErrorResponse> => {
+            return of(error);
+          }
+        )
       );
   }
 
@@ -158,9 +165,21 @@ export class SyncProvider {
    *
    * @return: Observable of server response
   **/
-  patchSync(route: string, data: RecipeMaster | Batch | User): Observable<RecipeMaster | Batch | User> {
-    return this.http.patch(`${baseURL}/${apiVersion}/${route}`, data)
-      .pipe(catchError(error => of(error)));
+  patchSync(
+    route: string,
+    data: Syncable
+  ): Observable<SyncableResponse | HttpErrorResponse> {
+    return this.http.patch<SyncableResponse>(
+      `${BASE_URL}/${API_VERSION}/${route}`,
+      data
+    )
+    .pipe(
+      catchError(
+        (error: HttpErrorResponse): Observable<HttpErrorResponse> => {
+          return of(error);
+        }
+      )
+    );
   }
 
   /**
@@ -171,9 +190,21 @@ export class SyncProvider {
    *
    * @return: Observable of server response
   **/
-  postSync(route: string, data: RecipeMaster | Batch | User): Observable<RecipeMaster | Batch | User> {
-    return this.http.post(`${baseURL}/${apiVersion}/${route}`, data)
-      .pipe(catchError(error => of(error)));
+  postSync(
+    route: string,
+    data: Syncable
+  ): Observable<SyncableResponse | HttpErrorResponse> {
+    return this.http.post<SyncableResponse>(
+      `${BASE_URL}/${API_VERSION}/${route}`,
+      data
+    )
+    .pipe(
+      catchError(
+        (error: HttpErrorResponse): Observable<HttpErrorResponse> => {
+          return of(error);
+        }
+      )
+    );
   }
 
   /**
@@ -183,8 +214,8 @@ export class SyncProvider {
    *
    * @return: array of formatted error messages
   **/
-  processSyncErrors(errorData: Array<HttpErrorResponse | Error>): Array<string> {
-    return errorData.map(error => {
+  processSyncErrors(errorData: (HttpErrorResponse | Error)[]): string[] {
+    return errorData.map((error: HttpErrorResponse) => {
       let errMsg: string;
       if (error instanceof HttpErrorResponse) {
         const errStatus = error.status ? error.status: 503;
@@ -194,7 +225,7 @@ export class SyncProvider {
                                : '';
         errMsg = `<${errStatus}> ${errText || ''}${additionalText}`;
       } else {
-        errMsg = error.message;
+        errMsg = error['message'];
       }
       return errMsg;
     });
@@ -208,21 +239,28 @@ export class SyncProvider {
    *
    * @return: observable of sync responses
   **/
-  sync(docType: string, requests: Array<Observable<any>>): Observable<SyncResponse> {
+  sync(
+    docType: string,
+    requests: Observable<Syncable>[]
+  ): Observable<SyncResponse> {
     console.log(`performing ${docType} sync requests`);
     return forkJoin(requests)
       .pipe(
-        map(responses => {
-          this.syncFlags = this.syncFlags.filter(syncFlag => {
-            return syncFlag.docType !== docType;
-          });
+        map((responses: SyncableResponse[]): SyncResponse => {
+          this.syncFlags = this.syncFlags
+            .filter((syncFlag: SyncMetadata): boolean => {
+              return syncFlag.docType !== docType;
+            });
           this.updateStorage();
 
-          const errors = [];
-          const successes = [];
+          const errors: (HttpErrorResponse | Error)[] = [];
+          const successes: SyncableResponse[] = [];
 
-          responses.forEach((response: any) => {
-            if (response instanceof HttpErrorResponse || response instanceof Error) {
+          responses.forEach((response: SyncableResponse) => {
+            if (
+              response instanceof HttpErrorResponse
+              || response instanceof Error
+            ) {
               errors.push(response);
             } else {
               successes.push(response);
@@ -246,8 +284,12 @@ export class SyncProvider {
   updateStorage(): void {
     this.storageService.setSyncFlags(this.syncFlags)
       .subscribe(
-        () => console.log('Stored sync flags'),
-        (error: ErrorObservable) => console.log('Sync flag store error', error)
+        (): void => console.log('Stored sync flags'),
+        (error: ErrorObservable): void => {
+          console.log(
+            `Sync flag store error: ${normalizeErrorObservableMessage(error)}`
+          );
+        }
       );
   }
 
