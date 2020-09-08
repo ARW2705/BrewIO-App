@@ -1,7 +1,7 @@
 import { HopsSchedule } from '../../src/shared/interfaces/hops-schedule';
 
 export const mockHopsSchedule = () => {
-  const mock: Array<HopsSchedule> = [
+  const mock: HopsSchedule[] = [
     {
       _id: '1',
       cid: '1234567890123',

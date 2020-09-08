@@ -1,5 +1,7 @@
 import { User } from '../../src/shared/interfaces/user';
 
+import { defaultEnglish } from '../../src/shared/defaults/default-units';
+
 export const mockUser = () => {
   const mock: User =  {
     _id: 'test-id',
@@ -12,7 +14,10 @@ export const mockUser = () => {
     email: 'test@user.com',
     friendList: ['userId1', 'userId2'],
     token: 'testtoken',
-    preferredUnits: 'e'
+    preferredUnitSystem: 'english standard',
+    units: defaultEnglish,
+    labelImage: 'label-image-url',
+    userImage: 'user-image-url'
   };
   return mock;
 };

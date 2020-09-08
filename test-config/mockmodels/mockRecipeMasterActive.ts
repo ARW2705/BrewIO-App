@@ -15,7 +15,6 @@ export const mockRecipeMasterActive = () => {
     notes: [],
     master: 'complete',
     owner: 'owner-id',
-    hasActiveBatch: true,
     isPublic: true,
     isFriendsOnly: false,
     variants: [

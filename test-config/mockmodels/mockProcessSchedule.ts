@@ -1,7 +1,7 @@
 import { Process } from '../../src/shared/interfaces/process';
 
 export const mockProcessSchedule = () => {
-  const mock: Array<Process> = [
+  const mock: Process[] = [
     {
       splitInterval: 1,
       duration: 0,

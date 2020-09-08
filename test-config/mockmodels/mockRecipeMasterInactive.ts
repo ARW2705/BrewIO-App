@@ -12,9 +12,8 @@ export const mockRecipeMasterInactive = () => {
     name: 'inactive',
     style: mockStyles()[0],
     notes: [],
-    master: 'incomplete',
+    master: 'complete',
     owner: 'owner-id',
-    hasActiveBatch: false,
     isPublic: true,
     isFriendsOnly: false,
     variants: [

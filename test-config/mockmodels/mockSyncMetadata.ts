@@ -1,4 +1,4 @@
-import { SyncMetadata } from '../../src/shared/interfaces/sync-metadata';
+import { SyncMetadata } from '../../src/shared/interfaces/sync';
 
 export const mockSyncMetadata = (method: string, docId: string, docType: string) => {
   const mock: SyncMetadata = {
