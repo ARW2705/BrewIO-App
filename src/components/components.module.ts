@@ -1,23 +1,34 @@
 import { NgModule } from '@angular/core';
 import { IonicModule } from 'ionic-angular';
 import { AccordionComponent } from './accordion/accordion';
+import { ActiveBatchesComponent } from './active-batches/active-batches';
+import { CalendarComponent } from './calendar/calendar';
 import { HeaderComponent } from './header/header';
 import { ProgressCircleComponent } from './progress-circle/progress-circle';
-import { CalendarComponent } from './calendar/calendar';
-import { ActiveBatchesComponent } from './active-batches/active-batches';
+import { InventoryComponent } from './inventory/inventory';
 
 
 @NgModule({
-	declarations: [AccordionComponent,
+	declarations: [
+		AccordionComponent,
+		ActiveBatchesComponent,
+		CalendarComponent,
     HeaderComponent,
     ProgressCircleComponent,
-    CalendarComponent,
-    ActiveBatchesComponent],
-	imports: [IonicModule],
-	exports: [AccordionComponent,
+    InventoryComponent
+	],
+	imports: [ IonicModule ],
+	exports: [
+		AccordionComponent,
+		ActiveBatchesComponent,
+		CalendarComponent,
     HeaderComponent,
     ProgressCircleComponent,
-    CalendarComponent,
-    ActiveBatchesComponent]
+    InventoryComponent
+	],
+	entryComponents: [
+		ActiveBatchesComponent,
+		InventoryComponent
+	]
 })
 export class ComponentsModule {}
