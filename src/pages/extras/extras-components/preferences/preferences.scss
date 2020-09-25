@@ -1,0 +1,11 @@
+preferences {
+  #preference-form {
+    padding: 10px;
+  }
+  
+  .preference-toggle {
+    /* Display */
+    display: flex;
+    justify-content: space-between;
+  }
+}

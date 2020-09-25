@@ -1,0 +1,201 @@
+<ion-content>
+
+  <div *ngIf="preferencesForm === null">
+    Form Load Error
+  </div>
+
+  <ng-container *ngIf="preferencesForm !== null">
+
+    <form [formGroup]="preferencesForm"
+          id="preference-form">
+
+      <!-- Preferred Overall Unit System -->
+      <ion-item>
+
+        <ion-label floating>
+          Preferred Unit System
+        </ion-label>
+
+        <ion-select formControlName="preferredUnitSystem"
+                    okText="Okay"
+                    cancelText="Dismiss">
+
+          <ion-option value="metric">
+            Metric
+          </ion-option>
+
+          <ion-option value="englishStandard">
+            English Standard
+          </ion-option>
+
+          <ion-option value="none">
+            Other / Mixed
+          </ion-option>
+
+        </ion-select>
+
+      </ion-item>
+
+
+      <!-- Wort density select -->
+      <ion-item>
+
+        <ion-label floating>
+          Density
+        </ion-label>
+
+        <ion-select formControlName="density"
+                    okText="Okay"
+                    cancelText="Dismiss">
+
+          <ion-option value="specificGravity">
+            Specific Gravity
+          </ion-option>
+
+          <ion-option value="brix">
+            Brix
+          </ion-option>
+
+          <ion-option value="plato">
+            Plato
+          </ion-option>
+
+        </ion-select>
+
+      </ion-item>
+
+
+      <!-- Small scale weight -->
+      <ion-item>
+
+        <ion-label  position="floating"
+                    class="preference-toggle">
+
+          <span>
+            Weight (small)
+          </span>
+
+          <span>
+            {{ setUnits.weightSmall.longName | titlecase }}
+          </span>
+
+        </ion-label>
+
+        <ion-toggle formControlName="weightSmall"
+                    color="primary">
+        </ion-toggle>
+
+      </ion-item>
+
+
+      <!-- Large scale weight -->
+      <ion-item>
+
+        <ion-label  position="floating"
+                    class="preference-toggle">
+
+          <span>
+            Weight (large)
+          </span>
+
+          <span>
+            {{ setUnits.weightLarge.longName | titlecase }}
+          </span>
+
+        </ion-label>
+
+        <ion-toggle formControlName="weightLarge"
+                    color="primary">
+        </ion-toggle>
+
+      </ion-item>
+
+
+      <!-- Small scale volume -->
+      <ion-item>
+
+        <ion-label  position="floating"
+                    class="preference-toggle">
+
+          <span>
+            Volume (small)
+          </span>
+
+          <span>
+            {{ setUnits.volumeSmall.longName | titlecase }}
+          </span>
+
+        </ion-label>
+
+        <ion-toggle formControlName="volumeSmall"
+                    color="primary">
+        </ion-toggle>
+
+      </ion-item>
+
+
+      <!-- Large scale volume -->
+      <ion-item>
+
+        <ion-label  position="floating"
+                    class="preference-toggle">
+
+          <span>
+            Volume (large)
+          </span>
+
+          <span>
+            {{ setUnits.volumeLarge.longName | titlecase }}
+          </span>
+
+        </ion-label>
+
+        <ion-toggle formControlName="volumeLarge"
+                    color="primary">
+        </ion-toggle>
+
+      </ion-item>
+
+
+      <!-- Temperature selection -->
+      <ion-item>
+
+        <ion-label  position="floating"
+                    class="preference-toggle">
+
+          <span>
+            Temperature
+          </span>
+
+          <span>
+            {{ setUnits.temperature.longName | titlecase }}
+          </span>
+
+        </ion-label>
+
+        <ion-toggle formControlName="temperature"
+                    color="primary">
+        </ion-toggle>
+
+      </ion-item>
+
+    </form>
+
+    <ion-grid>
+
+      <ion-row justify-content-center>
+
+        <button ion-button
+                color="primary"
+                (click)="onSubmit()"
+                class="form-button">
+          Update
+        </button>
+
+      </ion-row>
+
+    </ion-grid>
+
+  </ng-container>
+
+</ion-content>
