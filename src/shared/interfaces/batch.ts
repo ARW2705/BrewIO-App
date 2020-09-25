@@ -1,7 +1,6 @@
 import { Process } from './process';
 import { Alert } from './alert';
 import { PrimaryValues } from './primary-values';
-import { SelectedUnits } from './units';
 import { Syncable } from './sync';
 
 export interface Batch extends Syncable {
@@ -20,7 +19,6 @@ export interface Batch extends Syncable {
 
 export interface BatchAnnotations {
   styleId: string;
-  units: SelectedUnits;
   targetValues: PrimaryValues;
   measuredValues: PrimaryValues;
   notes: string[];

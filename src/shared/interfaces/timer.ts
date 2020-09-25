@@ -9,6 +9,13 @@ export interface Timer {
   timer: Process;
   timeRemaining: number;
   show: boolean;
+  expansion: {
+    value: string;
+    params: {
+      height: number;
+      speed: number;
+    }
+  };
   isRunning: boolean;
   settings: ProgressCircleSettings;
 };

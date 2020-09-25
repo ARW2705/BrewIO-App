@@ -28,4 +28,6 @@ export interface OptionalItemData {
   itemSubname?: string;
   packagingDate?: string;
   originalRecipeId?: string;
+  srmColor?: string;
+  remainingColor?: string;
 };
