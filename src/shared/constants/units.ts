@@ -29,57 +29,59 @@ export const VOLUME_METRIC_LARGE: Unit = {
 export const TEMPERATURE_METRIC: Unit = {
   system: 'metric',
   longName: 'celsius',
-  shortName: 'c'
+  shortName: '°C'
 };
 
 /** English Standard **/
 
 export const WEIGHT_ENGLISH_SMALL: Unit = {
-  system: 'english standard',
+  system: 'englishStandard',
   longName: 'ounce',
   shortName: 'oz'
 };
 
 export const WEIGHT_ENGLISH_LARGE: Unit = {
-  system: 'english standard',
+  system: 'englishStandard',
   longName: 'pound',
-  shortName: 'lbs'
+  shortName: 'lb'
 };
 
 export const VOLUME_ENGLISH_SMALL: Unit = {
-  system: 'english standard',
+  system: 'englishStandard',
   longName: 'fluid ounce',
-  shortName: 'fl oz'
+  shortName: 'oz'
 };
 
 export const VOLUME_ENGLISH_LARGE: Unit = {
-  system: 'english standard',
+  system: 'englishStandard',
   longName: 'gallon',
   shortName: 'gal'
 };
 
 export const TEMPERATURE_ENGLISH: Unit = {
-  system: 'english standard',
+  system: 'englishStandard',
   longName: 'fahrenheit',
-  shortName: 'f'
+  shortName: '°F'
 };
 
 /** Other **/
 
 export const SPECIFIC_GRAVITY: Unit = {
   system: 'none',
-  longName: 'specific gravity',
+  longName: 'specificGravity',
   shortName: 'sg'
 };
 
 export const BRIX: Unit = {
   system: 'none',
   longName: 'brix',
-  shortName: 'bx'
+  shortName: 'bx',
+  symbol: '°Bx'
 };
 
 export const PLATO: Unit = {
   system: 'none',
-  longName: 'Plato',
-  shortName: 'p'
+  longName: 'plato',
+  shortName: 'p',
+  symbol: '°P'
 };
