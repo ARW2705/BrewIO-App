@@ -1,0 +1,12 @@
+form-error {
+  .form-error {
+    /* Display */
+    padding-top: 4px;
+
+    /* Color */
+    font-size: 1.2em;
+
+    /* Text */
+    color: map-get($colors, danger);
+  }
+}
