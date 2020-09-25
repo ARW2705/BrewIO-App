@@ -1,7 +1,7 @@
 import { GrainBill } from '../../src/shared/interfaces/grain-bill';
 
 export const mockGrainBill = () => {
-  const mock: Array<GrainBill> = [
+  const mock: GrainBill[] = [
     {
       _id: '1',
       cid: '1234567890123',

@@ -34,7 +34,9 @@ export const mockOptionalItemData = () => {
     itemLabelImageURL: 'mockitemlabelurl',
     itemSubname: 'mock subname',
     packagingDate: 'mockdate',
-    originalRecipeId: 'originalid'
+    originalRecipeId: 'originalid',
+    remainingColor: '#fd4855',
+    srmColor: '#963500'
   };
   return mock;
 };

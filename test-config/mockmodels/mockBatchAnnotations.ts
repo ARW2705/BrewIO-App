@@ -1,11 +1,8 @@
 import { BatchAnnotations } from '../../src/shared/interfaces/batch';
 
-import { mockEnglishUnits } from './mockUnits';
-
 export const mockBatchAnnotations = () => {
   const mock: BatchAnnotations = {
     styleId: 'style-id',
-    units: mockEnglishUnits(),
     targetValues: {
       originalGravity: 1.050,
       finalGravity: 1.010,

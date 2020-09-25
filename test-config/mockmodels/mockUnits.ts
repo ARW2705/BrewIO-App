@@ -4,13 +4,13 @@ import * as units from '../../src/shared/constants/units';
 
 export const mockEnglishUnits = () => {
   const mock: SelectedUnits = {
-    system: 'english standard',
+    system: 'englishStandard',
     weightSmall: units.WEIGHT_ENGLISH_SMALL,
     weightLarge: units.WEIGHT_ENGLISH_LARGE,
     volumeSmall: units.VOLUME_ENGLISH_SMALL,
     volumeLarge: units.VOLUME_ENGLISH_LARGE,
     temperature: units.TEMPERATURE_ENGLISH,
-    density: units.BRIX
+    density: units.SPECIFIC_GRAVITY
   };
   return mock
 };
@@ -30,7 +30,7 @@ export const mockMetricUnits = () => {
 
 export const mockWeightSmallUnit = () => {
   const mock: Unit = {
-    system: 'english standard',
+    system: 'englishStandard',
     longName: 'ounce',
     shortName: 'oz'
   };

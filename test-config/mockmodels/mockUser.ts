@@ -15,7 +15,7 @@ export const mockUser = () => {
     friendList: ['userId1', 'userId2'],
     token: 'testtoken',
     preferredUnitSystem: 'english standard',
-    units: defaultEnglish,
+    units: defaultEnglish(),
     labelImage: 'label-image-url',
     userImage: 'user-image-url'
   };

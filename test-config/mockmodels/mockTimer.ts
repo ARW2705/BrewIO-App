@@ -10,6 +10,13 @@ export const mockTimer = () => {
     cid: '0123456789011',
     timeRemaining: mockTimer.duration / 2,
     show: true,
+    expansion: {
+      value: 'collapsed',
+      params: {
+        height: 0,
+        speed: 0
+      }
+    },
     isRunning: false,
     settings: {
       height: 360,
@@ -40,13 +47,20 @@ export const mockTimer = () => {
 };
 
 export const mockConcurrentTimers = () => {
-  const mockTimer: Array<Process> = mockProcessSchedule().slice(2, 4);
+  const mockTimer: Process[] = mockProcessSchedule().slice(2, 4);
   const mock1: Timer = {
     first: mockTimer[0].cid,
     timer: mockTimer[0],
     cid: '0123456789012',
     timeRemaining: mockTimer[0].duration / 2,
     show: true,
+    expansion: {
+      value: 'collapsed',
+      params: {
+        height: 0,
+        speed: 0
+      }
+    },
     isRunning: false,
     settings: {
       height: 360,
@@ -79,6 +93,13 @@ export const mockConcurrentTimers = () => {
     cid: '0123456789013',
     timeRemaining: mockTimer[1].duration / 2,
     show: true,
+    expansion: {
+      value: 'collapsed',
+      params: {
+        height: 0,
+        speed: 0
+      }
+    },
     isRunning: false,
     settings: {
       height: 360,

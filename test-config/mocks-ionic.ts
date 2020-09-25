@@ -21,7 +21,9 @@ export class ActionSheetControllerMock {
 }
 
 
-class ActionSheetMock {
+export class ActionSheetMock {
+  buttons: any[];
+
   public present() { };
   public dismiss() { };
   public dismissAll() { };
@@ -54,6 +56,11 @@ export class DeepLinkerMock { }
 
 export class DomMock {
   public debouncer(): any { }
+}
+
+
+export class ElementRefMock {
+  nativeElement: any = null;
 }
 
 
@@ -129,7 +136,7 @@ export class ModalMock {
 
 
 export class NavMock {
-  _views: any[] = [ {name: 'first'}, { name: 'last' }];
+  _views: any[] = [ {name: 'first'}, { name: 'last' } ];
 
   public pop(): any {
     return new Promise(function(resolve: Function): void {
@@ -171,6 +178,8 @@ export class NavMock {
   public length(): number {
     return this._views.length;
   }
+
+  public remove(): void { }
 }
 
 
@@ -186,6 +195,10 @@ export class NavParamsMock {
 
   static setParams(key, val): void {
     NavParamsMock.returnParam[key] = val;
+  }
+
+  static removeParam(key): void {
+    delete NavParamsMock.returnParam[key];
   }
 }
 
@@ -337,14 +350,6 @@ export class PlatformMockDev extends PlatformMock {
 }
 
 
-@Pipe({name: 'sort'})
-export class SortPipeMock implements PipeTransform {
-  transform(arr: Array<any>, sortBy: string): Array<any> {
-    return arr;
-  }
-}
-
-
 export class SplashScreenMock extends SplashScreen {
   hide() {
     return;
@@ -412,7 +417,6 @@ class ToastMock {
   dismissAll() { };
 }
 
-
 export class ViewControllerMock {
   public readReady = {
     subscribe(){ }
@@ -425,4 +429,94 @@ export class ViewControllerMock {
   public _setNavbar() { }
   public _setIONContent() { }
   public _setIONContentRef() { }
+}
+
+
+/***** Pipe Mocks *****/
+
+
+@Pipe({name: 'calculate'})
+export class CalculatePipeMock implements PipeTransform {
+  transform(inputSource: any, calculation: any, dataset: any): string {
+    return 'ok';
+  }
+}
+
+
+@Pipe({name: 'formatStock'})
+export class FormatStockPipeMock implements PipeTransform {
+  transform(item: any, type: any): string {
+    return 'ok';
+  }
+}
+
+
+
+@Pipe({name: 'formatTime'})
+export class FormatTimePipeMock implements PipeTransform {
+  transform(value: any, formatType: any): string {
+    return 'ok';
+  }
+}
+
+
+@Pipe({name: 'moment'})
+export class MomentPipeMock implements PipeTransform {
+  transform(moment: any, fName: string, ...options: any[]): string {
+    return 'ok';
+  }
+}
+
+
+@Pipe({name: 'parseError'})
+export class ParseErrorPipeMock implements PipeTransform {
+  transform(errors: any, formName: string, controlName: string): string {
+    return 'ok';
+  }
+}
+
+
+@Pipe({name: 'ratio'})
+export class RatioPipeMock implements PipeTransform {
+  transform(item: any, key: string, group: any[], refresh?: boolean): string {
+    return 'ok';
+  }
+}
+
+
+@Pipe({name: 'round'})
+export class RoundPipeMock implements PipeTransform {
+  transform(value: any): number {
+    return 1;
+  }
+}
+
+
+@Pipe({name: 'sort'})
+export class SortPipeMock implements PipeTransform {
+  transform(arr: any[], sortBy: string): any[] {
+    return arr;
+  }
+}
+
+
+@Pipe({name: 'truncate'})
+export class TruncatePipeMock implements PipeTransform {
+  transform(value: any, places: any): string {
+    return '10';
+  }
+}
+
+
+@Pipe({name: 'unitConversion'})
+export class UnitConversionPipeMock implements PipeTransform {
+  transform(
+    value: any,
+    unitType: any,
+    showSymbol?: boolean,
+    refresh?: boolean,
+    reformat?: boolean
+  ): string {
+    return 'ok';
+  }
 }
