@@ -1,18 +1,21 @@
 /* Module imports */
-import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/testing';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { ComponentFixture, TestBed, getTestBed } from '@angular/core/testing';
+import { SimpleChange, SimpleChanges, NO_ERRORS_SCHEMA } from '@angular/core';
 import { IonicModule, Events } from 'ionic-angular';
 
 /* Test configuration imports */
 import { configureTestBed } from '../../../../../test-config/configureTestBed';
 
 /* Mock imports */
-import { EventsMock, SortPipeMock } from '../../../../../test-config/mocks-ionic';
+import { EventsMock, MomentPipeMock, SortPipeMock } from '../../../../../test-config/mocks-ionic';
 import { mockProcessSchedule } from '../../../../../test-config/mockmodels/mockProcessSchedule';
-import { mockAlert, mockAlertPast, mockAlertFuture } from '../../../../../test-config/mockmodels/mockAlert';
+import { mockAlert, mockAlertFuture } from '../../../../../test-config/mockmodels/mockAlert';
 
 /* Utilitiy imports */
 import { getId } from '../../../../shared/utility-functions/id-helpers';
+
+/* Interface imports */
+import { Process } from '../../../../shared/interfaces/process';
 
 /* Component imports */
 import { CalendarProcessComponent } from './calendar-process';
@@ -24,6 +27,8 @@ describe('Calendar Process Component', () => {
   let eventService: Events;
   let cpPage: CalendarProcessComponent;
   let fixture: ComponentFixture<CalendarProcessComponent>;
+  let originalNgOnChanges: () => void;
+  const staticProcessSchedule: Process[] = mockProcessSchedule();
   configureTestBed();
 
   beforeAll(done => (async() => {
@@ -31,6 +36,7 @@ describe('Calendar Process Component', () => {
       declarations: [
         CalendarProcessComponent,
         CalendarComponent,
+        MomentPipeMock,
         SortPipeMock
       ],
       imports: [
@@ -51,21 +57,38 @@ describe('Calendar Process Component', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(CalendarProcessComponent);
     cpPage = fixture.componentInstance;
-    cpPage.stepData = mockProcessSchedule()[0];
+    cpPage.stepData = staticProcessSchedule[0];
     cpPage.isPreview = false;
     cpPage.alerts = [];
     cpPage.calendarRef = new CalendarComponent();
-    
+
     injector = getTestBed();
     eventService = injector.get(Events);
+
+    originalNgOnChanges = cpPage.ngOnChanges;
+    cpPage.ngOnChanges = jest
+      .fn();
   });
 
   test('should create the component', () => {
     fixture.detectChanges();
 
     expect(cpPage).toBeDefined();
-    expect(cpPage.stepData).toStrictEqual(mockProcessSchedule()[0]);
+    expect(cpPage.stepData).toStrictEqual(staticProcessSchedule[0]);
   }); // end 'should create the component' test
+
+  test('should listen for changes', () => {
+    cpPage.ngOnChanges = originalNgOnChanges;
+
+    const alertSpy: jest.SpyInstance = jest
+      .spyOn(cpPage, 'getClosestAlertByGroup');
+
+    fixture.detectChanges();
+
+    cpPage.ngOnChanges();
+
+    expect(alertSpy).toHaveBeenCalled();
+  }); // end 'should listen for changes' test
 
   test('should publish a change date event', () => {
     fixture.detectChanges();
@@ -76,32 +99,6 @@ describe('Calendar Process Component', () => {
 
     expect(eventSpy).toHaveBeenCalledWith('change-date');
   }); // end 'should publish a change date event' test
-
-  test('should get the appropriate classes for the closest alert (\'past\')', () => {
-    fixture.detectChanges();
-
-    cpPage.alerts = [mockAlert(), mockAlertPast(), mockAlertFuture()];
-
-    const alertClass = cpPage.getAlertClass(mockAlertPast());
-
-    expect(alertClass['next-datetime']).toBe(false);
-    expect(alertClass['past-datetime']).toBe(true);
-  }); // end 'should get the appropriate classes for the closest alert (\'past\')' test
-
-  test('should get the appropriate classes for the closest alert (\'next\')', () => {
-    fixture.detectChanges();
-
-    const targetAlert = mockAlert();
-    const now = new Date();
-    now.setDate(now.getDate() + 2);
-    targetAlert.datetime = now.toISOString();
-    cpPage.alerts = [targetAlert, mockAlert(), mockAlertPast(), mockAlertFuture()];
-
-    const alertClass = cpPage.getAlertClass(targetAlert);
-
-    expect(alertClass['next-datetime']).toBe(true);
-    expect(alertClass['past-datetime']).toBe(false);
-  }); // end 'should get the appropriate classes for the closest alert (\'next\')' test
 
   test('should get the closest alert to current datetime within a group', () => {
     fixture.detectChanges();
@@ -114,30 +111,15 @@ describe('Calendar Process Component', () => {
     expect(closest.datetime).toMatch(targetAlert.datetime);
   }); // end 'should get the closest alert to current datetime within a group' test
 
-  test('should get the step data of current calendar step', () => {
+  test('should not get an alert if there are no alerts', () => {
     fixture.detectChanges();
 
-    const calendarStep = 13;
-    const stepData = mockProcessSchedule()[calendarStep];
-    cpPage.stepData = stepData;
+    cpPage.alerts = [];
 
-    const data = cpPage.getCurrentStepCalendarData();
+    const closest = cpPage.getClosestAlertByGroup();
 
-    expect(data['_id']).toMatch(stepData._id);
-    expect(data['duration']).toBe(stepData.duration);
-    expect(data['title']).toMatch(stepData.name);
-    expect(data['description']).toMatch(stepData.description);
-  }); // end 'should get the step data of current calendar step' test
-
-  test('should check if a calendar step is in progress', () => {
-    fixture.detectChanges();
-
-    expect(cpPage.isCalendarInProgress()).toBe(false);
-
-    cpPage.stepData['startDatetime'] = (new Date()).toISOString();
-
-    expect(cpPage.isCalendarInProgress()).toBe(true);
-  }); // end 'should check if a calendar step is in progress' test
+    expect(closest).toBeNull();
+  }); // end 'should not get an alert if there are no alerts' test
 
   test('should start a calendar step', () => {
     fixture.detectChanges();

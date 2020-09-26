@@ -29,7 +29,7 @@
     </ion-col>
 
     <!-- If the calendar step has been started, show information about next part(s) of step -->
-    <ion-col  *ngIf="isCalendarInProgress()"
+    <ion-col  *ngIf="stepData['startDatetime'] !== undefined"
               col-12>
 
       <!-- Description of task to do at end date -->
@@ -44,7 +44,7 @@
 
         <ng-container *ngFor="let alert of alerts | sort:'datetime'">
 
-          <ion-item [ngClass]="getAlertClass(alert)">
+          <ion-item [ngClass]="{ 'next-datetime': alert === closestAlert }">
 
             <!-- Alert date -->
             <p class="alert-datetime">
@@ -75,10 +75,10 @@
 
     <!-- Show calendar if step has not been started -->
     <calendar #calendar
-              *ngIf="!isPreview && !isCalendarInProgress()"
-              [data]="getCurrentStepCalendarData()">
+              *ngIf="!isPreview && stepData['startDatetime'] === undefined"
+              [data]="currentStepCalendarData">
     </calendar>
-    
+
   </ion-row>
 
 </div>

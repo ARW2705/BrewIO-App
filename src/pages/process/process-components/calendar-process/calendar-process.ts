@@ -1,5 +1,5 @@
 /* Module imports */
-import { Component, Input, ViewChild } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import { Events } from 'ionic-angular';
 
 /* Interface imports */
@@ -17,14 +17,26 @@ import { CalendarComponent } from '../../../../components/calendar/calendar';
   selector: 'calendar-process',
   templateUrl: 'calendar-process.html'
 })
-export class CalendarProcessComponent {
+export class CalendarProcessComponent implements OnChanges {
   @Input() alerts: Alert[];
   @Input() isPreview: boolean;
   @Input() stepData: Process;
   @ViewChild('calendar') calendarRef: CalendarComponent;
+  closestAlert: Alert = null;
+  currentStepCalendarData: object = {};
   showDescription: boolean = false;
 
   constructor(public events: Events) { }
+
+  ngOnChanges() {
+    this.currentStepCalendarData = {
+      _id: getId(this.stepData),
+      duration: this.stepData.duration,
+      title: this.stepData.name,
+      description: this.stepData.description
+    };
+    this.closestAlert = this.getClosestAlertByGroup();
+  }
 
   /**
    * Publish event to revert calendar to date selection view
@@ -37,21 +49,6 @@ export class CalendarProcessComponent {
   }
 
   /**
-   * Get css classes by alert values
-   *
-   * @params: alert - calendar alert
-   *
-   * @return: ngClass object with associated class names
-  **/
-  getAlertClass(alert: Alert): object {
-    const closest: Alert = this.getClosestAlertByGroup();
-    return {
-      'next-datetime': alert === closest,
-      'past-datetime': new Date().getTime() > new Date(alert.datetime).getTime()
-    };
-  }
-
-  /**
    * Get alert for a particular step that is closest to the present datetime
    *
    * @params: none
@@ -59,6 +56,10 @@ export class CalendarProcessComponent {
    * @return: alert that is closest to the current datetime
   **/
   getClosestAlertByGroup(): Alert {
+    if (!this.alerts.length) {
+      return null;
+    }
+
     return this.alerts.reduce((acc, curr) => {
       const accDiff: number
         = new Date(acc.datetime).getTime() - new Date().getTime();
@@ -71,33 +72,6 @@ export class CalendarProcessComponent {
 
       return isCurrCloser ? curr: acc;
     });
-  }
-
-  /**
-   * Get values from current calendar step
-   *
-   * @params: none
-   *
-   * @return: calendar values to use in template
-  **/
-  getCurrentStepCalendarData(): object {
-    return {
-      _id: getId(this.stepData),
-      duration: this.stepData.duration,
-      title: this.stepData.name,
-      description: this.stepData.description
-    };
-  }
-
-  /**
-   * Check if a calendar step has been started, but not finished
-   *
-   * @params: none
-   *
-   * @return: true if a calendar step has been started, but not yet completed
-  **/
-  isCalendarInProgress(): boolean {
-    return this.stepData.hasOwnProperty('startDatetime');
   }
 
   /**
