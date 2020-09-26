@@ -412,4 +412,21 @@ describe('Sync Service', () => {
     expect(consoleSpy).toHaveBeenCalledWith('Sync flag store error: new error');
   }); // end 'should get error updating sync flag storage' test
 
+  describe('Other', () => {
+    let consoleSpy: jest.SpyInstance;
+
+    beforeAll(() => {
+      consoleSpy = jest.spyOn(console, 'log');
+      storage.getSyncFlags = jest
+        .fn()
+        .mockReturnValue(new ErrorObservable('sync flag error'));
+    });
+
+    test('should get error on init', () => {
+      expect(consoleSpy.mock.calls[consoleSpy.mock.calls.length - 1][0])
+        .toMatch('Sync error: sync flag error');
+    });
+
+  });
+
 });

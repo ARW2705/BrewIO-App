@@ -42,7 +42,9 @@ export class SyncProvider {
           this.syncFlags = flags;
         },
         (error: ErrorObservable): void => {
-          console.log('Sync error', error.error);
+          console.log(
+            `Sync error: ${normalizeErrorObservableMessage(error)}`
+          );
         }
       );
   }
