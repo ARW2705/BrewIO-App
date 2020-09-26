@@ -1,5 +1,5 @@
 /* Module imports */
-import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/testing';
+import { ComponentFixture, TestBed, getTestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { IonicModule, Events } from 'ionic-angular';
 
@@ -18,6 +18,8 @@ describe('Tabs page', () => {
   let fixture: ComponentFixture<TabsPage>;
   let injector: TestBed;
   let eventService: Events;
+  let originalNgOnInit: () => void;
+  let originalNgOnDestroy: () => void;
   configureTestBed();
 
   beforeAll(done => (async() => {
@@ -46,24 +48,26 @@ describe('Tabs page', () => {
 
     injector = getTestBed();
     eventService = injector.get(Events);
+
+    originalNgOnInit = tabsPage.ngOnInit;
+    tabsPage.ngOnInit = jest
+      .fn();
+    originalNgOnDestroy = tabsPage.ngOnDestroy;
+    tabsPage.ngOnDestroy = jest
+      .fn();
   });
 
   describe('Component creation', () => {
+
     test('should create component', () => {
+      tabsPage.ngOnInit = originalNgOnInit;
+      tabsPage.ngOnDestroy = originalNgOnDestroy;
+
       fixture.detectChanges();
 
       expect(tabsPage).toBeDefined();
+      expect(tabsPage.title).toMatch('BrewIO');
     }); // end 'should create component' test
-
-    test('should get the tab header', () => {
-      fixture.detectChanges();
-
-      expect(tabsPage.getCurrentTitle()).toMatch('BrewIO');
-
-      tabsPage.currentIndex = 1;
-
-      expect(tabsPage.getCurrentTitle()).toMatch('Recipes');
-    }); // end 'should get the tab header' test
 
   }); // end 'Component creation' section
 

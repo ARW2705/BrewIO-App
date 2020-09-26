@@ -38,6 +38,7 @@ export class TabsPage implements OnInit, OnDestroy {
       icon: 'more'
     }
   ];
+  title: string = '';
   _popHeaderNav: any;
 
   constructor(public events: Events) {
@@ -49,6 +50,7 @@ export class TabsPage implements OnInit, OnDestroy {
   ngOnInit() {
     this.slides.lockSwipes(true);
     this.events.subscribe('pop-header-nav', this._popHeaderNav);
+    this.title = this.tabs[this.currentIndex].header;
   }
 
   ngOnDestroy() {
@@ -56,15 +58,6 @@ export class TabsPage implements OnInit, OnDestroy {
   }
 
   /***** End lifecycle hooks *****/
-
-  /**
-   * Get tab title for header
-   *
-   * @return: tab title at current tab index
-  **/
-  getCurrentTitle(): string {
-    return this.tabs[this.currentIndex].header;
-  }
 
   /**
    * Set tab navigation
@@ -88,6 +81,7 @@ export class TabsPage implements OnInit, OnDestroy {
   popHeaderNavEventHandler(data: any): void {
     if (this.tabs.some((tab: PageChoice) => tab.component.name === data.origin)) {
       this.navTabs.select(this.currentIndex);
+      this.title = this.tabs[this.currentIndex].header;
       this.updateHeader();
     }
   }
@@ -102,6 +96,7 @@ export class TabsPage implements OnInit, OnDestroy {
   setIndex(index: number): void {
     this.slides.lockSwipes(false);
     this.currentIndex = index;
+    this.title = this.tabs[this.currentIndex].header;
     this.navTabs.select(index);
     this.slides.slideTo(index);
     this.slides.lockSwipes(true);
