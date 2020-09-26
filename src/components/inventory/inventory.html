@@ -1,18 +1,34 @@
 <ion-grid>
 
-  <ion-row  *ngIf="inventoryList === null"
+  <ion-row  *ngIf="displayList === null"
             class="no-items">
     Loading Inventory
     <ion-spinner></ion-spinner>
   </ion-row>
 
-  <ion-row  *ngIf="inventoryList !== null && !displayList.length"
-            class="no-items"
-            justify-content-center>
-    No Items in Inventory
-  </ion-row>
+  <ng-container *ngIf="displayList !== null && !displayList.length">
 
-  <ng-container *ngIf="inventoryList !== null && displayList.length">
+    <ion-row  class="no-items"
+              justify-content-center>
+      No Items in Inventory
+    </ion-row>
+
+    <!-- Open Inventory form for third party items -->
+    <ion-row>
+
+      <button ion-button
+              color="primary"
+              (click)="openInventoryFormModal({})"
+              class="form-button">
+        Add Custom Item
+      </button>
+
+    </ion-row>
+
+  </ng-container>
+
+
+  <ng-container *ngIf="displayList !== null && displayList.length">
 
     <ion-row>
 
@@ -31,15 +47,15 @@
                       cancelText="Dismiss"
                       class="inventory-select">
 
-            <ion-option [value]="alphabetical">
+            <ion-option value="alphabetical">
               Alphabetical
             </ion-option>
 
-            <ion-option [value]="remaining">
+            <ion-option value="remaining">
               Remaining
             </ion-option>
 
-            <ion-option [value]="source">
+            <ion-option value="source">
               Source
             </ion-option>
 
@@ -162,6 +178,10 @@
                             </ion-row>
 
                             <ion-row>
+                              Type
+                            </ion-row>
+
+                            <ion-row>
                               ABV
                             </ion-row>
 
@@ -173,34 +193,57 @@
                               SRM
                             </ion-row>
 
+                            <ion-row>
+                              Added
+                            </ion-row>
+
                           </ion-col>
 
                           <!-- Right column field values -->
                           <ion-col class="col-right" no-padding>
 
-                            <ion-row  [innerText]="getStockTypeDisplayText(item)"
-                                      [ngStyle]="getQuantityStyle(item)">
+                            <ion-row [ngStyle]="{ color: item.optionalItemData.remainingColor || '#f4f4f4' }">
+                              {{ item | formatStock:'quantity' }}
                             </ion-row>
 
-                            <ion-row [ngStyle]="getABVStyle(item)">
-                              {{ item.itemABV.toFixed(1) }}%
+                            <ion-row>
+                              {{ item | formatStock:'type' }}
+                            </ion-row>
+
+                            <ion-row [ngClass]="{
+                              'abv-low': item.itemABV < 5,
+                              'abv-mid': item.itemABV >= 5 && item.itemABV < 7,
+                              'abv-high': item.itemABV >= 7 && item.itemABV < 10,
+                              'abv-ultra': item.itemABV >= 10
+                            }">
+                              {{ item.itemABV | truncate:1 }}%
                             </ion-row>
 
                             <ion-row  *ngIf="item.optionalItemData.itemIBU !== undefined"
-                                      [ngStyle]="getIBUStyle(item)">
-                              {{ item.optionalItemData.itemIBU }}
+                                      [ngClass]="{
+                                        'ibu-low': item.optionalItemData.itemIBU < 20,
+                                        'ibu-mid': item.optionalItemData.itemIBU >= 20 && item.optionalItemData.itemIBU < 60,
+                                        'ibu-high': item.optionalItemData.itemIBU >= 60 && item.optionalItemData.itemIBU < 100,
+                                        'ibu-ultra': item.optionalItemData.itemIBU >= 100
+                                      }">
+                              {{ item.optionalItemData.itemIBU | round }}
                             </ion-row>
 
-                            <ion-row  *ngIf="item.optionalItemData.itemSRM !== undefined">
+                            <ion-row *ngIf="item.optionalItemData.itemSRM !== undefined">
 
-                              <span>
-                                {{ item.optionalItemData.itemSRM }}
+                              <span class="srm-text">
+                                {{ item.optionalItemData.itemSRM | round }}
                               </span>
 
                               <ion-icon name="pint"
-                                        [ngStyle]="getSRMStyle(item)">
+                                        [ngStyle]="{ color: item.optionalItemData.srmColor || '#f4f4f4' }"
+                                        class="pint-icon">
                               </ion-icon>
 
+                            </ion-row>
+
+                            <ion-row>
+                              {{ item.createdAt | date:'MMM/yy' }}
                             </ion-row>
 
                           </ion-col>
@@ -209,15 +252,18 @@
 
                       </ion-col>
 
-                      <ion-col col-5 no-padding>
+                      <ion-col  col-5
+                                no-padding>
 
                         <!-- Item label image -->
                         <ion-row>
 
-                          <picture>
-                            <source [srcset]="getImageSource(item.itemLabelImageURL)">
-                            <img src="assets/imgs/no-label-image-240.png" alt="label art">
-                          </picture>
+                          <img  [src]="baseImageURL + item.optionalItemData.itemLabelImageURL"
+                                [hidden]="!item.itemLabelImageURLLoaded"
+                                (load)="item.itemLabelImageURLLoaded = true">
+                          <img  src="assets/imgs/no-label-image-240.png"
+                                alt="label art"
+                                [hidden]="item.itemLabelImageURLLoaded">
 
                         </ion-row>
 
@@ -241,10 +287,12 @@
                           <!-- Item supplier image -->
                           <ion-col>
 
-                            <picture>
-                              <source [srcset]="getImageSource(item.supplierLabelImageURL)">
-                              <img src="assets/imgs/no-label-image-240.png" alt="label art">
-                            </picture>
+                            <img  [src]="baseImageURL + item.optionalItemData.supplierLabelImageURL"
+                                  [hidden]="!item.supplierLabelImageURLLoaded"
+                                  (load)="item.supplierLabelImageURLLoaded = true">
+                            <img  src="assets/imgs/no-label-image-240.png"
+                                  alt="label art"
+                                  [hidden]="item.supplierLabelImageURLLoaded">
 
                           </ion-col>
                         </ion-row>

@@ -12,10 +12,7 @@ import { configureTestBed } from '../../../test-config/configureTestBed';
 /* Mock imports */
 import { mockBatch } from '../../../test-config/mockmodels/mockBatch';
 import { mockInventoryItem } from '../../../test-config/mockmodels/mockInventoryItem';
-import { NavMock, NavParamsMock, ModalControllerMock, ModalMock } from '../../../test-config/mocks-ionic';
-
-/* Constant imports */
-import { STOCK_TYPES } from '../../shared/constants/stock-types';
+import { FormatStockPipeMock, NavMock, NavParamsMock, ModalControllerMock, ModalMock, RoundPipeMock, TruncatePipeMock } from '../../../test-config/mocks-ionic';
 
 /* Interface imports */
 import { Batch } from '../../shared/interfaces/batch';
@@ -49,7 +46,10 @@ describe('Inventory Component', () => {
   beforeAll(done => (async() => {
     TestBed.configureTestingModule({
       declarations: [
-        InventoryComponent
+        InventoryComponent,
+        FormatStockPipeMock,
+        RoundPipeMock,
+        TruncatePipeMock
       ],
       imports: [
         IonicModule.forRoot(InventoryComponent)
@@ -166,24 +166,6 @@ describe('Inventory Component', () => {
       expect(inventoryCmp.itemIndex).toEqual(-1);
     }); // end 'should toggle item expansion' test
 
-    test('should get formatted stock type text', () => {
-      fixture.detectChanges();
-
-      const _mockInventoryItem: InventoryItem = mockInventoryItem();
-      _mockInventoryItem.currentQuantity = 2;
-
-      const discreteItem: string = inventoryCmp
-        .getStockTypeDisplayText(_mockInventoryItem);
-
-      expect(discreteItem).toMatch('2 Bottles');
-
-      _mockInventoryItem.stockType = STOCK_TYPES[STOCK_TYPES.length - 1].name;
-      const nonDiscreteItem: string = inventoryCmp
-        .getStockTypeDisplayText(_mockInventoryItem);
-
-      expect(nonDiscreteItem).toMatch('40% Keg')
-    }); // end 'should get formatted stock type text' test
-
     test('should reset display list', () => {
       fixture.detectChanges();
 
@@ -225,9 +207,18 @@ describe('Inventory Component', () => {
   describe('Inventory action operations', () => {
 
     test('should decrement item count', () => {
+      const _mockInventoryItem1: InventoryItem = mockInventoryItem();
+      _mockInventoryItem1.currentQuantity = 3;
+      const _mockInventoryItem2: InventoryItem = mockInventoryItem();
+      _mockInventoryItem2.currentQuantity = 2;
+      const _mockInventoryItem3: InventoryItem = mockInventoryItem();
+      _mockInventoryItem3.currentQuantity = 1;
+
       inventoryService.patchItem = jest
         .fn()
-        .mockReturnValue(of({}));
+        .mockReturnValueOnce(of(_mockInventoryItem2))
+        .mockReturnValueOnce(of(_mockInventoryItem3))
+        .mockReturnValueOnce(of(null));
 
       const patchSpy: jest.SpyInstance = jest
         .spyOn(inventoryService, 'patchItem');
@@ -236,19 +227,27 @@ describe('Inventory Component', () => {
 
       fixture.detectChanges();
 
-      const _mockInventoryItem: InventoryItem = mockInventoryItem();
-      inventoryCmp.decrementCount(_mockInventoryItem);
+      inventoryCmp.decrementCount(_mockInventoryItem1);
+      inventoryCmp.decrementCount(_mockInventoryItem2);
+      inventoryCmp.decrementCount(_mockInventoryItem3);
 
-      expect(patchSpy).toHaveBeenCalledWith(
-        _mockInventoryItem.cid,
-        {
-          currentQuantity: _mockInventoryItem.currentQuantity - 1
-        }
-      );
-      expect(toastSpy).toHaveBeenCalledWith(
-        'Decreased Item Count',
-        1500
-      );
+      expect(patchSpy.mock.calls[0][0]).toMatch(_mockInventoryItem1.cid);
+      expect(patchSpy.mock.calls[0][1]).toStrictEqual({ currentQuantity: 2 });
+      expect(patchSpy.mock.calls[1][1]).toStrictEqual({ currentQuantity: 1 });
+      expect(patchSpy.mock.calls[2][1]).toStrictEqual({ currentQuantity: 0 });
+
+      expect(toastSpy.mock.calls[0][0]).toMatch('2 Standard Bottles remaining');
+      expect(toastSpy.mock.calls[0][1]).toEqual(1500);
+      expect(toastSpy.mock.calls[0][2]).toMatch('bottom');
+      expect(toastSpy.mock.calls[0][3]).toMatch('');
+      expect(toastSpy.mock.calls[1][0]).toMatch('1 Standard Bottle remaining');
+      expect(toastSpy.mock.calls[1][1]).toEqual(1500);
+      expect(toastSpy.mock.calls[1][2]).toMatch('bottom');
+      expect(toastSpy.mock.calls[1][3]).toMatch('');
+      expect(toastSpy.mock.calls[2][0]).toMatch('Mock Item Out of Stock!');
+      expect(toastSpy.mock.calls[2][1]).toEqual(1500);
+      expect(toastSpy.mock.calls[2][2]).toMatch('bottom');
+      expect(toastSpy.mock.calls[2][3]).toMatch('toast-warn');
     }); // end 'should decrement item count' test
 
     test('should get an error when decreasing item count', () => {
@@ -350,6 +349,36 @@ describe('Inventory Component', () => {
 
 
   describe('Modals', () => {
+
+    test('should create measurement form options', () => {
+      const _mockBatch: Batch = mockBatch();
+      processService.getBatchById = jest
+        .fn()
+        .mockReturnValue(new BehaviorSubject<Batch>(_mockBatch));
+
+      fixture.detectChanges();
+
+      const options: object = inventoryCmp
+        .getMeasurementFormOptions(_mockBatch.cid);
+
+      expect(options).toStrictEqual({
+        areAllRequired: true,
+        batch: _mockBatch
+      });
+    }); // end 'should create measurement form options' test
+
+    test('should get undefined form options on missing batch', () => {
+      processService.getBatchById = jest
+        .fn()
+        .mockReturnValue(undefined);
+
+      fixture.detectChanges();
+
+      const options: object = inventoryCmp
+        .getMeasurementFormOptions('missingId');
+
+      expect(options).toBeUndefined();
+    }); // end 'should get undefined form options on missing batch' test
 
     test('should open the inventory form modal', () => {
       fixture.detectChanges();
@@ -462,7 +491,7 @@ describe('Inventory Component', () => {
         .toMatch('Inventory error: error generating item');
 
       expect(presentSpy).toHaveBeenCalled();
-    });
+    }); // end 'should open the inventory form modal' test
 
     test('should open measurements form modal', () => {
       fixture.detectChanges();
@@ -470,9 +499,12 @@ describe('Inventory Component', () => {
       const _mockBatch: Batch = mockBatch();
       const _mockModal: ModalMock = new ModalMock();
 
-      processService.getBatchById = jest
+      inventoryCmp.getMeasurementFormOptions = jest
         .fn()
-        .mockReturnValue(new BehaviorSubject<Batch>(_mockBatch));
+        .mockReturnValue({
+          areAllRequired: true,
+          batch: mockBatch()
+        });
       modalCtrl.create = jest
         .fn()
         .mockReturnValue(_mockModal);
@@ -507,7 +539,7 @@ describe('Inventory Component', () => {
       );
       expect(patchSpy).toHaveBeenCalledWith(
         false,
-        _mockBatch._id,
+        _mockBatch.cid,
         _mockBatch
       )
       expect(formSpy).toHaveBeenCalledWith({ batch: _mockBatch });
@@ -518,7 +550,34 @@ describe('Inventory Component', () => {
         .toMatch('Batch update error: error updating batch');
 
       expect(presentSpy).toHaveBeenCalled();
+
+      _mockModal._setCallBackData(undefined);
+
+      inventoryCmp.openMeasurementFormModal(_mockBatch.cid);
+
+      expect(consoleSpy.mock.calls[consoleSpy.mock.calls.length - 1][0])
+        .toMatch('Batch update error: error updating batch');
     }); // end 'should open measurements form modal' test
+
+    test('should display error if unable to open modal', () => {
+      inventoryCmp.getMeasurementFormOptions = jest
+        .fn()
+        .mockReturnValue({ areAllRequired: true, batch: undefined });
+
+      const toastSpy: jest.SpyInstance = jest
+        .spyOn(toastService, 'presentToast');
+
+      fixture.detectChanges();
+
+      inventoryCmp.openMeasurementFormModal('missing');
+
+      const callCount: number = toastSpy.mock.calls.length;
+      expect(toastSpy.mock.calls[callCount - 1][0])
+        .toMatch('Measurement form error: please add as custom item instead');
+      expect(toastSpy.mock.calls[callCount - 1][1]).toEqual(2000);
+      expect(toastSpy.mock.calls[callCount - 1][2]).toMatch('bottom');
+      expect(toastSpy.mock.calls[callCount - 1][3]).toMatch('toast-error');
+    }); // end 'should display error if unable to open modal' test
 
   }); // end 'Modals' section
 
@@ -648,78 +707,5 @@ describe('Inventory Component', () => {
     }); // end 'should sort items by source type' test
 
   }); // end 'Sorting' section
-
-
-  describe('Styling', () => {
-
-    test('should get ABV color style', () => {
-      fixture.detectChanges();
-
-      const _mockInventoryItem: InventoryItem = mockInventoryItem();
-
-      _mockInventoryItem.itemABV = 0;
-      expect(inventoryCmp.getABVStyle(_mockInventoryItem).color)
-        .toMatch('#f4f4f4');
-      _mockInventoryItem.itemABV = 6;
-      expect(inventoryCmp.getABVStyle(_mockInventoryItem).color)
-        .toMatch('#40e0cf');
-      _mockInventoryItem.itemABV = 8;
-      expect(inventoryCmp.getABVStyle(_mockInventoryItem).color)
-        .toMatch('#ff9649');
-      _mockInventoryItem.itemABV = 11;
-      expect(inventoryCmp.getABVStyle(_mockInventoryItem).color)
-        .toMatch('#fd4855');
-    }); // end 'should get ABV color style' test
-
-    test('should get IBU color style', () => {
-      fixture.detectChanges();
-
-      const _mockInventoryItem: InventoryItem = mockInventoryItem();
-
-      _mockInventoryItem.optionalItemData.itemIBU = 0;
-      expect(inventoryCmp.getIBUStyle(_mockInventoryItem).color)
-        .toMatch('#f4f4f4');
-      _mockInventoryItem.optionalItemData.itemIBU = 21;
-      expect(inventoryCmp.getIBUStyle(_mockInventoryItem).color)
-        .toMatch('#9bc484');
-      _mockInventoryItem.optionalItemData.itemIBU = 61;
-      expect(inventoryCmp.getIBUStyle(_mockInventoryItem).color)
-        .toMatch('#309400');
-      _mockInventoryItem.optionalItemData.itemIBU = 101;
-      expect(inventoryCmp.getIBUStyle(_mockInventoryItem).color)
-        .toMatch('#161312');
-    }); // end 'should get IBU color style' test
-
-    test('should get quantity color style', () => {
-      fixture.detectChanges();
-
-      const _mockInventoryItem: InventoryItem = mockInventoryItem();
-      _mockInventoryItem.initialQuantity = 100;
-
-      _mockInventoryItem.currentQuantity = 70;
-      expect(inventoryCmp.getQuantityStyle(_mockInventoryItem).color)
-        .toMatch('#f4f4f4');
-      _mockInventoryItem.currentQuantity = 40;
-      expect(inventoryCmp.getQuantityStyle(_mockInventoryItem).color)
-        .toMatch('#ff9649');
-      _mockInventoryItem.currentQuantity = 20;
-      expect(inventoryCmp.getQuantityStyle(_mockInventoryItem).color)
-        .toMatch('#fd4855');
-    }); // end 'should get quantity color style' test
-
-    test('should get SRM color style', () => {
-      fixture.detectChanges();
-
-      const _mockInventoryItem: InventoryItem = mockInventoryItem();
-
-      _mockInventoryItem.optionalItemData.itemSRM = 15;
-      expect(inventoryCmp.getSRMStyle(_mockInventoryItem).color)
-        .toMatch('#b65300');
-      _mockInventoryItem.optionalItemData.itemSRM = 50;
-      expect(inventoryCmp.getSRMStyle(_mockInventoryItem).color)
-        .toMatch('#140303');
-    }); // end 'should get SRM color style' test
-
-  }); // end 'Styling' section
 
 });

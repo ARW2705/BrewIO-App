@@ -4,6 +4,26 @@ inventory {
     width: 100%;
   }
 
+  .abv-low {
+    /* Color */
+    color: map-get($colors, gray-scale-10);
+  }
+
+  .abv-mid {
+    /* Color */
+    color: map-get($colors, primary);
+  }
+
+  .abv-high {
+    /* Color */
+    color: map-get($colors, secondary);
+  }
+
+  .abv-ultra {
+    /* Color */
+    color: map-get($colors, danger);
+  }
+
   .expand-button {
     /* Display */
     padding-left: 0;
@@ -22,6 +42,26 @@ inventory {
     /* Display */
     width: 100%;
     margin: 10px;
+  }
+
+  .ibu-low {
+    /* Color */
+    color: map-get($colors, gray-scale-10);
+  }
+
+  .ibu-mid {
+    /* Color */
+    color: #9bc484;
+  }
+
+  .ibu-high {
+    /* Color */
+    color: #309400;
+  }
+
+  .ibu-ultra {
+    /* Color */
+    color: #161312;
   }
 
   .inventory-card {
@@ -60,8 +100,34 @@ inventory {
     font-size: 2rem;
   }
 
+  .pint-icon {
+    /* Display */
+    padding-top: 3%;
+  }
+
+  .quantity-low {
+    /* Color */
+    color: map-get($colors, gray-scale-10);
+  }
+
+  .quantity-mid {
+    /* Color */
+    color: map-get($colors, secondary);
+  }
+
+  .quantity-high {
+    /* Color */
+    color: map-get($colors, danger);
+  }
+
   .right-col {
     /* Text */
     font-weight: 500;
   }
+
+  .srm-text {
+    /* Display */
+    padding-right: 5%;
+  }
+
 }
