@@ -557,7 +557,7 @@ describe('Timer Provider', () => {
 
   test('should toggle timer stop', done => {
     const _mockTimer: Timer = mockTimer();
-    
+
     timerService.getTimerSubjectById = jest
       .fn()
       .mockReturnValue(new BehaviorSubject<Timer>(_mockTimer));

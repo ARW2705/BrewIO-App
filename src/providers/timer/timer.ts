@@ -83,6 +83,13 @@ export class TimerProvider {
             timer: clone(batch.process.schedule[i]),
             timeRemaining: timeRemaining,
             show: false,
+            expansion : {
+              value: 'collapsed',
+              params: {
+                height: 0,
+                speed: 250
+              }
+            },
             isRunning: false,
             settings: this.getSettings(batch.process.schedule[i])
           });
