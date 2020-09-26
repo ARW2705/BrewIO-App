@@ -6,10 +6,10 @@ import { Events, NavController, NavParams } from 'ionic-angular';
 import { PageChoice } from '../../shared/interfaces/page-choice';
 
 /* Page imports */
-import { AboutComponent } from './components/about/about';
-import { ActiveBatchesWrapperPage } from './components/active-batches-wrapper/active-batches-wrapper';
-import { InventoryWrapperPage } from './components/inventory-wrapper/inventory-wrapper';
-import { PreferencesComponent } from './components/preferences/preferences';
+import { AboutComponent } from './extras-components/about/about';
+import { ActiveBatchesWrapperPage } from './extras-components/active-batches-wrapper/active-batches-wrapper';
+import { InventoryWrapperPage } from './extras-components/inventory-wrapper/inventory-wrapper';
+import { PreferencesComponent } from './extras-components/preferences/preferences';
 import { UserPage } from '../user/user';
 
 // For testing purposes only

@@ -11,7 +11,7 @@ import { EventsMock, NavMock, NavParamsMock } from '../../../test-config/mocks-i
 
 /* Page imports */
 import { ExtrasPage } from './extras';
-import { InventoryWrapperPage } from './components/inventory-wrapper/inventory-wrapper';
+import { InventoryWrapperPage } from './extras-components/inventory-wrapper/inventory-wrapper';
 
 
 describe('Extras Component', () => {
