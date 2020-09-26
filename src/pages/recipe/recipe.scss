@@ -100,6 +100,10 @@ page-recipe {
   .master-summary-subheader {
     > ion-col {
       > p {
+        /* Display */
+        display: flex;
+        justify-content: space-between;
+
         /* Color */
         color: map-get($colors, gray-scale-7);
       }
@@ -177,9 +181,9 @@ page-recipe {
 
   ion-label {
     /* Display */
-    margin: 5px 0 !important;
+    margin: 2px 0 !important;
 
     /* Text */
-    font-size: 1.5em;
+    font-size: 1.35em;
   }
 }

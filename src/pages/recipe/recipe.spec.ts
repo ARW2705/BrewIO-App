@@ -12,10 +12,22 @@ import { configureTestBed } from '../../../test-config/configureTestBed';
 /* Mock imports */
 import { mockRecipeMasterActive } from '../../../test-config/mockmodels/mockRecipeMasterActive';
 import { mockRecipeMasterInactive } from '../../../test-config/mockmodels/mockRecipeMasterInactive';
-import { NavMock, SortPipeMock } from '../../../test-config/mocks-ionic';
+import { mockRecipeVariantComplete } from '../../../test-config/mockmodels/mockRecipeVariantComplete';
+import { mockUser } from '../../../test-config/mockmodels/mockUser';
+import {
+  CalculatePipeMock,
+  NavMock,
+  RatioPipeMock,
+  RoundPipeMock,
+  SortPipeMock,
+  TruncatePipeMock,
+  UnitConversionPipeMock
+} from '../../../test-config/mocks-ionic';
 
 /* Interface imports */
 import { RecipeMaster } from '../../shared/interfaces/recipe-master';
+import { RecipeVariant } from '../../shared/interfaces/recipe-variant';
+import { User } from '../../shared/interfaces/user';
 
 /* Page imports */
 import { RecipePage } from './recipe';
@@ -38,16 +50,24 @@ describe('Recipe Page', () => {
   let toastService: ToastProvider;
   let userService: UserProvider;
   let navCtrl: NavController;
+  let originalNgOnInit: () => void;
+  let originalNgOnDestroy: () => void;
+  let originalWillEnter: () => void;
+  let originalDidLeave: () => void;
+  const staticRecipeMaster: RecipeMaster = mockRecipeMasterActive();
+  const staticRecipeVariant: RecipeVariant = mockRecipeVariantComplete();
   configureTestBed();
 
   beforeAll(done => (async() => {
     TestBed.configureTestingModule({
       declarations: [
+        CalculatePipeMock,
         RecipePage,
-        RecipeDetailPage,
-        ProcessPage,
-        RecipeFormPage,
-        SortPipeMock
+        RatioPipeMock,
+        RoundPipeMock,
+        SortPipeMock,
+        TruncatePipeMock,
+        UnitConversionPipeMock
       ],
       imports: [
         IonicModule.forRoot(RecipePage)
@@ -75,8 +95,12 @@ describe('Recipe Page', () => {
     eventService = injector.get(Events);
     navCtrl = injector.get(NavController);
 
+    eventService.publish = jest
+      .fn();
+
     navCtrl.push = jest
       .fn();
+
     recipeService.getCombinedHopsSchedule = jest
       .fn()
       .mockImplementation(
@@ -84,45 +108,88 @@ describe('Recipe Page', () => {
           return input;
         }
       );
+
+    toastService.presentToast = jest
+      .fn();
+
+    userService.getUser = jest
+      .fn()
+      .mockReturnValue(new BehaviorSubject<User>(mockUser()));
+    userService.isLoggedIn = jest
+      .fn()
+      .mockReturnValueOnce(true)
+      .mockReturnValueOnce(false);
   }));
 
   beforeEach(() => {
     fixture = TestBed.createComponent(RecipePage);
     recipePage = fixture.componentInstance;
 
-    recipeService.getMasterList = jest
-      .fn()
-      .mockReturnValue(
-        new BehaviorSubject<BehaviorSubject<RecipeMaster>[]>(
-          [
-            new BehaviorSubject<RecipeMaster>(mockRecipeMasterActive()),
-            new BehaviorSubject<RecipeMaster>(mockRecipeMasterInactive())
-          ]
-        )
-      );
-    userService.isLoggedIn = jest
-      .fn()
-      .mockReturnValueOnce(true)
-      .mockReturnValueOnce(false);
-    toastService.presentToast = jest
+    originalNgOnInit = recipePage.ngOnInit;
+    recipePage.ngOnInit = jest
+      .fn();
+    originalNgOnDestroy = recipePage.ngOnDestroy;
+    recipePage.ngOnDestroy = jest
+      .fn();
+    originalDidLeave = recipePage.ionViewDidLeave;
+    recipePage.ionViewDidLeave = jest
+      .fn();
+    originalWillEnter = recipePage.ionViewWillEnter;
+    recipePage.ionViewWillEnter = jest
       .fn();
   });
 
   describe('Component creation', () => {
 
     test('should create the component', () => {
+      recipePage.ngOnInit = originalNgOnInit;
+      recipePage.ngOnDestroy = originalNgOnDestroy;
+      recipePage.ionViewDidLeave = originalDidLeave;
+      recipePage.ionViewWillEnter = originalWillEnter;
+
+      recipePage.mapMasterRecipes = jest
+        .fn();
+      recipeService.getMasterList = jest
+        .fn()
+        .mockReturnValue(
+          new BehaviorSubject<BehaviorSubject<RecipeMaster>[]>(
+            [
+              new BehaviorSubject<RecipeMaster>(mockRecipeMasterActive()),
+              new BehaviorSubject<RecipeMaster>(mockRecipeMasterInactive())
+            ]
+          )
+        );
+
       fixture.detectChanges();
 
       expect(recipePage).toBeDefined();
+      expect(recipePage.masterList.length).toBe(2);
+      expect(recipePage.isLoggedIn).toBe(true);
     }); // end 'should create the component' test
 
-    test('should have a list of recipe masters', () => {
+    test('should refresh pipe flag on enter', () => {
+      recipePage.ionViewWillEnter = originalWillEnter;
+
       fixture.detectChanges();
 
-      expect(recipePage.masterList.length).toBe(2);
-    }); // end 'should have a list of recipe masters' test
+      expect(recipePage.refreshPipes).toBe(false);
+
+      recipePage.ionViewWillEnter();
+
+      expect(recipePage.refreshPipes).toBe(true);
+    }); // end 'should refresh pipe flag on enter' test
 
     test('should close all sliding items on exit', () => {
+      recipePage.masterList = [
+        staticRecipeMaster,
+        staticRecipeMaster
+      ];
+      recipePage.variantList = [
+        staticRecipeVariant,
+        staticRecipeVariant
+      ];
+      recipePage.ionViewDidLeave = originalDidLeave;
+
       fixture.detectChanges();
 
       const slideSpies: jest.SpyInstance[] = recipePage
@@ -189,9 +256,15 @@ describe('Recipe Page', () => {
     }); // end 'should fail to navigate to brewing process page when missing a recipe' test
 
     test('should navigate to recipe master details page for master at given index', () => {
-      fixture.detectChanges();
-
       const _mockRecipeMaster: RecipeMaster = mockRecipeMasterInactive();
+
+      recipePage.masterList = [
+        _mockRecipeMaster,
+        _mockRecipeMaster,
+        _mockRecipeMaster
+      ];
+
+      fixture.detectChanges();
 
       const navSpy: jest.SpyInstance = jest.spyOn(recipePage.navCtrl, 'push');
 
@@ -206,6 +279,8 @@ describe('Recipe Page', () => {
     }); // end 'should navigate to recipe master details page for master at given index' test
 
     test('should fail to navigate to the recipe master details page with an invalid index', () => {
+      recipePage.masterList = [];
+
       fixture.detectChanges();
 
       const toastSpy: jest.SpyInstance = jest
@@ -303,32 +378,21 @@ describe('Recipe Page', () => {
       expect(recipePage.masterIndex).toBe(-1);
     }); // end 'should toggle a recipe master at index to be expanded' test
 
-    test('should check if user is logged in', () => {
-      fixture.detectChanges();
-
-      // first value should be true
-      expect(recipePage.isLoggedIn()).toBe(true);
-      // second value should be false
-      expect(recipePage.isLoggedIn()).toBe(false);
-    }); // end 'should check if user is logged in' test
-
     test('should compose the recipe master list with values from recipe set as the master', () => {
+      const _mockRecipeMaster: RecipeMaster = mockRecipeMasterInactive();
+
+      recipePage.masterList = [
+        _mockRecipeMaster,
+        _mockRecipeMaster,
+        _mockRecipeMaster
+      ];
+
       fixture.detectChanges();
 
       recipePage.mapMasterRecipes();
 
-      expect(recipePage.masterList.length).toBe(2);
+      expect(recipePage.variantList.length).toBe(3);
     }); // end 'should compose the recipe master list with values from recipe set as the master' test
-
-    test('should mark given recipe master index as being expanded', () => {
-      fixture.detectChanges();
-
-      recipePage.masterIndex = 0;
-
-      expect(recipePage.showExpandedMaster(0)).toBe(true);
-      expect(recipePage.showExpandedMaster(1)).toBe(false);
-      expect(recipePage.showExpandedMaster(2)).toBe(false);
-    }); // end 'should mark given recipe master index as being expanded' test
 
   }); // end 'Utility methods' section
 

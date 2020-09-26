@@ -12,7 +12,7 @@
 
   <ion-grid>
 
-    <ion-row *ngIf="masterList">
+    <ion-row *ngIf="masterList && variantList">
 
       <!-- Recipe masters list -->
       <ion-list id="master-list">
@@ -67,11 +67,35 @@
                   <ion-col>
 
                     <p>
-                      {{ variantList[i].batchVolume }} gal
-                       • {{ variantList[i].brewingType | titlecase }}
-                       • {{ variantList[i].ABV.toFixed(1) }}% ABV
-                       • {{ variantList[i].IBU.toFixed(1) }} IBU
-                       • {{ variantList[i].SRM.toFixed(1) }} SRM
+
+                      <span>
+                        {{ variantList[i].batchVolume | unitConversion:'volumeLarge':true:refreshPipes }}
+                      </span>
+
+                      <span>•</span>
+
+                      <span>
+                        {{ variantList[i].brewingType | uppercase }}
+                      </span>
+
+                      <span>•</span>
+
+                      <span>
+                        {{ variantList[i].ABV | truncate:1 }}% ABV
+                      </span>
+
+                      <span>•</span>
+
+                      <span>
+                        {{ variantList[i].IBU | round }} IBU
+                      </span>
+
+                      <span>•</span>
+
+                      <span>
+                        {{ variantList[i].SRM | round }} SRM
+                      </span>
+
                     </p>
 
                   </ion-col>
@@ -111,7 +135,7 @@
           </ion-item-sliding>
 
           <!-- Recipe ingredient list -->
-          <accordion [expanded]="showExpandedMaster(i)">
+          <accordion [expanded]="masterIndex === i">
 
             <ion-card class="recipe-card">
 
@@ -139,7 +163,7 @@
                         </ion-col>
 
                         <ion-col col-4>
-                          {{ grains.quantity }} lbs
+                          {{ grains.quantity | unitConversion:'weightLarge':true:refreshPipes }}
                         </ion-col>
 
                       </ion-row>
@@ -169,7 +193,7 @@
 
                         <ion-col  col-4
                                   col-right>
-                          {{ hops.quantity }} oz
+                          {{ hops.quantity | unitConversion:'weightSmall':true:refreshPipes }}
                         </ion-col>
 
                       </ion-row>
@@ -198,7 +222,7 @@
                         </ion-col>
 
                         <ion-col col-4>
-                          {{ yeast.quantity }} pack
+                          {{ yeast.quantity }} unit
                         </ion-col>
 
                       </ion-row>
@@ -264,7 +288,7 @@
     <ion-row *ngIf="isLoggedIn && !masterList">
 
       <ion-spinner color="primary"></ion-spinner>
-      
+
     </ion-row>
 
   </ion-grid>

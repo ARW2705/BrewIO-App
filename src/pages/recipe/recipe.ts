@@ -34,8 +34,10 @@ export class RecipePage implements OnInit, OnDestroy {
   @ViewChildren('slidingItems') slidingItems: QueryList<ItemSliding>;
   creationMode: boolean = false;
   destroy$: Subject<boolean> = new Subject<boolean>();
+  isLoggedIn: boolean = false;
   masterIndex: number = -1;
   masterList: RecipeMaster[] = null;
+  refreshPipes: boolean = false;
   variantList: RecipeVariant[] = null;
 
   constructor(
@@ -53,6 +55,10 @@ export class RecipePage implements OnInit, OnDestroy {
     this.slidingItems.forEach(slidingItem => slidingItem.close());
   }
 
+  ionViewWillEnter() {
+    this.refreshPipes = !this.refreshPipes;
+  }
+
   ngOnDestroy() {
     this.destroy$.next(true);
     this.destroy$.complete();
@@ -64,6 +70,11 @@ export class RecipePage implements OnInit, OnDestroy {
       .subscribe((_masterList: BehaviorSubject<RecipeMaster>[]) => {
         this.masterList = getArrayFromObservables(_masterList);
         this.mapMasterRecipes();
+      });
+    this.userService.getUser()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((): void => {
+        this.isLoggedIn = this.userService.isLoggedIn();
       });
   }
 
@@ -192,17 +203,6 @@ export class RecipePage implements OnInit, OnDestroy {
   }
 
   /**
-   * Check if user subject is logged in
-   *
-   * @params: none
-   *
-   * @return: true if user values are authed
-  **/
-  isLoggedIn(): boolean {
-    return this.userService.isLoggedIn();
-  }
-
-  /**
    * Populate recipe master list with each master's designated selected recipe
    *
    * @params: none
@@ -221,23 +221,6 @@ export class RecipePage implements OnInit, OnDestroy {
       .filter((variant: RecipeVariant) => {
         return variant !== undefined;
       });
-  }
-
-  /**
-   * Expand ingredient table accordion of recipe master at given index
-   *
-   * @params: index - masterList index to expand
-   *
-   * @return: none
-  **/
-  showExpandedMaster(index: number): boolean {
-    if (index > -1 && index < this.masterList.length) {
-      return  index === this.masterIndex
-        && this.masterList[index].variants
-          .some(variant => variant.processSchedule.length > 0);
-    } else {
-      return false;
-    }
   }
 
   /***** End other *****/
