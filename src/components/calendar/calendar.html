@@ -25,7 +25,7 @@
 
           <!-- Displayed month -->
           <ion-col class="header-month">
-            {{ currentDate.format('MMMM') }}
+            {{ currentDate | moment:'format':'MMMM' }}
           </ion-col>
 
           <!-- Go forward month button -->
@@ -115,20 +115,20 @@
           <button *ngIf="editType === 'start'"
                   (click)="selectStartDate(day)"
                   class="day day-button">
-            {{ day.mDate.date() }}
+            {{ day.mDate | moment:'date' }}
           </button>
 
           <!-- Button if in select alert edit mode -->
           <button *ngIf="editType === 'alerts'"
                   (click)="toggleProjectedDate(day)"
                   class="day day-button">
-            {{ day.mDate.date() }}
+            {{ day.mDate | moment:'date' }}
           </button>
 
           <!-- Date marker if not in any edit mode -->
           <span *ngIf="editType === ''"
                 class="day day-span">
-            {{ day.mDate.date() }}
+            {{ day.mDate | moment:'date' }}
           </span>
 
         </ion-col>

@@ -10,7 +10,7 @@ import { configureTestBed } from '../../../test-config/configureTestBed';
 /* Mock imports */
 import { mockCalendarStep } from '../../../test-config/mockmodels/mockCalendarStep';
 import { mockCalendarDate } from '../../../test-config/mockmodels/mockCalendarDate';
-import { ConfigMock } from '../../../test-config/mocks-ionic';
+import { ConfigMock, MomentPipeMock } from '../../../test-config/mocks-ionic';
 
 /* interface imports */
 import { CalendarDate } from '../../shared/interfaces/calendar-date';
@@ -28,7 +28,8 @@ describe('Calendar Component', () => {
   beforeAll(done => (async() => {
     TestBed.configureTestingModule({
       declarations: [
-        CalendarComponent
+        CalendarComponent,
+        MomentPipeMock
       ],
       imports: [
         IonicModule
