@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 
 /* Constants imports */
 import * as Constant from '../../shared/constants/factors';
+import * as Units from '../../shared/constants/units';
 
 /* Interface imports */
 import { GrainBill } from '../../shared/interfaces/grain-bill';
@@ -10,15 +11,164 @@ import { HopsSchedule } from '../../shared/interfaces/hops-schedule';
 import { YeastBatch } from '../../shared/interfaces/yeast-batch';
 import { Grains, Hops } from '../../shared/interfaces/library';
 import { RecipeVariant } from '../../shared/interfaces/recipe-variant';
+import { SelectedUnits } from '../../shared/interfaces/units';
 
 /* Utility function imports */
 import { roundToDecimalPlace } from '../../shared/utility-functions/utilities';
+
+/* Provider imports */
+import { PreferencesProvider } from '../../providers/preferences/preferences';
 
 
 @Injectable()
 export class CalculationsProvider {
 
-  constructor() { }
+  constructor(public preferenceService: PreferencesProvider) { }
+
+  /***** Unit Conversions *****/
+
+  /**
+   * Convert density values between specific gravity, plato, and brix
+   *
+   * Conversions use the following formulas:
+   *   SG to Plato = 135.997sg^3 - 630.272sg^2 + 1111.14sg - 616.868
+   *   Plato to SG = (plato / (258.6 - (227.1plato / 258.2))) + 1
+   *   Plato <-> Brix considered 1:1
+   *
+   * @params: density - value to convert
+   * @params: inputUnit - the original value unit
+   * @params: outputUnit - the target value unit
+   *
+   * @return: converted density value or -1 if units are not valid
+  **/
+  convertDensity(
+    density: number,
+    inputUnit: string,
+    outputUnit: string
+  ): number {
+    if (
+      inputUnit === Units.SPECIFIC_GRAVITY.longName
+      && (
+        outputUnit === Units.PLATO.longName
+        || outputUnit === Units.BRIX.longName
+      )
+    ) {
+      return (Math.abs(
+        (Constant.SG_TO_PLATO[0] * Math.pow(density, 3))
+        - (Constant.SG_TO_PLATO[1] * Math.pow(density, 2))
+        + (Constant.SG_TO_PLATO[2] * density)
+        - Constant.SG_TO_PLATO[3]
+      ));
+    } else if (
+      outputUnit === Units.SPECIFIC_GRAVITY.longName
+      && (
+        inputUnit === Units.PLATO.longName
+        || inputUnit === Units.BRIX.longName
+      )
+    ) {
+      return (
+        (density / (Constant.PLATO_TO_SG[0] - (density * Constant.PLATO_TO_SG[1] / Constant.PLATO_TO_SG[2]))) + 1
+      );
+    } else if (
+      (
+        inputUnit === Units.SPECIFIC_GRAVITY.longName
+        || inputUnit === Units.PLATO.longName
+        || inputUnit === Units.BRIX.longName
+      )
+      &&
+      (
+        outputUnit === Units.SPECIFIC_GRAVITY.longName
+        || outputUnit === Units.PLATO.longName
+        || outputUnit === Units.BRIX.longName
+      )
+    ) {
+      return density;
+    }
+
+    return -1;
+  }
+
+  /**
+   * Convert temperature value between celsius and fahrenheit
+   *
+   * @params: temperature - value to convert
+   * @params: toF - true if converting from celsius to fahrenheit,
+   *          false for C -> F
+   *
+   * @return: converted temperature value
+  **/
+  convertTemperature(temperature: number, toF: boolean): number {
+    if (toF) {
+      return temperature * 1.8 + 32;
+    }
+    return (temperature - 32) / 1.8;
+  }
+
+  /**
+   * Convert volume values between metric and english standard
+   *
+   * @params: volume - volume value to convert
+   * @params: isLarge - true for large volume unit, false for small
+   * @params: toEn - true to convert to english standard, false for metric
+   *
+   * @return: converted volume value
+  **/
+  convertVolume(volume: number, isLarge: boolean, toEn: boolean): number {
+    if (isLarge) {
+      return volume * (toEn ? Constant.L_TO_GAL: Constant.GAL_TO_L);
+    } else {
+      return volume * (toEn ? Constant.ML_TO_FL: Constant.FL_TO_ML);
+    }
+  }
+
+  /**
+   * Convert weight values between metric and english standard
+   *
+   * @params: weight - weight value to convert
+   * @params: isLarge - true for large weight unit, false for small
+   * @params: toEn - true to convert to english standard, false for metric
+   *
+   * @return: converted weight value
+  **/
+  convertWeight(weight: number, isLarge: boolean, toEn: boolean): number {
+    if (isLarge) {
+      return weight * (toEn ? Constant.KG_TO_LB: Constant.LB_TO_KG);
+    } else {
+      return weight * (toEn ? Constant.G_TO_OZ: Constant.OZ_TO_G);
+    }
+  }
+
+  /**
+   * Data is stored in english standard units and requires conversion otherwise
+   *
+   * @params: unitType - the unit type to check
+   * @params: unit - the unit object to check
+   *
+   * @return: true if the given unit requires conversion
+  **/
+  requiresConversion(unitType: string, unit: SelectedUnits): boolean {
+    switch(unitType) {
+      case 'density':
+        return unit.density.longName !== Units.SPECIFIC_GRAVITY.longName;
+      case 'temperature':
+        return unit.temperature.longName !== Units.TEMPERATURE_ENGLISH.longName;
+      case 'volumeLarge':
+        return unit.volumeLarge.longName !== Units.VOLUME_ENGLISH_LARGE.longName;
+      case 'volumeSmall':
+        return unit.volumeSmall.longName !== Units.VOLUME_ENGLISH_SMALL.longName;
+      case 'weightLarge':
+        return unit.weightLarge.longName !== Units.WEIGHT_ENGLISH_LARGE.longName;
+      case 'weightSmall':
+        return unit.weightSmall.longName !== Units.WEIGHT_ENGLISH_SMALL.longName;
+      default:
+        return false;
+    }
+  }
+
+  /***** End Unit Conversions *****/
+
+
+  /***** Recipe Calculations *****/
 
   /**
    * Calculate mash efficiency from grain bill, and measured original gravity
@@ -118,7 +268,8 @@ export class CalculationsProvider {
             grainsItem.grainType.gravity,
             grainsItem.quantity,
             batchVolume,
-            efficiency);
+            efficiency
+          );
         })
         .reduce((arr: number, curr: number): number => arr + curr - 1)
       ),
@@ -243,6 +394,10 @@ export class CalculationsProvider {
     batchVolume: number,
     efficiency: number
   ): number {
+    if (pps === 0) {
+      return 1;
+    }
+
     return roundToDecimalPlace(
       1 + ((pps - 1) * quantity * efficiency / batchVolume),
       3
@@ -405,5 +560,7 @@ export class CalculationsProvider {
       1
     );
   }
+
+  /***** End Recipe Calculations *****/
 
 }
