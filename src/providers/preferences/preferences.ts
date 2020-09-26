@@ -7,16 +7,33 @@ import { SelectedUnits } from '../../shared/interfaces/units';
 /* Default imports */
 import { defaultEnglish } from '../../shared/defaults/default-units';
 
-/* Utility imports */
-import { clone } from '../../shared/utility-functions/clone';
-
 
 @Injectable()
 export class PreferencesProvider {
-  preferredUnitSystem: string = 'english standard';
-  units: SelectedUnits = clone(defaultEnglish);
+  preferredUnitSystem: string = 'englishStandard';
+  units: SelectedUnits = defaultEnglish();
 
   constructor() { }
+
+  /**
+   * Get the preferred units system
+   *
+   * @params: none
+   * @params: none
+  **/
+  getPreferredUnitSystem(): string {
+    return this.preferredUnitSystem;
+  }
+
+  /**
+   * Get selected units
+   *
+   * @params: none
+   * @return: none
+  **/
+  getSelectedUnits(): SelectedUnits {
+    return this.units;
+  }
 
   /**
    * Check if density unit is either 'specific gravity', 'brix', or 'plato'
@@ -26,7 +43,7 @@ export class PreferencesProvider {
    * @return: true if a valid unit
   **/
   isValidDensityUnit(unit: string): boolean {
-    return unit === 'specific gravity' || unit === 'brix' || unit === 'plato';
+    return unit === 'specificgravity' || unit === 'brix' || unit === 'plato';
   }
 
   /**
@@ -49,12 +66,12 @@ export class PreferencesProvider {
   **/
   isValidUnits(units: SelectedUnits): boolean {
     return  this.isValidSystem(units.system)
-            && this.isValidWeightUnit(units.weightSmall.longName.toLowerCase())
-            && this.isValidWeightUnit(units.weightLarge.longName.toLowerCase())
-            && this.isValidVolumeUnit(units.volumeSmall.longName.toLowerCase())
-            && this.isValidVolumeUnit(units.volumeLarge.longName.toLowerCase())
-            && this.isValidTemperatureUnit(units.temperature.longName.toLowerCase())
-            && this.isValidDensityUnit(units.density.longName.toLowerCase());
+      && this.isValidWeightUnit(units.weightSmall.longName.toLowerCase())
+      && this.isValidWeightUnit(units.weightLarge.longName.toLowerCase())
+      && this.isValidVolumeUnit(units.volumeSmall.longName.toLowerCase())
+      && this.isValidVolumeUnit(units.volumeLarge.longName.toLowerCase())
+      && this.isValidTemperatureUnit(units.temperature.longName.toLowerCase())
+      && this.isValidDensityUnit(units.density.longName.toLowerCase());
   }
 
   /**
@@ -67,9 +84,9 @@ export class PreferencesProvider {
   **/
   isValidVolumeUnit(unit: string): boolean {
     return  unit === 'milliliter'
-            || unit === 'liter'
-            || unit === 'fluid ounce'
-            || unit === 'gallon';
+      || unit === 'liter'
+      || unit === 'fluid ounce'
+      || unit === 'gallon';
   }
 
   /**
@@ -81,9 +98,9 @@ export class PreferencesProvider {
   **/
   isValidWeightUnit(unit: string): boolean {
     return  unit === 'gram'
-            || unit === 'kilogram'
-            || unit === 'pound'
-            || unit === 'ounce';
+      || unit === 'kilogram'
+      || unit === 'pound'
+      || unit === 'ounce';
   }
 
   /**
@@ -95,8 +112,8 @@ export class PreferencesProvider {
   **/
   isValidSystem(system: string): boolean {
     return  system === 'metric'
-            || system === 'english standard'
-            || system === 'other';
+      || system === 'englishStandard'
+      || system === 'other';
   }
 
   /**
@@ -109,7 +126,6 @@ export class PreferencesProvider {
    * @return: none
   **/
   setUnits(preferredUnitSystem: string, units: SelectedUnits): void {
-    console.log('setting units', preferredUnitSystem, this.isValidUnits(units), units);
     if (this.isValidSystem(preferredUnitSystem) && this.isValidUnits(units)) {
       this.preferredUnitSystem = preferredUnitSystem;
       this.units = units;
@@ -117,7 +133,6 @@ export class PreferencesProvider {
       // TODO handle unit error
       console.log('unit set error', preferredUnitSystem, units);
     }
-    console.log(this.preferredUnitSystem, this.units);
   }
 
 }

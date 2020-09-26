@@ -17,6 +17,8 @@ import { PreferencesProvider } from './preferences';
 describe('Preferences Provider', () => {
   let injector: TestBed;
   let preferenceService: PreferencesProvider;
+  const staticMockEnglish: SelectedUnits = mockEnglishUnits();
+  const staticMockMetric: SelectedUnits = mockMetricUnits();
   configureTestBed();
 
   beforeAll(async(() => {
@@ -34,13 +36,13 @@ describe('Preferences Provider', () => {
 
   describe('Unit Checks', () => {
 
-    test('should default to english standard', () => {
-      expect(preferenceService.preferredUnitSystem).toMatch('english standard');
-      expect(preferenceService.units).toStrictEqual(mockEnglishUnits());
+    test('should default to englishStandard', () => {
+      expect(preferenceService.preferredUnitSystem).toMatch('englishStandard');
+      expect(preferenceService.units).toStrictEqual(staticMockEnglish);
     });
 
     test('should check if a density unit is valid', () => {
-      expect(preferenceService.isValidDensityUnit('specific gravity')).toBe(true);
+      expect(preferenceService.isValidDensityUnit('specificgravity')).toBe(true);
       expect(preferenceService.isValidDensityUnit('brix')).toBe(true);
       expect(preferenceService.isValidDensityUnit('plato')).toBe(true);
       expect(preferenceService.isValidDensityUnit('error')).toBe(false);
@@ -70,7 +72,7 @@ describe('Preferences Provider', () => {
 
     test('should check if a unit system is valid', () => {
       expect(preferenceService.isValidSystem('metric')).toBe(true);
-      expect(preferenceService.isValidSystem('english standard')).toBe(true);
+      expect(preferenceService.isValidSystem('englishStandard')).toBe(true);
       expect(preferenceService.isValidSystem('other')).toBe(true);
       expect(preferenceService.isValidSystem('error')).toBe(false);
     });
@@ -102,10 +104,8 @@ describe('Preferences Provider', () => {
         .mockReturnValueOnce(true)
         .mockReturnValueOnce(true);
 
-      const _mockEnglishUnits: SelectedUnits = mockEnglishUnits();
-
-      expect(preferenceService.isValidUnits(_mockEnglishUnits)).toBe(true);
-      expect(preferenceService.isValidUnits(_mockEnglishUnits)).toBe(false);
+      expect(preferenceService.isValidUnits(staticMockEnglish)).toBe(true);
+      expect(preferenceService.isValidUnits(staticMockEnglish)).toBe(false);
     });
 
   });
@@ -121,13 +121,11 @@ describe('Preferences Provider', () => {
         .fn()
         .mockReturnValue(true);
 
-      const _mockMetricUnits: SelectedUnits = mockMetricUnits();
-
-      preferenceService.setUnits('metric', _mockMetricUnits);
+      preferenceService.setUnits('metric', staticMockMetric);
 
       expect(preferenceService.preferredUnitSystem).toMatch('metric');
-      expect(preferenceService.units).toStrictEqual(_mockMetricUnits);
-    });
+      expect(preferenceService.units).toStrictEqual(staticMockMetric);
+    }); // end 'should set preferred units' test
 
     test('should fail to set preferred units', () => {
       preferenceService.isValidSystem = jest
@@ -136,14 +134,30 @@ describe('Preferences Provider', () => {
 
       const consoleSpy: jest.SpyInstance = jest.spyOn(console, 'log');
 
-      const _mockEnglishUnits: SelectedUnits = mockEnglishUnits();
+      preferenceService.setUnits('invalid', staticMockEnglish);
 
-      preferenceService.setUnits('invalid', _mockEnglishUnits);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'unit set error',
+        'invalid',
+        staticMockEnglish
+      );
+    }); // end 'should fail to set preferred units' test
 
-      const callCount = consoleSpy.mock.calls.length - 2; // second from last call
-      expect(consoleSpy.mock.calls[callCount][0]).toMatch('unit set error');
-      expect(consoleSpy.mock.calls[callCount][1]).toMatch('invalid');
-      expect(consoleSpy.mock.calls[callCount][2]).toStrictEqual(_mockEnglishUnits);
+  }); // end 'Unit Set' section
+
+
+  describe('Other operations', () => {
+
+    test('should get preferred unit system', () => {
+      preferenceService.preferredUnitSystem = 'englishStandard';
+      expect(preferenceService.getPreferredUnitSystem())
+        .toMatch('englishStandard');
+    });
+
+    test('should get selected units', () => {
+      preferenceService.units = staticMockEnglish;
+      expect(preferenceService.getSelectedUnits())
+        .toStrictEqual(staticMockEnglish);
     });
 
   });
