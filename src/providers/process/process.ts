@@ -17,9 +17,6 @@ import { _throw as throwError } from 'rxjs/observable/throw';
 import { API_VERSION } from '../../shared/constants/api-version';
 import { BASE_URL } from '../../shared/constants/base-url';
 
-/* Default imports */
-import { defaultEnglish } from '../../shared/defaults/default-units';
-
 /* Interface imports */
 import { Batch } from '../../shared/interfaces/batch';
 import { PrimaryValues } from '../../shared/interfaces/primary-values';
@@ -794,7 +791,6 @@ export class ProcessProvider {
             isArchived: false,
             annotations: {
               styleId: recipeMaster.style._id,
-              units: defaultEnglish,
               targetValues: {
                 efficiency: variant.efficiency,
                 originalGravity: variant.originalGravity,
