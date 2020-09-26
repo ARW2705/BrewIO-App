@@ -1,154 +1,165 @@
 /* Module imports */
-import { TestBed, async } from '@angular/core/testing';
-import { FormControl, FormGroup, ValidatorFn } from '@angular/forms';
+import { TestBed, getTestBed } from '@angular/core/testing';
+import { FormControl, FormGroup } from '@angular/forms';
 
 /* Provider imports */
 import { FormValidatorProvider } from './form-validator';
 
 describe('Custom form validator service', () => {
-  let matchValidator: ValidatorFn;
-  let patternValidator: ValidatorFn;
-  let errorGetter: any;
+  let injector: TestBed;
+  let formValidator: FormValidatorProvider;
 
-  beforeAll(async(() => {
+  beforeAll(() => {
     TestBed.configureTestingModule({
       imports: [],
       providers: [
         FormValidatorProvider
       ]
     });
-    matchValidator = FormValidatorProvider.PasswordMatch();
-    patternValidator = FormValidatorProvider.PasswordPattern();
-    errorGetter = FormValidatorProvider.GetErrorMessage;
-  }));
 
-  describe('Validates password confimration', () => {
+    injector = getTestBed();
+    formValidator = injector.get(FormValidatorProvider);
+  });
 
-    test('should match password and confirmation', () => {
-      const formGroup: FormGroup = new FormGroup({
-        'password': new FormControl('abcDEF123!@#'),
-        'passwordConfirmation': new FormControl('abcDEF123!@#')
-      });
-      expect(matchValidator(formGroup)).toBe(null);
-    }); // end 'should match password and confirmation' test
 
-    test('should fail matching: missing confirmation', () => {
-      const formGroup: FormGroup = new FormGroup({
-        'password': new FormControl('abcDEF123!@#'),
-        'passwordConfirmation': new FormControl('')
-      });
-      matchValidator(formGroup);
-      expect(formGroup.controls.passwordConfirmation.getError('required'))
-        .toBe(true);
-    }); // end 'should fail matching: missing confirmation' test
+  test('should match password and confirmation', () => {
+    const formGroup: FormGroup = new FormGroup({
+      'password': new FormControl('abcDEF123!@#'),
+      'passwordConfirmation': new FormControl('abcDEF123!@#')
+    });
+    expect(formValidator.passwordMatch()(formGroup)).toBeNull();
+  }); // end 'should match password and confirmation' test
 
-    test('should fail matching: mismatch', () => {
-      const formGroup: FormGroup = new FormGroup({
-        'password': new FormControl('abcDEF123!@#'),
-        'passwordConfirmation': new FormControl('abc')
-      });
-      matchValidator(formGroup);
-      expect(formGroup.controls.passwordConfirmation.getError('mismatch'))
-        .toBe(true);
-    }); // end 'should fail matching: mismatch' test
+  test('should fail matching: missing confirmation', () => {
+    const formGroup: FormGroup = new FormGroup({
+      'password': new FormControl('abcDEF123!@#'),
+      'passwordConfirmation': new FormControl('')
+    });
+    formValidator.passwordMatch()(formGroup);
+    expect(formGroup.controls.passwordConfirmation.getError('required'))
+      .toBe(true);
+  }); // end 'should fail matching: missing confirmation' test
 
-  }); // end 'Validates password confimration' section
+  test('should fail matching: mismatch', () => {
+    const formGroup: FormGroup = new FormGroup({
+      'password': new FormControl('abcDEF123!@#'),
+      'passwordConfirmation': new FormControl('abc')
+    });
+    formValidator.passwordMatch()(formGroup);
+    expect(formGroup.controls.passwordConfirmation.getError('mismatch'))
+      .toBe(true);
+  }); // end 'should fail matching: mismatch' test
 
-  describe('Validates password pattern', () => {
+  test('should match the required password pattern', () => {
+    const formControl: FormControl = new FormControl('abcDEF123');
+    expect(formValidator.passwordPattern()(formControl)).toBeNull();
+  }); // end 'should match the required password pattern' test
 
-    test('should match password pattern', () => {
-      expect(patternValidator(new FormControl('abcDEF123!@#'))).toBeNull();
+  test('should fail to match the required password pattern', () => {
+    const formControl: FormControl = new FormControl('abcdef123');
+    expect(formValidator.passwordPattern()(formControl))
+      .toStrictEqual({ passwordInvalid: true });
+  }); // end 'should fail to match the required password pattern' test
+
+  test('should pass eitherOr validation with no additional validators', () => {
+    const control1: FormControl = new FormControl('');
+    const control2: FormControl = new FormControl('5');
+    const control3: FormControl = new FormControl('');
+
+    const formGroup: FormGroup = new FormGroup({
+      control1: control1,
+      control2: control2,
+      control3: control3
     });
 
-    test('should fail password pattern: missing lowercase letter', () => {
-      expect(patternValidator(new FormControl('ABCDEF123!@#')).passwordInvalid)
-        .toBe(true);
+    formValidator.eitherOr(['control1', 'control2', 'control3'])(formGroup);
+
+    expect(control1.errors).toBeNull();
+    expect(control2.errors).toBeNull();
+    expect(control3.errors).toBeNull();
+  }); // end 'should pass eitherOr validation with no additional validators' test
+
+  test('should pass eitherOr validation with additional validators', () => {
+    const control1: FormControl = new FormControl('10');
+    const control2: FormControl = new FormControl('5');
+    const control3: FormControl = new FormControl('1');
+
+    const formGroup: FormGroup = new FormGroup({
+      control1: control1,
+      control2: control2,
+      control3: control3
     });
 
-    test('should fail password pattern: missing uppercase letter', () => {
-      expect(patternValidator(new FormControl('abcdef123!@#')).passwordInvalid)
-        .toBe(true);
+    formValidator
+      .eitherOr(
+        ['control1', 'control2', 'control3'],
+        { required: true, min: 0 }
+      )(formGroup);
+
+    expect(control1.errors).toBeNull();
+    expect(control2.errors).toBeNull();
+    expect(control3.errors).toBeNull();
+  }); // end 'should pass eitherOr validation with additional validators' test
+
+  test('should fail eitherOr due to no controls having a value', () => {
+    const control1: FormControl = new FormControl('');
+    const control2: FormControl = new FormControl('');
+    const control3: FormControl = new FormControl('');
+
+    const formGroup: FormGroup = new FormGroup({
+      control1: control1,
+      control2: control2,
+      control3: control3
     });
 
-    test('should fail password pattern: missing number', () => {
-      expect(patternValidator(new FormControl('abcDEFghi!@#')).passwordInvalid)
-        .toBe(true);
+    formValidator.eitherOr(['control1', 'control2', 'control3'])(formGroup);
+
+    expect(control1.errors).toStrictEqual({ eitherOr: true });
+    expect(control2.errors).toStrictEqual({ eitherOr: true });
+    expect(control3.errors).toStrictEqual({ eitherOr: true });
+  }); // end 'should fail eitherOr due to no controls having a value' test
+
+  test('should fail eitherOr due to failed additional min validation', () => {
+    const control1: FormControl = new FormControl('0');
+    const control2: FormControl = new FormControl('1');
+    const control3: FormControl = new FormControl('2');
+
+    const formGroup: FormGroup = new FormGroup({
+      control1: control1,
+      control2: control2,
+      control3: control3
     });
 
-    test('should fail password pattern: missing special character', () => {
-      expect(patternValidator(new FormControl('abcDEF123456')).passwordInvalid)
-        .toBe(true);
-    });
+    formValidator
+      .eitherOr(
+        ['control1', 'control2', 'control3'],
+        { min: 3 }
+      )(formGroup);
 
-  }); // end 'Validates password pattern' section
+    expect(control1.errors)
+      .toStrictEqual({ eitherOr: true, min: { min: 3, actual: 0 } });
+    expect(control2.errors)
+      .toStrictEqual({ eitherOr: true, min: { min: 3, actual: 1 } });
+    expect(control3.errors)
+      .toStrictEqual({ eitherOr: true, min: { min: 3, actual: 2 } });
+  });
 
-  describe('Gets validator error messages', () => {
+  test('should pass required validation if selected as such', () => {
+    const formControl: FormControl = new FormControl('content');
+    formValidator.requiredIfValidator(true)(formControl);
+    expect(formControl.errors).toBeNull();
+  }); // end 'should pass required validation if selected as such' test
 
-    test('should get username is required error', () => {
-      expect(errorGetter('username', 'required'))
-        .toMatch('Username is required');
-    });
+  test('should pass validation if not required', () => {
+    const formControl: FormControl = new FormControl('');
+    formValidator.requiredIfValidator(false)(formControl);
+    expect(formControl.errors).toBeNull();
+  }); // end 'should pass validation if not required' test
 
-    test('should get username is too short error', () => {
-      expect(errorGetter('username', 'minlength'))
-        .toMatch('Username must be at least 6 characters');
-    });
-
-    test('should get username is too long error', () => {
-      expect(errorGetter('username', 'maxlength'))
-        .toMatch('Username is limited to 20 characters');
-    });
-
-    test('should get password is required error', () => {
-      expect(errorGetter('password', 'required'))
-        .toMatch('Password is required');
-    });
-
-    test('should get password is too short error', () => {
-      expect(errorGetter('password', 'minlength'))
-        .toMatch('Password must be at least 8 characters');
-    });
-
-    test('should get password is too long error', () => {
-      expect(errorGetter('password', 'maxlength'))
-        .toMatch('Password is limited to 20 characters');
-    });
-
-    test('should get password pattern is invalid error', () => {
-      expect(errorGetter('password', 'passwordInvalid'))
-        .toMatch('Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character (!@#$%^&*)');
-    });
-
-    test('should get password confirmation required error', () => {
-      expect(errorGetter('passwordConfirmation', 'required'))
-        .toMatch('Must confirm password');
-    });
-
-    test('should get password confirmation mismatch error', () => {
-      expect(errorGetter('passwordConfirmation', 'mismatch'))
-        .toMatch('Passwords must match');
-    });
-
-    test('should get email is required error', () => {
-      expect(errorGetter('email', 'required'))
-        .toMatch('Email address is required');
-    });
-
-    test('should get email pattern is invalid error', () => {
-      expect(errorGetter('email', 'email'))
-        .toMatch('Email address is invalid');
-    });
-
-    test('should get first name is too long error', () => {
-      expect(errorGetter('firstname', 'maxlength'))
-        .toMatch('First name is limited to 25 characters');
-    });
-
-    test('should get last name is too long error', () => {
-      expect(errorGetter('lastname', 'maxlength'))
-        .toMatch('Last name is limited to 25 characters');
-    });
-
-  }); // end 'Gets validator error messages' section
+  test('should fail required validation', () => {
+    const formControl: FormControl = new FormControl(null);
+    expect(formValidator.requiredIfValidator(true)(formControl))
+      .toStrictEqual({ required: true });
+  }); // end 'should fail required validation' test
 
 });
