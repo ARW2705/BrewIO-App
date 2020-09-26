@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/test
 import { IonicModule, NavController } from 'ionic-angular';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { of } from 'rxjs/observable/of';
 
 /* Test configuration imports */
 import { configureTestBed } from '../../../test-config/configureTestBed';
@@ -79,7 +80,7 @@ describe('Home Page', () => {
       _mockUser.token = '';
       userService.getUser = jest
         .fn()
-        .mockReturnValue(new BehaviorSubject<User>(_mockUser));
+        .mockReturnValue(of(null));
       userService.isLoggedIn = jest
         .fn()
         .mockReturnValue(false);
@@ -93,14 +94,13 @@ describe('Home Page', () => {
     beforeEach(() => {
       fixture = TestBed.createComponent(HomePage);
       homePage = fixture.componentInstance;
+      homePage.isLoggedIn = false;
     });
 
     test('should create the component', () => {
       fixture.detectChanges();
 
       expect(homePage).toBeDefined();
-
-      expect(homePage.isLoggedIn()).toBe(false);
     }); // end 'should create the component' test
 
     test('should open signup modal', () => {
@@ -123,20 +123,11 @@ describe('Home Page', () => {
       expect(modalSpy).toHaveBeenCalled();
     }); // end 'should open login modal' test
 
-    test('should get a welcome message when not logged in', () => {
-      fixture.detectChanges();
-
-      expect(homePage.getWelcomeMessage()).toMatch('Welcome test to BrewIO');
-
-      homePage.user = null;
-
-      expect(homePage.getWelcomeMessage()).toMatch('Welcome to BrewIO');
-    }); // end 'should get a welcome message when not logged in' test
-
   }); // end 'User not logged in' section
 
 
   describe('User logged in', () => {
+
     beforeEach(async(() => {
       userService.getUser = jest
         .fn()
@@ -163,9 +154,24 @@ describe('Home Page', () => {
     test('should have a user', () => {
       fixture.detectChanges();
 
-      expect(homePage.user$).not.toBeNull();
-      expect(homePage.isLoggedIn()).toBe(true);
+      expect(homePage.user).not.toBeNull();
     }); // end 'should have a user' test
+
+    test('should set the welcome message to user name', () => {
+      homePage.user = mockUser();
+
+      fixture.detectChanges();
+
+      expect(homePage.welcomeMessage)
+        .toMatch(`Welcome ${homePage.user.firstname} to BrewIO`);
+
+      delete homePage.user.firstname;
+
+      homePage.setWelcomeMessage();
+
+      expect(homePage.welcomeMessage)
+        .toMatch(`Welcome ${homePage.user.username} to BrewIO`);
+    }); // end 'should set the welcome message to user name' test
 
     test('should navigate to active brew process', () => {
       fixture.detectChanges();
@@ -186,16 +192,6 @@ describe('Home Page', () => {
         }
       )
     }); // end 'should navigate to active brew process' test
-
-    test('should get a welcome message when logged in', () => {
-      fixture.detectChanges();
-
-      expect(homePage.getWelcomeMessage()).toMatch('Welcome test to BrewIO');
-
-      homePage.user.firstname = '';
-
-      expect(homePage.getWelcomeMessage()).toMatch('Welcome mockUser to BrewIO');
-    }); // end 'should get a welcome message when logged in' test
 
     test('should toggle show active batches flag', () => {
       fixture.detectChanges();

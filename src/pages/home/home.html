@@ -15,13 +15,13 @@
     <ion-row justify-content-center>
 
       <h2 id="welcome-message"
-          [innerText]="getWelcomeMessage()">
+          [innerText]="welcomeMessage">
       </h2>
 
     </ion-row>
 
     <!-- If user not logged in -->
-    <ng-container *ngIf="!isLoggedIn()">
+    <ng-container *ngIf="!isLoggedIn">
 
       <ion-row  justify-content-around
                 id="user-buttons">

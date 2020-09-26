@@ -29,20 +29,19 @@ import { UserProvider } from '../../providers/user/user';
 })
 export class HomePage implements OnInit, OnDestroy {
   destroy$: Subject<boolean> = new Subject<boolean>();
+  isLoggedIn: boolean = false;
   notifications: string[] = [];
   showActiveBatches: boolean = false;
   showInventory: boolean = false;
   user: User = null;
-  user$: Observable<User> = null;
+  welcomeMessage: string = '';
 
   constructor(
     public navCtrl: NavController,
     public modalService: ModalProvider,
     public recipeService: RecipeProvider,
     public userService: UserProvider
-  ) {
-    this.user$ = this.userService.getUser();
-  }
+  ) { }
 
   /***** Lifecycle Hooks *****/
 
@@ -52,44 +51,16 @@ export class HomePage implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.user$
+    this.userService.getUser()
       .pipe(takeUntil(this.destroy$))
       .subscribe(user => {
         this.user = user
+        this.isLoggedIn = this.userService.isLoggedIn();
+        this.setWelcomeMessage();
       });
   }
 
   /***** End lifecycle hooks *****/
-
-  /**
-   * Format welcome message
-   *
-   * @params: none
-   *
-   * @return: welcome message string
-  **/
-  getWelcomeMessage(): string {
-    let userName: string = ' ';
-    if (this.user !== null) {
-      if (this.user.firstname !== undefined && this.user.firstname.length > 0) {
-        userName = ` ${this.user.firstname} `;
-      } else if (this.user.username !== undefined && this.user.username.length > 0) {
-        userName = ` ${this.user.username} `;
-      }
-    }
-    return `Welcome${userName}to BrewIO`;
-  }
-
-  /**
-   * Check if a user is logged in
-   *
-   * @params: none
-   *
-   * @return: true if user is logged in
-  **/
-  isLoggedIn(): boolean {
-    return this.userService.isLoggedIn();
-  }
 
   /**
    * Navigate to Process Page with required data
@@ -138,6 +109,29 @@ export class HomePage implements OnInit, OnDestroy {
   **/
   openSignup(): void {
     this.modalService.openSignup();
+  }
+
+  /**
+   * Format welcome message
+   *
+   * @params: none
+   *
+   * @return: welcome message string
+  **/
+  setWelcomeMessage(): void {
+    let userName: string = ' ';
+    if (this.user !== null) {
+      if (
+        this.user.firstname !== undefined && this.user.firstname.length > 0
+      ) {
+        userName = ` ${this.user.firstname} `;
+      } else if (
+        this.user.username !== undefined && this.user.username.length > 0
+      ) {
+        userName = ` ${this.user.username} `;
+      }
+    }
+    this.welcomeMessage = `Welcome${userName}to BrewIO`;
   }
 
   /**
