@@ -23,7 +23,7 @@ import { normalizeErrorObservableMessage } from '../../shared/utility-functions/
 import { CalendarProcessComponent } from './process-components/calendar-process/calendar-process';
 
 /* Page imports */
-import { InventoryWrapperPage } from '../extras/components/inventory-wrapper/inventory-wrapper';
+import { InventoryWrapperPage } from '../extras/extras-components/inventory-wrapper/inventory-wrapper';
 import { ProcessMeasurementsFormPage } from '../forms/process-measurements-form/process-measurements-form';
 
 /* Provider imports */
@@ -69,11 +69,6 @@ export class ProcessPage implements OnInit, OnDestroy {
     public toastService: ToastProvider,
     public userService: UserProvider
   ) {
-    this.recipeMaster = navParams.get('master');
-    this.requestedUserId = navParams.get('requestedUserId');
-    this.recipeVariant = this.recipeMaster.variants
-      .find(variant => hasId(variant, navParams.get('selectedRecipeId')));
-    this.batchId = navParams.get('selectedBatchId');
     this._headerNavPop = this.headerNavPopEventHandler.bind(this);
     this._changeDate = this.changeDateEventHandler.bind(this);
   }
@@ -81,8 +76,17 @@ export class ProcessPage implements OnInit, OnDestroy {
   /***** Lifecycle Hooks *****/
 
   ngOnInit() {
+    this.recipeMaster = this.navParams.get('master');
+    this.requestedUserId = this.navParams.get('requestedUserId');
+    this.recipeVariant = this.recipeMaster.variants
+      .find(variant => hasId(variant, this.navParams.get('selectedRecipeId')));
+    this.batchId = this.navParams.get('selectedBatchId');
     this.events.subscribe('pop-header-nav', this._headerNavPop);
     this.events.subscribe('change-date', this._changeDate);
+
+    if (this.navParams.get('origin') === 'RecipeDetailPage') {
+      this.navCtrl.remove(this.navCtrl.length() - 2, 1);
+    }
 
     if (!this.batchId) {
       // Start a new batch
@@ -253,8 +257,9 @@ export class ProcessPage implements OnInit, OnDestroy {
     )
     .pipe(take(1))
     .subscribe(
-      () => {
+      (): void => {
         if (isFinished) {
+          console.log('finishing batch');
           const batchId: string = this.selectedBatch.cid;
           this.selectedBatch = null;
           this.timerService.removeBatchTimer(batchId);
@@ -435,7 +440,7 @@ export class ProcessPage implements OnInit, OnDestroy {
     const values: object = this.calendarRef.startCalendar();
     this.processService.patchStepById(getId(this.selectedBatch), values)
       .pipe(take(1))
-      .subscribe(() => {
+      .subscribe((): void => {
         console.log('Started calendar');
       });
   }
@@ -469,6 +474,7 @@ export class ProcessPage implements OnInit, OnDestroy {
    * @return: none
   **/
   navToInventory(sourceBatchId: string): void {
+    console.log('nav to inventory');
     this.events.publish('update-nav-header', {
       caller: 'process page',
       destType: 'page',
