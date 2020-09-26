@@ -2,7 +2,6 @@
 import { Component, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { Events, ItemSliding, NavController } from 'ionic-angular';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import { takeUntil } from 'rxjs/operators/takeUntil';
 
@@ -29,9 +28,8 @@ import { ToastProvider } from '../../providers/toast/toast';
 })
 export class ActiveBatchesComponent implements OnInit, OnDestroy {
   @ViewChildren('slidingItems') slidingItems: QueryList<ItemSliding>;
-  activeBatchesList: Observable<Batch>[] = [];
+  activeBatchesList: Batch[] = [];
   destroy$: Subject<boolean> = new Subject<boolean>();
-  getArrayFromObservables = getArrayFromObservables;
   _updateHeaderNav: any;
 
   constructor(
@@ -50,8 +48,8 @@ export class ActiveBatchesComponent implements OnInit, OnDestroy {
     // retrieve active batches only
     this.processService.getBatchList(true)
       .pipe(takeUntil(this.destroy$))
-      .subscribe(activeBatchesList => {
-        this.activeBatchesList = activeBatchesList;
+      .subscribe(activeBatchesList$ => {
+        this.activeBatchesList = getArrayFromObservables(activeBatchesList$);
       });
 
     this.events.subscribe('update-nav-header', this._updateHeaderNav);

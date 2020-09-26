@@ -11,7 +11,7 @@
     <!-- Batch List -->
     <ion-list id="batch-list">
 
-      <ng-container *ngFor="let batch of getArrayFromObservables(activeBatchesList)">
+      <ng-container *ngFor="let batch of activeBatchesList">
 
         <!-- Active batches as sliding items -->
         <ion-item-sliding #slidingItems

@@ -13,7 +13,7 @@ import { configureTestBed } from '../../../test-config/configureTestBed';
 import { mockBatch } from '../../../test-config/mockmodels/mockBatch';
 import { mockRecipeMasterActive } from '../../../test-config/mockmodels/mockRecipeMasterActive';
 import { mockRecipeVariantComplete } from '../../../test-config/mockmodels/mockRecipeVariantComplete';
-import { NavMock, EventsMock, ConfigMock, DomMock, GestureMock, FormMock, PlatformMockDev } from '../../../test-config/mocks-ionic';
+import { NavMock, EventsMock, ConfigMock, DomMock, GestureMock, FormMock, MomentPipeMock, PlatformMockDev } from '../../../test-config/mocks-ionic';
 
 /* Interface imports */
 import { RecipeMaster } from '../../shared/interfaces/recipe-master';
@@ -44,7 +44,8 @@ describe('Active Batch Component', () => {
   beforeAll(done => (async() => {
     TestBed.configureTestingModule({
       declarations: [
-        ActiveBatchesComponent
+        ActiveBatchesComponent,
+        MomentPipeMock
       ],
       imports: [
         IonicModule
