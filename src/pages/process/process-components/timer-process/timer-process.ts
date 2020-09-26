@@ -1,5 +1,5 @@
 /* Module imports */
-import { Component, ElementRef, Input, OnInit, OnChanges, OnDestroy, QueryList, SimpleChange, SimpleChanges, ViewChildren } from '@angular/core';
+import { Component, ElementRef, Input, AfterViewInit, OnInit, OnChanges, OnDestroy, QueryList, SimpleChange, SimpleChanges, ViewChildren } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Subject } from 'rxjs/Subject';
 import { take } from 'rxjs/operators/take';
@@ -26,12 +26,13 @@ import { TimerProvider } from '../../../../providers/timer/timer';
     expandUpDown()
   ]
 })
-export class TimerProcessComponent implements OnInit, OnChanges, OnDestroy {
+export class TimerProcessComponent implements AfterViewInit, OnInit, OnChanges, OnDestroy {
   @Input() batchId: string;
   @Input() isPreview: boolean;
   @Input() stepData: Process[];
   @ViewChildren('slidingTimers') slidingTimers: QueryList<ElementRef>;
   destroy$: Subject<boolean> = new Subject<boolean>();
+  height: number = 0;
   isConcurrent: boolean = false;
   showDescription: boolean = false;
   timers: Timer[] = [];
@@ -42,6 +43,10 @@ export class TimerProcessComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnInit() {
     this.initTimers();
+  }
+
+  ngAfterViewInit() {
+    this.height = this.slidingTimers.last.nativeElement.clientHeight;
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -219,33 +224,19 @@ export class TimerProcessComponent implements OnInit, OnChanges, OnDestroy {
   **/
   toggleTimerControls(timer: Timer): void {
     timer.show = !timer.show;
+    timer.expansion = {
+      value: timer.show ? 'expanded': 'collapsed',
+      params: {
+        height: this.height,
+        speed: 250
+      }
+    }
   }
 
   /***** End Timer Controls *****/
 
 
   /***** Timer Settings *****/
-
-  /**
-   * Get step duration to be used in description display
-   *
-   * @params: duration - stored duration in minutes
-   *
-   * @return: datetime string hh:mm
-  **/
-  getFormattedDurationString(duration: number): string {
-    let result: string = 'Duration: ';
-    if (duration > 59) {
-      const hours = Math.floor(duration / 60);
-      result += `${hours} hour${hours > 1 ? 's': ''}`;
-      duration = duration % 60;
-      result += (duration) ? ' ': '';
-    }
-    if (duration) {
-      result += `${duration} minute${duration > 1 ? 's': ''}`;
-    }
-    return result;
-  }
 
   /**
    * Initialize timers for the current step and subscribe to their subjects
@@ -294,28 +285,6 @@ export class TimerProcessComponent implements OnInit, OnChanges, OnDestroy {
   hasChanges(changes: SimpleChange): boolean {
     return  JSON.stringify(changes.currentValue)
             !== JSON.stringify(changes.previousValue);
-  }
-
-  /**
-   * Trigger for expandUpDown animation
-   *
-   * @params: timer - Timer on which to trigger the animation
-   *
-   * @return: object - sets state value and params for animation
-  **/
-  isExpanded(timer: Timer): object {
-    try {
-      const height: number = this.slidingTimers.last.nativeElement.clientHeight;
-      return {
-        value: timer.show ? 'expanded': 'collapsed',
-        params: {
-          height: height,
-          speed: 250
-        }
-      };
-    } catch(e) {
-      return {};
-    }
   }
 
 }

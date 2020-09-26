@@ -26,6 +26,13 @@ timer-process {
     font-size: 1.1em;
   }
 
+  .timer-container {
+    border: 2px solid map-get($colors, primary);
+    border-radius: 15px;
+    margin: 2% 0;
+    padding: 0 1%;
+  }
+
   .timer-individual-controls {
     /* Display */
     z-index: 1 !important;
@@ -43,9 +50,6 @@ timer-process {
     > ion-col {
       /* Display */
       z-index: 2;
-
-      /* Color */
-      background-color: map-get($colors, gray-scale-2);
 
       /* Children */
       > h2 {

@@ -92,8 +92,7 @@
 
       <ion-col col-6>
 
-        <span [innerText]="getFormattedDurationString(timer.timer.duration)">
-        </span>
+        {{ timer.timer.duration | formatTime:'duration' }}
 
       </ion-col>
 
@@ -108,7 +107,7 @@
       <ion-col col-12>
 
         <p>
-          {{ timer.timer.description }}
+          {{ timer.timer.description | unitConversion:'weightSmall':true:true:true }}
         <p>
 
       </ion-col>
@@ -120,104 +119,108 @@
     <!-- Active Step View Timers -->
     <ng-container *ngIf="!isPreview">
 
-      <!-- Active Step View Timer Data -->
-      <ion-row class="timer-row">
+      <div class="timer-container">
 
-        <ion-col col-12>
+        <!-- Active Step View Timer Data -->
+        <ion-row class="timer-row">
 
-          <h2>
-            {{ timer.timer.name }}
-          </h2>
+          <ion-col col-12>
 
-        </ion-col>
+            <h2>
+              {{ timer.timer.name }}
+            </h2>
 
-        <ion-col  *ngIf="showDescription"
-                  col-12
-                  class="description">
+          </ion-col>
 
-          <p>
-            {{ timer.timer.description }}
-          </p>
+          <ion-col  *ngIf="showDescription"
+                    col-12
+                    class="description">
 
-        </ion-col>
+            <p>
+              {{ timer.timer.description | unitConversion:'weightSmall':true:true:true }}
+            </p>
 
-      </ion-row>
-      <!-- End Active Step View Timer Data -->
+          </ion-col>
 
-      <ion-row  #slidingTimers
-                align-items-center
-                class="timer-row">
+        </ion-row>
+        <!-- End Active Step View Timer Data -->
 
-        <!-- Timer Progress Circle Component -->
-        <ion-col *ngIf="timer.settings">
+        <ion-row  #slidingTimers
+                  align-items-center
+                  class="timer-row">
 
-          <progress-circle  (click)="toggleTimerControls(timer)"
-                            [settings]="timer.settings">
-          </progress-circle>
+          <!-- Timer Progress Circle Component -->
+          <ion-col *ngIf="timer.settings">
 
-        </ion-col>
-        <!-- End Timer Progress Circle Component -->
+            <progress-circle  (click)="toggleTimerControls(timer)"
+                              [settings]="timer.settings">
+            </progress-circle>
 
-        <ng-container *ngIf="isConcurrent">
+          </ion-col>
+          <!-- End Timer Progress Circle Component -->
 
-          <!-- Concurrent Timers Individual Controls -->
-          <div  [@expandUpDown]="isExpanded(timer)"
-                class="timer-individual-controls">
+          <ng-container *ngIf="isConcurrent">
 
-              <!-- Start Individual Timer Button -->
-              <ion-row>
+            <!-- Concurrent Timers Individual Controls -->
+            <div  [@expandUpDown]="timer.expansion"
+                  class="timer-individual-controls">
 
-                <button ion-button
-                        color="primary"
-                        (click)="startSingleTimer(timer)"
-                        class="button timer-button">
-                  Start
-                </button>
+                <!-- Start Individual Timer Button -->
+                <ion-row>
 
-              </ion-row>
+                  <button ion-button
+                          color="primary"
+                          (click)="startSingleTimer(timer)"
+                          class="button timer-button">
+                    Start
+                  </button>
 
-              <!-- Stop Individual Timer Button -->
-              <ion-row>
+                </ion-row>
 
-                <button ion-button
-                        color="primary"
-                        (click)="stopSingleTimer(timer)"
-                        class="button timer-button">
-                  Stop
-                </button>
+                <!-- Stop Individual Timer Button -->
+                <ion-row>
 
-              </ion-row>
+                  <button ion-button
+                          color="primary"
+                          (click)="stopSingleTimer(timer)"
+                          class="button timer-button">
+                    Stop
+                  </button>
 
-              <!-- Add minute to Individual Timer Button -->
-              <ion-row>
+                </ion-row>
 
-                <button ion-button
-                        color="primary"
-                        (click)="addToSingleTimer(timer)"
-                        class="button timer-button">
-                  +1min
-                </button>
+                <!-- Add minute to Individual Timer Button -->
+                <ion-row>
 
-              </ion-row>
+                  <button ion-button
+                          color="primary"
+                          (click)="addToSingleTimer(timer)"
+                          class="button timer-button">
+                    +1min
+                  </button>
 
-              <!-- Reset Individual Timer Button -->
-              <ion-row>
+                </ion-row>
 
-                <button ion-button
-                        color="secondary"
-                        (click)="resetSingleTimer(timer)"
-                        class="button timer-button">
-                  Reset
-                </button>
-                
-              </ion-row>
+                <!-- Reset Individual Timer Button -->
+                <ion-row>
 
-          </div>
-          <!-- End Concurrent Timers Individual Controls -->
+                  <button ion-button
+                          color="secondary"
+                          (click)="resetSingleTimer(timer)"
+                          class="button timer-button">
+                    Reset
+                  </button>
 
-        </ng-container>
+                </ion-row>
 
-      </ion-row>
+            </div>
+            <!-- End Concurrent Timers Individual Controls -->
+
+          </ng-container>
+
+        </ion-row>
+
+      </div>
 
     </ng-container>
     <!-- End Active Step View Timers -->
