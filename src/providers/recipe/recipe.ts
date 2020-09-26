@@ -279,7 +279,6 @@ export class RecipeProvider {
 
     // Process sync flags if present, then get recipes from server
     if (this.connectionService.isConnected() && this.userService.isLoggedIn()) {
-      console.log('try concat')
       concat(
         this.syncOnConnection(true),
         this.http.get(`${BASE_URL}/${API_VERSION}/recipes/private`)
@@ -912,6 +911,18 @@ export class RecipeProvider {
       }
     });
 
+    combined.sort(
+      (h1: HopsSchedule, h2: HopsSchedule): number => {
+        if (h1.quantity > h2.quantity) {
+          return -1;
+        } else if (h1.quantity < h2.quantity) {
+          return 1;
+        } else {
+          return 0;
+        }
+      }
+    );
+
     return combined;
   }
 
@@ -991,7 +1002,7 @@ export class RecipeProvider {
    * @return: true if at least one process is in the schedule
   **/
   isRecipeProcessPresent(variant: RecipeVariant): boolean {
-    return  variant
+    return variant
       && variant.processSchedule !== undefined
       && variant.processSchedule.length > 0;
   }

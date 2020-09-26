@@ -2065,13 +2065,20 @@ describe('Recipe Service', () => {
     }); // end 'should refresh the master list' test
 
     test('should combine hops schedule', () => {
-      const _mockHopsSchedule: HopsSchedule[] = mockHopsSchedule();
+      const __mockHopsSchedule: HopsSchedule[] = mockHopsSchedule();
+      const _mockHopsSchedule: HopsSchedule[] = [
+        __mockHopsSchedule[1],
+        __mockHopsSchedule[0],
+        __mockHopsSchedule[2],
+        __mockHopsSchedule[0]
+      ];
 
       const combined: HopsSchedule[]
         = recipeService.getCombinedHopsSchedule(_mockHopsSchedule);
 
       expect(combined.length).toEqual(3);
       expect(combined[0].quantity).toEqual(2);
+      expect(combined[1].quantity).toEqual(0.5);
     }); // end 'should combine hops schedule' test
 
     test('should fail to combine a missing hops schedule', () => {
