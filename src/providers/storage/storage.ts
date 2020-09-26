@@ -11,14 +11,12 @@ import { Batch } from '../../shared/interfaces/batch';
 import { LibraryStorage } from '../../shared/interfaces/library';
 import { InventoryItem } from '../../shared/interfaces/inventory-item';
 import { RecipeMaster } from '../../shared/interfaces/recipe-master';
+import { SelectedUnits } from '../../shared/interfaces/units';
 import { SyncMetadata } from '../../shared/interfaces/sync';
 import { User } from '../../shared/interfaces/user';
 
 /* Default imports */
 import { defaultEnglish } from '../../shared/defaults/default-units';
-
-/* Utility imports */
-import { clone } from '../../shared/utility-functions/clone';
 
 
 @Injectable()
@@ -351,12 +349,13 @@ export class StorageProvider {
           return JSON.parse(user);
         })
         .catch((): User => {
+          const _defaultEnglish: SelectedUnits = defaultEnglish();
           return {
             cid: 'offline',
             username: '',
             token: '',
-            preferredUnitSystem: defaultEnglish.system,
-            units: clone(defaultEnglish)
+            preferredUnitSystem: _defaultEnglish.system,
+            units: _defaultEnglish
           };
         })
     );
