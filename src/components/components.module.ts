@@ -1,11 +1,13 @@
 import { NgModule } from '@angular/core';
 import { IonicModule } from 'ionic-angular';
+import { PipesModule } from '../pipes/pipes.module';
 import { AccordionComponent } from './accordion/accordion';
 import { ActiveBatchesComponent } from './active-batches/active-batches';
 import { CalendarComponent } from './calendar/calendar';
 import { HeaderComponent } from './header/header';
 import { ProgressCircleComponent } from './progress-circle/progress-circle';
 import { InventoryComponent } from './inventory/inventory';
+import { FormErrorComponent } from './form-error/form-error';
 
 
 @NgModule({
@@ -15,16 +17,21 @@ import { InventoryComponent } from './inventory/inventory';
 		CalendarComponent,
     HeaderComponent,
     ProgressCircleComponent,
-    InventoryComponent
+    InventoryComponent,
+    FormErrorComponent
 	],
-	imports: [ IonicModule ],
+	imports: [
+		IonicModule,
+	 	PipesModule
+	],
 	exports: [
 		AccordionComponent,
 		ActiveBatchesComponent,
 		CalendarComponent,
     HeaderComponent,
     ProgressCircleComponent,
-    InventoryComponent
+    InventoryComponent,
+    FormErrorComponent
 	],
 	entryComponents: [
 		ActiveBatchesComponent,
