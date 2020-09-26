@@ -1,7 +1,8 @@
 /* Module imports */
-import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/testing';
+import { ComponentFixture, TestBed, getTestBed } from '@angular/core/testing';
 import { IonicModule } from 'ionic-angular';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { FormGroup, FormControl } from '@angular/forms';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 import { of } from 'rxjs/observable/of';
@@ -29,6 +30,14 @@ describe('Profile Component', () => {
   let injector: TestBed;
   let userService: UserProvider;
   let toastService: ToastProvider;
+  let originalNgOnInit: () => void;
+  let originalNgOnDestroy: () => void;
+  const staticUser: User = mockUser();
+  const staticUserForm: FormGroup = new FormGroup({
+    email: new FormControl(''),
+    firstname: new FormControl(''),
+    lastname: new FormControl('')
+  });
   configureTestBed();
 
   beforeAll(done => (async() => {
@@ -60,32 +69,44 @@ describe('Profile Component', () => {
     userService = injector.get(UserProvider);
     toastService = injector.get(ToastProvider);
 
-    userService.getUser = jest
-      .fn()
-      .mockReturnValue(new BehaviorSubject<User>(mockUser()));
-    userService.isLoggedIn = jest
-      .fn()
-      .mockReturnValue(true);
-
     toastService.presentToast = jest
+      .fn();
+
+    profilePage.userForm = staticUserForm;
+    profilePage.isLoggedIn = true;
+    profilePage.user = staticUser;
+
+    originalNgOnInit = profilePage.ngOnInit;
+    profilePage.ngOnInit = jest
+      .fn();
+    originalNgOnDestroy = profilePage.ngOnDestroy;
+    profilePage.ngOnDestroy = jest
       .fn();
   });
 
   test('should create the component', () => {
+    profilePage.ngOnInit = originalNgOnInit;
+    profilePage.ngOnDestroy = originalNgOnDestroy;
+
+    userService.getUser = jest
+      .fn()
+      .mockReturnValue(new BehaviorSubject<User>(staticUser));
+    userService.isLoggedIn = jest
+      .fn()
+      .mockReturnValue(true);
+    profilePage.initForm = jest
+      .fn();
+
     fixture.detectChanges();
 
     expect(profilePage).toBeDefined();
   }); // end 'should create the component' test
 
-  test('should have new updated values', () => {
-    fixture.detectChanges();
-
-    profilePage.originalValues.email = 'new-email';
-
-    expect(profilePage.hasValuesToUpdate()).toBe(true);
-  }); // end 'should have new updated values' test
-
   test('should get error when trying to get user', () => {
+    profilePage.ngOnInit = originalNgOnInit;
+    profilePage.initForm = jest
+      .fn();
+
     const consoleSpy: jest.SpyInstance = jest.spyOn(console, 'log');
 
     userService.getUser = jest
@@ -96,14 +117,6 @@ describe('Profile Component', () => {
 
     expect(consoleSpy).toHaveBeenCalledWith('Error getting user: user error');
   }); // end 'should get error when trying to get user' test
-
-  test('should not have new updated values', () => {
-    fixture.detectChanges();
-
-    profilePage.originalValues = profilePage.userForm.value;
-
-    expect(profilePage.hasValuesToUpdate()).toBe(false);
-  }); // end 'should not have new updated values' test
 
   test('should stop editing', () => {
     fixture.detectChanges();
@@ -116,14 +129,14 @@ describe('Profile Component', () => {
   test('should init form with user', () => {
     fixture.detectChanges();
 
-    const _mockUser: User = mockUser();
+    profilePage.initForm(staticUser);
 
     expect(profilePage.userForm.controls.email.value)
-      .toMatch(_mockUser.email);
+      .toMatch(staticUser.email);
     expect(profilePage.userForm.controls.firstname.value)
-      .toMatch(_mockUser.firstname);
+      .toMatch(staticUser.firstname);
     expect(profilePage.userForm.controls.lastname.value)
-      .toMatch(_mockUser.lastname);
+      .toMatch(staticUser.lastname);
   }); // end 'should init form with user' test
 
   test('should init form without a user', () => {
@@ -145,22 +158,6 @@ describe('Profile Component', () => {
 
     expect(profilePage.isEditing(field)).toBe(true);
   }); // end 'should be in editing for field' test
-
-  test('should not be in editing for field', () => {
-    fixture.detectChanges();
-
-    const field: string = 'email';
-
-    profilePage.editing = '';
-
-    expect(profilePage.isEditing(field)).toBe(false);
-  }); // end 'should not be in editing for field' test
-
-  test('should be logged in', () => {
-    fixture.detectChanges();
-
-    expect(profilePage.isLoggedIn()).toBe(true);
-  }); // end 'should be logged in' test
 
   test('should change editing to \'email\'', () => {
     fixture.detectChanges();
@@ -194,54 +191,26 @@ describe('Profile Component', () => {
     expect(profilePage.editing).toMatch('');
   }); // end 'should stop editing' test
 
-  test('should map new values to original values', () => {
-    fixture.detectChanges();
-
-    const newValues: object = {
-      email: 'new-email',
-      firstname: 'new-firstname',
-      lastname: 'new-lastname',
-      ignore: true
-    };
-
-    profilePage.mapOriginalValues(newValues);
-
-    expect(profilePage.originalValues.email)
-      .toMatch(newValues['email']);
-    expect(profilePage.originalValues.firstname)
-      .toMatch(newValues['firstname']);
-    expect(profilePage.originalValues.lastname)
-      .toMatch(newValues['lastname']);
-    expect(profilePage.originalValues['ignore']).toBeUndefined();
-  }); // end 'should map new values to original values' test
-
   test('should submit an update', () => {
-    const _mockUser: User = mockUser();
-
     userService.updateUserProfile = jest
       .fn()
-      .mockReturnValue(of(_mockUser));
-
-    profilePage.updateForm = jest
-      .fn();
+      .mockReturnValue(of(staticUser));
 
     fixture.detectChanges();
 
-    const updateSpy: jest.SpyInstance = jest.spyOn(profilePage, 'updateForm');
     const toastSpy: jest.SpyInstance = jest.spyOn(toastService, 'presentToast');
 
     profilePage.onUpdate();
 
-    expect(updateSpy).toHaveBeenCalledWith(_mockUser);
     expect(toastSpy).toHaveBeenCalledWith('Profile Updated');
   }); // end 'should submit an update' test
 
   test('should fail to update user profile on error response', () => {
-    fixture.detectChanges();
-
     userService.updateUserProfile = jest
       .fn()
       .mockReturnValue(new ErrorObservable('update error'));
+
+    fixture.detectChanges();
 
     const toastSpy: jest.SpyInstance = jest.spyOn(toastService, 'presentToast');
 
@@ -249,19 +218,5 @@ describe('Profile Component', () => {
 
     expect(toastSpy).toHaveBeenCalledWith('update error');
   }); // end 'should fail to update user profile on error response' test
-
-  test('should update original values with updated values', () => {
-    fixture.detectChanges();
-
-    profilePage.updateForm({
-      email: 'email',
-      firstname: 'first',
-      lastname: 'last'
-    });
-
-    expect(profilePage.originalValues.email).toMatch('email');
-    expect(profilePage.originalValues.firstname).toMatch('first');
-    expect(profilePage.originalValues.lastname).toMatch('last');
-  }); // end 'should update original values with updated values' test
 
 });

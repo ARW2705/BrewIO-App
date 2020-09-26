@@ -2,9 +2,8 @@
 
   <ion-grid>
 
-    <ion-list *ngIf="isLoggedIn()"
+    <ion-list *ngIf="isLoggedIn"
               no-lines>
-
 
       <!-- Profile section -->
 
@@ -34,7 +33,7 @@
 
       </ion-row>
 
-      <accordion [expanded]="showExpandedContent('profile')">
+      <accordion [expanded]="expandedContent === 'profile'">
 
         <profile></profile>
 
@@ -68,7 +67,7 @@
 
       </ion-row>
 
-      <accordion [expanded]="showExpandedContent('friends')">
+      <accordion [expanded]="expandedContent === 'friends'">
 
         <friends></friends>
 
@@ -78,7 +77,7 @@
 
     <!-- Signup section -->
 
-    <ion-row  *ngIf="!isLoggedIn()"
+    <ion-row  *ngIf="!isLoggedIn"
               class="section-row">
 
       <ion-col col-12>
@@ -104,7 +103,7 @@
         </button>
 
       </ion-col>
-      
+
     </ion-row>
 
   </ion-grid>

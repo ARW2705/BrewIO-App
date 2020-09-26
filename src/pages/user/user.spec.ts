@@ -1,10 +1,17 @@
 /* Module imports */
-import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/testing';
+import { ComponentFixture, TestBed, getTestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { IonicModule } from 'ionic-angular';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 /* Test configuration imports */
 import { configureTestBed } from '../../../test-config/configureTestBed';
+
+/* Mock imports */
+import { mockUser } from '../../../test-config/mockmodels/mockUser';
+
+/* Interface imports */
+import { User } from '../../shared/interfaces/user';
 
 /* Page imports */
 import { UserPage } from './user';
@@ -51,6 +58,10 @@ describe('User Page', () => {
     userService = injector.get(UserProvider);
     modalService = injector.get(ModalProvider);
 
+    const _mockUser: BehaviorSubject<User> = new BehaviorSubject<User>(mockUser());
+    userService.getUser = jest
+      .fn()
+      .mockReturnValue(_mockUser);
     userService.isLoggedIn = jest
       .fn();
 
@@ -79,16 +90,6 @@ describe('User Page', () => {
 
     expect(userPage.expandedContent.length).toBe(0);
   }); // end 'should toggle a section' test
-
-  test('should return if content should be expanded', () => {
-    fixture.detectChanges();
-
-    expect(userPage.showExpandedContent('should be false')).toBe(false);
-
-    userPage.expandedContent = 'should be true';
-
-    expect(userPage.showExpandedContent('should be true')).toBe(true);
-  }); // end 'should return if content should be expanded' test
 
   test('should open the login modal', () => {
     fixture.detectChanges();

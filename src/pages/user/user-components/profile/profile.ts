@@ -28,11 +28,7 @@ export class ProfileComponent {
   @ViewChild('lastname') lastnameField: TextInput;
   destroy$: Subject<boolean> = new Subject<boolean>();
   editing: string = '';
-  originalValues: { email: string, firstname: string, lastname: string } = {
-    email: '',
-    firstname: '',
-    lastname: ''
-  };
+  isLoggedIn: boolean = false;
   user: User = null;
   userForm: FormGroup = null;
 
@@ -51,6 +47,7 @@ export class ProfileComponent {
       .subscribe(
         (user: User) => {
           this.user = user;
+          this.isLoggedIn = this.userService.isLoggedIn();
           this.initForm(user);
         },
         (error: ErrorObservable) => {
@@ -92,22 +89,6 @@ export class ProfileComponent {
   }
 
   /**
-   * Check if profile form has a value other than original
-   *
-   * @params: none
-   *
-   * @return: true if at least on form field has a new input value
-  **/
-  hasValuesToUpdate(): boolean {
-    for (const key in this.originalValues) {
-      if (this.userForm.value[key] != this.originalValues[key]) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /**
    * Create form with profile values in form fields
    *
    * @params: user - user profile object
@@ -134,32 +115,6 @@ export class ProfileComponent {
   }
 
   /**
-   * Check if user is logged in via user provider
-   *
-   * @params: none
-   *
-   * @return: true if user is logged in
-  **/
-  isLoggedIn(): boolean {
-    return this.userService.isLoggedIn();
-  }
-
-  /**
-   * Update original values object with new values
-   *
-   * @params: values - key value pairs of updates to apply
-   *
-   * @return: none
-  **/
-  mapOriginalValues(values: object): void {
-    for (const key in this.originalValues) {
-      if (values.hasOwnProperty(key)) {
-        this.originalValues[key] = values[key];
-      }
-    }
-  }
-
-  /**
    * Submit updated user profile, update view on successful response or
    * display error message on error
    *
@@ -170,26 +125,13 @@ export class ProfileComponent {
     this.userService.updateUserProfile(this.userForm.value)
       .pipe(take(1))
       .subscribe(
-        response => {
-          this.updateForm(response);
+        (): void => {
           this.toastService.presentToast('Profile Updated');
         },
         error => {
           this.toastService.presentToast(error);
         }
       );
-  }
-
-  /**
-   * Update original values and form fields with updated values
-   *
-   * @params: update - key value pairs of user profile data
-   *
-   * @return: none
-  **/
-  updateForm(update: any): void {
-    this.mapOriginalValues(update);
-    this.userForm.reset(this.originalValues);
   }
 
   /***** End Form Methods *****/

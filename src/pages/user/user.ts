@@ -1,5 +1,7 @@
 /* Module imports */
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subject } from 'rxjs/Subject';
+import { takeUntil } from 'rxjs/operators/takeUntil';
 
 /* Provider imports */
 import { UserProvider } from '../../providers/user/user';
@@ -10,23 +12,27 @@ import { ModalProvider } from '../../providers/modal/modal';
   selector: 'page-user',
   templateUrl: 'user.html'
 })
-export class UserPage {
+export class UserPage implements OnInit, OnDestroy {
+  destroy$: Subject<boolean> = new Subject<boolean>();
   expandedContent: string = '';
+  isLoggedIn: boolean = false;
 
   constructor(
     public userService: UserProvider,
     public modalService: ModalProvider
   ) { }
 
-  /**
-   * Check if a user is logged in
-   *
-   * @params: none
-   *
-   * @return: true if a user is logged in
-  **/
-  isLoggedIn(): boolean {
-    return this.userService.isLoggedIn();
+  ngOnInit() {
+    this.userService.getUser()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((): void => {
+        this.isLoggedIn = this.userService.isLoggedIn();
+      });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next(true);
+    this.destroy$.complete();
   }
 
   /**
@@ -47,17 +53,6 @@ export class UserPage {
   **/
   openSignup(): void {
     this.modalService.openSignup();
-  }
-
-  /**
-   * Determine if content should be expanded or collapsed
-   *
-   * @params: section - name of section check
-   *
-   * @return: true if section name matches expandedContent name
-  **/
-  showExpandedContent(section: string): boolean {
-    return section === this.expandedContent;
   }
 
   /**

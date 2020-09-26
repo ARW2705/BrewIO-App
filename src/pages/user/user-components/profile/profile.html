@@ -3,7 +3,7 @@
 
   <ion-grid>
 
-    <ng-container *ngIf="isLoggedIn()">
+    <ng-container *ngIf="isLoggedIn && userForm">
 
       <ion-row>
 
@@ -12,7 +12,7 @@
               id="form">
 
           <!-- Email field (not form) -->
-          <ion-item *ngIf="!isEditing('email', undefined)">
+          <ion-item *ngIf="editing !== 'email'">
 
             <!-- Toggle editing mode for email -->
             <button (click)="changeEdit('email')"
@@ -25,7 +25,7 @@
           </ion-item>
 
           <!-- Email field (form) -->
-          <ion-item *ngIf="isEditing('email')">
+          <ion-item *ngIf="editing === 'email'">
 
             <ion-label floating>
               Email
@@ -42,7 +42,7 @@
           </ion-item>
 
           <!-- First name field (not form) -->
-          <ion-item *ngIf="!isEditing('firstname')">
+          <ion-item *ngIf="editing !== 'firstname'">
 
             <!-- Toggle editing mode for first name -->
             <button (click)="changeEdit('firstname', undefined)"
@@ -55,7 +55,7 @@
           </ion-item>
 
           <!-- First name field (form) -->
-          <ion-item *ngIf="isEditing('firstname')">
+          <ion-item *ngIf="editing === 'firstname'">
 
             <ion-label floating>
               First name
@@ -72,7 +72,7 @@
           </ion-item>
 
           <!-- Last name field (not form) -->
-          <ion-item *ngIf="!isEditing('lastname')">
+          <ion-item *ngIf="editing !== 'lastname'">
 
             <!-- Toggle editing mode for last name -->
             <button (click)="changeEdit('lastname', undefined)"
@@ -85,7 +85,7 @@
           </ion-item>
 
           <!-- Last name field (form) -->
-          <ion-item *ngIf="isEditing('lastname')">
+          <ion-item *ngIf="editing === 'lastname'">
 
             <ion-label floating>
               Last name
@@ -106,7 +106,7 @@
       </ion-row>
 
       <!-- Submit changes to user profile -->
-      <ion-row *ngIf="hasValuesToUpdate()">
+      <ion-row>
 
         <ion-col class="user-button-container">
 
@@ -126,7 +126,7 @@
 
     <!-- Prompt user to login or signup if not logged in -->
 
-    <ng-container *ngIf="!isLoggedIn()">
+    <ng-container *ngIf="!isLoggedIn">
 
       <ion-row justify-content-center>
 
