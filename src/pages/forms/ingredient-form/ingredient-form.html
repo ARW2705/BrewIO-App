@@ -37,27 +37,81 @@
 
           </ion-item>
 
+          <!-- Error messages -->
+          <form-error *ngIf="
+            ingredientForm.controls['type'].touched
+            && ingredientForm.controls['type'].errors
+          "
+                      formName="ingredient"
+                      controlName="type"
+                      [controlErrors]="ingredientForm.controls['type'].errors">
+          </form-error>
+
+
         </ion-col>
 
       </ion-row>
 
+
       <!-- GRAIN BILL SPECIFIC -->
       <ion-row *ngIf="ingredientType === 'grains'">
 
-        <ion-col>
+        <ion-col col-12>
 
-          <!-- Grain Quantity -->
+          <!-- Grain Bulk Quantity -->
           <ion-item>
 
             <ion-label floating>
-              Quantity
+              Quantity ({{ units !== null ? units.weightLarge.shortName: '' }})
             </ion-label>
 
             <ion-input  formControlName="quantity"
-                        type="number" >
+                        type="number"
+                        autocomplete="off">
             </ion-input>
 
           </ion-item>
+
+          <!-- Error messages -->
+          <form-error *ngIf="
+            ingredientForm.controls['quantity'].touched
+            && ingredientForm.controls['quantity'].errors
+          "
+                      formName="ingredient"
+                      controlName="quantity"
+                      [controlErrors]="ingredientForm.controls['quantity'].errors">
+          </form-error>
+
+
+        </ion-col>
+
+        <ion-col  *ngIf="hasSubQuantity"
+                  col-12>
+
+          <!-- Grain Fine Quantity -->
+          <ion-item>
+
+            <ion-label floating>
+              Quantity ({{ units !== null ? units.weightSmall.shortName: '' }})
+            </ion-label>
+
+            <ion-input  formControlName="subQuantity"
+                        type="number"
+                        autocomplete="off">
+            </ion-input>
+
+          </ion-item>
+
+          <!-- Error messages -->
+          <form-error *ngIf="
+            ingredientForm.controls['subQuantity'].touched
+            && ingredientForm.controls['subQuantity'].errors
+          "
+                      formName="ingredient"
+                      controlName="subQuantity"
+                      [controlErrors]="ingredientForm.controls['subQuantity'].errors">
+          </form-error>
+
 
         </ion-col>
 
@@ -71,7 +125,8 @@
             </ion-label>
 
             <ion-input  formControlName="mill"
-                        type="number">
+                        type="number"
+                        autocomplete="off">
             </ion-input>
 
           </ion-item>
@@ -79,6 +134,7 @@
         </ion-col>
 
       </ion-row>
+
 
       <!-- HOPS SCHEDULE SPECIFIC -->
       <ion-row *ngIf="ingredientType === 'hops'">
@@ -89,14 +145,26 @@
           <ion-item>
 
             <ion-label floating>
-              Quantity
+              Quantity ({{ units !== null ? units.weightSmall.shortName: '' }})
             </ion-label>
 
-            <ion-input  formControlName="quantity"
-                        type="number">
+            <ion-input  formControlName="subQuantity"
+                        type="number"
+                        autocomplete="off">
             </ion-input>
 
           </ion-item>
+
+          <!-- Error messages -->
+          <form-error *ngIf="
+            ingredientForm.controls['subQuantity'].touched
+            && ingredientForm.controls['subQuantity'].errors
+          "
+                      formName="ingredient"
+                      controlName="subQuantity"
+                      [controlErrors]="ingredientForm.controls['subQuantity'].errors">
+          </form-error>
+
 
         </ion-col>
 
@@ -105,15 +173,28 @@
           <!-- Hops Addition Time -->
           <ion-item>
 
-            <ion-label floating>
-              Add At
+            <ion-label  floating
+                        class="label-full-width">
+              Boil time (minutes)
             </ion-label>
 
             <ion-input  formControlName="addAt"
-                        type="number">
+                        type="number"
+                        autocomplete="off">
             </ion-input>
 
           </ion-item>
+
+          <!-- Error messages -->
+          <form-error *ngIf="
+            ingredientForm.controls['addAt'].touched
+            && ingredientForm.controls['addAt'].errors
+          "
+                      formName="ingredient"
+                      controlName="addAt"
+                      [controlErrors]="ingredientForm.controls['addAt'].errors">
+          </form-error>
+
 
         </ion-col>
 
@@ -126,7 +207,9 @@
               Dry Hop
             </ion-label>
 
-            <ion-toggle formControlName="dryHop"></ion-toggle>
+            <ion-toggle formControlName="dryHop"
+                        (ionChange)="onDryHopChange($event)">
+            </ion-toggle>
 
           </ion-item>
 
@@ -143,18 +226,30 @@
           <ion-item>
 
             <ion-label floating>
-              Quantity
+              Quantity (packs/vials)
             </ion-label>
 
             <ion-input  formControlName="quantity"
-                        type="number">
+                        type="number"
+                        autocomplete="off">
             </ion-input>
 
           </ion-item>
 
+          <!-- Error messages -->
+          <form-error *ngIf="
+            ingredientForm.controls['quantity'].touched
+            && ingredientForm.controls['quantity'].errors
+          "
+                      formName="ingredient"
+                      controlName="quantity"
+                      [controlErrors]="ingredientForm.controls['quantity'].errors">
+          </form-error>
+
+
         </ion-col>
 
-        <ion-col>
+        <ion-col col-12>
 
           <!-- Select if Yeast needs a Starter -->
           <ion-item>
@@ -184,10 +279,25 @@
             </ion-label>
 
             <ion-input  formControlName="name"
-                        type="text">
+                        type="text"
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="off"
+                        spellcheck="false">
             </ion-input>
 
           </ion-item>
+
+          <!-- Error messages -->
+          <form-error *ngIf="
+            ingredientForm.controls['name'].touched
+            && ingredientForm.controls['name'].errors
+          "
+                      formName="ingredient"
+                      controlName="name"
+                      [controlErrors]="ingredientForm.controls['name'].errors">
+          </form-error>
+
 
         </ion-col>
 
@@ -201,10 +311,25 @@
             </ion-label>
 
             <ion-input  formControlName="type"
-                        type="text">
+                        type="text"
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="off"
+                        spellcheck="false">
             </ion-input>
 
           </ion-item>
+
+          <!-- Error messages -->
+          <form-error *ngIf="
+            ingredientForm.controls['type'].touched
+            && ingredientForm.controls['type'].errors
+          "
+                      formName="ingredient"
+                      controlName="type"
+                      [controlErrors]="ingredientForm.controls['type'].errors">
+          </form-error>
+
 
         </ion-col>
 
@@ -218,10 +343,22 @@
             </ion-label>
 
             <ion-input  formControlName="quantity"
-                        type="number">
+                        type="number"
+                        autocomplete="off">
             </ion-input>
 
           </ion-item>
+
+          <!-- Error messages -->
+          <form-error *ngIf="
+            ingredientForm.controls['quantity'].touched
+            && ingredientForm.controls['quantity'].errors
+          "
+                      formName="ingredient"
+                      controlName="quantity"
+                      [controlErrors]="ingredientForm.controls['quantity'].errors">
+          </form-error>
+
 
         </ion-col>
 
@@ -235,10 +372,25 @@
             </ion-label>
 
             <ion-input  formControlName="units"
-                        type="text">
+                        type="text"
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="off"
+                        spellcheck="false">
             </ion-input>
 
           </ion-item>
+
+          <!-- Error messages -->
+          <form-error *ngIf="
+            ingredientForm.controls['units'].touched
+            && ingredientForm.controls['units'].errors
+          "
+                      formName="ingredient"
+                      controlName="units"
+                      [controlErrors]="ingredientForm.controls['units'].errors">
+          </form-error>
+
 
         </ion-col>
 
@@ -252,10 +404,25 @@
             </ion-label>
 
             <ion-textarea formControlName="description"
-                          rows="3">
+                          rows="3"
+                          autocomplete="off"
+                          autocorrect="off"
+                          autocapitalize="off"
+                          spellcheck="false">
             </ion-textarea>
 
           </ion-item>
+
+          <!-- Error messages -->
+          <form-error *ngIf="
+            ingredientForm.controls['description'].touched
+            && ingredientForm.controls['description'].errors
+          "
+                      formName="ingredient"
+                      controlName="description"
+                      [controlErrors]="ingredientForm.controls['description'].errors">
+          </form-error>
+
 
         </ion-col>
 

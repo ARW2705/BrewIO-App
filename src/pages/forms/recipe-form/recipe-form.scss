@@ -52,6 +52,7 @@ page-recipe-form {
   .addition-button {
     /* Display */
     width: 100%;
+    margin-left: 0;
 
     /* Color */
     color: map-get($colors, gray-scale-1);
@@ -92,9 +93,12 @@ page-recipe-form {
     /* Display */
     padding: 0;
     margin: 5px 0;
+    border-radius: 10px;
+    box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.6);
+    -webkit-box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.6);
 
     /* Color */
-    background: map-get($colors, gray-scale-6);
+    background: none;
     color: map-get($colors, gray-scale-2);
 
     /* Children */
@@ -109,8 +113,11 @@ page-recipe-form {
       height: 100%;
 
       /* Children */
-      button {
+      .note-button {
         /* Display */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         height: 100%;
         width: 100%;
 
@@ -118,6 +125,11 @@ page-recipe-form {
         font-size: 1em;
 
         /* Children */
+        .note-icon {
+          /* Text */
+          font-size: 1.3em;
+        }
+
         span {
           /* Display */
           overflow: hidden;
@@ -129,6 +141,12 @@ page-recipe-form {
         }
       }
     }
+  }
+
+  .note-item.activated {
+    /* Display */
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    -webkit-box-shadow: 0 0 0 rgba(0, 0, 0, 0);
   }
 
   .note-operation-button-container {

@@ -6,7 +6,8 @@
 
 <ion-content  padding
               class="sub-page">
-  <ion-grid>
+
+  <ion-grid *ngIf="note">
 
     <!-- Form text area -->
     <ion-row id="form-container">
@@ -15,11 +16,22 @@
 
         <ion-textarea [formControl]="note"
                       id="textarea"
-                      rows="8"
-                      autofocus>
+                      rows="5"
+                      autocomplete="off"
+                      autocorrect="off"
+                      autocapitalize="off"
+                      spellcheck="false">
         </ion-textarea>
 
       </form>
+
+      <ng-container *ngIf="note !== null && note.errors">
+
+        <div class="form-error">
+          Please limit notes to 120 characters
+        </div>
+
+      </ng-container>
 
     </ion-row>
 

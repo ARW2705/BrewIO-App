@@ -7,95 +7,106 @@
 <ion-content  padding
               class="sub-page">
 
-  <form [formGroup]="loginForm">
+  <ng-container *ngIf="loginForm">
 
-    <!-- Username Input -->
-    <ion-item>
+    <form [formGroup]="loginForm">
 
-      <ion-label floating>
-        Username
-      </ion-label>
+      <!-- Username Input -->
+      <ion-item>
 
-      <ion-input  formControlName="username"
-                  type="text"
-                  autocapitalize="off"
-                  spellcheck="false"
-                  autofocus>
-      </ion-input>
+        <ion-label floating>
+          Username
+        </ion-label>
 
-    </ion-item>
+        <ion-input  formControlName="username"
+                    type="text"
+                    autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false">
+        </ion-input>
 
-    <!-- Password Input -->
-    <ion-item>
+      </ion-item>
 
-      <ion-label floating>
-        Password
-      </ion-label>
+      <!-- Password Input -->
+      <ion-item>
 
-      <ion-input  formControlName="password"
-                  type="{{ showPassword ? 'text': 'password' }}"
-                  autocapitalize="off"
-                  spellcheck="false">
-      </ion-input>
-      
-    </ion-item>
+        <ion-label floating>
+          Password
+        </ion-label>
 
-    <!-- Toggle display password in plain text -->
-    <ion-item>
+        <ion-input  formControlName="password"
+                    type="{{ showPassword ? 'text': 'password' }}"
+                    autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false">
+        </ion-input>
 
-      <ion-label>
-        Show Password
-      </ion-label>
+      </ion-item>
 
-      <ion-checkbox (ionChange)="togglePasswordVisible()"></ion-checkbox>
+      <!-- Toggle display password in plain text -->
+      <ion-item>
 
-    </ion-item>
+        <ion-label>
+          Show Password
+        </ion-label>
 
-    <!-- Set to remember user in storage -->
-    <ion-item>
+        <ion-checkbox (ionChange)="togglePasswordVisible()"></ion-checkbox>
 
-      <ion-label>
-        Remember Me
-      </ion-label>
+      </ion-item>
 
-      <ion-checkbox formControlName="remember"></ion-checkbox>
+      <!-- Set to remember user in storage -->
+      <ion-item>
 
-    </ion-item>
+        <ion-label>
+          Remember Me
+        </ion-label>
 
-  </form>
+        <ion-checkbox formControlName="remember"></ion-checkbox>
 
-  <!-- Form Buttons -->
-  <ion-grid>
+      </ion-item>
 
-    <ion-row>
+    </form>
 
-      <!-- Form cancel button -->
-      <ion-col>
+    <!-- Form Buttons -->
+    <ion-grid>
 
-        <button ion-button
-                color="primary"
-                (click)="dismiss()"
-                class="form-button">
-          Cancel
-        </button>
+      <ion-row>
 
-      </ion-col>
+        <!-- Form cancel button -->
+        <ion-col>
 
-      <!-- Log in submit button -->
-      <ion-col>
+          <button ion-button
+                  color="primary"
+                  (click)="dismiss()"
+                  class="form-button">
+            Cancel
+          </button>
 
-        <button ion-button
-                color="primary"
-                (click)="onSubmit()"
-                class="form-button"
-                [disabled]="!loginForm.valid">
-          Log In
-        </button>
+        </ion-col>
 
-      </ion-col>
+        <!-- Log in submit button -->
+        <ion-col>
 
-    </ion-row>
+          <button ion-button
+                  color="primary"
+                  (click)="onSubmit()"
+                  class="form-button"
+                  [disabled]="!loginForm.valid">
+            Log In
+          </button>
 
-  </ion-grid>
+        </ion-col>
+
+      </ion-row>
+
+    </ion-grid>
+
+  </ng-container>
+
+  <ng-container *ngIf="!loginForm">
+    Login Form Failed Construction
+  </ng-container>
 
 </ion-content>

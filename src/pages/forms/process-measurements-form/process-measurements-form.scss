@@ -1,13 +1,13 @@
 page-process-measurements-form {
-  .item-md {
-    /* Display */
-    padding-right: 16px;
+  #heading {
+    /* Text */
+    font-size: 1.5em;
+    text-align: center;
   }
 
-  .form-button {
+  .item-md {
     /* Display */
-    display: block;
-    width: 100%;
+    padding: 10px;
   }
 
   input {

@@ -7,144 +7,193 @@
 <ion-content  padding
               class="sub-page">
 
-  <form [formGroup]="processForm">
+  <ng-container *ngIf="processForm">
 
-    <!-- Step name input -->
-    <ion-item>
+    <form [formGroup]="processForm">
 
-      <ion-label floating>
-        Name
-      </ion-label>
-
-      <ion-input  formControlName="name"
-                  type="text"
-                  autofocus>
-      </ion-input>
-
-    </ion-item>
-
-    <!-- Step description text input -->
-    <ion-item>
-
-      <ion-label floating>
-        Description
-      </ion-label>
-
-      <ion-textarea formControlName="description"
-                    rows="3">
-      </ion-textarea>
-
-    </ion-item>
-
-    <!-- Expected duration input for manual steps -->
-    <ion-item *ngIf="stepType === 'manual'">
-
-      <ion-label floating>
-        Expected Duration
-      </ion-label>
-
-      <ion-input  formControlName="expectedDuration"
-                  type="number">
-      </ion-input>
-
-    </ion-item>
-
-    <!-- Duration input in minutes for timer steps and days for calendar steps -->
-    <ng-container *ngIf="stepType !== 'manual'">
-
+      <!-- Step name input -->
       <ion-item>
 
         <ion-label floating>
-          Duration {{ stepType === 'timer' ? '(Minutes)': '(Days)' }}
+          Name
         </ion-label>
 
-        <ion-input  formControlName="duration"
-                    type="number">
+        <ion-input  formControlName="name"
+                    type="text"
+                    autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false">
         </ion-input>
 
       </ion-item>
 
-      <ng-container *ngIf="stepType === 'timer'">
+      <!-- Error messages -->
+      <form-error *ngIf="
+        processForm.controls['name'].touched
+        && processForm.controls['name'].errors
+      "
+                  formName="process"
+                  controlName="name"
+                  [controlErrors]="processForm.controls['name'].errors">
+      </form-error>
 
-        <!-- Toggle if timer should be split into n intervals -->
+
+      <!-- Step description text input -->
+      <ion-item>
+
+        <ion-label floating>
+          Description
+        </ion-label>
+
+        <ion-textarea formControlName="description"
+                      rows="3"
+                      autocomplete="off"
+                      autocorrect="off"
+                      autocapitalize="off"
+                      spellcheck="false">
+        </ion-textarea>
+
+      </ion-item>
+
+      <!-- Error messages -->
+      <form-error *ngIf="
+        processForm.controls['description'].touched
+        && processForm.controls['description'].errors
+      "
+                  formName="process"
+                  controlName="description"
+                  [controlErrors]="processForm.controls['description'].errors">
+      </form-error>
+
+
+      <!-- Expected duration input for manual steps -->
+      <ion-item *ngIf="stepType === 'manual'">
+
+        <ion-label floating>
+          Expected Duration
+        </ion-label>
+
+        <ion-input  formControlName="expectedDuration"
+                    type="number"
+                    autocomplete="off">
+        </ion-input>
+
+      </ion-item>
+
+
+      <!-- Duration input in minutes for timer steps and days for calendar steps -->
+      <ng-container *ngIf="stepType !== 'manual'">
+
         <ion-item>
 
           <ion-label floating>
-            Split Interval
+            Duration {{ stepType === 'timer' ? '(Minutes)': '(Days)' }}
           </ion-label>
 
-          <ion-input  formControlName="splitInterval"
-                      type="number">
+          <ion-input  formControlName="duration"
+                      type="number"
+                      autocomplete="off">
           </ion-input>
 
         </ion-item>
 
-        <!-- Toggle if timer is concurrent with neighboring timers -->
-        <ion-item>
+        <!-- Error messages -->
+        <form-error *ngIf="
+          processForm.controls['duration'].touched
+          && processForm.controls['duration'].errors
+        "
+                    formName="process"
+                    controlName="duration"
+                    [controlErrors]="processForm.controls['duration'].errors">
+        </form-error>
 
-          <ion-label position="floating">
-            Concurrent
-          </ion-label>
 
-          <ion-toggle formControlName="concurrent"
-                      color="primary">
-          </ion-toggle>
+        <ng-container *ngIf="stepType === 'timer'">
 
-        </ion-item>
+          <!-- Toggle if timer should be split into n intervals -->
+          <ion-item>
+
+            <ion-label floating>
+              Split Interval
+            </ion-label>
+
+            <ion-input  formControlName="splitInterval"
+                        type="number"
+                        autocomplete="off">
+            </ion-input>
+
+          </ion-item>
+
+
+          <!-- Toggle if timer is concurrent with neighboring timers -->
+          <ion-item>
+
+            <ion-label position="floating">
+              Concurrent
+            </ion-label>
+
+            <ion-toggle formControlName="concurrent"
+                        color="primary">
+            </ion-toggle>
+
+          </ion-item>
+
+        </ng-container>
 
       </ng-container>
 
-    </ng-container>
+      <ion-grid>
 
-    <ion-grid>
+        <ion-row>
 
-      <ion-row>
+          <!-- Form cancel button -->
+          <ion-col>
 
-        <!-- Form cancel button -->
-        <ion-col>
+            <button ion-button
+                    color="primary"
+                    (click)="dismiss()"
+                    class="form-button">
+              Cancel
+            </button>
 
-          <button ion-button
-                  color="primary"
-                  (click)="dismiss()"
-                  class="form-button">
-            Cancel
-          </button>
+          </ion-col>
 
-        </ion-col>
+          <!-- Form submit button -->
+          <ion-col>
 
-        <!-- Form submit button -->
-        <ion-col>
+            <button ion-button
+                    color="primary"
+                    (click)="onSubmit()"
+                    class="form-button"
+                    [disabled]="!processForm.valid">
+              Submit
+            </button>
 
-          <button ion-button
-                  color="primary"
-                  (click)="onSubmit()"
-                  class="form-button"
-                  [disabled]="!processForm.valid">
-            Submit
-          </button>
+          </ion-col>
 
-        </ion-col>
+        </ion-row>
 
-      </ion-row>
+        <!-- Delete step button -->
+        <ion-row *ngIf="formMode === 'update'">
 
-      <!-- Delete step button -->
-      <ion-row *ngIf="formMode === 'update'">
+          <ion-col>
 
-        <ion-col>
+            <button ion-button
+                    color="danger"
+                    (click)="deleteStep()"
+                    class="form-button">
+              Delete
+            </button>
 
-          <button ion-button
-                  color="danger"
-                  (click)="deleteStep()"
-                  class="formButton">
-            Delete
-          </button>
+          </ion-col>
 
-        </ion-col>
+        </ion-row>
 
-      </ion-row>
+      </ion-grid>
 
-    </ion-grid>
+    </form>
 
-  </form>
+  </ng-container>
 
 </ion-content>

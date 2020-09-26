@@ -1,6 +1,7 @@
 /* Module imports */
 import { NgModule } from '@angular/core';
 import { IonicPageModule } from 'ionic-angular';
+import { ComponentsModule } from '../../components/components.module';
 
 /* Page imports */
 import { GeneralFormPage } from './general-form/general-form';
@@ -12,6 +13,9 @@ import { ProcessFormPage } from './process-form/process-form';
 import { ProcessMeasurementsFormPage } from './process-measurements-form/process-measurements-form';
 import { RecipeFormPage } from './recipe-form/recipe-form';
 import { SignupPage } from './signup/signup';
+
+/* Pipe imports */
+import { PipesModule } from '../../pipes/pipes.module';
 
 
 @NgModule({
@@ -27,7 +31,9 @@ import { SignupPage } from './signup/signup';
     SignupPage
   ],
   imports: [
-    IonicPageModule
+    IonicPageModule,
+    PipesModule,
+    ComponentsModule
   ],
   entryComponents: [
     GeneralFormPage,

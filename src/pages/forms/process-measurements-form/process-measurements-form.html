@@ -7,12 +7,21 @@
 <ion-content  no-padding
               class="sub-page">
 
-  <ion-grid no-padding>
+  <ion-grid *ngIf="measurementsForm"
+            no-padding>
 
     <ion-row  *ngIf="areAllRequired"
               justify-content-center
               id="heading">
-      Verify Measurements
+
+        <ion-col col-12>
+          Confirm Measurements
+        </ion-col>
+
+        <ion-col col-12>
+          For Submission
+        </ion-col>
+
     </ion-row>
 
     <ion-row>
@@ -23,40 +32,76 @@
         <ion-item>
 
           <ion-label position="floating">
-            Original Gravity
+            Original Gravity ({{ units.density.shortName }})
           </ion-label>
 
           <ion-input  formControlName="originalGravity"
-                      type="number">
+                      type="number"
+                      autocomplete="off">
           </ion-input>
 
         </ion-item>
+
+        <!-- Error messages -->
+        <form-error *ngIf="
+          measurementsForm.controls['originalGravity'].touched
+          && measurementsForm.controls['originalGravity'].errors
+        "
+                    formName="measurements"
+                    controlName="originalGravity"
+                    [controlErrors]="measurementsForm.controls['originalGravity'].errors">
+        </form-error>
+
 
         <!-- Final Gravity Input -->
         <ion-item>
 
           <ion-label position="floating">
-            Final Gravity
+            Final Gravity ({{ units.density.shortName }})
           </ion-label>
 
           <ion-input  formControlName="finalGravity"
-                      type="number">
+                      type="number"
+                      autocomplete="off">
           </ion-input>
 
         </ion-item>
+
+        <!-- Error messages -->
+        <form-error *ngIf="
+          measurementsForm.controls['finalGravity'].touched
+          && measurementsForm.controls['finalGravity'].errors
+        "
+                    formName="measurements"
+                    controlName="finalGravity"
+                    [controlErrors]="measurementsForm.controls['finalGravity'].errors">
+        </form-error>
+
 
         <!-- Batch Volume Input -->
         <ion-item>
 
           <ion-label position="floating">
-            Batch Volume
+            Batch Volume ({{ units.volumeLarge.shortName }})
           </ion-label>
 
           <ion-input  formControlName="batchVolume"
-                      type="number">
+                      type="number"
+                      autocomplete="off">
           </ion-input>
 
         </ion-item>
+
+        <!-- Error messages -->
+        <form-error *ngIf="
+          measurementsForm.controls['batchVolume'].touched
+          && measurementsForm.controls['batchVolume'].errors
+        "
+                    formName="measurements"
+                    controlName="batchVolume"
+                    [controlErrors]="measurementsForm.controls['batchVolume'].errors">
+        </form-error>
+
 
         <ion-grid>
 
@@ -81,7 +126,7 @@
                       (click)="onSubmit()"
                       class="form-button"
                       [disabled]="!measurementsForm.valid">
-                Submit
+                {{ areAllRequired ? 'Submit To Inventory': 'Submit' }}
               </button>
 
             </ion-col>

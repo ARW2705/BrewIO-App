@@ -1,7 +1,8 @@
 /* Module imports */
 import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/testing';
 import { IonicModule, NavParams, ViewController } from 'ionic-angular';
-import { AbstractControl, FormGroup } from '@angular/forms';
+import { FormGroup, FormControl } from '@angular/forms';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 import { of } from 'rxjs/observable/of';
 
@@ -16,6 +17,7 @@ import { NavParamsMock, ViewControllerMock } from '../../../../test-config/mocks
 
 /* Interface imports */
 import { Batch } from '../../../shared/interfaces/batch';
+import { InventoryItem } from '../../../shared/interfaces/inventory-item';
 import { Style } from '../../../shared/interfaces/library';
 
 /* Page imports */
@@ -32,10 +34,11 @@ describe('Inventory Form Page', () => {
   let inventoryPage: InventoryFormPage;
   let injector: TestBed;
   let libraryService: LibraryProvider;
-  let recipeService: RecipeProvider;
-  let toastService: ToastProvider;
-  let userService: UserProvider;
   let viewCtrl: ViewController;
+  const staticMockBatch: Batch = mockBatch();
+  const staticMockItem: InventoryItem = mockInventoryItem();
+  const staticStyleLibrary: Style[] = mockStyles();
+  let originalNgOnInit: any;
   configureTestBed();
 
   beforeAll(done => (async() => {
@@ -53,6 +56,9 @@ describe('Inventory Form Page', () => {
         { provide: UserProvider, useValue: {} },
         { provide: ViewController, useClass: ViewControllerMock },
         { provide: NavParams, useClass: NavParamsMock}
+      ],
+      schemas: [
+        NO_ERRORS_SCHEMA
       ]
     });
     await TestBed.compileComponents();
@@ -63,9 +69,6 @@ describe('Inventory Form Page', () => {
   beforeAll(async(() => {
     injector = getTestBed();
     libraryService = injector.get(LibraryProvider);
-    recipeService = injector.get(RecipeProvider);
-    toastService = injector.get(ToastProvider);
-    userService = injector.get(UserProvider);
   }));
 
   beforeEach(() => {
@@ -75,12 +78,18 @@ describe('Inventory Form Page', () => {
     viewCtrl = injector.get(ViewController);
     libraryService.getStyleLibrary = jest
       .fn()
-      .mockReturnValue(of(mockStyles()));
+      .mockReturnValue(of(staticStyleLibrary));
+
+    originalNgOnInit = inventoryPage.ngOnInit;
+    inventoryPage.ngOnInit = jest
+      .fn();
   });
 
   test('should create the component with generic form controls', () => {
     NavParamsMock.setParams('isRequired', false);
     NavParamsMock.setParams('options', {});
+
+    inventoryPage.ngOnInit = originalNgOnInit;
 
     const genericSpy: jest.SpyInstance = jest
       .spyOn(inventoryPage, 'initFormGeneric');
@@ -93,7 +102,12 @@ describe('Inventory Form Page', () => {
 
   test('should create the component with form controls for a provided batch', () => {
     NavParamsMock.setParams('isRequired', false);
-    NavParamsMock.setParams('options', { batch: mockBatch() });
+    NavParamsMock.setParams('options', { batch: staticMockBatch });
+
+    inventoryPage.ngOnInit = originalNgOnInit;
+
+    inventoryPage.initFormWithBatch = jest
+      .fn();
 
     const batchSpy: jest.SpyInstance = jest
       .spyOn(inventoryPage, 'initFormWithBatch');
@@ -106,7 +120,12 @@ describe('Inventory Form Page', () => {
 
   test('should create the component with form controls for a provided item', () => {
     NavParamsMock.setParams('isRequired', false);
-    NavParamsMock.setParams('options', { item: mockInventoryItem() });
+    NavParamsMock.setParams('options', { item: staticMockItem });
+
+    inventoryPage.ngOnInit = originalNgOnInit;
+
+    inventoryPage.initFormWithItem = jest
+      .fn();
 
     const itemSpy: jest.SpyInstance = jest
       .spyOn(inventoryPage, 'initFormWithItem');
@@ -124,6 +143,8 @@ describe('Inventory Form Page', () => {
 
     const consoleSpy: jest.SpyInstance = jest.spyOn(console, 'log');
 
+    inventoryPage.ngOnInit = originalNgOnInit;
+
     fixture.detectChanges();
 
     expect(consoleSpy.mock.calls[consoleSpy.mock.calls.length - 1][0])
@@ -139,11 +160,21 @@ describe('Inventory Form Page', () => {
 
     expect(inventoryPage.compareWithFn(o1a, o1b)).toBe(true);
     expect(inventoryPage.compareWithFn(o1a, o2)).toBe(false);
+    expect(inventoryPage.compareWithFn(o1a, undefined)).toBe(false);
   }); // end 'should compare objects for equality' test
 
   test('should convert numeric fields from strings to numbers', () => {
-    NavParamsMock.setParams('isRequired', false);
-    NavParamsMock.setParams('options', { item: mockInventoryItem() });
+    inventoryPage.batch = staticMockBatch;
+
+    inventoryPage.inventoryForm = new FormGroup({
+      currentQuantity: new FormControl('10'),
+      initialQuantity: new FormControl('20'),
+      itemABV: new FormControl('5'),
+      itemIBU: new FormControl('20'),
+      itemSRM: new FormControl('10'),
+      description: new FormControl(''),
+      stockType: new FormControl('')
+    });
 
     fixture.detectChanges();
 
@@ -172,9 +203,6 @@ describe('Inventory Form Page', () => {
   }); // end 'should convert numeric fields from strings to numbers' test
 
   test('should dismiss the form with no data', () => {
-    NavParamsMock.setParams('isRequired', false);
-    NavParamsMock.setParams('options', {});
-
     const dismissSpy: jest.SpyInstance = jest.spyOn(viewCtrl, 'dismiss');
 
     fixture.detectChanges();
@@ -183,6 +211,69 @@ describe('Inventory Form Page', () => {
 
     expect(dismissSpy.mock.calls[0].length).toEqual(0);
   }); // end 'should dismiss the form with no data' test
+
+  test('should init form with a batch', () => {
+    fixture.detectChanges();
+
+    inventoryPage.initFormWithBatch();
+
+    expect(inventoryPage.inventoryForm.value).toStrictEqual({
+      description: '',
+      initialQuantity: '',
+      stockType: ''
+    });
+  }); // end 'should init form with a batch' test
+
+  test('should init generic form', () => {
+    fixture.detectChanges();
+
+    inventoryPage.initFormGeneric();
+
+    expect(inventoryPage.inventoryForm.value).toStrictEqual({
+      description: '',
+      initialQuantity: null,
+      itemABV: null,
+      itemIBU: null,
+      itemName: '',
+      itemSRM: null,
+      itemStyleId: null,
+      itemSubname: '',
+      sourceType: '',
+      stockType: '',
+      supplierName: '',
+      supplierURL: ''
+    });
+  }); // end 'should init generic form' test
+
+  test('should init form with an item', () => {
+    const _mockItem: InventoryItem = staticMockItem;
+    inventoryPage.item = _mockItem;
+    inventoryPage.styles = staticStyleLibrary;
+
+    fixture.detectChanges();
+
+    inventoryPage.initFormWithItem();
+
+    expect(inventoryPage.inventoryForm.value).toStrictEqual({
+      currentQuantity: _mockItem.currentQuantity,
+      description: _mockItem.description,
+      initialQuantity: _mockItem.initialQuantity,
+      itemABV: _mockItem.itemABV,
+      itemName: _mockItem.itemName,
+      itemStyleId: staticStyleLibrary[0],
+      sourceType: _mockItem.sourceType,
+      stockType: _mockItem.stockType,
+      supplierName: _mockItem.supplierName,
+      itemIBU: _mockItem.optionalItemData.itemIBU,
+      itemSRM: _mockItem.optionalItemData.itemSRM,
+      itemSubname: _mockItem.optionalItemData.itemSubname,
+      originalRecipeId: _mockItem.optionalItemData.originalRecipeId,
+      packagingDate: _mockItem.optionalItemData.packagingDate,
+      supplierURL: _mockItem.optionalItemData.supplierURL,
+      supplierLabelImageURL: _mockItem.optionalItemData.supplierLabelImageURL,
+      itemLabelImageURL: _mockItem.optionalItemData.itemLabelImageURL
+    });
+  }); // end 'should init form with an item' test
 
   test('should update the selected style', () => {
     NavParamsMock.setParams('isRequired', false);
@@ -200,26 +291,25 @@ describe('Inventory Form Page', () => {
   }); // end 'should update the selected style' test
 
   test('should submit the form', () => {
-    NavParamsMock.setParams('isRequired', false);
-    NavParamsMock.setParams('options', {});
-
     const dismissSpy: jest.SpyInstance = jest.spyOn(viewCtrl, 'dismiss');
 
-    fixture.detectChanges();
-
-    const form: FormGroup = inventoryPage.inventoryForm;
-    const _mockStyle: Style = mockStyles()[0];
+    const _mockStyle: Style = staticStyleLibrary[0];
     inventoryPage.styleSelection = _mockStyle;
 
-    form.controls.initialQuantity.setValue('5');
-    form.controls.itemABV.setValue('5');
-    form.controls.itemIBU.setValue('20');
-    form.controls.itemName.setValue('item-name');
-    form.controls.itemSRM.setValue('10');
-    form.controls.itemStyleId.setValue(_mockStyle);
-    form.controls.sourceType.setValue('third');
-    form.controls.stockType.setValue('keg');
-    form.controls.supplierName.setValue('supplier');
+    inventoryPage.inventoryForm = new FormGroup({
+      initialQuantity: new FormControl('5'),
+      itemABV: new FormControl('5'),
+      itemIBU: new FormControl('20'),
+      itemName: new FormControl('item-name'),
+      itemSRM: new FormControl('10'),
+      itemStyleId: new FormControl(_mockStyle),
+      sourceType: new FormControl('third'),
+      stockType: new FormControl('keg'),
+      supplierName: new FormControl('supplier'),
+      description: new FormControl(''),
+    });
+
+    fixture.detectChanges();
 
     inventoryPage.onSubmit();
 
@@ -232,30 +322,31 @@ describe('Inventory Form Page', () => {
       itemSRM: 10,
       itemStyleId: _mockStyle._id,
       itemStyleName: _mockStyle.name,
-      itemSubname: '',
       sourceType: 'third',
       stockType: 'keg',
-      supplierName: 'supplier',
-      supplierURL: '',
+      supplierName: 'supplier'
     });
   }); // end 'should submit the form' test
 
   test('should submit the form using provided batch\'s style selection', () => {
-    const _mockBatch: Batch = mockBatch();
-    const _mockStyle: Style = mockStyles()[0];
+    const _mockBatch: Batch = staticMockBatch;
+    const _mockStyle: Style = staticStyleLibrary[0];
     _mockBatch.annotations.styleId = _mockStyle._id;
-
-    NavParamsMock.setParams('isRequired', false);
-    NavParamsMock.setParams('options', { batch: _mockBatch });
+    inventoryPage.styles = staticStyleLibrary;
 
     const dismissSpy: jest.SpyInstance = jest.spyOn(viewCtrl, 'dismiss');
 
+    inventoryPage.batch = _mockBatch;
+
+    inventoryPage.inventoryForm = new FormGroup({
+      description: new FormControl(''),
+      initialQuantity: new FormControl(5),
+      itemStyleId: new FormControl(_mockStyle._id),
+      itemStyleName: new FormControl(_mockStyle.name),
+      stockType: new FormControl('keg')
+    })
+
     fixture.detectChanges();
-
-    const form: FormGroup = inventoryPage.inventoryForm;
-
-    form.controls.initialQuantity.setValue('5');
-    form.controls.stockType.setValue('keg');
 
     inventoryPage.onSubmit();
 

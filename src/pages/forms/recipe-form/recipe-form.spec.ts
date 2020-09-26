@@ -14,6 +14,7 @@ import { stripSharedProperties } from '../../../shared/utility-functions/strip-s
 import { configureTestBed } from '../../../../test-config/configureTestBed';
 
 /* Mock imports */
+import { mockEnglishUnits } from '../../../../test-config/mockmodels/mockUnits';
 import { mockRecipeMasterActive } from '../../../../test-config/mockmodels/mockRecipeMasterActive';
 import { mockRecipeMasterInactive } from '../../../../test-config/mockmodels/mockRecipeMasterInactive';
 import { mockRecipeVariantComplete } from '../../../../test-config/mockmodels/mockRecipeVariantComplete';
@@ -26,7 +27,7 @@ import { mockHopsSchedule } from '../../../../test-config/mockmodels/mockHopsSch
 import { mockYeastGroup } from '../../../../test-config/mockmodels/mockYeastGroup';
 import { mockOtherIngredient } from '../../../../test-config/mockmodels/mockOtherIngredient';
 import { mockRecipeMasterCreatePayload, mockRecipeMasterUpdatePayload } from '../../../../test-config/mockmodels/mockPayload';
-import { EventsMock, NavMock, NavParamsMock, ModalControllerMock, ModalMock, ActionSheetControllerMock, ToastControllerMock } from '../../../../test-config/mocks-ionic';
+import { CalculatePipeMock, EventsMock, NavMock, NavParamsMock, ModalControllerMock, ModalMock, ActionSheetControllerMock, RatioPipeMock, ToastControllerMock, TruncatePipeMock, UnitConversionPipeMock } from '../../../../test-config/mocks-ionic';
 
 /* Interface imports */
 import { ActionSheetButton } from '../../../shared/interfaces/action-sheet-buttons';
@@ -75,6 +76,7 @@ describe('Recipe Form', () => {
   let calculator: CalculationsProvider;
   let recipeService: RecipeProvider;
   let toastService: ToastProvider;
+  let preferenceService: PreferencesProvider;
   let modalCtrl: ModalController;
   let navCtrl: NavController;
   let originalOnInit: any;
@@ -97,7 +99,11 @@ describe('Recipe Form', () => {
   beforeAll(done => (async() => {
     TestBed.configureTestingModule({
       declarations: [
-        RecipeFormPage
+        RecipeFormPage,
+        CalculatePipeMock,
+        UnitConversionPipeMock,
+        TruncatePipeMock,
+        RatioPipeMock
       ],
       imports: [
         IonicModule.forRoot(RecipeFormPage)
@@ -136,6 +142,7 @@ describe('Recipe Form', () => {
     calculator = injector.get(CalculationsProvider);
     recipeService = injector.get(RecipeProvider);
     toastService = injector.get(ToastProvider);
+    preferenceService = injector.get(PreferencesProvider);
 
     calculator.calculateRecipeValues = jest
       .fn()
@@ -174,6 +181,10 @@ describe('Recipe Form', () => {
 
     toastService.presentToast = jest
       .fn();
+
+    preferenceService.getSelectedUnits = jest
+      .fn()
+      .mockReturnValue(mockEnglishUnits());
   }));
 
   beforeEach(() => {
@@ -236,6 +247,21 @@ describe('Recipe Form', () => {
       expect(subSpy).toHaveBeenCalled();
     }); // end 'should create the component' test
 
+    test('should get an error loading libraries', () => {
+      const consoleSpy: jest.SpyInstance = jest.spyOn(console, 'log');
+
+      libraryService.getAllLibraries = jest
+        .fn()
+        .mockReturnValue(new ErrorObservable('library error'));
+
+      recipePage.ngOnInit = originalOnInit;
+
+      fixture.detectChanges();
+
+      expect(consoleSpy.mock.calls[consoleSpy.mock.calls.length - 1][0])
+        .toMatch('Library import error: library error');
+    }); // end 'should get an error loading libraries' test
+
     test('should configure form', () => {
       fixture.detectChanges();
 
@@ -279,7 +305,7 @@ describe('Recipe Form', () => {
         = mockRecipeVariantComplete();
       stripSharedProperties(_mockRecipeVariantComplete);
 
-      _mockRecipeVariantComplete.variantName = '< Add Variant Name >';
+      _mockRecipeVariantComplete.variantName = '';
 
       recipePage.setFormTypeConfiguration(
         'variant',
@@ -520,6 +546,15 @@ describe('Recipe Form', () => {
         .toStrictEqual({updateObj: 1});
       expect(modalSpy.mock.calls[2][1].data.library)
         .toStrictEqual(staticYeastLibrary);
+
+      // Other ingredient selection
+      recipePage.openIngredientFormModal('otherIngredients', {updateObj: 1});
+
+      expect(modalSpy.mock.calls[3][0]).toBe(IngredientFormPage);
+      expect(modalSpy.mock.calls[3][1].data.ingredientType).toMatch('otherIngredients');
+      expect(modalSpy.mock.calls[3][1].data.update)
+        .toStrictEqual({updateObj: 1});
+      expect(modalSpy.mock.calls[3][1].data.library).toBeUndefined();
     }); // end 'should open ingredient form modal' test
 
     test('should handle ingredient modal dismiss', () => {
@@ -938,6 +973,8 @@ describe('Recipe Form', () => {
         }
       ];
 
+      recipePage.units = mockEnglishUnits();
+
       const _mockHopsSchedule: HopsSchedule[] = mockHopsSchedule();
       const _mockHopsInstance30: HopsSchedule = _mockHopsSchedule[0];
       _mockHopsInstance30.addAt = 30;
@@ -984,7 +1021,7 @@ describe('Recipe Form', () => {
       expect(schedule[1].name)
         .toMatch(`Add ${_mockHopsInstance45.hopsType.name} hops`);
       expect(schedule[2].description)
-        .toMatch(`Hops addition: ${_mockHopsInstance30.quantity} oz`);
+        .toMatch(`Hops addition: ${_mockHopsInstance30.quantity}oz`);
       expect(schedule[3].description)
         .toMatch(_mockHopsToSortBefore.quantity.toString());
       expect(schedule[4].description)
@@ -1003,15 +1040,15 @@ describe('Recipe Form', () => {
       recipePage.variant = staticRecipeVariantComplete;
     });
 
-    test('should get the weight percentage of a given quantity', () => {
-      fixture.detectChanges();
-
-      recipePage.getTotalGristWeight = jest
-        .fn()
-        .mockReturnValue(12.5);
-
-      expect(recipePage.getGristRatio(5)).toEqual(40);
-    }); // end 'should get the weight percentage of a given quantity' test
+    // test('should get the weight percentage of a given quantity', () => {
+    //   fixture.detectChanges();
+    //
+    //   recipePage.getTotalGristWeight = jest
+    //     .fn()
+    //     .mockReturnValue(12.5);
+    //
+    //   expect(recipePage.getGristRatio(5)).toEqual(40);
+    // }); // end 'should get the weight percentage of a given quantity' test
 
     test('should get time remaining of hops addition addAt time', () => {
       fixture.detectChanges();
@@ -1019,31 +1056,31 @@ describe('Recipe Form', () => {
       expect(recipePage.getHopsTimeRemaining(15)).toEqual(45);
     }); // end 'should get time remaining of hops addition addAt time' test
 
-    test('should get the IBU contribution of a particular hops addition instance', () => {
-      fixture.detectChanges();
+    // test('should get the IBU contribution of a particular hops addition instance', () => {
+    //   fixture.detectChanges();
+    //
+    //   calculator.getIBU = jest
+    //     .fn()
+    //     .mockReturnValue(42);
+    //
+    //   const calculateSpy: jest.SpyInstance = jest.spyOn(calculator, 'getIBU');
+    //
+    //   const _mockHopsSchedule: HopsSchedule = mockHopsSchedule()[0];
+    //   expect(recipePage.getIndividualIBU(_mockHopsSchedule)).toEqual(42);
+    //   expect(calculateSpy).toHaveBeenCalledWith(
+    //     _mockHopsSchedule.hopsType,
+    //     _mockHopsSchedule,
+    //     staticRecipeVariantComplete.originalGravity,
+    //     staticRecipeVariantComplete.batchVolume,
+    //     staticRecipeVariantComplete.boilVolume
+    //   );
+    // }); // end 'should get the IBU contribution of a particular hops addition instance' test
 
-      calculator.getIBU = jest
-        .fn()
-        .mockReturnValue(42);
-
-      const calculateSpy: jest.SpyInstance = jest.spyOn(calculator, 'getIBU');
-
-      const _mockHopsSchedule: HopsSchedule = mockHopsSchedule()[0];
-      expect(recipePage.getIndividualIBU(_mockHopsSchedule)).toEqual(42);
-      expect(calculateSpy).toHaveBeenCalledWith(
-        _mockHopsSchedule.hopsType,
-        _mockHopsSchedule,
-        staticRecipeVariantComplete.originalGravity,
-        staticRecipeVariantComplete.batchVolume,
-        staticRecipeVariantComplete.boilVolume
-      );
-    }); // end 'should get the IBU contribution of a particular hops addition instance' test
-
-    test('should get the total weight of grain bill', () => {
-      fixture.detectChanges();
-
-      expect(recipePage.getTotalGristWeight()).toEqual(12.5);
-    }); // end 'should get the total weight of grain bill' test
+    // test('should get the total weight of grain bill', () => {
+    //   fixture.detectChanges();
+    //
+    //   expect(recipePage.getTotalGristWeight()).toEqual(12.5);
+    // }); // end 'should get the total weight of grain bill' test
 
     test('should call recalculate all recipe values', () => {
       fixture.detectChanges();
@@ -1534,6 +1571,7 @@ describe('Recipe Form', () => {
     test('should not change orders', () => {
       fixture.detectChanges();
 
+      // Grains sorting
       const _mockGrainBill: GrainBill[] = mockGrainBill();
       _mockGrainBill[0].quantity = 1;
       _mockGrainBill[1].quantity = 1;
@@ -1546,6 +1584,8 @@ describe('Recipe Form', () => {
       expect(recipePage.variant.grains[0]).toStrictEqual(testBill[0]);
       expect(recipePage.variant.grains[1]).toStrictEqual(testBill[1]);
 
+
+      // Hops sorting
       const _mockHopsSchedule: HopsSchedule[] = mockHopsSchedule();
       _mockHopsSchedule[0].addAt = 60;
       _mockHopsSchedule[1].addAt = 60;
@@ -1561,6 +1601,8 @@ describe('Recipe Form', () => {
       expect(recipePage.variant.hops[0]).toStrictEqual(testSchedule[0]);
       expect(recipePage.variant.hops[1]).toStrictEqual(testSchedule[1]);
 
+
+      // Yeast sorting
       const _mockYeastGroup: YeastBatch[] = mockYeastGroup();
       _mockYeastGroup[0].quantity = 1;
       _mockYeastGroup[1].quantity = 1;
@@ -1572,6 +1614,15 @@ describe('Recipe Form', () => {
 
       expect(recipePage.variant.yeast[0]).toStrictEqual(testGroup[0]);
       expect(recipePage.variant.yeast[1]).toStrictEqual(testGroup[1]);
+
+
+      // Other sorting - should not sort
+      const _mockOtherIngredients: OtherIngredients[] = mockOtherIngredient();
+
+      recipePage.sortIngredients('otherIngredients');
+
+      expect(_mockOtherIngredients[0]._id).toMatch('1');
+      expect(_mockOtherIngredients[1]._id).toMatch('2');
     }); // end 'should not change orders' test
 
     test('should add grains instance in grain bill', () => {
@@ -1793,17 +1844,17 @@ describe('Recipe Form', () => {
       expect(navSpy).toHaveBeenCalled();
     }); // end 'should handle nav pop event' test
 
-    test('should check if recipe is valid (denoted by a style being selected)', () => {
-      fixture.detectChanges();
-
-      recipePage.master = staticDefaultRecipeMaster;
-
-      expect(recipePage.isRecipeValid()).toBe(false);
-
-      recipePage.master = mockRecipeMasterInactive();
-
-      expect(recipePage.isRecipeValid()).toBe(true);
-    }); // end 'should check if recipe is valid (denoted by a style being selected)' test
+    // test('should check if recipe is valid (denoted by a style being selected)', () => {
+    //   fixture.detectChanges();
+    //
+    //   recipePage.master = staticDefaultRecipeMaster;
+    //
+    //   expect(recipePage.isRecipeValid()).toBe(false);
+    //
+    //   recipePage.master = mockRecipeMasterInactive();
+    //
+    //   expect(recipePage.isRecipeValid()).toBe(true);
+    // }); // end 'should check if recipe is valid (denoted by a style being selected)' test
 
     test('should map updated recipe master and recipe values', () => {
       fixture.detectChanges();

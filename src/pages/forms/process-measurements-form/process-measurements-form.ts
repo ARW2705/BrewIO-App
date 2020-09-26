@@ -7,9 +7,15 @@ import { Subject } from 'rxjs/Subject';
 /* Interface imports */
 import { Batch, BatchAnnotations } from '../../../shared/interfaces/batch';
 import { PrimaryValues } from '../../../shared/interfaces/primary-values';
+import { SelectedUnits } from '../../../shared/interfaces/units';
+
+/* Utility imports */
+import { roundToDecimalPlace } from '../../../shared/utility-functions/utilities';
 
 /* Provider imports */
+import { CalculationsProvider } from '../../../providers/calculations/calculations';
 import { FormValidatorProvider } from '../../../providers/form-validator/form-validator';
+import { PreferencesProvider } from '../../../providers/preferences/preferences';
 
 
 @Component({
@@ -22,11 +28,17 @@ export class ProcessMeasurementsFormPage implements OnInit, OnDestroy {
   destroy$: Subject<boolean> = new Subject<boolean>();
   readonly measuredSentinel: number = -1;
   measurementsForm: FormGroup = null;
+  requiresVolumeConversion: boolean = false;
+  requiresDensityConversion: boolean = false;
+  units: SelectedUnits = null;
 
   constructor(
     public formBuilder: FormBuilder,
     public navParams: NavParams,
-    public viewCtrl: ViewController
+    public viewCtrl: ViewController,
+    public calculator: CalculationsProvider,
+    public formValidator: FormValidatorProvider,
+    public preferenceService: PreferencesProvider
   ) { }
 
   /***** Lifecycle Hooks *****/
@@ -34,6 +46,11 @@ export class ProcessMeasurementsFormPage implements OnInit, OnDestroy {
   ngOnInit() {
     this.areAllRequired = this.navParams.get('areAllRequired');
     this.batch = this.navParams.get('batch');
+    this.units = this.preferenceService.getSelectedUnits();
+    this.requiresVolumeConversion = this.calculator
+      .requiresConversion('volumeLarge', this.units);
+    this.requiresDensityConversion = this.calculator
+      .requiresConversion('density', this.units);
     this.initForm();
     this.listenForChanges();
   }
@@ -47,20 +64,22 @@ export class ProcessMeasurementsFormPage implements OnInit, OnDestroy {
 
 
   /**
-   * Convert form number inputs from strings back to numbers
+   * Convert form number inputs from strings back to numbers; Expect all inputs
+   * to be digits only
    *
    * @params: formValues - object of form inputs
    *
    * @return: formValues with strings parsed to numbers
   **/
-  convertFormValuesToNumbers(): object {
-    const formValues: object = this.measurementsForm.value;
+  convertFormValuesToNumbers(formValues: object): void {
     for (const key in formValues) {
-      if (typeof formValues[key] !== 'number') {
-        formValues[key] = parseFloat(formValues[key]);
+      if (typeof formValues[key] === 'string') {
+        const parsed: number = parseFloat(formValues[key]);
+        if (!isNaN(parsed)) {
+          formValues[key] = parsed;
+        }
       }
     }
-    return formValues;
   }
 
   /**
@@ -71,6 +90,44 @@ export class ProcessMeasurementsFormPage implements OnInit, OnDestroy {
   **/
   dismiss(): void {
     this.viewCtrl.dismiss();
+  }
+
+  /**
+   * Convert density to english standard
+   *
+   * @params: formValues - form values pending submission
+   *
+   * @return: none
+  **/
+  formatDensityValues(formValues: object): void {
+    if (this.requiresDensityConversion) {
+      formValues['originalGravity'] = this.calculator
+        .convertDensity(
+          formValues['originalGravity'],
+          this.units.density.longName,
+          'specificGravity'
+        );
+      formValues['finalGravity'] = this.calculator
+        .convertDensity(
+          formValues['finalGravity'],
+          this.units.density.longName,
+          'specificGravity'
+        );
+    }
+  }
+
+  /**
+   * Convert volume to english standard
+   *
+   * @params: formValues - form values pending submission
+   *
+   * @return: none
+  **/
+  formatVolumeValues(formValues: object): void {
+    if (this.requiresVolumeConversion) {
+      formValues['batchVolume'] = this.calculator
+        .convertVolume(formValues['batchVolume'], true, true);
+    }
   }
 
   /**
@@ -85,39 +142,62 @@ export class ProcessMeasurementsFormPage implements OnInit, OnDestroy {
     const annotations: BatchAnnotations = this.batch.annotations;
     const targetValues: PrimaryValues = annotations.targetValues;
     const measuredValues: PrimaryValues = annotations.measuredValues;
-    const originalGravity: number
+
+    let originalGravity: number
       = measuredValues.originalGravity !== this.measuredSentinel
-      ? measuredValues.originalGravity
-      : targetValues.originalGravity;
-    const finalGravity: number
+        ? measuredValues.originalGravity
+        : targetValues.originalGravity;
+    let finalGravity: number
       = measuredValues.finalGravity !== this.measuredSentinel
-      ? measuredValues.finalGravity
-      : targetValues.finalGravity;
-    const batchVolume: number
+        ? measuredValues.finalGravity
+        : targetValues.finalGravity;
+
+    if (this.requiresDensityConversion) {
+      originalGravity = this.calculator
+        .convertDensity(
+          originalGravity,
+          'specificGravity',
+          this.units.density.longName
+        );
+      finalGravity = this.calculator
+        .convertDensity(
+          finalGravity,
+          'specificGravity',
+          this.units.density.longName
+        );
+    }
+
+    let batchVolume: number
       = measuredValues.batchVolume !== this.measuredSentinel
-      ? measuredValues.batchVolume
-      : targetValues.batchVolume;
+        ? measuredValues.batchVolume
+        : targetValues.batchVolume;
+
+    if (this.requiresVolumeConversion) {
+      batchVolume = this.calculator.convertVolume(batchVolume, true, false);
+    }
+
+    batchVolume = roundToDecimalPlace(batchVolume, 2);
 
     this.measurementsForm = this.formBuilder.group({
       originalGravity: [
-        originalGravity.toFixed(3),
+        originalGravity.toFixed(this.requiresDensityConversion ? 1: 3),
         [
           Validators.min(0),
-          FormValidatorProvider.RequiredIfValidator(this.areAllRequired)
+          this.formValidator.requiredIfValidator(this.areAllRequired)
         ]
       ],
       finalGravity: [
-        finalGravity.toFixed(3),
+        finalGravity.toFixed(this.requiresDensityConversion ? 1: 3),
         [
           Validators.min(0),
-          FormValidatorProvider.RequiredIfValidator(this.areAllRequired)
+          this.formValidator.requiredIfValidator(this.areAllRequired)
         ]
       ],
       batchVolume: [
         batchVolume,
         [
           Validators.min(0),
-          FormValidatorProvider.RequiredIfValidator(this.areAllRequired)
+          this.formValidator.requiredIfValidator(this.areAllRequired)
         ]
       ]
     });
@@ -159,7 +239,13 @@ export class ProcessMeasurementsFormPage implements OnInit, OnDestroy {
    * @return: none
   **/
   onSubmit(): void {
-    this.viewCtrl.dismiss(this.convertFormValuesToNumbers());
+    const formValues: object = this.measurementsForm.value;
+    this.convertFormValuesToNumbers(formValues);
+
+    this.formatDensityValues(formValues);
+    this.formatVolumeValues(formValues);
+
+    this.viewCtrl.dismiss(formValues);
   }
 
 }

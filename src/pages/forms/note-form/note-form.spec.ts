@@ -1,6 +1,7 @@
 /* Module imports */
-import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/testing';
+import { ComponentFixture, TestBed, getTestBed } from '@angular/core/testing';
 import { IonicModule, NavParams, ViewController } from 'ionic-angular';
+import { FormControl } from '@angular/forms';
 
 /* Test configuration imports */
 import { configureTestBed } from '../../../../test-config/configureTestBed';
@@ -17,6 +18,7 @@ describe('Note Form', () => {
   let injector: TestBed;
   let notePage: NoteFormPage;
   let viewCtrl: ViewController;
+  let originalNgOnInit: () => void;
   configureTestBed();
 
   beforeAll(done => (async() => {
@@ -43,15 +45,20 @@ describe('Note Form', () => {
 
     injector = getTestBed();
     viewCtrl = injector.get(ViewController);
+
+    originalNgOnInit = notePage.ngOnInit;
+    notePage.ngOnInit = jest
+      .fn();
   });
 
   describe('Note creation', () => {
-    beforeAll(async(() => {
-      NavParamsMock.setParams('formMethod', 'create');
-      NavParamsMock.setParams('noteType', 'recipe');
-    }));
 
     test('should create component', () => {
+      NavParamsMock.setParams('formMethod', 'create');
+      NavParamsMock.setParams('noteType', 'recipe');
+
+      notePage.ngOnInit = originalNgOnInit;
+
       fixture.detectChanges();
 
       expect(notePage).toBeDefined();
@@ -69,11 +76,12 @@ describe('Note Form', () => {
     }); // end 'should dimiss modal'
 
     test('should dimiss modal with note data', () => {
+      notePage.formMethod = 'create';
+      notePage.note = new FormControl('a test note');
+
       fixture.detectChanges();
 
       const viewSpy = jest.spyOn(viewCtrl, 'dismiss');
-
-      notePage.note.setValue('a test note');
 
       notePage.onSubmit();
 
@@ -87,13 +95,14 @@ describe('Note Form', () => {
 
 
   describe('Note update', () => {
-    beforeAll(async(() => {
+
+    test('should have note content to update', () => {
       NavParamsMock.setParams('formMethod', 'update');
       NavParamsMock.setParams('noteType', 'recipe');
       NavParamsMock.setParams('toUpdate', 'note to update');
-    }));
 
-    test('should have note content to update', () => {
+      notePage.ngOnInit = originalNgOnInit;
+
       fixture.detectChanges();
 
       expect(notePage.note.value).toBe('note to update');

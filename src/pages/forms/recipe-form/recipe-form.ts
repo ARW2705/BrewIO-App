@@ -1,6 +1,7 @@
 /* Module imports */
 import { Component, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { Events, Modal, ModalController, NavController, NavParams } from 'ionic-angular';
+import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 import { Subject } from 'rxjs/Subject';
 import { take } from 'rxjs/operators/take';
 import { takeUntil } from 'rxjs/operators/takeUntil';
@@ -13,6 +14,7 @@ import { OtherIngredients } from '../../../shared/interfaces/other-ingredients';
 import { Process } from '../../../shared/interfaces/process';
 import { RecipeMaster } from '../../../shared/interfaces/recipe-master';
 import { RecipeVariant } from '../../../shared/interfaces/recipe-variant';
+import { SelectedUnits } from '../../../shared/interfaces/units';
 import { YeastBatch } from '../../../shared/interfaces/yeast-batch';
 
 /* Default imports */
@@ -24,7 +26,7 @@ import { clone } from '../../../shared/utility-functions/clone';
 import { getId } from '../../../shared/utility-functions/id-helpers';
 import { normalizeErrorObservableMessage } from '../../../shared/utility-functions/observable-helpers';
 import { stripSharedProperties } from '../../../shared/utility-functions/strip-shared-properties';
-import { toTitleCase } from '../../../shared/utility-functions/utilities';
+import { roundToDecimalPlace, toTitleCase } from '../../../shared/utility-functions/utilities';
 
 /* Page imports */
 import { GeneralFormPage } from '../general-form/general-form';
@@ -37,6 +39,7 @@ import { ActionSheetProvider } from '../../../providers/action-sheet/action-shee
 import { CalculationsProvider } from '../../../providers/calculations/calculations';
 import { ClientIdProvider } from '../../../providers/client-id/client-id';
 import { LibraryProvider } from '../../../providers/library/library';
+import { PreferencesProvider } from '../../../providers/preferences/preferences';
 import { RecipeProvider } from '../../../providers/recipe/recipe';
 import { ToastProvider } from '../../../providers/toast/toast';
 
@@ -46,6 +49,7 @@ import { ToastProvider } from '../../../providers/toast/toast';
   templateUrl: 'recipe-form.html',
 })
 export class RecipeFormPage implements AfterViewInit {
+  defaultStyle: Style = defaultStyle();
   destroy$: Subject<boolean> = new Subject<boolean>();
   docMethod: string = '';
   formOptions: any = null;
@@ -55,10 +59,16 @@ export class RecipeFormPage implements AfterViewInit {
   isLoaded: boolean = false;
   master: RecipeMaster = null;
   mode: string = null;
-  processIcons: object = { manual: 'hand', timer: 'timer', calendar: 'calendar' };
+  processIcons: object = {
+    manual: 'hand',
+    timer: 'timer',
+    calendar: 'calendar'
+  };
+  refreshRatio: boolean = false;
   styleLibrary: Style[] = null;
-  textarea = '';
+  textarea: string = '';
   title: string = '';
+  units: SelectedUnits = null;
   variant: RecipeVariant = null;
   yeastLibrary: Yeast[] = null;
   _headerNavPop: any;
@@ -73,6 +83,7 @@ export class RecipeFormPage implements AfterViewInit {
     public calculator: CalculationsProvider,
     public clientIdService: ClientIdProvider,
     public libraryService: LibraryProvider,
+    public preferenceService: PreferencesProvider,
     public recipeService: RecipeProvider,
     public toastService: ToastProvider
   ) {
@@ -82,6 +93,7 @@ export class RecipeFormPage implements AfterViewInit {
   /***** Lifecycle Hooks *****/
 
   ngOnInit() {
+    this.units = this.preferenceService.getSelectedUnits();
     this.setFormTypeConfiguration(
       this.navParams.get('formType'),
       this.navParams.get('mode'),
@@ -92,12 +104,17 @@ export class RecipeFormPage implements AfterViewInit {
     this.libraryService.getAllLibraries()
       .pipe(takeUntil(this.destroy$))
       .subscribe(
-        ([grainsLibrary, hopsLibrary, yeastLibrary, styleLibrary]) => {
+        ([grainsLibrary, hopsLibrary, yeastLibrary, styleLibrary]): void => {
           this.grainsLibrary = <Grains[]>grainsLibrary;
           this.hopsLibrary = <Hops[]>hopsLibrary;
           this.yeastLibrary = <Yeast[]>yeastLibrary;
           this.styleLibrary = <Style[]>styleLibrary;
           this.isLoaded = true;
+        },
+        (error: ErrorObservable): void => {
+          console.log(
+            `Library import error: ${normalizeErrorObservableMessage(error)}`
+          );
         }
       );
     this.events.subscribe('pop-header-nav', this._headerNavPop);
@@ -159,7 +176,7 @@ export class RecipeFormPage implements AfterViewInit {
       if (_data) {
         this.mode = 'update';
         this.updateDisplay(_data);
-        this.calculator.calculateRecipeValues(this.variant);
+        this.updateRecipeValues();
         this.autoSetBoilMashDuration(_data);
       }
     });
@@ -199,7 +216,7 @@ export class RecipeFormPage implements AfterViewInit {
     modal.onDidDismiss((data: object) => {
       if (data) {
         this.updateIngredientList(data, type, toUpdate, data['delete']);
-        this.calculator.calculateRecipeValues(this.variant);
+        this.updateRecipeValues();
         if (data['hopsType'] !== undefined) {
           this.autoSetHopsAddition();
         }
@@ -463,7 +480,7 @@ export class RecipeFormPage implements AfterViewInit {
             type: 'timer',
             name: `Add ${hopsAddition.hopsType.name} hops`,
             concurrent: true,
-            description: `Hops addition: ${hopsAddition.quantity} oz`,
+            description: `Hops addition: ${roundToDecimalPlace(hopsAddition.quantity, 2)}${this.units.weightSmall.shortName}`,
             duration: this.getHopsTimeRemaining(hopsAddition.addAt)
           })
         }
@@ -480,17 +497,6 @@ export class RecipeFormPage implements AfterViewInit {
   /***** Recipe Calculations *****/
 
   /**
-   * Get grains quantity as percentage of total
-   *
-   * @params: quantity - grain weight
-   *
-   * @return: percentage of total quantity for given quantity
-  **/
-  getGristRatio(quantity: number): number {
-    return quantity / this.getTotalGristWeight() * 100;
-  }
-
-  /**
    * Get time remaining after subtracting addAt time from boil time
    *
    * @params: addAt - time to add hops at in minutes
@@ -503,37 +509,6 @@ export class RecipeFormPage implements AfterViewInit {
     // TODO handle missing boil step
     const boilTime: number = boilStep ? boilStep.duration: 60;
     return boilTime - addAt;
-  }
-
-  /**
-   * Calculate the individual IBU contribution of a hops instances
-   *
-   * @params: hops - an individual hops addition
-   *
-   * @return: IBU contribution of given hops addition
-  **/
-  getIndividualIBU(hops: HopsSchedule): number {
-    return this.calculator.getIBU(
-      hops.hopsType,
-      hops,
-      this.variant.originalGravity,
-      this.variant.batchVolume,
-      this.variant.boilVolume
-    );
-  }
-
-  /**
-   * Get total weight of all grains
-   *
-   * @params: none
-   *
-   * @return: total weight of grain bill
-  **/
-  getTotalGristWeight(): number {
-    return this.variant.grains
-      .reduce((acc, curr) => {
-        return acc + curr.quantity;
-      }, 0);
   }
 
   /**
@@ -667,7 +642,7 @@ export class RecipeFormPage implements AfterViewInit {
         this.master = master;
         this.variant = clone(master.variants.find(elem => elem.isMaster));
         stripSharedProperties(this.variant);
-        this.variant.variantName = '< Add Variant Name >';
+        this.variant.variantName = '';
       } else {
         // Start master and variant with existing values
         this.title = `Update ${variant.variantName}`;
@@ -809,37 +784,40 @@ export class RecipeFormPage implements AfterViewInit {
   sortIngredients(ingredientType: string): void {
     switch(ingredientType) {
       case 'grains':
-        this.variant.grains.sort((g1, g2) => {
-          if (g1.quantity < g2.quantity) {
-            return 1;
-          }
-          if (g1.quantity > g2.quantity) {
-            return -1;
-          }
-          return 0;
-        });
+        this.variant.grains.sort(
+          (g1: GrainBill, g2: GrainBill): number => {
+            if (g1.quantity < g2.quantity) {
+              return 1;
+            }
+            if (g1.quantity > g2.quantity) {
+              return -1;
+            }
+            return 0;
+          });
         break;
       case 'hops':
-        this.variant.hops.sort((g1, g2) => {
-          if (g1.addAt < g2.addAt) {
-            return 1;
-          }
-          if (g1.addAt > g2.addAt) {
-            return -1;
-          }
-          return 0;
-        });
+        this.variant.hops.sort(
+          (h1: HopsSchedule, h2: HopsSchedule): number => {
+            if (!h1.addAt || h1.addAt < h2.addAt) {
+              return 1;
+            }
+            if (!h2.addAt || h1.addAt > h2.addAt) {
+              return -1;
+            }
+            return 0;
+          });
         break;
       case 'yeast':
-        this.variant.yeast.sort((g1, g2) => {
-          if (g1.quantity < g2.quantity) {
-            return 1;
-          }
-          if (g1.quantity > g2.quantity) {
-            return -1;
-          }
-          return 0;
-        });
+        this.variant.yeast.sort(
+          (y1: YeastBatch, y2: YeastBatch): number => {
+            if (y1.quantity < y2.quantity) {
+              return 1;
+            }
+            if (y1.quantity > y2.quantity) {
+              return -1;
+            }
+            return 0;
+          });
         break;
       default:
         // do not sort on 'otherIngredients' or unknown ingredient type
@@ -931,6 +909,7 @@ export class RecipeFormPage implements AfterViewInit {
         );
         break;
     }
+    this.refreshRatio = !this.refreshRatio;
     this.cdRef.detectChanges();
   }
 
@@ -949,17 +928,6 @@ export class RecipeFormPage implements AfterViewInit {
     if (data['origin'] === 'RecipeDetailPage') {
       this.navCtrl.pop();
     }
-  }
-
-  /**
-   * Check if a recipe has been created - style must have been changed
-   *
-   * @params: none
-   *
-   * @return: true if master style id has been changed from default
-  **/
-  isRecipeValid(): boolean {
-    return this.master.style._id !== defaultStyle()._id;
   }
 
   /**

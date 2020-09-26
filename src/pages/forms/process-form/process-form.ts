@@ -71,9 +71,13 @@ export class ProcessFormPage implements OnInit {
       type: this.stepType,
       name: [
         '',
-        [Validators.minLength(2), Validators.maxLength(25), Validators.required]
+        [
+          Validators.minLength(2),
+          Validators.maxLength(25),
+          Validators.required
+        ]
       ],
-      description: ['']
+      description: ['', [Validators.maxLength(240)]]
     });
 
     // Add step type specific form controls
@@ -84,7 +88,11 @@ export class ProcessFormPage implements OnInit {
         this.processForm.addControl('concurrent', new FormControl(false));
         this.processForm.addControl('splitInterval', new FormControl(1));
       }
-      this.processForm.addControl('duration', new FormControl());
+      this.processForm
+        .addControl(
+          'duration',
+          new FormControl('', [Validators.required, Validators.min(0)])
+        );
     }
 
     // Populate form fields with provided data, if available

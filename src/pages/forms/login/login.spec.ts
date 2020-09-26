@@ -1,7 +1,8 @@
 /* Module imports */
-import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/testing';
+import { ComponentFixture, TestBed, getTestBed } from '@angular/core/testing';
 import { IonicModule, ViewController, ToastController } from 'ionic-angular';
-import { AbstractControl } from '@angular/forms';
+import { AbstractControl, FormGroup, FormControl, Validators } from '@angular/forms';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 import { of } from 'rxjs/observable/of';
 
@@ -30,6 +31,14 @@ describe('Login Form', () => {
   let userService: UserProvider;
   let toastService: ToastProvider;
   let viewCtrl: ViewController;
+  let originalNgOnInit: () => void;
+  const buildMockForm: () => FormGroup = () => {
+    return new FormGroup({
+      password: new FormControl('', [Validators.required]),
+      remember: new FormControl(false),
+      username: new FormControl('', [Validators.required])
+    });
+  }
   configureTestBed();
 
   beforeAll(done => (async() => {
@@ -45,6 +54,9 @@ describe('Login Form', () => {
         { provide: ToastProvider, useValue: {} },
         { provide: ViewController, useClass: ViewControllerMock },
         { provide: ToastController, useClass: ToastControllerMock }
+      ],
+      schemas: [
+        NO_ERRORS_SCHEMA
       ]
     });
     await TestBed.compileComponents();
@@ -63,9 +75,15 @@ describe('Login Form', () => {
 
     toastService.presentToast = jest
       .fn();
+
+    originalNgOnInit = loginPage.ngOnInit;
+    loginPage.ngOnInit = jest
+      .fn();
   });
 
   test('should create component', () => {
+    loginPage.ngOnInit = originalNgOnInit;
+
     fixture.detectChanges();
 
     expect(loginPage).toBeDefined();
@@ -77,12 +95,6 @@ describe('Login Form', () => {
     expect(loginPage.loginForm).toBeDefined();
   }); // end 'should initialize the form' test
 
-  test('should be invalid when form is empty', () => {
-    fixture.detectChanges();
-
-    expect(loginPage.loginForm.valid).toBe(false);
-  }); // end 'should be invalid when form is empty' test
-
   test('should close the modal', () => {
     fixture.detectChanges();
 
@@ -93,7 +105,9 @@ describe('Login Form', () => {
     expect(viewSpy).toHaveBeenCalledWith();
   }); // end 'should close the modal' test
 
-  test('should have require form field error', () => {
+  test('should have required form field error', () => {
+    loginPage.loginForm = buildMockForm();
+
     fixture.detectChanges();
 
     const usernameControl: AbstractControl = loginPage
@@ -107,6 +121,8 @@ describe('Login Form', () => {
   }); // end 'should have require form field error' test
 
   test('should submit a login form and get a success response', done => {
+    loginPage.loginForm = buildMockForm();
+
     fixture.detectChanges();
 
     userService.logIn = jest
@@ -145,6 +161,8 @@ describe('Login Form', () => {
   }); // end 'should submit a login form and get a success response' test
 
   test('should submit a login form and get an error response', done => {
+    loginPage.loginForm = buildMockForm();
+
     fixture.detectChanges();
 
     userService.logIn = jest

@@ -19,12 +19,17 @@ page-note-form {
     }
   }
 
-  .form-button {
+  .form-error {
     /* Display */
-    display: block;
-    margin: 20px auto 0;
+    padding-top: 4px;
+
+    /* Color */
+    font-size: 1.2em;
+
+    /* Text */
+    color: map-get($colors, danger);
   }
-  
+
   .note-button {
     /* Display */
     width: 100%;

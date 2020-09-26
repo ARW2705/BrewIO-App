@@ -1,25 +1,51 @@
 /* Module imports */
-import { ComponentFixture, TestBed, async } from '@angular/core/testing';
+import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/testing';
 import { IonicModule, NavParams, ViewController } from 'ionic-angular';
-import { AbstractControl } from '@angular/forms';
+import { AbstractControl, FormControl, FormGroup } from '@angular/forms';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 /* Test configuration imports */
 import { configureTestBed } from '../../../../test-config/configureTestBed';
 
 /* Mock imports */
+import { mockEnglishUnits, mockMetricUnits } from '../../../../test-config/mockmodels/mockUnits';
 import { mockStyles } from '../../../../test-config/mockmodels/mockStyles';
 import { NavParamsMock, ViewControllerMock } from '../../../../test-config/mocks-ionic';
 
 /* Interface imports */
+import { SelectedUnits } from '../../../shared/interfaces/units';
 import { Style } from '../../../shared/interfaces/library';
 
 /* Page imports */
 import { GeneralFormPage } from './general-form';
 
+/* Provider imports */
+import { CalculationsProvider } from '../../../providers/calculations/calculations';
+import { PreferencesProvider } from '../../../providers/preferences/preferences';
+
 
 describe('General Form', () => {
   let fixture: ComponentFixture<GeneralFormPage>;
   let generalPage: GeneralFormPage;
+  let injector: TestBed;
+  let calculator: CalculationsProvider;
+  let preferenceService: PreferencesProvider;
+  let originalNgOnInit: any;
+  const staticEnglishUnits: SelectedUnits = mockEnglishUnits();
+  const staticMetricUnits: SelectedUnits = mockMetricUnits();
+  const staticGeneralForm: FormGroup = new FormGroup({
+    name: new FormControl(''),
+    style: new FormControl(mockStyles()[1]),
+    brewingType: new FormControl('all-grain'),
+    efficiency: new FormControl(80),
+    mashDuration: new FormControl(90),
+    boilDuration: new FormControl(90),
+    batchVolume: new FormControl(3),
+    boilVolume: new FormControl(4.2),
+    mashVolume: new FormControl(3.75),
+    isFavorite: new FormControl(true),
+    isMaster: new FormControl(false)
+  });
   configureTestBed();
 
   beforeAll(done => (async() => {
@@ -31,8 +57,13 @@ describe('General Form', () => {
         IonicModule.forRoot(GeneralFormPage)
       ],
       providers: [
+        { provide: CalculationsProvider, useValue: {} },
+        { provide: PreferencesProvider, useValue: {} },
         { provide: NavParams, useClass: NavParamsMock },
         { provide: ViewController, useClass: ViewControllerMock }
+      ],
+      schemas: [
+        NO_ERRORS_SCHEMA
       ]
     });
     await TestBed.compileComponents();
@@ -40,25 +71,50 @@ describe('General Form', () => {
   .then(done)
   .catch(done.fail));
 
+  beforeAll(async(() => {
+    injector = getTestBed();
+    preferenceService = injector.get(PreferencesProvider);
+
+    preferenceService.getSelectedUnits = jest
+      .fn()
+      .mockReturnValue(mockEnglishUnits());
+  }));
+
   beforeEach(() => {
     fixture = TestBed.createComponent(GeneralFormPage);
     generalPage = fixture.componentInstance;
+
+    calculator = injector.get(CalculationsProvider);
+    calculator.requiresConversion = jest
+      .fn()
+      .mockReturnValue(false);
+
+    originalNgOnInit = generalPage.ngOnInit;
+    generalPage.ngOnInit = jest
+      .fn();
   });
 
-  describe('Form create', () => {
-    beforeAll(async(() => {
+  describe('Create form', () => {
+
+    test('should create the component in creation mode', () => {
+      generalPage.ngOnInit = originalNgOnInit;
+
       NavParamsMock.setParams('formType', 'master');
       NavParamsMock.setParams('docMethod', 'create');
       NavParamsMock.setParams('styles', mockStyles());
-    }));
 
-    test('should create the component in creation mode', () => {
       fixture.detectChanges();
 
       expect(generalPage).toBeDefined();
     }); // end 'should create the component in creation mode' test
 
     test('should create the form with default values', () => {
+      generalPage.units = staticEnglishUnits;
+      generalPage.formType = 'master';
+      generalPage.docMethod = 'create';
+      generalPage.styles = [];
+      generalPage.ngOnInit = originalNgOnInit;
+
       fixture.detectChanges();
 
       expect(generalPage.generalForm.value.style).toBeUndefined();
@@ -67,6 +123,8 @@ describe('General Form', () => {
     }); // end 'should create the form with default values' test
 
     test('should compare ion-select items', () => {
+      generalPage.generalForm = staticGeneralForm;
+
       fixture.detectChanges();
 
       const o1a: object = { _id: 1 };
@@ -77,29 +135,9 @@ describe('General Form', () => {
       expect(generalPage.compareWithFn(o1a, o2)).toBe(false);
     }); // end 'should compare ion-select items' test
 
-    test('should convert form numbers from strings to actual numbers', () => {
-      fixture.detectChanges();
-
-      const form: { [key: string]: AbstractControl }
-        = generalPage.generalForm.controls;
-      form.efficiency.setValue('60')
-      form.batchVolume.setValue('5');
-      form.boilVolume.setValue('5');
-      form.mashVolume.setValue('5');
-      form.boilDuration.setValue('60');
-      form.mashDuration.setValue('60');
-
-      generalPage.convertFormValuesToNumbers();
-
-      expect(form.efficiency.value).toBe(60);
-      expect(form.batchVolume.value).toBe(5);
-      expect(form.boilVolume.value).toBe(5);
-      expect(form.mashVolume.value).toBe(5);
-      expect(form.boilDuration.value).toBe(60);
-      expect(form.mashDuration.value).toBe(60);
-    }); // end 'should convert form numbers from strings to actual numbers' test
-
     test('should dismiss the modal', () => {
+      generalPage.generalForm = staticGeneralForm;
+
       fixture.detectChanges();
 
       const viewSpy: jest.SpyInstance = jest
@@ -108,9 +146,88 @@ describe('General Form', () => {
       generalPage.dismiss();
 
       expect(viewSpy).toHaveBeenCalled();
-    }); // 'should dismiss the modal' test
+    }); // end 'should dismiss the modal' test
+
+    test('should convert form values for submission', () => {
+      generalPage.units = mockEnglishUnits();
+      generalPage.generalForm = new FormGroup({
+        style: new FormControl(mockStyles()[1]),
+        brewingType: new FormControl('all-grain'),
+        efficiency: new FormControl('80'),
+        mashDuration: new FormControl('90'),
+        boilDuration: new FormControl('90'),
+        batchVolume: new FormControl('3'),
+        boilVolume: new FormControl('4.2'),
+        mashVolume: new FormControl('3.75'),
+        isFavorite: new FormControl(true),
+        isMaster: new FormControl(false)
+      });
+
+      calculator.requiresConversion = jest
+        .fn()
+        .mockReturnValue(false);
+
+      fixture.detectChanges();
+
+      const converted: object = generalPage.convertForSubmission();
+
+      expect(converted).toStrictEqual({
+        style: mockStyles()[1],
+        brewingType: 'all-grain',
+        efficiency: 80,
+        mashDuration: 90,
+        boilDuration: 90,
+        batchVolume: 3,
+        boilVolume: 4.2,
+        mashVolume: 3.75,
+        isFavorite: true,
+        isMaster: false
+      });
+    }); // end 'should convert form values for submission' test
+
+    test('should convert form values (with metric conversion) for submission', () => {
+      generalPage.units = mockEnglishUnits();
+      generalPage.generalForm = new FormGroup({
+        style: new FormControl(mockStyles()[1]),
+        brewingType: new FormControl('all-grain'),
+        efficiency: new FormControl('80'),
+        mashDuration: new FormControl('90'),
+        boilDuration: new FormControl('90'),
+        batchVolume: new FormControl('3'),
+        boilVolume: new FormControl('4.2'),
+        mashVolume: new FormControl('3.75'),
+        isFavorite: new FormControl(true),
+        isMaster: new FormControl(false)
+      });
+
+      calculator.requiresConversion = jest
+        .fn()
+        .mockReturnValue(true);
+      calculator.convertVolume = jest
+        .fn()
+        .mockReturnValue(12);
+
+      fixture.detectChanges();
+
+      const converted: object = generalPage.convertForSubmission();
+
+      expect(converted).toStrictEqual({
+        style: mockStyles()[1],
+        brewingType: 'all-grain',
+        efficiency: 80,
+        mashDuration: 90,
+        boilDuration: 90,
+        batchVolume: 12,
+        boilVolume: 12,
+        mashVolume: 12,
+        isFavorite: true,
+        isMaster: false
+      });
+    }); // end 'should convert form values (with metric conversion) for submission' test
 
     test('should update the selected style', () => {
+      generalPage.generalForm = staticGeneralForm;
+
       fixture.detectChanges();
 
       const _mockStyle: Style = mockStyles()[0];
@@ -123,6 +240,11 @@ describe('General Form', () => {
     }); // end 'should update the selected style' test
 
     test('should submit the form', () => {
+      generalPage.generalForm = staticGeneralForm;
+      generalPage.convertForSubmission = jest
+        .fn()
+        .mockReturnValue({});
+
       fixture.detectChanges();
 
       const viewSpy: jest.SpyInstance = jest
@@ -140,25 +262,14 @@ describe('General Form', () => {
 
       generalPage.onSubmit();
 
-      expect(viewSpy).toHaveBeenCalledWith({
-        name: 'some name',
-        style: _mockStyle,
-        brewingType: 'biab',
-        efficiency: 70,
-        mashDuration: 60,
-        boilDuration: 60,
-        batchVolume: 5,
-        boilVolume: 5,
-        mashVolume: 5,
-        isFavorite: false,
-        isMaster: false
-      });
+      expect(viewSpy).toHaveBeenCalledWith({});
     }); // end 'should submit the form' test
 
   }); // end 'Form create' section
 
 
   describe('Form update', () => {
+
     beforeAll(async(() => {
       NavParamsMock.setParams('formType', 'recipe');
       NavParamsMock.setParams('docMethod', 'update');
@@ -178,9 +289,11 @@ describe('General Form', () => {
     }));
 
     test('should init form with given values', () => {
+      generalPage.ngOnInit = originalNgOnInit;
+
       fixture.detectChanges();
 
-      expect(generalPage.generalForm.value).toStrictEqual({
+      const fields: object = {
         variantName: '',
         style: mockStyles()[1],
         brewingType: 'all-grain',
@@ -192,8 +305,44 @@ describe('General Form', () => {
         mashVolume: 3.75,
         isFavorite: true,
         isMaster: false
-      });
+      };
+
+      expect(generalPage.generalForm.value).toStrictEqual(fields);
+
+      generalPage.docMethod = 'create';
+
+      generalPage.initForm(fields);
+
+      expect(generalPage.generalForm.value.isFavorite).toBe(false);
     }); // end 'should init form with given values' test
+
+    test('should init form with metric volume units', () => {
+      generalPage.ngOnInit = originalNgOnInit;
+      generalPage.units = staticMetricUnits;
+
+      calculator.requiresConversion = jest
+        .fn()
+        .mockReturnValue(true);
+      calculator.convertVolume = jest
+        .fn()
+        .mockReturnValue(12);
+
+      fixture.detectChanges();
+
+      expect(generalPage.generalForm.value).toStrictEqual({
+        variantName: '',
+        style: mockStyles()[1],
+        brewingType: 'all-grain',
+        efficiency: 80,
+        mashDuration: 90,
+        boilDuration: 90,
+        batchVolume: 12,
+        boilVolume: 12,
+        mashVolume: 12,
+        isFavorite: true,
+        isMaster: false
+      });
+    }); // end 'should init form with metric volume units' test
 
   }); // end 'Form update' test
 

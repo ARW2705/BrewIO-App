@@ -15,11 +15,11 @@
                or recipe variant name -->
 
           <ion-col *ngIf="formType === 'master'">
-            {{ master.name === '' ? 'Untitled Recipe': master.name }}
+            {{ master.name === '' ? 'Tap Here To Begin': master.name }}
           </ion-col>
 
           <ion-col *ngIf="formType === 'variant'">
-            {{ variant.variantName === '' ? 'Untitled Batch': variant.variantName }}
+            {{ variant.variantName === '' ? 'Tap Here To Begin': variant.variantName }}
           </ion-col>
 
         </ion-row>
@@ -28,7 +28,7 @@
 
           <!-- Calculated recipe alcohol by volume -->
           <ion-col>
-            {{ variant.ABV.toFixed(1) }}% ABV
+            {{ variant.ABV | truncate:1 }}% ABV
           </ion-col>
 
           <!-- Recipe's chosen style -->
@@ -61,13 +61,16 @@
         <ion-row>
 
           <!-- Calculated original gravity -->
-          <ion-col class="col-left">
-            Original Gravity {{ variant.originalGravity.toFixed(3) }}
+          <ion-col  col-7
+                    class="col-left">
+            Original Gravity {{ variant.originalGravity | unitConversion:'density':true }}
           </ion-col>
 
           <!-- Style specified original gravity -->
-          <ion-col class="col-right">
-            {{ master.style._id != -1 ? master.style.originalGravity[0].toFixed(3): '--' }} - {{ master.style._id != -1 ? master.style.originalGravity[1].toFixed(3): '--' }}
+          <ion-col  col-5
+                    class="col-right">
+            {{ master.style.originalGravity[0] | unitConversion:'density' }}
+            - {{ master.style.originalGravity[1] | unitConversion:'density' }}
           </ion-col>
 
         </ion-row>
@@ -76,13 +79,16 @@
         <ion-row>
 
           <!-- Calculated final gravity -->
-          <ion-col class="col-left">
-            Final Gravity {{ variant.finalGravity.toFixed(3) }}
+          <ion-col  col-7
+                    class="col-left">
+            Final Gravity {{ variant.finalGravity | unitConversion:'density':true }}
           </ion-col>
 
           <!-- Style specified final gravity -->
-          <ion-col class="col-right">
-            {{ master.style._id != -1 ? master.style.finalGravity[0].toFixed(3): '--' }} - {{ master.style._id != -1 ? master.style.finalGravity[1].toFixed(3): '--' }}
+          <ion-col  col-5
+                    class="col-right">
+            {{ master.style.finalGravity[0] | unitConversion:'density' }}
+            - {{ master.style.finalGravity[1] | unitConversion:'density' }}
           </ion-col>
 
         </ion-row>
@@ -91,12 +97,14 @@
         <ion-row>
 
           <!-- Calculated IBU -->
-          <ion-col class="col-left">
-            IBU {{ variant.IBU.toFixed(1) }}
+          <ion-col  col-7
+                    class="col-left">
+            IBU {{ variant.IBU | truncate:1 }}
           </ion-col>
 
           <!-- Style specified IBU -->
-          <ion-col class="col-right">
+          <ion-col  col-5
+                    class="col-right">
             {{ master.style._id != -1 ? master.style.IBU[0]: '--' }} - {{ master.style._id != -1 ? master.style.IBU[1]: '--' }}
           </ion-col>
 
@@ -106,12 +114,14 @@
         <ion-row>
 
           <!-- Calculated SRM -->
-          <ion-col class="col-left">
-            SRM {{ variant.SRM.toFixed(1) }}
+          <ion-col  col-7
+                    class="col-left">
+            SRM {{ variant.SRM | truncate:1 }}
           </ion-col>
 
           <!-- Style specified SRM -->
-          <ion-col class="col-right">
+          <ion-col  col-5
+                    class="col-right">
             {{ master.style._id != -1 ? master.style.SRM[0]: '--' }} - {{ master.style._id != -1 ? master.style.SRM[1]: '--' }}
           </ion-col>
 
@@ -167,7 +177,7 @@
 
                           <!-- Grain selected quantity -->
                           <ion-col class="col-right">
-                            {{ grains.quantity }}lbs
+                            {{ grains.quantity | unitConversion:'weightLarge':true }}
                           </ion-col>
 
                         </ion-row>
@@ -176,12 +186,12 @@
 
                           <!-- Calculated gravity points by grain type and quantity -->
                           <ion-col class="col-left">
-                            {{ grains.grainType.gravity }}
+                            {{ grains.grainType.gravity | unitConversion:'density':true }}
                           </ion-col>
 
                           <!-- Grain type lovibond rating -->
                           <ion-col>
-                            {{ grains.grainType.lovibond }}°
+                            {{ grains.grainType.lovibond }}°L
                           </ion-col>
 
                           <!-- Selected grain milling setting -->
@@ -191,7 +201,7 @@
 
                           <!-- Calculated gravity percentage of whole for given item -->
                           <ion-col class="col-right">
-                            {{ getGristRatio(grains.quantity).toFixed(1) }}%
+                            {{ grains | ratio:'quantity':variant.grains:refreshRatio }}
                           </ion-col>
 
                         </ion-row>
@@ -253,12 +263,12 @@
 
                           <!-- Selected hops quantity -->
                           <ion-col class="col-right">
-                            {{ hops.quantity }}
+                            {{ hops.quantity | unitConversion:'weightSmall':true }}
                           </ion-col>
 
                         </ion-row>
 
-                        <ion-row>
+                        <ion-row *ngIf="!hops.dryHop">
 
                           <!-- Calculated alpha acid by hops type -->
                           <ion-col class="col-left">
@@ -267,12 +277,28 @@
 
                           <!-- Calculated IBU by alpha acid and boil duration -->
                           <ion-col>
-                            {{ getIndividualIBU(hops).toFixed(1) }} IBU
+                            {{ hops | calculate:'ibu':variant }}
                           </ion-col>
 
                           <!-- Display hops addition duration or 'Dry Hop' -->
                           <ion-col class="col-right">
-                            {{ hops.dryHop ? 'Dry Hop': hops.addAt }}
+                            {{ hops.addAt + 'min' }}
+                          </ion-col>
+
+                        </ion-row>
+
+                        <ion-row *ngIf="hops.dryHop">
+
+                          <ion-col class="col-left">
+                            0% AA
+                          </ion-col>
+
+                          <ion-col>
+                            0 IBU
+                          </ion-col>
+
+                          <ion-col class="col-right">
+                            Dry Hop
                           </ion-col>
 
                         </ion-row>
@@ -528,11 +554,17 @@
                       class="note-item">
 
               <!-- Open note form modal to edit note button -->
-              <button (click)="openNoteModal('variant', i)">
+              <button (click)="openNoteModal('master', i)"
+                      class="note-button">
 
-                <span>
+                <span class="note-text">
                   {{ note }}
                 </span>
+
+                <ion-icon color="secondary"
+                          name="create"
+                          class="note-icon">
+                </ion-icon>
 
               </button>
 
@@ -569,11 +601,17 @@
                       class="note-item">
 
               <!-- Open note form modal to edit note button -->
-              <button (click)="openNoteModal('batch', i)">
+              <button (click)="openNoteModal('variant', i)"
+                      class="note-button">
 
-                <span>
+                <span class="note-text">
                   {{ note }}
                 </span>
+
+                <ion-icon color="secondary"
+                          name="create"
+                          class="note-icon">
+                </ion-icon>
 
               </button>
 
@@ -594,7 +632,7 @@
                   color="primary"
                   (click)="onSubmit()"
                   id="submit-button"
-                  [disabled]="!isRecipeValid()">
+                  [disabled]="master.style._id === defaultStyle._id">
             Save
           </button>
 

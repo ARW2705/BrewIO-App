@@ -100,7 +100,11 @@ export class InventoryFormPage implements OnInit {
    * @return: true if object ids match
   **/
   compareWithFn(o1: any, o2: any): boolean {
-    return o1 && o2 ? o1._id === o2._id: o1 === o2;
+    try {
+      return o1['_id'] === o2['_id'];
+    } catch(error) {
+      return o1 === o2;
+    }
   }
 
   /**
@@ -131,6 +135,60 @@ export class InventoryFormPage implements OnInit {
   }
 
   /**
+   * Initialize the form using given batch values as form values
+   *
+   * @params: none
+   * @return: none
+  **/
+  initFormWithBatch(): void {
+    this.inventoryForm = this.formBuilder.group({
+      description: ['', [Validators.maxLength(120)]],
+      initialQuantity: ['', [Validators.required]],
+      stockType: ['', [Validators.required]],
+      // itemLabelImageURL: ''
+    });
+  }
+
+  /**
+   * Initialize the form with default values
+   *
+   * @params: none
+   * @return: none
+  **/
+  initFormGeneric(): void {
+    this.inventoryForm = this.formBuilder.group({
+      description: ['', [Validators.maxLength(120)]],
+      initialQuantity: [null, [Validators.required, Validators.min(1)]],
+      itemABV: [null, [Validators.required, Validators.min(0)]],
+      itemIBU: null,
+      itemName: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(2),
+          Validators.maxLength(25)
+        ]
+      ],
+      itemSRM: null,
+      itemStyleId: [null, [Validators.required]],
+      itemSubname: ['', [Validators.minLength(2), Validators.maxLength(25)]],
+      sourceType: ['', [Validators.required]],
+      stockType: ['', [Validators.required]],
+      supplierName: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(2),
+          Validators.maxLength(25)
+        ]
+      ],
+      supplierURL: '',
+      // supplierLabelImageURL: '',
+      // itemLabelImageURL: '',
+    });
+  }
+
+  /**
    * Initialize the form using given item values as form values
    *
    * @params: none
@@ -140,13 +198,32 @@ export class InventoryFormPage implements OnInit {
     this.inventoryForm = this.formBuilder.group({
       currentQuantity: [this.item.currentQuantity, [Validators.required]],
       description: [this.item.description, [Validators.maxLength(120)]],
-      initialQuantity: [this.item.initialQuantity, [Validators.required]],
-      itemABV: [this.item.itemABV, [Validators.required]],
-      itemName: [this.item.itemName, [Validators.required]],
+      initialQuantity: [
+        this.item.initialQuantity,
+        [
+          Validators.required, Validators.min(1)
+        ]
+      ],
+      itemABV: [this.item.itemABV, [Validators.required, Validators.min(0)]],
+      itemName: [
+        this.item.itemName,
+        [
+          Validators.required,
+          Validators.minLength(2),
+          Validators.maxLength(20)
+        ]
+      ],
       itemStyleId: [null, [Validators.required]],
       sourceType: [this.item.sourceType, [Validators.required]],
       stockType: [this.item.stockType, [Validators.required]],
-      supplierName: [this.item.supplierName, [Validators.required]]
+      supplierName: [
+        this.item.supplierName,
+        [
+          Validators.required,
+          Validators.minLength(2),
+          Validators.maxLength(50)
+        ]
+      ]
     });
 
     // populate ion-selects with currently chosen option
@@ -168,46 +245,6 @@ export class InventoryFormPage implements OnInit {
         optionalKey,
         new FormControl(addValue !== undefined ? addValue: '')
       );
-    });
-  }
-
-  /**
-   * Initialize the form using given batch values as form values
-   *
-   * @params: none
-   * @return: none
-  **/
-  initFormWithBatch(): void {
-    this.inventoryForm = this.formBuilder.group({
-      description: ['', [Validators.maxLength(120)]],
-      initialQuantity: [this.batch.annotations.measuredValues.batchVolume, [Validators.required]],
-      stockType: ['', [Validators.required]],
-      // itemLabelImageURL: ''
-    });
-  }
-
-  /**
-   * Initialize the form with default values
-   *
-   * @params: none
-   * @return: none
-  **/
-  initFormGeneric(): void {
-    this.inventoryForm = this.formBuilder.group({
-      description: ['', [Validators.maxLength(120)]],
-      initialQuantity: [null, [Validators.required]],
-      itemABV: [null, [Validators.required]],
-      itemIBU: null,
-      itemName: ['', [Validators.required]],
-      itemSRM: null,
-      itemStyleId: [null, [Validators.required]],
-      itemSubname: '',
-      sourceType: ['', [Validators.required]],
-      stockType: ['', [Validators.required]],
-      supplierName: ['', [Validators.required]],
-      supplierURL: '',
-      // supplierLabelImageURL: '',
-      // itemLabelImageURL: '',
     });
   }
 

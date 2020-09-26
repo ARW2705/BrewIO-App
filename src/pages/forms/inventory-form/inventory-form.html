@@ -16,32 +16,59 @@
         <!-- Supplier Info Section -->
 
         <!-- Item supplier name -->
-        <ion-item *ngIf="batch === null"
-                  class="form-input">
+        <ng-container *ngIf="batch === null">
 
-          <ion-label floating>
-            Supplier Name
-          </ion-label>
+          <ion-item class="form-input">
 
-          <ion-input  formControlName="supplierName"
-                      type="text">
-          </ion-input>
+            <ion-label floating>
+              Supplier Name
+            </ion-label>
 
-        </ion-item>
+            <ion-input  formControlName="supplierName"
+                        type="text"
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="off"
+                        spellcheck="false">
+            </ion-input>
+
+          </ion-item>
+
+          <!-- Error messages -->
+          <form-error *ngIf="
+            inventoryForm.controls['supplierName'].touched
+            && inventoryForm.controls['supplierName'].errors
+          "
+                      formName="inventory"
+                      controlName="supplierName"
+                      [controlErrors]="inventoryForm.controls['supplierName'].errors">
+          </form-error>
+
+
+        </ng-container>
+
 
         <!-- Item supplier website url [optional] -->
-        <ion-item *ngIf="batch === null && inventoryForm.controls.supplierURL !== undefined"
-                  class="form-input">
+        <ng-container *ngIf="batch === null && inventoryForm.controls.supplierURL !== undefined">
 
-          <ion-label floating>
-            Supplier Website URL
-          </ion-label>
+          <ion-item class="form-input">
 
-          <ion-input  formControlName="supplierURL"
-                      type="url">
-          </ion-input>
+            <ion-label floating>
+              Supplier Website URL
+            </ion-label>
 
-        </ion-item>
+            <ion-input  formControlName="supplierURL"
+                        type="url"
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="off"
+                        spellcheck="false">
+            </ion-input>
+
+          </ion-item>
+
+        </ng-container>
+
 
         <!-- Item supplier image file name [optional] -->
         <!-- <ion-item  class="form-input"
@@ -52,33 +79,49 @@
           </ion-input>
         </ion-item> -->
 
+
         <!-- Item source type -->
-        <ion-item *ngIf="batch === null"
-                  class="form-input">
+        <ng-container *ngIf="batch === null">
 
-          <ion-label floating>
-            Item Source
-          </ion-label>
+          <ion-item class="form-input">
 
-          <ion-select formControlName="sourceType"
-                      okText="Okay"
-                      cancelText="Dismiss">
+            <ion-label floating>
+              Item Source
+            </ion-label>
 
-            <ion-option value="self">
-              My Recipe
-            </ion-option>
+            <ion-select formControlName="sourceType"
+                        okText="Okay"
+                        cancelText="Dismiss">
 
-            <ion-option value="other">
-              Other User Recipe
-            </ion-option>
+              <ion-option value="self">
+                My Recipe
+              </ion-option>
 
-            <ion-option value="third">
-              Third Party
-            </ion-option>
+              <ion-option value="other">
+                Other User Recipe
+              </ion-option>
 
-          </ion-select>
+              <ion-option value="third">
+                Third Party
+              </ion-option>
 
-        </ion-item>
+            </ion-select>
+
+          </ion-item>
+
+          <!-- Error messages -->
+          <form-error *ngIf="
+            inventoryForm.controls['sourceType'].touched
+            && inventoryForm.controls['sourceType'].errors
+          "
+                      formName="inventory"
+                      controlName="sourceType"
+                      [controlErrors]="inventoryForm.controls['sourceType'].errors">
+          </form-error>
+
+
+        </ng-container>
+
 
         <!-- END Supplier Info Section -->
 
@@ -87,32 +130,70 @@
         <!-- Item Details Section -->
 
         <!-- Item name -->
-        <ion-item *ngIf="batch === null"
-                  class="form-input">
+        <ng-container *ngIf="batch === null">
 
-          <ion-label floating>
-            Item Name
-          </ion-label>
+          <ion-item class="form-input">
 
-          <ion-input  formControlName="itemName"
-                      type="text">
-          </ion-input>
+            <ion-label floating>
+              Item Name
+            </ion-label>
 
-        </ion-item>
+            <ion-input  formControlName="itemName"
+                        type="text"
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="off"
+                        spellcheck="false">
+            </ion-input>
+
+          </ion-item>
+
+          <!-- Error messages -->
+          <form-error *ngIf="
+            inventoryForm.controls['itemName'].touched
+            && inventoryForm.controls['itemName'].errors
+          "
+                      formName="inventory"
+                      controlName="itemName"
+                      [controlErrors]="inventoryForm.controls['itemName'].errors">
+          </form-error>
+
+
+        </ng-container>
+
 
         <!-- Item additional name [optional] -->
-        <ion-item *ngIf="batch === null && inventoryForm.controls.itemSubname !== undefined"
-                  class="form-input">
+        <ng-container *ngIf="batch === null && inventoryForm.controls.itemSubname !== undefined">
 
-          <ion-label floating>
-            Item Additional Name
-          </ion-label>
+          <ion-item class="form-input">
 
-          <ion-input  formControlName="itemSubname"
-                      type="text">
-          </ion-input>
+            <ion-label floating>
+              Item Additional Name
+            </ion-label>
 
-        </ion-item>
+            <ion-input  formControlName="itemSubname"
+                        type="text"
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="off"
+                        spellcheck="false">
+            </ion-input>
+
+          </ion-item>
+
+          <!-- Error messages -->
+          <form-error *ngIf="
+            inventoryForm.controls['itemSubname'].touched
+            && inventoryForm.controls['itemSubname'].errors
+          "
+                      formName="inventory"
+                      controlName="itemSubname"
+                      [controlErrors]="inventoryForm.controls['itemSubname'].errors">
+          </form-error>
+
+
+        </ng-container>
+
 
         <!-- Item description [optional] -->
         <ion-item class="form-input">
@@ -122,10 +203,25 @@
           </ion-label>
 
           <ion-textarea formControlName="description"
-                        rows="3">
+                        rows="3"
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="off"
+                        spellcheck="false">
           </ion-textarea>
 
         </ion-item>
+
+        <!-- Error messages -->
+        <form-error *ngIf="
+          inventoryForm.controls['description'].touched
+          && inventoryForm.controls['description'].errors
+        "
+                    formName="inventory"
+                    controlName="description"
+                    [controlErrors]="inventoryForm.controls['description'].errors">
+        </form-error>
+
 
         <!-- Item label image name [optional] -->
         <!-- <ion-item class="form-input">
@@ -135,71 +231,134 @@
           </ion-input>
         </ion-item> -->
 
+
         <!-- Item Style -->
-        <ion-item *ngIf="batch === null && styles !== null"
-                  class="form-input">
+        <ng-container *ngIf="batch === null && styles !== null">
 
-          <ion-label floating>
-            Select Style
-          </ion-label>
+          <ion-item class="form-input">
 
-          <ion-select formControlName="itemStyleId"
-                      okText="Okay"
-                      cancelText="Dismiss"
-                      [(ngModel)]="styleSelection"
-                      (ionChange)="onStyleSelection($event)"
-                      [compareWith]="compareWithFn">
+            <ion-label floating>
+              Select Style
+            </ion-label>
 
-            <ion-option *ngFor="let style of styles"
-                        [value]="style">
-              {{ style.name }}
-            </ion-option>
+            <ion-select formControlName="itemStyleId"
+                        okText="Okay"
+                        cancelText="Dismiss"
+                        [(ngModel)]="styleSelection"
+                        (ionChange)="onStyleSelection($event)"
+                        [compareWith]="compareWithFn">
 
-          </ion-select>
+              <ion-option *ngFor="let style of styles"
+                          [value]="style">
+                {{ style.name }}
+              </ion-option>
 
-        </ion-item>
+            </ion-select>
+
+          </ion-item>
+
+          <!-- Error messages -->
+          <form-error *ngIf="
+            inventoryForm.controls['itemStyleId'].touched
+            && inventoryForm.controls['itemStyleId'].errors
+          "
+                      formName="inventory"
+                      controlName="itemStyleId"
+                      [controlErrors]="inventoryForm.controls['itemStyleId'].errors">
+          </form-error>
+
+
+        </ng-container>
 
         <!-- Item ABV -->
-        <ion-item *ngIf="batch === null"
-                  class="form-input">
+        <ng-container *ngIf="batch === null">
 
-          <ion-label floating>
-            ABV
-          </ion-label>
+          <ion-item class="form-input">
 
-          <ion-input  formControlName="itemABV"
-                      type="number">
-          </ion-input>
+            <ion-label floating>
+              ABV
+            </ion-label>
 
-        </ion-item>
+            <ion-input  formControlName="itemABV"
+                        type="number"
+                        autocomplete="off">
+            </ion-input>
+
+          </ion-item>
+
+          <!-- Error messages -->
+          <form-error *ngIf="
+            inventoryForm.controls['itemABV'].touched
+            && inventoryForm.controls['itemABV'].errors
+          "
+                      formName="inventory"
+                      controlName="itemABV"
+                      [controlErrors]="inventoryForm.controls['itemABV'].errors">
+          </form-error>
+
+
+        </ng-container>
+
 
         <!-- Item IBU -->
-        <ion-item *ngIf="batch === null && inventoryForm.controls.itemIBU !== undefined"
-                  class="form-input">
+        <ng-container *ngIf="batch === null && inventoryForm.controls.itemIBU !== undefined">
 
-          <ion-label floating>
-            IBU
-          </ion-label>
+          <ion-item class="form-input">
 
-          <ion-input  formControlName="itemIBU"
-                      type="number">
-          </ion-input>
+            <ion-label floating>
+              IBU
+            </ion-label>
 
-        </ion-item>
+            <ion-input  formControlName="itemIBU"
+                        type="number"
+                        autocomplete="off">
+            </ion-input>
+
+          </ion-item>
+
+          <!-- Error messages -->
+          <form-error *ngIf="
+            inventoryForm.controls['itemIBU'].touched
+            && inventoryForm.controls['itemIBU'].errors
+          "
+                      formName="inventory"
+                      controlName="itemIBU"
+                      [controlErrors]="inventoryForm.controls['itemIBU'].errors">
+          </form-error>
+
+
+        </ng-container>
+
 
         <!-- Item SRM -->
-        <ion-item *ngIf="batch === null && inventoryForm.controls.itemSRM !== undefined"
-                  class="form-input">
+        <ng-container *ngIf="batch === null && inventoryForm.controls.itemSRM !== undefined">
 
-          <ion-label floating>
-            SRM
-          </ion-label>
+          <ion-item class="form-input">
 
-          <ion-input  formControlName="itemSRM"
-                      type="number">
-          </ion-input>
+            <ion-label floating>
+              SRM
+            </ion-label>
 
-        </ion-item>
+            <ion-input  formControlName="itemSRM"
+                        type="number"
+                        autocomplete="off">
+            </ion-input>
+
+          </ion-item>
+
+          <!-- Error messages -->
+          <form-error *ngIf="
+            inventoryForm.controls['itemSRM'].touched
+            && inventoryForm.controls['itemSRM'].errors
+          "
+                      formName="inventory"
+                      controlName="itemSRM"
+                      [controlErrors]="inventoryForm.controls['itemSRM'].errors">
+          </form-error>
+
+
+        </ng-container>
+
 
         <!-- END Item Details Section -->
 
@@ -227,6 +386,17 @@
 
         </ion-item>
 
+        <!-- Error messages -->
+        <form-error *ngIf="
+          inventoryForm.controls['stockType'].touched
+          && inventoryForm.controls['stockType'].errors
+        "
+                    formName="inventory"
+                    controlName="stockType"
+                    [controlErrors]="inventoryForm.controls['stockType'].errors">
+        </form-error>
+
+
         <!-- Initial Quantity -->
         <ion-item class="form-input">
 
@@ -235,24 +405,51 @@
           </ion-label>
 
           <ion-input  formControlName="initialQuantity"
-                      type="number">
+                      type="number"
+                      autocomplete="off">
           </ion-input>
 
         </ion-item>
+
+        <!-- Error messages -->
+        <form-error *ngIf="
+          inventoryForm.controls['initialQuantity'].touched
+          && inventoryForm.controls['initialQuantity'].errors
+        "
+                    formName="inventory"
+                    controlName="initialQuantity"
+                    [controlErrors]="inventoryForm.controls['initialQuantity'].errors">
+        </form-error>
+
 
         <!-- Current Quantity -->
-        <ion-item *ngIf="item !== null"
-                  class="form-input">
+        <ng-container *ngIf="item !== null">
 
-          <ion-label floating>
-            Current Quantity
-          </ion-label>
+          <ion-item class="form-input">
 
-          <ion-input  formControlName="currentQuantity"
-                      type="number">
-          </ion-input>
+            <ion-label floating>
+              Current Quantity
+            </ion-label>
 
-        </ion-item>
+            <ion-input  formControlName="currentQuantity"
+                        type="number"
+                        autocomplete="off">
+            </ion-input>
+
+          </ion-item>
+
+          <!-- Error messages -->
+          <form-error *ngIf="
+            inventoryForm.controls['currentQuantity'].touched
+            && inventoryForm.controls['currentQuantity'].errors
+          "
+                      formName="inventory"
+                      controlName="currentQuantity"
+                      [controlErrors]="inventoryForm.controls['currentQuantity'].errors">
+          </form-error>
+
+
+        </ng-container>
 
         <!-- End Stock Details Section -->
 

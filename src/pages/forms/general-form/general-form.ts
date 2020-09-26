@@ -3,8 +3,19 @@ import { Component, OnInit } from '@angular/core';
 import { NavParams, ViewController } from 'ionic-angular';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 
+/* Constant imports */
+import * as Units from '../../../shared/constants/units';
+
+/* Utility imports */
+import { roundToDecimalPlace } from '../../../shared/utility-functions/utilities';
+
 /* Interface imports */
+import { SelectedUnits } from '../../../shared/interfaces/units';
 import { Style } from '../../../shared/interfaces/library';
+
+/* Provider imports */
+import { CalculationsProvider } from '../../../providers/calculations/calculations';
+import { PreferencesProvider } from '../../../providers/preferences/preferences';
 
 
 @Component({
@@ -12,7 +23,7 @@ import { Style } from '../../../shared/interfaces/library';
   templateUrl: 'general-form.html',
 })
 export class GeneralFormPage implements OnInit {
-  controlsToConvert: string[] = [
+  controlsToConvertToNumber: string[] = [
     'efficiency',
     'batchVolume',
     'boilVolume',
@@ -20,21 +31,30 @@ export class GeneralFormPage implements OnInit {
     'boilDuration',
     'mashDuration'
   ];
+  controlsToConvertUnits: string[] = [
+    'batchVolume',
+    'boilVolume',
+    'mashVolume',
+  ];
   docMethod: string = '';
   formType: string = '';
   generalForm: FormGroup = null;
   styles: Style[] = null;
   styleSelection: Style;
+  units: SelectedUnits = null;
 
   constructor(
     public formBuilder: FormBuilder,
     public navParams: NavParams,
-    public viewCtrl: ViewController
+    public viewCtrl: ViewController,
+    public calculator: CalculationsProvider,
+    public preferenceService: PreferencesProvider
   ) { }
 
   /***** Lifecycle Hooks *****/
 
   ngOnInit() {
+    this.units = this.preferenceService.getSelectedUnits();
     this.formType = this.navParams.get('formType');
     this.docMethod = this.navParams.get('docMethod');
     this.styles = this.navParams.get('styles');
@@ -59,17 +79,30 @@ export class GeneralFormPage implements OnInit {
   }
 
   /**
-   * ion-input stores numbers as strings - must be submitted as numbers
+   * Convert numeric values to numbers and store units converted to english
+   * standard
    *
    * @params: none
-   * @return: none
+   *
+   * @return: a submission ready object of form values
   **/
-  convertFormValuesToNumbers(): void {
-    this.controlsToConvert.forEach(key => {
-      this.generalForm.controls[key].setValue(
-        parseFloat(this.generalForm.value[key])
-      );
-    });
+  convertForSubmission(): object {
+    const formValues: object = {};
+    for (const key in this.generalForm.value) {
+      if (this.controlsToConvertToNumber.includes(key)) {
+        formValues[key] = parseFloat(this.generalForm.value[key]);
+      } else {
+        formValues[key] = this.generalForm.value[key];
+      }
+      if (
+        this.controlsToConvertUnits.includes(key)
+        && this.calculator.requiresConversion('volumeLarge', this.units)
+      ) {
+        formValues[key] = this.calculator
+          .convertVolume(formValues[key], true, true);
+      }
+    }
+    return formValues;
   }
 
   /**
@@ -94,12 +127,49 @@ export class GeneralFormPage implements OnInit {
     this.generalForm = this.formBuilder.group({
       style: ['', [Validators.required]],
       brewingType: ['', [Validators.required]],
-      efficiency: 70,
-      mashDuration: 60,
-      boilDuration: 60,
-      batchVolume: [null, [Validators.required]],
-      boilVolume: [null, [Validators.required]],
-      mashVolume: [null, [Validators.required]],
+      efficiency: [
+        70,
+        [
+          Validators.required,
+          Validators.min(0),
+          Validators.max(100)
+        ]
+      ],
+      mashDuration: [
+        60,
+        [
+          Validators.required,
+          Validators.min(0)
+        ]
+      ],
+      boilDuration: [
+        60,
+        [
+          Validators.required,
+          Validators.min(0)
+        ]
+      ],
+      batchVolume: [
+        null,
+        [
+          Validators.required,
+          Validators.min(0)
+        ]
+      ],
+      boilVolume: [
+        null,
+        [
+          Validators.required,
+          Validators.min(0)
+        ]
+      ],
+      mashVolume: [
+        null,
+        [
+          Validators.required,
+          Validators.min(0)
+        ]
+      ],
       isFavorite: false,
       isMaster: false
     });
@@ -109,7 +179,11 @@ export class GeneralFormPage implements OnInit {
       this.formType === 'master' ? 'name': 'variantName',
       new FormControl(
         '',
-        [Validators.minLength(2), Validators.maxLength(30), Validators.required]
+        [
+          Validators.minLength(2),
+          Validators.maxLength(30),
+          Validators.required
+        ]
       )
     );
 
@@ -121,7 +195,15 @@ export class GeneralFormPage implements OnInit {
           || (key !== 'isFavorite'
               && key !== 'isMaster')
         ) {
-          this.generalForm.controls[key].setValue(data[key]);
+          if (this.controlsToConvertUnits.includes(key)) {
+            if (this.calculator.requiresConversion('volumeLarge', this.units)) {
+              data[key] = this.calculator.convertVolume(data[key], true, false);
+            }
+            this.generalForm.controls[key]
+              .setValue(roundToDecimalPlace(data[key], 2));
+          } else {
+            this.generalForm.controls[key].setValue(data[key]);
+          }
         }
       }
       this.styleSelection = data.style;
@@ -147,8 +229,7 @@ export class GeneralFormPage implements OnInit {
    * @return: none
   **/
   onSubmit(): void {
-    this.convertFormValuesToNumbers();
-    this.viewCtrl.dismiss(this.generalForm.value);
+    this.viewCtrl.dismiss(this.convertForSubmission());
   }
 
   /***** End Form Methods *****/

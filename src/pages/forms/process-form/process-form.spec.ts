@@ -1,13 +1,17 @@
 /* Module imports */
-import { TestBed, async, getTestBed, ComponentFixture } from '@angular/core/testing';
+import { TestBed, getTestBed, ComponentFixture } from '@angular/core/testing';
 import { IonicModule, NavParams, ViewController } from 'ionic-angular';
-import { AbstractControl } from '@angular/forms';
+import { AbstractControl, FormGroup, FormControl } from '@angular/forms';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 /* Test configuration imports */
 import { configureTestBed } from '../../../../test-config/configureTestBed';
 
 /* Mock imports */
 import { NavParamsMock, ViewControllerMock } from '../../../../test-config/mocks-ionic';
+
+/* Interface imports */
+import { Process } from '../../../shared/interfaces/process';
 
 /* Page imports */
 import { ProcessFormPage } from './process-form';
@@ -18,6 +22,7 @@ describe('Process Form Page', () => {
   let processPage: ProcessFormPage;
   let injector: TestBed;
   let viewCtrl: ViewController;
+  let originalNgOnInit: () => void;
   configureTestBed();
 
   beforeAll(done => (async() => {
@@ -31,6 +36,9 @@ describe('Process Form Page', () => {
       providers: [
         { provide: NavParams, useClass: NavParamsMock },
         { provide: ViewController, useClass: ViewControllerMock }
+      ],
+      schemas: [
+        NO_ERRORS_SCHEMA
       ]
     });
     await TestBed.compileComponents();
@@ -44,15 +52,23 @@ describe('Process Form Page', () => {
 
     injector = getTestBed();
     viewCtrl = injector.get(ViewController);
+
+    originalNgOnInit = processPage.ngOnInit;
+    processPage.ngOnInit = jest
+      .fn();
   });
 
   describe('Form creation', () => {
-    beforeAll(async(() => {
-      NavParamsMock.setParams('processType', 'manual');
-      NavParamsMock.setParams('formMode', 'create');
-    }));
 
     test('should create the component', () => {
+      NavParamsMock.setParams('processType', 'manual');
+      NavParamsMock.setParams('formMode', 'create');
+
+      processPage.ngOnInit = originalNgOnInit;
+
+      processPage.initForm = jest
+        .fn();
+
       fixture.detectChanges();
 
       expect(processPage).toBeDefined();
@@ -79,70 +95,103 @@ describe('Process Form Page', () => {
     }); // end 'should call view controller dismiss without args' test
 
     test('should initialize a manual step creation form', () => {
+      processPage.stepType = 'manual';
+
       fixture.detectChanges();
 
-      expect(processPage.processForm).toBeDefined();
-      expect(processPage.processForm.controls.expectedDuration).toBeDefined();
+      processPage.initForm(undefined);
+
+      expect(processPage.processForm.value).toStrictEqual({
+        type: 'manual',
+        name: '',
+        description: '',
+        expectedDuration: null
+      });
     }); // end 'should initialize a manual step creation form' test
 
     test('should initialize a timer step creation form', () => {
-      fixture.detectChanges();
-
       processPage.stepType = 'timer';
 
-      processPage.initForm(null);
+      fixture.detectChanges();
 
-      expect(processPage.processForm.controls.concurrent).toBeDefined();
-      expect(processPage.processForm.controls.splitInterval).toBeDefined();
+      processPage.initForm(undefined);
+
+      expect(processPage.processForm.value).toStrictEqual({
+        type: 'timer',
+        name: '',
+        description: '',
+        concurrent: false,
+        splitInterval: 1,
+        duration: ''
+      });
     }); // end 'should initialize a timer step creation form' test
 
     test('should initialize a calendar step creation form', () => {
-      fixture.detectChanges();
-
       processPage.stepType = 'calendar';
 
-      processPage.initForm(null);
+      fixture.detectChanges();
 
-      expect(processPage.processForm.controls.duration).toBeDefined();
+      processPage.initForm(undefined);
+
+      expect(processPage.processForm.value).toStrictEqual({
+        type: 'calendar',
+        name: '',
+        description: '',
+        duration: ''
+      });
     }); //  end 'should initialize a calendar step creation form' test
 
     test('should submit a creation form', () => {
-      fixture.detectChanges();
-
-      processPage.processForm.controls.name.setValue('test name');
-      processPage.processForm.controls.expectedDuration.setValue(10);
+      processPage.stepType = 'manual';
+      processPage.formMode = 'create';
+      processPage.processForm = new FormGroup({
+        name: new FormControl('test-name'),
+        type: new FormControl('manual'),
+        description: new FormControl('test description'),
+        expectedDuration: new FormControl(10)
+      });
 
       const viewSpy: jest.SpyInstance = jest.spyOn(viewCtrl, 'dismiss');
 
+      fixture.detectChanges();
+
       processPage.onSubmit();
 
-      expect(viewSpy).toHaveBeenCalledWith(processPage.processForm.value);
+      expect(viewSpy).toHaveBeenCalledWith({
+        name: 'test-name',
+        type: 'manual',
+        description: 'test description',
+        expectedDuration: 10
+      });
     }); // end 'should submit a creation form' test
 
   }); // end 'Form creation' section
 
 
   describe('Form update', () => {
-    beforeAll(async(() => {
-      NavParamsMock.setParams('processType', 'manual');
-      NavParamsMock.setParams('formMode', 'update');
-      NavParamsMock.setParams('update', {
-        name: 'a manual step',
-        type: 'manual',
-        description: 'manual step to update',
-        expectedDuration: 15
-      });
-    }));
 
     test('should initialize a manual step form with values to update', () => {
+      processPage.stepType = 'manual';
+      processPage.formMode = 'create';
+
       fixture.detectChanges();
 
-      const formControls: { [key: string]: AbstractControl }
-      = processPage.processForm.controls;
+      const formValue: Process = {
+        name: 'a manual step',
+        type: 'manual',
+        description: 'manual step',
+        expectedDuration: 15,
+        cid: '0'
+      };
 
-      expect(formControls.expectedDuration.value).toBe(15);
-      expect(formControls.name.value).toMatch('a manual step');
-      expect(formControls.description.value).toMatch('manual step to update');
+      processPage.initForm(formValue);
+
+      expect(processPage.processForm.value).toStrictEqual({
+        type: formValue.type,
+        name: formValue.name,
+        description: formValue.description,
+        expectedDuration: formValue.expectedDuration
+      });
     }); // end 'should initialize a manual step form with values to update' test
 
     test('should initialize a timer step form with values to update', () => {
@@ -188,17 +237,30 @@ describe('Process Form Page', () => {
     }); // end 'should initialize a calendar step form with values to update' test
 
     test('should submit an update form', () => {
-      fixture.detectChanges();
+      processPage.stepType = 'manual';
+      processPage.formMode = 'update';
 
-      const formControls: { [key: string]: AbstractControl }
-        = processPage.processForm.controls;
-      formControls.name.setValue('updated name');
+      processPage.processForm = new FormGroup({
+        name: new FormControl('test name'),
+        type: new FormControl('manual'),
+        description: new FormControl(''),
+        expectedDuration: new FormControl(10)
+      });
 
       const viewSpy: jest.SpyInstance = jest.spyOn(viewCtrl, 'dismiss');
 
+      fixture.detectChanges();
+
       processPage.onSubmit();
 
-      expect(viewSpy.mock.calls[0][0].update.name).toMatch('updated name');
+      expect(viewSpy).toHaveBeenCalledWith({
+        update: {
+          name: 'test name',
+          type: 'manual',
+          description: '',
+          expectedDuration: 10
+        }
+      });
     }); // end 'should submit an update form' test
 
   }); // end 'Form update' section
