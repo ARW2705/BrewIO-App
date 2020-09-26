@@ -18,6 +18,7 @@ import { _throw as throwError } from 'rxjs/observable/throw';
 import { API_VERSION } from '../../shared/constants/api-version';
 import { BASE_URL } from '../../shared/constants/base-url';
 import { OPTIONAL_INVENTORY_DATA_KEYS } from '../../shared/constants/optional-inventory-data-keys';
+import { SRM_HEX_CHART } from '../../shared/constants/srm-hex-chart';
 
 /* Utility function imports */
 import { clone } from '../../shared/utility-functions/clone';
@@ -80,6 +81,7 @@ export class InventoryProvider {
   addItem(newItemValues: object): Observable<InventoryItem> {
     const newItem: InventoryItem = {
       cid: this.clientIdService.getNewId(),
+      createdAt: (new Date()).toISOString(),
       supplierName: newItemValues['supplierName'],
       stockType: newItemValues['stockType'],
       initialQuantity: newItemValues['initialQuantity'],
@@ -272,6 +274,18 @@ export class InventoryProvider {
       ) {
         item.optionalItemData[key] = optionalData[key];
       }
+    }
+    if (!item.optionalItemData.supplierLabelImageURL) {
+      item.optionalItemData.supplierLabelImageURL = 'missing';
+    }
+    if (!item.optionalItemData.itemLabelImageURL) {
+      item.optionalItemData.itemLabelImageURL = 'missing';
+    }
+    if (item.optionalItemData.itemSRM) {
+      item.optionalItemData.srmColor = this.getSRMColor(item);
+    }
+    if (item.initialQuantity && item.currentQuantity) {
+      item.optionalItemData.remainingColor = this.getRemainingColor(item);
     }
   }
 
@@ -647,5 +661,57 @@ export class InventoryProvider {
   }
 
   /***** End Storage Operations *****/
+
+
+  /***** Other Operations *****/
+
+  /**
+   * Get the appropriate quantity color by item
+   *
+   * @params: item - item instance to get count from item quantity counts
+   *
+   * @return: style color
+  **/
+  getRemainingColor(item: InventoryItem): string {
+    const normal: string = '#f4f4f4';
+    const warning: string = '#ff9649';
+    const danger: string = '#fd4855';
+    const remaining: number = item.currentQuantity / item.initialQuantity;
+
+    let color;
+
+    if (remaining > 0.5) {
+      color = normal;
+    } else if (remaining > 0.25) {
+      color = warning;
+    } else {
+      color = danger;
+    }
+
+    return color;
+  }
+
+  /**
+   * Get the appropriate SRM color by item
+   *
+   * @params: item - item instance to get count from item quantity counts
+   *
+   * @return: style color value
+  **/
+  getSRMColor(item: InventoryItem): string {
+    let color: string = '#f4f4f4';
+
+    if (item.optionalItemData.itemSRM !== undefined) {
+      if (item.optionalItemData.itemSRM < SRM_HEX_CHART.length) {
+        color = SRM_HEX_CHART[Math.floor(item.optionalItemData.itemSRM)];
+      } else {
+        color = '#140303';
+      }
+    }
+
+    return color;
+  }
+
+  /***** End Other Operations *****/
 
 }

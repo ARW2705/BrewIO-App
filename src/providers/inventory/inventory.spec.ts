@@ -10,13 +10,12 @@ import { of } from 'rxjs/observable/of';
 /* Constants imports */
 import { API_VERSION } from '../../shared/constants/api-version';
 import { BASE_URL } from '../../shared/constants/base-url';
-import { STOCK_TYPES } from '../../shared/constants/stock-types';
+import { SRM_HEX_CHART } from '../../shared/constants/srm-hex-chart';
 
 /* Test configuration imports */
 import { configureTestBed } from '../../../test-config/configureTestBed';
 
 /* Mock imports */
-import { mockAuthor } from '../../../test-config/mockmodels/mockAuthor';
 import { mockBatch } from '../../../test-config/mockmodels/mockBatch';
 import { mockErrorResponse } from '../../../test-config/mockmodels/mockErrorResponse';
 import { mockInventoryItem, mockOptionalItemData } from '../../../test-config/mockmodels/mockInventoryItem';
@@ -26,12 +25,10 @@ import { EventsMock } from '../../../test-config/mocks-ionic';
 
 /* Interface imports*/
 import { Author } from '../../shared/interfaces/author';
-import { Batch, BatchContext } from '../../shared/interfaces/batch';
+import { Batch } from '../../shared/interfaces/batch';
 import { InventoryItem, OptionalItemData } from '../../shared/interfaces/inventory-item';
-import { PrimaryValues } from '../../shared/interfaces/primary-values';
 import { RecipeMaster } from '../../shared/interfaces/recipe-master';
 import { Style } from '../../shared/interfaces/library';
-import { SyncData, SyncMetadata, SyncResponse } from '../../shared/interfaces/sync';
 
 /* Provider imports */
 import { InventoryProvider } from './inventory';
@@ -59,6 +56,8 @@ describe('Inventory Service', () => {
   let storage: StorageProvider;
   let sync: SyncProvider;
   let userService: UserProvider;
+  const staticItem: InventoryItem = mockInventoryItem();
+  const staticBatch: Batch = mockBatch();
   configureTestBed();
 
   beforeAll(async(() => {
@@ -108,7 +107,7 @@ describe('Inventory Service', () => {
 
     beforeEach(() => {
       inventoryService.inventory$ = new BehaviorSubject<InventoryItem[]>(
-        [ mockInventoryItem() ]
+        [ staticItem ]
       );
     });
 
@@ -208,6 +207,8 @@ describe('Inventory Service', () => {
       inventoryService.addItem(newItemValues)
         .subscribe(
           (response: InventoryItem): void => {
+            expect(Date.parse(response.createdAt)).not.toBeNaN();
+            delete response.createdAt;
             expect(response).toStrictEqual(_mockInventoryItem);
             expect(addSpy).toHaveBeenCalledWith(
               'create',
@@ -284,12 +285,10 @@ describe('Inventory Service', () => {
 
       expect(inventoryService.inventory$.value.length).toEqual(1);
 
-      const _mockInventoryItem: InventoryItem = mockInventoryItem();
-
-      inventoryService.addItemToList(_mockInventoryItem)
+      inventoryService.addItemToList(staticItem)
         .subscribe(
           (response: InventoryItem): void => {
-            expect(response).toStrictEqual(_mockInventoryItem);
+            expect(response).toStrictEqual(staticItem);
             expect(inventoryService.inventory$.value.length).toEqual(2);
             expect(updateSpy).toHaveBeenCalled();
             done();
@@ -393,18 +392,14 @@ describe('Inventory Service', () => {
     }); // end 'should get the inventory list' test
 
     test('should get an item by its id', () => {
-      const _mockInventoryItem: InventoryItem = mockInventoryItem();
-
-      expect(inventoryService.getItemById(_mockInventoryItem.cid))
-        .toStrictEqual(_mockInventoryItem);
+      expect(inventoryService.getItemById(staticItem.cid))
+        .toStrictEqual(staticItem);
 
       expect(inventoryService.getItemById('none')).toBeUndefined();
     }); // end 'should get an item by its id' test
 
     test('should initialize the inventory [online]', done => {
       inventoryService.inventory$.next([]);
-
-      const _mockInventoryItem: InventoryItem = mockInventoryItem();
 
       storage.getInventory = jest
         .fn()
@@ -435,17 +430,15 @@ describe('Inventory Service', () => {
       const getReq: TestRequest = httpMock
         .expectOne(`${BASE_URL}/${API_VERSION}/inventory`);
       expect(getReq.request.method).toMatch('GET');
-      getReq.flush([_mockInventoryItem, _mockInventoryItem]);
+      getReq.flush([staticItem, staticItem]);
     }); // end 'should initialize the inventory [online]' test
 
     test('should initialize the inventory [offline]', done => {
       inventoryService.inventory$.next([]);
 
-      const _mockInventoryItem: InventoryItem = mockInventoryItem();
-
       storage.getInventory = jest
         .fn()
-        .mockReturnValue(of([_mockInventoryItem, _mockInventoryItem]));
+        .mockReturnValue(of([staticItem, staticItem]));
       connectionService.isConnected = jest
         .fn()
         .mockReturnValue(false);
@@ -534,12 +527,25 @@ describe('Inventory Service', () => {
     }); // end 'should fail to initialize the inventory from storage' test
 
     test('should map optional data to an inventory item', () => {
+      inventoryService.getSRMColor = jest
+        .fn();
+
+      inventoryService.getRemainingColor = jest
+        .fn();
+
       const _mockInventoryItem: InventoryItem = mockInventoryItem();
       _mockInventoryItem.optionalItemData = {};
 
       const _mockOptionalItemDataResult: OptionalItemData = mockOptionalItemData();
+      _mockOptionalItemDataResult.remainingColor = undefined;
+      _mockOptionalItemDataResult.srmColor = undefined;
+      _mockOptionalItemDataResult.supplierLabelImageURL = 'missing';
+      _mockOptionalItemDataResult.itemLabelImageURL = 'missing';
+
       const _mockOptionalItemDataInput: OptionalItemData = mockOptionalItemData();
       _mockOptionalItemDataInput['ignoreProp'] = '';
+      _mockOptionalItemDataInput.supplierLabelImageURL = undefined;
+      _mockOptionalItemDataInput.itemLabelImageURL = undefined;
 
       inventoryService
         .mapOptionalData(_mockInventoryItem, _mockOptionalItemDataInput);
@@ -636,20 +642,18 @@ describe('Inventory Service', () => {
     }); // end 'should patch an item [offline]' test
 
     test('should call remove item when patching an item with 0 current quantity', done => {
-      const _mockInventoryItem: InventoryItem = mockInventoryItem();
-
       inventoryService.removeItem = jest
         .fn()
-        .mockReturnValue(of(_mockInventoryItem));
+        .mockReturnValue(of(staticItem));
 
       const removeSpy: jest.SpyInstance = jest
         .spyOn(inventoryService, 'removeItem');
 
-      inventoryService.patchItem(_mockInventoryItem.cid, { currentQuantity: 0 })
+      inventoryService.patchItem(staticItem.cid, { currentQuantity: 0 })
         .subscribe(
           (response: InventoryItem): void => {
-            expect(response).toStrictEqual(_mockInventoryItem);
-            expect(removeSpy).toHaveBeenCalledWith(_mockInventoryItem.cid);
+            expect(response).toStrictEqual(staticItem);
+            expect(removeSpy).toHaveBeenCalledWith(staticItem.cid);
             done();
           },
           (error: any): void => {
@@ -883,17 +887,16 @@ describe('Inventory Service', () => {
     }); // end 'should throw error with invalid index' test
 
     test('should process sync success responses', done => {
-      const _mockInventoryItem: InventoryItem = mockInventoryItem();
       const _mockUpdateItem: InventoryItem = mockInventoryItem();
       _mockUpdateItem.itemName = 'updatedName';
       const _mockMissingItem: InventoryItem = mockInventoryItem();
       _mockMissingItem.cid = 'missing';
 
-      inventoryService.inventory$.next([_mockInventoryItem]);
+      inventoryService.inventory$.next([staticItem]);
 
       inventoryService.processSyncSuccess([
         _mockUpdateItem,
-        { isDeleted: true, data: _mockInventoryItem },
+        { isDeleted: true, data: staticItem },
         _mockMissingItem
       ]);
 
@@ -907,7 +910,6 @@ describe('Inventory Service', () => {
     }); // end 'should process sync success responses' test
 
     test('should handle sync requests on connection', done => {
-      const _mockBatch: Batch = mockBatch();
       const _mockItemDefaultId: InventoryItem = mockInventoryItem();
       const _mockItemServerId: InventoryItem = mockInventoryItem();
       _mockItemServerId._id = 'a01234567890123456789b';
@@ -920,7 +922,7 @@ describe('Inventory Service', () => {
       processService.getBatchById = jest
         .fn()
         .mockReturnValueOnce(undefined)
-        .mockReturnValueOnce(new BehaviorSubject<Batch>(_mockBatch));
+        .mockReturnValueOnce(new BehaviorSubject<Batch>(staticBatch));
 
       inventoryService.updateInventoryStorage = jest
         .fn();
@@ -1087,9 +1089,8 @@ describe('Inventory Service', () => {
     }); // end 'should get error response on unsuccessful sync on reconnect' test
 
     test('should handle sync on signup', () => {
-      const _mockBatch: Batch = mockBatch();
       const _mockInventoryItem: InventoryItem = mockInventoryItem();
-      _mockInventoryItem.optionalItemData.batchId = _mockBatch._id;
+      _mockInventoryItem.optionalItemData.batchId = staticBatch._id;
 
       inventoryService.getInventoryList = jest
         .fn()
@@ -1104,8 +1105,8 @@ describe('Inventory Service', () => {
       processService.getBatchById = jest
         .fn()
         .mockReturnValueOnce(undefined)
-        .mockReturnValueOnce(new BehaviorSubject<Batch>(_mockBatch))
-        .mockReturnValueOnce(new BehaviorSubject<Batch>(_mockBatch));
+        .mockReturnValueOnce(new BehaviorSubject<Batch>(staticBatch))
+        .mockReturnValueOnce(new BehaviorSubject<Batch>(staticBatch));
 
       sync.sync = jest
         .fn()
@@ -1178,5 +1179,37 @@ describe('Inventory Service', () => {
     }); // end 'should fail to update inventory storage due to error response' test
 
   }); // end 'Storage operations' section
+
+
+  describe('Other operations', () => {
+
+    test('should set remaining color value', () => {
+      const _mockItem: InventoryItem = mockInventoryItem();
+      _mockItem.initialQuantity = 10;
+
+      _mockItem.currentQuantity = 8;
+      expect(inventoryService.getRemainingColor(_mockItem)).toMatch('#f4f4f4');
+
+      _mockItem.currentQuantity = 5;
+      expect(inventoryService.getRemainingColor(_mockItem)).toMatch('#ff9649');
+
+      _mockItem.currentQuantity = 2;
+      expect(inventoryService.getRemainingColor(_mockItem)).toMatch('#fd4855');
+    }); // end 'should set remaining color value' test
+
+    test('should set SRM color value', () => {
+      const _mockItem: InventoryItem = mockInventoryItem();
+
+      _mockItem.optionalItemData.itemSRM = 20;
+      expect(inventoryService.getSRMColor(_mockItem)).toMatch(SRM_HEX_CHART[20]);
+
+      _mockItem.optionalItemData.itemSRM = SRM_HEX_CHART.length;
+      expect(inventoryService.getSRMColor(_mockItem)).toMatch('#140303');
+
+      _mockItem.optionalItemData.itemSRM = undefined;
+      expect(inventoryService.getSRMColor(_mockItem)).toMatch('#f4f4f4');
+    }); // end 'should set SRM color value' test
+
+  }); // end 'Other operations' section
 
 });
