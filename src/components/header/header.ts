@@ -66,6 +66,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
    * @return: none
   **/
   goBack(): void {
+    console.log('go back click');
     this.events.publish('pop-header-nav', {
       origin: this.isTabPage ? '': this.navStack.pop()
     });
