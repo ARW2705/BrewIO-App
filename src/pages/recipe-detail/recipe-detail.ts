@@ -12,7 +12,7 @@ import { RecipeVariant } from '../../shared/interfaces/recipe-variant';
 
 /* Utility imports */
 import { clone } from '../../shared/utility-functions/clone';
-import { getId } from '../../shared/utility-functions/id-helpers';
+import { getId, hasId } from '../../shared/utility-functions/id-helpers';
 import { normalizeErrorObservableMessage } from '../../shared/utility-functions/observable-helpers';
 
 /* Page imports */
@@ -32,13 +32,13 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
   @ViewChildren('slidingItems') slidingItems: QueryList<ItemSliding>;
   deletionInProgress: boolean = false;
   destroy$: Subject<boolean> = new Subject<boolean>();
+  displayVariantList: RecipeVariant[] = null;
   noteIndex: number = -1;
   recipeIndex: number = -1;
   recipeMaster: RecipeMaster = null;
   recipeMasterId: string = null;
   showNotes: boolean = false;
   showNotesIcon: string = 'arrow-down';
-  variantList: RecipeVariant[] = null;
   _headerNavPop: any;
 
   constructor(
@@ -118,14 +118,14 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
         caller: 'recipe details page',
         dest: 'process',
         destType: 'page',
-        destTitle: variant.variantName,
-        origin: this.navCtrl.getActive().name
+        destTitle: variant.variantName
       });
 
       this.navCtrl.push(ProcessPage, {
         master: this.recipeMaster,
         requestedUserId: this.recipeMaster.owner,
-        selectedRecipeId: variant.cid
+        selectedRecipeId: variant.cid,
+        origin: this.navCtrl.getActive().name
       });
     } else {
       this.toastService.presentToast(
@@ -164,7 +164,10 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
     } else if (formType === 'variant') {
       options['masterData'] = this.recipeMaster;
       if (variant) {
-        options['variantData'] = variant;
+        options['variantData'] = this.recipeMaster.variants.find(
+          (recipeVariant: RecipeVariant): boolean => {
+            return hasId(recipeVariant, getId(variant));
+          });
         options['mode'] = 'update';
         title = 'Update Variant'
       } else {
@@ -194,19 +197,6 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
 
 
   /***** Deletion handling *****/
-
-  /**
-   * Check if a recipe can be deleted from the recipe master
-   * - must have at least one recipe at any time
-   *
-   * @params: none
-   *
-   * @return: true if there are at least 2 recipes present and requested recipe
-   *          is not in progress
-  **/
-  canDelete(): boolean {
-    return this.recipeMaster.variants.length && !this.deletionInProgress;
-  }
 
   /**
    * Delete a recipe master note from server
@@ -298,17 +288,6 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
   }
 
   /**
-   * Check if note at array index should be shown
-   *
-   * @params: index - note array index to check
-   *
-   * @return: true if given index is the selected index to show
-  **/
-  showExpandedNote(index: number): boolean {
-    return index === this.noteIndex;
-  }
-
-  /**
    * Navigate to recipe form to update note from array
    *
    * @params: index - array index to update
@@ -356,7 +335,7 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
    * @return: none
   **/
   mapVariantList(): void {
-    this.variantList = this.recipeMaster.variants
+    this.displayVariantList = this.recipeMaster.variants
       .map((variant: RecipeVariant) => {
         const selected: RecipeVariant = clone(variant);
         selected.hops = this.recipeService.getCombinedHopsSchedule(selected.hops);
@@ -387,17 +366,6 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
         console.log(error);
       }
     );
-  }
-
-  /**
-   * Check if recipe variant at given index should be shown
-   *
-   * @params: index - given index to check
-   *
-   * @return: true if given index should be shown
-  **/
-  showExpandedRecipe(index: number): boolean {
-    return index === this.recipeIndex;
   }
 
   /**

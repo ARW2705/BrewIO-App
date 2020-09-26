@@ -75,13 +75,14 @@
                 </button>
 
                 <!-- Full note text -->
-                <accordion [expanded]="showExpandedNote(i)">
+                <accordion [expanded]="noteIndex === i">
+
                   <p>{{ note }}</p>
 
                   <div class="note-buttons-container">
                     <!-- Delete note button -->
                     <button ion-button
-                            color="secondary"
+                            color="danger"
                             (click)="deleteNote(i)">
                       Delete
                     </button>
@@ -111,19 +112,19 @@
 
         <ion-list id="variant-list">
 
-          <ng-container *ngFor="let variant of variantList; index as i">
+          <ng-container *ngFor="let variant of displayVariantList; index as i">
 
             <!-- Recipe variant list -->
             <ion-item-sliding #slidingItems>
 
               <!-- Delete recipe variant button -->
-              <ion-item-options *ngIf="variantList.length > 1"
+              <ion-item-options *ngIf="displayVariantList.length > 1"
                                 side="left">
 
                 <button ion-button
                         color="danger"
                         (click)="deleteRecipe(variant)"
-                        [disabled]="!canDelete()">
+                        [disabled]="!recipeMaster.variants.length || deletionInProgress">
 
                   <ion-icon name="trash"></ion-icon>
 
@@ -177,11 +178,35 @@
                     <ion-col>
 
                       <p>
-                        {{ variant.batchVolume }} gal
-                         • {{ variant.brewingType | titlecase }}
-                         • {{ variant.ABV.toFixed(1) }}% ABV
-                         • {{ variant.IBU.toFixed(1) }} IBU
-                         • {{ variant.SRM.toFixed(1) }} SRM
+
+                        <span>
+                          {{ variant.batchVolume | unitConversion:'volumeLarge':true }}
+                        </span>
+
+                        <span>•</span>
+
+                        <span>
+                          {{ variant.brewingType | uppercase }}
+                        </span>
+
+                        <span>•</span>
+
+                        <span>
+                          {{ variant.ABV | truncate:1 }}% ABV
+                        </span>
+
+                        <span>•</span>
+
+                        <span>
+                          {{ variant.IBU | round }} IBU
+                        </span>
+
+                        <span>•</span>
+
+                        <span>
+                          {{ variant.SRM | round }} SRM
+                        </span>
+
                       </p>
 
                     </ion-col>
@@ -232,7 +257,7 @@
 
             </ion-item-sliding>
 
-            <accordion [expanded]="showExpandedRecipe(i)">
+            <accordion [expanded]="recipeIndex === i">
 
               <ion-card class="variant-card">
 
@@ -251,7 +276,7 @@
 
                       <ion-grid>
 
-                        <ion-row  *ngFor="let grains of variantList[i].grains"
+                        <ion-row  *ngFor="let grains of displayVariantList[i].grains"
                                   justify-content-between
                                   align-items-center
                                   class="ingredient-row">
@@ -261,7 +286,8 @@
                           </ion-col>
 
                           <ion-col col-4>
-                            {{ grains.quantity }} lbs
+                            <!-- {{ grains.quantity }} lbs -->
+                            {{ grains.quantity | unitConversion:'weightLarge':true }}
                           </ion-col>
 
                         </ion-row>
@@ -291,7 +317,8 @@
 
                           <ion-col  col-4
                                     col-right >
-                            {{ hops.quantity }} oz
+                            <!-- {{ hops.quantity }} oz -->
+                            {{ hops.quantity | unitConversion:'weightSmall':true:refreshPipes }}
                           </ion-col>
 
                         </ion-row>
@@ -320,7 +347,7 @@
                           </ion-col>
 
                           <ion-col col-4>
-                            {{ yeast.quantity }} pack
+                            {{ yeast.quantity }} unit
                           </ion-col>
 
                         </ion-row>
@@ -379,7 +406,7 @@
           </ng-container>
 
         </ion-list>
-        
+
       </ion-row>
 
     </ng-container>
