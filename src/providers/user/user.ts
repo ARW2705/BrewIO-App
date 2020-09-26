@@ -17,11 +17,11 @@ import { BASE_URL } from '../../shared/constants/base-url';
 import { defaultEnglish } from '../../shared/defaults/default-units';
 
 /* Utility imports */
-import { clone } from '../../shared/utility-functions/clone';
 import { normalizeErrorObservableMessage } from '../../shared/utility-functions/observable-helpers';
 
 /* Interface imports */
 import { LoginCredentials } from '../../shared/interfaces/login-credentials';
+import { SelectedUnits } from '../../shared/interfaces/units';
 import { User } from '../../shared/interfaces/user';
 import { UserResponse } from '../../shared/interfaces/user-response';
 
@@ -85,6 +85,7 @@ export class UserProvider {
    * @return: none
   **/
   clearUserData(): void {
+    const _defaultEnglish: SelectedUnits = defaultEnglish();
     this.user$.next({
       _id: undefined,
       cid: 'offline',
@@ -96,8 +97,8 @@ export class UserProvider {
       email: undefined,
       friendList: [],
       token: '',
-      preferredUnitSystem: defaultEnglish.system,
-      units: clone(defaultEnglish)
+      preferredUnitSystem: _defaultEnglish.system,
+      units: _defaultEnglish
     });
 
     this.storageService.removeUser();
@@ -316,7 +317,7 @@ export class UserProvider {
           })
         );
     }
-    
+
     return of(null);
   }
 
