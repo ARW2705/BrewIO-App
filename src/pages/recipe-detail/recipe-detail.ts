@@ -1,6 +1,6 @@
 /* Module imports */
 import { Component, OnInit, OnDestroy, QueryList, ViewChildren } from '@angular/core';
-import { Events, ItemSliding, NavController, NavParams } from 'ionic-angular';
+import { Events, ItemSliding, Modal, ModalController, NavController, NavParams } from 'ionic-angular';
 import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 import { Subject } from 'rxjs/Subject';
 import { take } from 'rxjs/operators/take';
@@ -16,6 +16,7 @@ import { getId, hasId } from '../../shared/utility-functions/id-helpers';
 import { normalizeErrorObservableMessage } from '../../shared/utility-functions/observable-helpers';
 
 /* Page imports */
+import { ConfirmationPage } from '../confirmation/confirmation';
 import { ProcessPage } from '../process/process';
 import { RecipeFormPage } from '../forms/recipe-form/recipe-form';
 
@@ -43,6 +44,7 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
 
   constructor(
     public events: Events,
+    public modalCtrl: ModalController,
     public navCtrl: NavController,
     public navParams: NavParams,
     public recipeService: RecipeProvider,
@@ -196,6 +198,35 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
   /***** End navigation *****/
 
 
+  /***** Modals *****/
+
+  /**
+   * Present confirmation modal prior to deletion
+   *
+   * @params: index - index of recipe variant to delete
+   *
+   * @return: none
+  **/
+  confirmDelete(index: number): void {
+    const modal: Modal = this.modalCtrl.create(
+      ConfirmationPage,
+      {
+        title: 'Variant',
+        message: `Confirm deletion of "${this.displayVariantList[index].variantName}" variant`,
+        subMessage: 'This action cannot be reversed'
+      }
+    );
+    modal.onDidDismiss((confirmed: boolean): void => {
+      if (confirmed) {
+        this.deleteRecipe(index);
+      }
+    });
+    modal.present();
+  }
+
+  /***** End Modals *****/
+
+
   /***** Deletion handling *****/
 
   /**
@@ -212,14 +243,14 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
       { notes: this.recipeMaster.notes }
     )
     .subscribe(
-      () => {
+      (): void => {
         this.toastService.presentToast(
           'Note deleted',
           1000
         );
       },
-      (error: ErrorObservable) => {
-        console.log(error);
+      (error: ErrorObservable): void => {
+        console.log('Note deletion error', error);
         this.recipeMaster.notes.splice(index, 0, forDeletion[0]);
         this.toastService.presentToast(
           'Error while deleting note',
@@ -233,29 +264,31 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
   /**
    * Delete a recipe from server
    *
-   * @params: variant - recipe variant instance to be deleted
+   * @params: index - index of recipe variant instance to be deleted
    *
    * @return: none
   **/
-  deleteRecipe(variant: RecipeVariant): void {
+  deleteRecipe(index: number): void {
     this.deletionInProgress = true;
 
     this.recipeService.deleteRecipeVariantById(
       getId(this.recipeMaster),
-      getId(variant)
+      getId(this.displayVariantList[index])
     )
     .pipe(take(1))
     .subscribe(
-      () => {
+      (): void => {
         this.toastService.presentToast(
           'Recipe deleted!',
           1500
         );
         this.deletionInProgress = false;
       },
-      (error: ErrorObservable) => {
+      (error: ErrorObservable): void => {
         // TODO add error feedback
-        console.log(error);
+        console.log(
+          `Variant deletion error: ${normalizeErrorObservableMessage(error)}`
+        );
       }
     );
   }

@@ -1,7 +1,7 @@
 /* Module imports */
 import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { IonicModule, NavController, Events, ItemSliding } from 'ionic-angular';
+import { IonicModule, ModalController, NavController, Events, ItemSliding } from 'ionic-angular';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 import { of } from 'rxjs/observable/of';
@@ -16,6 +16,8 @@ import { mockRecipeVariantComplete } from '../../../test-config/mockmodels/mockR
 import { mockUser } from '../../../test-config/mockmodels/mockUser';
 import {
   CalculatePipeMock,
+  ModalControllerMock,
+  ModalMock,
   NavMock,
   RatioPipeMock,
   RoundPipeMock,
@@ -31,6 +33,7 @@ import { User } from '../../shared/interfaces/user';
 
 /* Page imports */
 import { RecipePage } from './recipe';
+import { ConfirmationPage } from '../confirmation/confirmation';
 import { RecipeDetailPage } from '../recipe-detail/recipe-detail';
 import { ProcessPage } from '../process/process';
 import { RecipeFormPage } from '../forms/recipe-form/recipe-form';
@@ -49,6 +52,7 @@ describe('Recipe Page', () => {
   let eventService: Events;
   let toastService: ToastProvider;
   let userService: UserProvider;
+  let modalCtrl: ModalController;
   let navCtrl: NavController;
   let originalNgOnInit: () => void;
   let originalNgOnDestroy: () => void;
@@ -62,6 +66,7 @@ describe('Recipe Page', () => {
     TestBed.configureTestingModule({
       declarations: [
         CalculatePipeMock,
+        ConfirmationPage,
         RecipePage,
         RatioPipeMock,
         RoundPipeMock,
@@ -75,6 +80,7 @@ describe('Recipe Page', () => {
       providers: [
         { provide: RecipeProvider, useValue: {} },
         { provide: ToastProvider, useValue: {} },
+        { provide: ModalController, useClass: ModalControllerMock },
         { provide: NavController, useClass: NavMock },
         { provide: UserProvider, useValue: {} }
       ],
@@ -313,9 +319,72 @@ describe('Recipe Page', () => {
   }); // end 'Navigation handling' section
 
 
+  describe('Modal methods', () => {
+
+    beforeEach(() => {
+      modalCtrl = injector.get(ModalController);
+      recipePage.masterList = [
+        staticRecipeMaster
+      ];
+    });
+
+    test('should open confirmation modal', () => {
+      const modalSpy: jest.SpyInstance = jest.spyOn(modalCtrl, 'create');
+
+      fixture.detectChanges();
+
+      recipePage.confirmDelete(0);
+
+      expect(modalSpy).toHaveBeenCalledWith(
+        ConfirmationPage,
+        {
+          title: 'Recipe',
+          message: `Confirm deletion of "${staticRecipeMaster.name}" and its variants`,
+          subMessage: 'This action cannot be reversed'
+        }
+      );
+    }); // end 'should open confirmation modal' test
+
+    test('should handle confirmation modal dismiss', () => {
+      fixture.detectChanges();
+
+      const _mockModal: ModalMock = new ModalMock();
+
+      recipePage.deleteMaster = jest
+        .fn();
+      modalCtrl.create = jest
+        .fn()
+        .mockReturnValue(_mockModal);
+
+      const deleteSpy: jest.SpyInstance = jest.spyOn(recipePage, 'deleteMaster');
+
+      _mockModal._setCallBackData(true);
+
+      recipePage.confirmDelete(0);
+
+      expect(deleteSpy.mock.calls[0][0]).toEqual(0);
+
+      _mockModal._setCallBackData(false);
+
+      recipePage.confirmDelete(0);
+
+      expect(deleteSpy.mock.calls.length).toEqual(1);
+    }); // end 'should handle confirmation modal dismiss' test
+
+  }); // end 'Modal methods' section
+
+
   describe('Utility methods', () => {
 
-    test('should delete a recipe master', done => {
+    beforeEach(() => {
+      recipePage.masterList = [
+        staticRecipeMaster,
+        staticRecipeMaster,
+        staticRecipeMaster
+      ];
+    });
+
+    test('should delete a recipe master', () => {
       fixture.detectChanges();
 
       recipeService.deleteRecipeMasterById = jest
@@ -327,21 +396,16 @@ describe('Recipe Page', () => {
       const toastSpy: jest.SpyInstance = jest
         .spyOn(toastService, 'presentToast');
 
-      const _mockRecipeMasterInactive: RecipeMaster = mockRecipeMasterInactive();
+      recipePage.deleteMaster(1);
 
-      recipePage.deleteMaster(_mockRecipeMasterInactive);
-
-      setTimeout(() => {
-        expect(recipeSpy).toHaveBeenCalled();
-        expect(toastSpy).toHaveBeenCalledWith(
-          'Deleted Recipe',
-          1000
-        );
-        done();
-      }, 10);
+      expect(recipeSpy).toHaveBeenCalled();
+      expect(toastSpy).toHaveBeenCalledWith(
+        'Deleted Recipe',
+        1000
+      );
     }); // end 'should delete a recipe master' test
 
-    test('should display error feedback if a recipe master failed to be deleted', done => {
+    test('should display error feedback if a recipe master failed to be deleted', () => {
       fixture.detectChanges();
 
       recipeService.deleteRecipeMasterById = jest
@@ -351,17 +415,12 @@ describe('Recipe Page', () => {
       const toastSpy: jest.SpyInstance = jest
         .spyOn(recipePage.toastService, 'presentToast');
 
-      const _mockRecipeMaster: RecipeMaster = mockRecipeMasterActive();
+      recipePage.deleteMaster(0);
 
-      recipePage.deleteMaster(_mockRecipeMaster);
-
-      setTimeout(() => {
-        expect(toastSpy).toHaveBeenCalledWith(
-          'An error occured during recipe deletion',
-          2000
-        );
-        done();
-      }, 10);
+      expect(toastSpy).toHaveBeenCalledWith(
+        'An error occured during recipe deletion',
+        2000
+      );
     }); // end 'should display error feedback if a recipe master failed to be deleted' test
 
     test('should toggle a recipe master at index to be expanded', () => {
@@ -379,14 +438,6 @@ describe('Recipe Page', () => {
     }); // end 'should toggle a recipe master at index to be expanded' test
 
     test('should compose the recipe master list with values from recipe set as the master', () => {
-      const _mockRecipeMaster: RecipeMaster = mockRecipeMasterInactive();
-
-      recipePage.masterList = [
-        _mockRecipeMaster,
-        _mockRecipeMaster,
-        _mockRecipeMaster
-      ];
-
       fixture.detectChanges();
 
       recipePage.mapMasterRecipes();

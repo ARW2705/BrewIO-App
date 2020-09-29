@@ -1,6 +1,6 @@
 /* Module imports */
 import { Component, OnInit, OnDestroy, QueryList, ViewChildren } from '@angular/core';
-import { Events, ItemSliding, NavController } from 'ionic-angular';
+import { Events, ItemSliding, Modal, ModalController, NavController } from 'ionic-angular';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 import { Subject } from 'rxjs/Subject';
@@ -16,6 +16,7 @@ import { getArrayFromObservables } from '../../shared/utility-functions/observab
 import { getId, hasId } from '../../shared/utility-functions/id-helpers';
 
 /* Page imports */
+import { ConfirmationPage } from '../confirmation/confirmation';
 import { RecipeDetailPage } from '../recipe-detail/recipe-detail';
 import { RecipeFormPage } from '../forms/recipe-form/recipe-form';
 import { ProcessPage } from '../process/process';
@@ -42,6 +43,7 @@ export class RecipePage implements OnInit, OnDestroy {
 
   constructor(
     public events: Events,
+    public modalCtrl: ModalController,
     public navCtrl: NavController,
     public recipeService: RecipeProvider,
     public toastService: ToastProvider,
@@ -166,22 +168,51 @@ export class RecipePage implements OnInit, OnDestroy {
   /***** End navigation *****/
 
 
+  /***** Modals *****/
+
+  /**
+   * Present confirmation modal prior to deletion
+   *
+   * @params: index - index of recipe master to delete
+   *
+   * @return: none
+  **/
+  confirmDelete(index: number): void {
+    const modal: Modal = this.modalCtrl.create(
+      ConfirmationPage,
+      {
+        title: 'Recipe',
+        message: `Confirm deletion of "${this.masterList[index].name}" and its variants`,
+        subMessage: 'This action cannot be reversed'
+      }
+    );
+    modal.onDidDismiss((confirmed: boolean): void => {
+      if (confirmed) {
+        this.deleteMaster(index);
+      }
+    });
+    modal.present();
+  }
+
+  /***** End Modals *****/
+
+
   /***** Other *****/
 
   /**
    * Delete a Recipe Master
    *
-   * @params: master - recipe master to delete
+   * @params: index - index of recipe master to delete
    *
    * @return: none
   **/
-  deleteMaster(master: RecipeMaster): void {
-    this.recipeService.deleteRecipeMasterById(getId(master))
+  deleteMaster(index: number): void {
+    this.recipeService.deleteRecipeMasterById(getId(this.masterList[index]))
       .subscribe(
-        () => {
+        (): void => {
           this.toastService.presentToast('Deleted Recipe', 1000);
         },
-        (error: ErrorObservable) => {
+        (error: ErrorObservable): void => {
           console.log('Error deleting recipe master', error);
           this.toastService.presentToast(
             'An error occured during recipe deletion',

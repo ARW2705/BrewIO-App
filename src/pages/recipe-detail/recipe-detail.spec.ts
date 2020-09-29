@@ -1,6 +1,6 @@
 /* Module imports */
 import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/testing';
-import { IonicModule, NavController, NavParams, Events, ItemSliding } from 'ionic-angular';
+import { IonicModule, ModalController, NavController, NavParams, Events, ItemSliding } from 'ionic-angular';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
@@ -13,7 +13,7 @@ import { configureTestBed } from '../../../test-config/configureTestBed';
 import { mockRecipeMasterActive } from '../../../test-config/mockmodels/mockRecipeMasterActive';
 import { mockRecipeVariantComplete } from '../../../test-config/mockmodels/mockRecipeVariantComplete';
 import { mockRecipeVariantIncomplete } from '../../../test-config/mockmodels/mockRecipeVariantIncomplete';
-import { NavMock, NavParamsMock, EventsMock, RoundPipeMock, TruncatePipeMock, UnitConversionPipeMock } from '../../../test-config/mocks-ionic';
+import { ModalControllerMock, ModalMock, NavMock, NavParamsMock, EventsMock, RoundPipeMock, TruncatePipeMock, UnitConversionPipeMock } from '../../../test-config/mocks-ionic';
 
 /* Interface imports */
 import { RecipeMaster } from '../../shared/interfaces/recipe-master';
@@ -21,6 +21,7 @@ import { RecipeVariant } from '../../shared/interfaces/recipe-variant';
 
 /* Page imports */
 import { RecipeDetailPage } from './recipe-detail';
+import { ConfirmationPage } from '../confirmation/confirmation';
 import { ProcessPage } from '../process/process';
 import { RecipeFormPage } from '../forms/recipe-form/recipe-form';
 
@@ -34,6 +35,7 @@ describe('Recipe Details Page', () => {
   let recipeService: RecipeProvider;
   let fixture: ComponentFixture<RecipeDetailPage>;
   let rmdPage: RecipeDetailPage;
+  let modalCtrl: ModalController;
   let navCtrl: NavController;
   let eventService: Events;
   let toastService: ToastProvider;
@@ -52,6 +54,7 @@ describe('Recipe Details Page', () => {
     TestBed.configureTestingModule({
       declarations: [
         RecipeDetailPage,
+        ConfirmationPage,
         RoundPipeMock,
         TruncatePipeMock,
         UnitConversionPipeMock
@@ -63,6 +66,7 @@ describe('Recipe Details Page', () => {
         { provide: Events, useClass: EventsMock },
         { provide: RecipeProvider, useValue: {} },
         { provide: ToastProvider, useValue: {} },
+        { provide: ModalController, useClass: ModalControllerMock },
         { provide: NavController, useClass: NavMock },
         { provide: NavParams, useClass: NavParamsMock }
       ],
@@ -407,9 +411,70 @@ describe('Recipe Details Page', () => {
 
   }); // end 'Navigation actions' section
 
+
+  describe('Modal methods', () => {
+
+    beforeEach(() => {
+      modalCtrl = injector.get(ModalController);
+      rmdPage.displayVariantList = [
+        staticRecipeVariant
+      ];
+    });
+
+    test('should open confirmation modal', () => {
+      const modalSpy: jest.SpyInstance = jest.spyOn(modalCtrl, 'create');
+
+      fixture.detectChanges();
+
+      rmdPage.confirmDelete(0);
+
+      expect(modalSpy).toHaveBeenCalledWith(
+        ConfirmationPage,
+        {
+          title: 'Variant',
+          message: `Confirm deletion of "${staticRecipeVariant.variantName}" variant`,
+          subMessage: 'This action cannot be reversed'
+        }
+      );
+    }); // end 'should open confirmation modal' test
+
+    test('should handle confirmation modal dismiss', () => {
+      fixture.detectChanges();
+
+      const _mockModal: ModalMock = new ModalMock();
+
+      rmdPage.deleteRecipe = jest
+        .fn();
+      modalCtrl.create = jest
+        .fn()
+        .mockReturnValue(_mockModal);
+
+      const deleteSpy: jest.SpyInstance = jest.spyOn(rmdPage, 'deleteRecipe');
+
+      _mockModal._setCallBackData(true);
+
+      rmdPage.confirmDelete(0);
+
+      expect(deleteSpy.mock.calls[0][0]).toEqual(0);
+
+      _mockModal._setCallBackData(false);
+
+      rmdPage.confirmDelete(0);
+
+      expect(deleteSpy.mock.calls.length).toEqual(1);
+    }); // end 'should handle confirmation modal dismiss' test
+
+  }); // end 'Modal methods' section
+
+
   describe('Deletion handling', () => {
 
     beforeEach(() => {
+      rmdPage.displayVariantList = [
+        staticRecipeVariant,
+        staticRecipeVariant,
+        staticRecipeVariant
+      ];
       rmdPage.recipeMaster = mockRecipeMasterActive();
     });
 
@@ -431,7 +496,7 @@ describe('Recipe Details Page', () => {
       expect(patchSpy).toHaveBeenCalled();
     }); // end 'should delete a recipe master note' test
 
-    test('should get an error trying to delete a note', done => {
+    test('should get an error trying to delete a note', () => {
       rmdPage.recipeMaster.notes.push('a test note');
 
       recipeService.patchRecipeMasterById = jest
@@ -445,14 +510,11 @@ describe('Recipe Details Page', () => {
 
       rmdPage.deleteNote(0);
 
-      setTimeout(() => {
-        expect(rmdPage.recipeMaster.notes.length).toBe(1);
-        expect(patchSpy).toHaveBeenCalled();
-        done();
-      }, 10);
+      expect(rmdPage.recipeMaster.notes.length).toBe(1);
+      expect(patchSpy).toHaveBeenCalled();
     }); // end 'should get an error trying to delete a note' test
 
-    test('should delete a recipe', done => {
+    test('should delete a recipe', () => {
       fixture.detectChanges();
 
       recipeService.deleteRecipeVariantById = jest
@@ -466,27 +528,24 @@ describe('Recipe Details Page', () => {
       const toastSpy: jest.SpyInstance = jest
         .spyOn(toastService, 'presentToast');
 
-      rmdPage.deleteRecipe(_mockRecipe);
+      rmdPage.deleteRecipe(0);
 
       rmdPage.recipeMaster.variants.splice(0, 1);
 
-      setTimeout(() => {
-        const foundDeleted: boolean = rmdPage
-          .recipeMaster
-          .variants
-          .some((variant: RecipeVariant): boolean => {
-            return variant._id == _mockRecipe._id;
-          });
-        expect(foundDeleted).toBe(false);
-        expect(toastSpy).toHaveBeenCalledWith(
-          'Recipe deleted!',
-          1500
-        );
-        done();
-      }, 200);
+      const foundDeleted: boolean = rmdPage
+        .recipeMaster
+        .variants
+        .some((variant: RecipeVariant): boolean => {
+          return variant._id == _mockRecipe._id;
+        });
+      expect(foundDeleted).toBe(false);
+      expect(toastSpy).toHaveBeenCalledWith(
+        'Recipe deleted!',
+        1500
+      );
     }); // end 'should delete a recipe' test
 
-    test('should get error response trying to delete a recipe', done => {
+    test('should get error response trying to delete a recipe', () => {
       recipeService.deleteRecipeVariantById = jest
         .fn()
         .mockReturnValue(new ErrorObservable('recipe deletion error'));
@@ -495,13 +554,10 @@ describe('Recipe Details Page', () => {
 
       const consoleSpy: jest.SpyInstance = jest.spyOn(console, 'log');
 
-      rmdPage.deleteRecipe(mockRecipeVariantComplete());
+      rmdPage.deleteRecipe(0);
 
-      setTimeout(() => {
-        expect(consoleSpy.mock.calls[consoleSpy.mock.calls.length - 1][0])
-          .toMatch('recipe deletion error');
-        done();
-      }, 10);
+      expect(consoleSpy.mock.calls[consoleSpy.mock.calls.length - 1][0])
+        .toMatch('Variant deletion error: recipe deletion error');
     }); // end 'should get error response trying to delete a recipe' test
 
   }); // end 'Deletion handling' section
@@ -582,7 +638,7 @@ describe('Recipe Details Page', () => {
       expect(rmdPage.isMaster(1)).toBe(false);
     }); // end 'should return recipe at given index is the master' test
 
-    test('should toggle the recipe master isPublic property', done => {
+    test('should toggle the recipe master isPublic property', () => {
       fixture.detectChanges();
 
       const _mockRecipeMaster: RecipeMaster = mockRecipeMasterActive();
@@ -599,15 +655,12 @@ describe('Recipe Details Page', () => {
 
       rmdPage.setPublic();
 
-      setTimeout(() => {
-        expect(recipeSpy)
-          .toHaveBeenCalledWith(rmdPage.recipeMaster._id, { isPublic: false });
-        expect(rmdPage.recipeMaster.isPublic).toBe(false);
-        done();
-      }, 10);
+      expect(recipeSpy)
+        .toHaveBeenCalledWith(rmdPage.recipeMaster._id, { isPublic: false });
+      expect(rmdPage.recipeMaster.isPublic).toBe(false);
     }); // end 'should toggle the recipe master isPublic property' test
 
-    test('should get error response trying to set isPublic property', done => {
+    test('should get error response trying to set isPublic property', () => {
       recipeService.patchRecipeMasterById = jest
         .fn()
         .mockReturnValue(
@@ -620,14 +673,11 @@ describe('Recipe Details Page', () => {
 
       rmdPage.setPublic();
 
-      setTimeout(() => {
-        expect(consoleSpy.mock.calls[consoleSpy.mock.calls.length - 1][0])
-          .toMatch('error setting recipe master public property');
-        done();
-      }, 10);
+      expect(consoleSpy.mock.calls[consoleSpy.mock.calls.length - 1][0])
+        .toMatch('error setting recipe master public property');
     }); // end 'should get error response trying to set isPublic property' test
 
-    test('should add a recipe to favorites', done => {
+    test('should add a recipe to favorites', () => {
       fixture.detectChanges();
 
       const _mockRecipeResponse: RecipeVariant = mockRecipeVariantIncomplete();
@@ -649,23 +699,20 @@ describe('Recipe Details Page', () => {
 
       rmdPage.toggleFavorite(_mockRecipe);
 
-      setTimeout(() => {
-        expect(recipeSpy).toHaveBeenCalledWith(
-          rmdPage.recipeMaster._id,
-          _mockRecipe._id,
-          { isFavorite: true }
-        );
-        expect(toastSpy).toHaveBeenCalledWith(
-          'Added to favorites',
-          1500,
-          'bottom',
-          'toast-fav'
-        );
-        done();
-      }, 10);
+      expect(recipeSpy).toHaveBeenCalledWith(
+        rmdPage.recipeMaster._id,
+        _mockRecipe._id,
+        { isFavorite: true }
+      );
+      expect(toastSpy).toHaveBeenCalledWith(
+        'Added to favorites',
+        1500,
+        'bottom',
+        'toast-fav'
+      );
     }); // end 'should add a recipe to favorites' test
 
-    test('should remove a recipe from favorites', done => {
+    test('should remove a recipe from favorites', () => {
       fixture.detectChanges();
 
       const _mockRecipeResponse: RecipeVariant = mockRecipeVariantIncomplete();
@@ -687,23 +734,20 @@ describe('Recipe Details Page', () => {
 
       rmdPage.toggleFavorite(_mockRecipe);
 
-      setTimeout(() => {
-        expect(recipeSpy).toHaveBeenCalledWith(
-          rmdPage.recipeMaster._id,
-          _mockRecipe._id,
-          { isFavorite: false }
-        );
-        expect(toastSpy).toHaveBeenCalledWith(
-          'Removed from favorites',
-          1500,
-          'bottom',
-          'toast-fav'
-        );
-        done();
-      }, 10);
+      expect(recipeSpy).toHaveBeenCalledWith(
+        rmdPage.recipeMaster._id,
+        _mockRecipe._id,
+        { isFavorite: false }
+      );
+      expect(toastSpy).toHaveBeenCalledWith(
+        'Removed from favorites',
+        1500,
+        'bottom',
+        'toast-fav'
+      );
     }); // end 'should remove a recipe from favorites' test
 
-    test('should fail to toggle a recipe\'s isFavorite property', done => {
+    test('should fail to toggle a recipe\'s isFavorite property', () => {
       fixture.detectChanges();
 
       recipeService.patchRecipeVariantById = jest
@@ -715,14 +759,11 @@ describe('Recipe Details Page', () => {
 
       rmdPage.toggleFavorite(mockRecipeVariantIncomplete())
 
-      setTimeout(() => {
-        expect(toastSpy).toHaveBeenCalledWith(
-          'Unable to add to favorites',
-          1500,
-          'toast-error'
-        )
-        done();
-      }, 10);
+      expect(toastSpy).toHaveBeenCalledWith(
+        'Unable to add to favorites',
+        1500,
+        'toast-error'
+      );
     }); // end 'should fail to toggle a recipe\'s isFavorite property' test
 
   }); // end 'Recipe handling' section
