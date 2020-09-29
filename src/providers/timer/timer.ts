@@ -41,12 +41,20 @@ export class TimerProvider {
   timerTextAnchor: string = 'middle';
   timerFontFamily: string = 'Arial';
 
+  counter = 0;
+
   constructor(
     public backgroundMode: BackgroundMode,
     public clientIdService: ClientIdProvider,
     public platform: Platform
   ) {
     if (this.platform.is('cordova')) {
+      console.log('cordova platform timer setup');
+      this.backgroundMode.on('activate')
+        .subscribe(() => {
+          console.log('disable web view');
+          this.backgroundMode.disableWebViewOptimizations();
+        });
       this.backgroundMode.enable();
       this.backgroundMode.overrideBackButton();
       this.backgroundMode.setDefaults({
@@ -56,6 +64,7 @@ export class TimerProvider {
       });
     }
     this.timing = setInterval(() => {
+      console.log('tick', this.counter++);
       this.tick();
     }, 1000);
     this.setupInitialSettings();
@@ -486,10 +495,10 @@ export class TimerProvider {
         }
 
         this.setProgress(timer);
-        this.updateNotifications();
         timer$.next(timer);
       });
     });
+    this.updateNotifications();
   }
 
   /**
@@ -499,7 +508,8 @@ export class TimerProvider {
    * @return: none
   **/
   updateNotifications(): void {
-    if (this.platform.is('cordova') && this.backgroundMode.isEnabled()) {
+    if (this.platform.is('cordova') && this.backgroundMode.isActive()) {
+      console.log('should update notifications');
       const timers: Timer[] = this.batchTimers.flatMap(
         (batchTimer: BatchTimer): Timer[] => {
           const _timers: Timer[] = [];
@@ -515,10 +525,13 @@ export class TimerProvider {
         }
       );
 
+      // console.log('timers', timers);
       if (timers.length) {
+        console.log('has timers');
         let nearest: Timer = timers[0];
 
         if (timers.length > 1) {
+          console.log('has multiple timers');
           nearest = timers.reduce(
             (acc: Timer, curr: Timer): Timer => {
               return acc.timeRemaining < curr.timeRemaining
@@ -528,9 +541,12 @@ export class TimerProvider {
           );
         }
 
+        console.log('nearest timer', nearest.settings.text.content, `${timers.length} timer${timers.length > 2 ? 's': ''} running`);
+
         this.backgroundMode.configure({
           title: nearest.settings.text.content,
           text: `${timers.length} timer${timers.length > 2 ? 's': ''} running`,
+          icon: 'ic_launcher',
           hidden: false,
           silent: false,
           color: '40e0cf'

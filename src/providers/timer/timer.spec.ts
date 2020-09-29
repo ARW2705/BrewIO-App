@@ -646,7 +646,7 @@ describe('Timer Provider', () => {
     mockPlatform.is = jest
       .fn()
       .mockReturnValue(true);
-    mockBackground.isEnabled = jest
+    mockBackground.isActive = jest
       .fn()
       .mockReturnValue(true);
     mockBackground.configure = jest
@@ -683,6 +683,7 @@ describe('Timer Provider', () => {
       {
         title: 'content',
         text: '4 timers running',
+        icon: 'ic_launcher',
         hidden: false,
         silent: false,
         color: '40e0cf'
