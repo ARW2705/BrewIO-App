@@ -1,0 +1,26 @@
+page-confirmation {
+
+  #message {
+    /* Text */
+    font-size: 1.5em;
+    text-align: center;
+  }
+
+  #subMessage {
+    /* Display */
+    margin-top: 10px;
+
+    /* Color */
+    color: map-get($colors, danger);
+
+    /* Text */
+    text-align: center;
+    font-weight: bold;
+  }
+
+  .fixed-content,
+  .scroll-content {
+    margin-top: 0 !important;
+  }
+
+}
