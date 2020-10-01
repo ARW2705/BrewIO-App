@@ -681,14 +681,44 @@ describe('Timer Provider', () => {
 
     expect(configureSpy).toHaveBeenCalledWith(
       {
-        title: 'content',
+        title: `${_mockTimer.timer.name}: ${_mockTimer.settings.text.content}`,
         text: '4 timers running',
         icon: 'ic_launcher',
-        hidden: false,
+        hidden: true,
         silent: false,
         color: '40e0cf'
       }
     );
   }); // end 'should update background notification' test
+
+  test('should setup background mode', () => {
+    timerService.setupInitialSettings = jest
+      .fn();
+
+    mockPlatform.is = jest
+      .fn()
+      .mockReturnValue('cordova');
+
+    const onSpy: jest.SpyInstance = jest.spyOn(mockBackground, 'on');
+    const disableSpy: jest.SpyInstance = jest
+      .spyOn(mockBackground, 'disableWebViewOptimizations');
+    const enableSpy: jest.SpyInstance = jest.spyOn(mockBackground, 'enable');
+    const buttonSpy: jest.SpyInstance = jest
+      .spyOn(mockBackground, 'overrideBackButton');
+    const defaultSpy: jest.SpyInstance = jest
+      .spyOn(mockBackground, 'setDefaults');
+
+    timerService.init();
+
+    expect(onSpy).toHaveBeenCalledWith('activate');
+    expect(disableSpy).toHaveBeenCalled();
+    expect(enableSpy).toHaveBeenCalled();
+    expect(buttonSpy).toHaveBeenCalled();
+    expect(defaultSpy).toHaveBeenCalledWith({
+      hidden: true,
+      silent: true,
+      color: '40e0cf'
+    });
+  }); // end 'should setup background mode' test
 
 });
