@@ -1,6 +1,6 @@
 /* Module imports */
 import { ComponentFixture, TestBed, getTestBed, async } from '@angular/core/testing';
-import { IonicModule, NavController } from 'ionic-angular';
+import { IonicModule, Events, NavController } from 'ionic-angular';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { of } from 'rxjs/observable/of';
@@ -12,7 +12,7 @@ import { configureTestBed } from '../../../test-config/configureTestBed';
 import { mockUser } from '../../../test-config/mockmodels/mockUser';
 import { mockRecipeMasterActive } from '../../../test-config/mockmodels/mockRecipeMasterActive';
 import { mockRecipeVariantComplete } from '../../../test-config/mockmodels/mockRecipeVariantComplete';
-import { NavMock } from '../../../test-config/mocks-ionic';
+import { EventsMock, NavMock } from '../../../test-config/mocks-ionic';
 
 /* Interface imports */
 import { RecipeMaster } from '../../shared/interfaces/recipe-master';
@@ -51,6 +51,7 @@ describe('Home Page', () => {
         { provide: UserProvider, useValue: {} },
         { provide: RecipeProvider, useValue: {} },
         { provide: ModalProvider, useValue: {} },
+        { provide: Events, useClass: EventsMock },
         { provide: NavController, useClass: NavMock }
       ],
       schemas: [
@@ -172,6 +173,19 @@ describe('Home Page', () => {
       expect(homePage.welcomeMessage)
         .toMatch(`Welcome ${homePage.user.username} to BrewIO`);
     }); // end 'should set the welcome message to user name' test
+
+    test('should handle a nav stack reset event', () => {
+      navCtrl.popToRoot = jest
+        .fn();
+
+      const navSpy: jest.SpyInstance = jest.spyOn(navCtrl, 'popToRoot');
+
+      fixture.detectChanges();
+
+      homePage.handleStackReset();
+
+      expect(navSpy).toHaveBeenCalled();
+    }); // end 'should handle a nav stack reset event' test
 
     test('should navigate to active brew process', () => {
       fixture.detectChanges();

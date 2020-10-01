@@ -1,8 +1,7 @@
 /* Module imports */
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { NavController } from 'ionic-angular';
+import { Events, NavController } from 'ionic-angular';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import { takeUntil } from 'rxjs/operators/takeUntil';
 
@@ -35,22 +34,29 @@ export class HomePage implements OnInit, OnDestroy {
   showInventory: boolean = false;
   user: User = null;
   welcomeMessage: string = '';
+  _stackReset: () => void;
 
   constructor(
+    public events: Events,
     public navCtrl: NavController,
     public modalService: ModalProvider,
     public recipeService: RecipeProvider,
     public userService: UserProvider
-  ) { }
+  ) {
+    this._stackReset = this.handleStackReset.bind(this);
+  }
 
   /***** Lifecycle Hooks *****/
 
   ngOnDestroy() {
+    this.events.unsubscribe('reset-stack');
     this.destroy$.next(true);
     this.destroy$.complete();
   }
 
   ngOnInit() {
+    this.events.subscribe('reset-stack', this._stackReset);
+
     this.userService.getUser()
       .pipe(takeUntil(this.destroy$))
       .subscribe(user => {
@@ -61,6 +67,17 @@ export class HomePage implements OnInit, OnDestroy {
   }
 
   /***** End lifecycle hooks *****/
+
+  /**
+   * Handle resetting the tab nav stack after a tab change event
+   *
+   * @params: none
+   * @return: none
+  **/
+  handleStackReset(): void {
+    console.log('handle home tab stack reset');
+    this.navCtrl.popToRoot();
+  }
 
   /**
    * Navigate to Process Page with required data
