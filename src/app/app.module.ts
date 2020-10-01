@@ -12,6 +12,7 @@ import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 
 /* My Modules */
+import { ConfirmationPageModule } from '../pages/confirmation/confirmation.module';
 import { ExtrasPageModule } from '../pages/extras/extras.module';
 import { HomePageModule } from '../pages/home/home.module';
 import { MyApp } from './app.component';
@@ -50,6 +51,7 @@ import { UserProvider } from '../providers/user/user';
     BrowserModule,
     BrowserAnimationsModule,
     CommonModule,
+    ConfirmationPageModule,
     ExtrasPageModule,
     HomePageModule,
     HttpClientModule,
