@@ -41,6 +41,7 @@ export class TabsPage implements OnInit, OnDestroy {
   title: string = '';
   _popHeaderNav: any;
 
+
   constructor(public events: Events) {
     this._popHeaderNav = this.popHeaderNavEventHandler.bind(this);
   }
@@ -69,6 +70,7 @@ export class TabsPage implements OnInit, OnDestroy {
   onTabNavigation(event: object): void {
     this.setIndex(event['index']);
     this.updateHeader();
+    this.events.publish('reset-stack');
   }
 
   /**
