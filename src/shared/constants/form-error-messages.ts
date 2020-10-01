@@ -56,9 +56,10 @@ export const FORM_ERROR_MESSAGES: object = {
     type: {
       required: 'Please select ingredient type'
     },
-    addAt: {
+    duration: {
       required: 'Please enter timeframe to add hops',
-      min: 'Please enter a non-negative time'
+      min: 'Please enter a non-negative time',
+      max: 'Hops addition may not be before start of boil'
     },
     name: {
       required: 'Please enter an ingredient name',
