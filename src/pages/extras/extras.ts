@@ -1,5 +1,5 @@
 /* Module imports */
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Events, NavController, NavParams } from 'ionic-angular';
 
 /* Interface imports */
@@ -19,47 +19,74 @@ import { UserPage } from '../user/user';
   selector: 'page-extras',
   templateUrl: 'extras.html',
 })
-export class ExtrasPage {
+export class ExtrasPage implements OnInit, OnDestroy {
   extras: PageChoice[] = [
-    { component: ActiveBatchesWrapperPage,
+    {
+      component: ActiveBatchesWrapperPage,
       title: 'Active Batches',
       header: 'Active Batches',
       icon: 'flask'
     },
-    { component: InventoryWrapperPage,
+    {
+      component: InventoryWrapperPage,
       title: 'Inventory',
       header: 'Inventory',
       icon: 'clipboard'
     },
-    { component: PreferencesComponent,
+    {
+      component: PreferencesComponent,
       title: 'Preferences',
       header: 'Preferences',
       icon: 'construct'
     },
-    { component: UserPage,
+    {
+      component: UserPage,
       title: 'User',
       header: 'User',
       icon: 'settings'
     },
-    { component: AboutComponent,
+    {
+      component: AboutComponent,
       title: 'About',
       header: 'About',
       icon: 'bulb'
     }
   ];
+  _stackReset: () => void;
 
   constructor(
     public events: Events,
     public navCtrl: NavController,
     public navParams: NavParams,
     // public connection: ConnectionProvider
-  ) { }
+  ) {
+    this._stackReset = this.handleStackReset.bind(this);
+  }
+
+  ngOnInit() {
+    this.events.subscribe('reset-stack', this._stackReset);
+  }
+
+  ngOnDestroy() {
+    this.events.unsubscribe('reset-stack');
+  }
 
   // For testing purposes only
   // toggleConnection(): void {
   //   this.connection.toggleConnection();
   //   console.log(this.connection.isConnected());
   // }
+
+  /**
+   * Handle resetting the tab nav stack after a tab change event
+   *
+   * @params: none
+   * @return: none
+  **/
+  handleStackReset(): void {
+    console.log('handle extras tab stack reset');
+    this.navCtrl.popToRoot();
+  }
 
   /**
    * Navigate to page at given index

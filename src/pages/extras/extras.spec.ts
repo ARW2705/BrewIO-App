@@ -62,6 +62,19 @@ describe('Extras Component', () => {
     expect(extrasPage).toBeDefined();
   }); // end 'should create the component' test
 
+  test('should handle a stack reset event', () => {
+    navCtrl.popToRoot = jest
+      .fn();
+
+    const navSpy: jest.SpyInstance = jest.spyOn(navCtrl, 'popToRoot');
+
+    fixture.detectChanges();
+
+    extrasPage.handleStackReset();
+
+    expect(navSpy).toHaveBeenCalled();
+  }); // end 'should handle a stack reset event' test
+
   test('should navigate to a component', () => {
     fixture.detectChanges();
 
