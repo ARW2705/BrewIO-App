@@ -42,6 +42,7 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
   showNotesIcon: string = 'arrow-down';
   _headerNavPop: any;
 
+
   constructor(
     public events: Events,
     public modalCtrl: ModalController,
@@ -57,6 +58,8 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
   /***** Lifecycle Hooks *****/
 
   ngOnInit() {
+    this.events.subscribe('pop-header-nav', this._headerNavPop);
+
     this.recipeService.getRecipeMasterById(this.recipeMasterId)
       .pipe(takeUntil(this.destroy$))
       .subscribe(
@@ -66,9 +69,10 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
         },
         (error: ErrorObservable) => {
           // TODO provide user feedback
-          console.log(`Recipe detail page error: ${normalizeErrorObservableMessage(error)}`);
+          console.log(
+            `Recipe detail page error: ${normalizeErrorObservableMessage(error)}`
+          );
         });
-    this.events.subscribe('pop-header-nav', this._headerNavPop);
   }
 
   ngOnDestroy() {
@@ -192,6 +196,7 @@ export class RecipeDetailPage implements OnInit, OnDestroy {
       destTitle: title,
       origin: this.navCtrl.getActive().name
     });
+
     this.navCtrl.push(RecipeFormPage, options);
   }
 
