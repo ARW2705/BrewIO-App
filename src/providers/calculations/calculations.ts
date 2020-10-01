@@ -514,7 +514,7 @@ export class CalculationsProvider {
     const bignessFactor: number = this.getBignessFactor(
       this.getBoilGravity(og, batchVolume, boilVolume)
     );
-    const boilTimeFactor: number = this.getBoilTimeFactor(hopsInstance.addAt);
+    const boilTimeFactor: number = this.getBoilTimeFactor(hopsInstance.duration);
 
     return roundToDecimalPlace(
       (
