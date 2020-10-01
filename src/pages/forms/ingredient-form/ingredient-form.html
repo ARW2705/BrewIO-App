@@ -178,7 +178,7 @@
               Boil time (minutes)
             </ion-label>
 
-            <ion-input  formControlName="addAt"
+            <ion-input  formControlName="duration"
                         type="number"
                         autocomplete="off">
             </ion-input>
@@ -187,12 +187,12 @@
 
           <!-- Error messages -->
           <form-error *ngIf="
-            ingredientForm.controls['addAt'].touched
-            && ingredientForm.controls['addAt'].errors
+            ingredientForm.controls['duration'].touched
+            && ingredientForm.controls['duration'].errors
           "
                       formName="ingredient"
-                      controlName="addAt"
-                      [controlErrors]="ingredientForm.controls['addAt'].errors">
+                      controlName="duration"
+                      [controlErrors]="ingredientForm.controls['duration'].errors">
           </form-error>
 
 

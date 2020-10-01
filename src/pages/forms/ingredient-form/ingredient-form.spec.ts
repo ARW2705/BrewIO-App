@@ -160,7 +160,7 @@ describe('Ingredient Form', () => {
 
       const form: FormGroup = ingredientPage.ingredientForm;
 
-      expect(form.controls.hasOwnProperty('addAt')).toBe(true);
+      expect(form.controls.hasOwnProperty('duration')).toBe(true);
     }); // end 'should configure form for a hops instance' test
 
     test('should configure form for a yeast instance', () => {
@@ -395,29 +395,29 @@ describe('Ingredient Form', () => {
       ingredientPage.ingredientForm = new FormGroup({
         subQuantity: new FormControl(''),
         type: new FormControl(staticMockHops[0]),
-        addAt: new FormControl(null, [Validators.required, Validators.min(0)]),
+        duration: new FormControl(null, [Validators.required, Validators.min(0)]),
         dryHop: new FormControl(false)
       });
 
       fixture.detectChanges();
 
-      expect(ingredientPage.ingredientForm.get('addAt').validator)
+      expect(ingredientPage.ingredientForm.get('duration').validator)
         .not
         .toBeNull();
-      expect(ingredientPage.ingredientForm.get('addAt').errors)
+      expect(ingredientPage.ingredientForm.get('duration').errors)
       .toStrictEqual({ required: true });
 
       ingredientPage.onDryHopChange(<Toggle>{ value: true });
 
-      expect(ingredientPage.ingredientForm.get('addAt').validator).toBeNull();
-      expect(ingredientPage.ingredientForm.get('addAt').errors).toBeNull();
+      expect(ingredientPage.ingredientForm.get('duration').validator).toBeNull();
+      expect(ingredientPage.ingredientForm.get('duration').errors).toBeNull();
 
       ingredientPage.onDryHopChange(<Toggle>{ value: false });
 
-      expect(ingredientPage.ingredientForm.get('addAt').validator)
+      expect(ingredientPage.ingredientForm.get('duration').validator)
         .not
         .toBeNull();
-      expect(ingredientPage.ingredientForm.get('addAt').errors)
+      expect(ingredientPage.ingredientForm.get('duration').errors)
         .toStrictEqual({ required: true });
     }); // end ('should update form validation on dry hop change' test
 
@@ -554,7 +554,7 @@ describe('Ingredient Form', () => {
       const update: object = {
         quantity: 1,
         hopsType: staticMockHops[0],
-        addAt: 45,
+        duration: 45,
         dryHop: false
       };
 
@@ -566,7 +566,7 @@ describe('Ingredient Form', () => {
         .toMatch(staticMockHops[0].name);
       expect(form['quantity']).toBeNull();
       expect(form['subQuantity']).toEqual(1);
-      expect(form['addAt']).toEqual(45);
+      expect(form['duration']).toEqual(45);
       expect(form['dryHop']).toBe(false);
     }); // end 'should init hops fields with data that does not require conversion' test
 
@@ -591,7 +591,7 @@ describe('Ingredient Form', () => {
       const update: object = {
         quantity: 1,
         hopsType: staticMockHops[0],
-        addAt: 45,
+        duration: 45,
         dryHop: false
       };
 
@@ -603,7 +603,7 @@ describe('Ingredient Form', () => {
         .toMatch(staticMockHops[0].name);
       expect(form['quantity']).toBeNull();
       expect(form['subQuantity']).toEqual(2);
-      expect(form['addAt']).toEqual(45);
+      expect(form['duration']).toEqual(45);
       expect(form['dryHop']).toBe(false);
     }); // end 'should init hops fields with data that does require conversion' test
 
@@ -615,7 +615,7 @@ describe('Ingredient Form', () => {
         .mockReturnValue({
           type: staticMockHops[1],
           subQuantity: 0,
-          addAt: 0,
+          duration: 0,
           dryHop: false
         });
 
@@ -629,7 +629,7 @@ describe('Ingredient Form', () => {
       expect(viewSpy).toHaveBeenCalledWith({
         type: staticMockHops[1],
         subQuantity: 0,
-        addAt: 0,
+        duration: 0,
         dryHop: false
       });
     }); // end 'should submit a hops update' test
@@ -637,7 +637,7 @@ describe('Ingredient Form', () => {
     test('should format hops values for submission', () => {
       ingredientPage.ingredientForm = new FormGroup({
         subQuantity: new FormControl('1'),
-        addAt: new FormControl('30'),
+        duration: new FormControl('30'),
         dryHop: new FormControl(false),
         type: new FormControl(staticMockHops[1])
       });
@@ -648,7 +648,7 @@ describe('Ingredient Form', () => {
 
       expect(formatted).toStrictEqual({
         quantity: 1,
-        addAt: 30,
+        duration: 30,
         dryHop: false,
         hopsType: staticMockHops[1]
       });

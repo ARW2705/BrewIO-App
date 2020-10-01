@@ -3,9 +3,6 @@ import { Component, OnInit } from '@angular/core';
 import { NavParams, ViewController, Toggle } from 'ionic-angular';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 
-/* Constant imports */
-import * as Units from '../../../shared/constants/units';
-
 /* Utility imports */
 import { roundToDecimalPlace } from '../../../shared/utility-functions/utilities';
 
@@ -23,6 +20,7 @@ import { PreferencesProvider } from '../../../providers/preferences/preferences'
   templateUrl: 'ingredient-form.html',
 })
 export class IngredientFormPage implements OnInit {
+  boilTime: number;
   formType: string;
   hasSubQuantity: boolean = false;
   ingredientForm: FormGroup = null;
@@ -169,7 +167,7 @@ export class IngredientFormPage implements OnInit {
       ? this.calculator.convertWeight(quantity, false, true)
       : quantity;
 
-    result['addAt'] = parseFloat(formValues['addAt']);
+    result['duration'] = parseFloat(formValues['duration']);
     result['dryHop'] = formValues['dryHop'];
 
     delete result['type'];
@@ -308,12 +306,21 @@ export class IngredientFormPage implements OnInit {
    * @return: none
   **/
   initHopsFields(data: any): void {
+    this.boilTime = this.navParams.get('boilTime') || 60;
+
     if (data.update !== undefined) {
       this.ingredientPlaceholder = data.update.hopsType.name;
     }
 
     this.ingredientForm.addControl(
-      'addAt', new FormControl(null, [Validators.required, Validators.min(0)])
+      'duration', new FormControl(
+        null,
+        [
+          Validators.required,
+          Validators.min(0),
+          Validators.max(this.boilTime)
+        ]
+      )
     );
     this.ingredientForm.addControl('dryHop', new FormControl(false));
 
@@ -325,7 +332,7 @@ export class IngredientFormPage implements OnInit {
       this.ingredientForm.controls
         .subQuantity.setValue(roundToDecimalPlace(quantity, 2));
       this.ingredientForm.controls.type.setValue(data.update.hopsType);
-      this.ingredientForm.controls.addAt.setValue(data.update.addAt);
+      this.ingredientForm.controls.duration.setValue(data.update.duration);
       this.ingredientForm.controls.dryHop.setValue(data.update.dryHop);
     }
   }
@@ -417,7 +424,7 @@ export class IngredientFormPage implements OnInit {
   }
 
   /**
-   * Set addAt validators based on whether the hops instance is marked as
+   * Set duration validators based on whether the hops instance is marked as
    * dry hop or not
    *
    * @params: dryHop - ion-toggle event
@@ -426,12 +433,18 @@ export class IngredientFormPage implements OnInit {
   **/
   onDryHopChange(dryHop: Toggle): void {
     if (dryHop.value) {
-      this.ingredientForm.get('addAt').clearValidators();
+      this.ingredientForm.get('duration').clearValidators();
     } else {
-      this.ingredientForm.get('addAt')
-        .setValidators([Validators.required, Validators.min(0)]);
+      this.ingredientForm.get('duration')
+        .setValidators(
+          [
+            Validators.required,
+            Validators.min(0),
+            Validators.max(this.boilTime)
+          ]
+        );
     }
-    this.ingredientForm.get('addAt').updateValueAndValidity();
+    this.ingredientForm.get('duration').updateValueAndValidity();
   }
 
   /**
