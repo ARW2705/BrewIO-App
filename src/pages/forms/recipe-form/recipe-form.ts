@@ -73,6 +73,7 @@ export class RecipeFormPage implements AfterViewInit {
   yeastLibrary: Yeast[] = null;
   _headerNavPop: any;
 
+
   constructor(
     public cdRef: ChangeDetectorRef,
     public events: Events,
@@ -192,9 +193,10 @@ export class RecipeFormPage implements AfterViewInit {
    * @return: none
   **/
   openIngredientFormModal(type: string, toUpdate?: object): void {
-    const data: { ingredientType: string, update: object } = {
+    const data: { ingredientType: string, update: object, boilTime: number } = {
       ingredientType: type,
-      update: toUpdate
+      update: toUpdate,
+      boilTime: this.variant.boilDuration
     };
 
     switch(type) {
@@ -464,10 +466,10 @@ export class RecipeFormPage implements AfterViewInit {
       // sort timers in descending order
       hopsForTimers.sort(
         (h1: HopsSchedule, h2: HopsSchedule) => {
-          if (h1.addAt < h2.addAt) {
-            return 1;
-          } else if (h1.addAt > h2.addAt) {
+          if (h1.duration < h2.duration) {
             return -1;
+          } else if (h1.duration > h2.duration) {
+            return 1;
           }
           return 0;
         }
@@ -481,7 +483,7 @@ export class RecipeFormPage implements AfterViewInit {
             name: `Add ${hopsAddition.hopsType.name} hops`,
             concurrent: true,
             description: `Hops addition: ${roundToDecimalPlace(hopsAddition.quantity, 2)}${this.units.weightSmall.shortName}`,
-            duration: this.getHopsTimeRemaining(hopsAddition.addAt)
+            duration: this.variant.boilDuration - hopsAddition.duration
           })
         }
       );
@@ -495,21 +497,6 @@ export class RecipeFormPage implements AfterViewInit {
 
 
   /***** Recipe Calculations *****/
-
-  /**
-   * Get time remaining after subtracting addAt time from boil time
-   *
-   * @params: addAt - time to add hops at in minutes
-   *
-   * @return: difference between boil time and addAt time point
-  **/
-  getHopsTimeRemaining(addAt: number): number {
-    const boilStep: Process = this.variant.processSchedule
-      .find((process: Process) => process.name === 'Boil');
-    // TODO handle missing boil step
-    const boilTime: number = boilStep ? boilStep.duration: 60;
-    return boilTime - addAt;
-  }
 
   /**
    * Update recipe calculated values
@@ -798,10 +785,10 @@ export class RecipeFormPage implements AfterViewInit {
       case 'hops':
         this.variant.hops.sort(
           (h1: HopsSchedule, h2: HopsSchedule): number => {
-            if (!h1.addAt || h1.addAt < h2.addAt) {
+            if (!h1.duration || h1.duration < h2.duration) {
               return 1;
             }
-            if (!h2.addAt || h1.addAt > h2.addAt) {
+            if (!h2.duration || h1.duration > h2.duration) {
               return -1;
             }
             return 0;

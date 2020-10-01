@@ -513,6 +513,8 @@ describe('Recipe Form', () => {
     }); // end 'should handle general modal dismiss' test
 
     test('should open ingredient form modal', () => {
+      recipePage.variant = staticRecipeVariantComplete;
+
       fixture.detectChanges();
 
       const modalSpy: jest.SpyInstance = jest.spyOn(modalCtrl, 'create');
@@ -977,29 +979,29 @@ describe('Recipe Form', () => {
 
       const _mockHopsSchedule: HopsSchedule[] = mockHopsSchedule();
       const _mockHopsInstance30: HopsSchedule = _mockHopsSchedule[0];
-      _mockHopsInstance30.addAt = 30;
+      _mockHopsInstance30.duration = 30;
       recipePage.variant.hops.push(_mockHopsInstance30);
 
       const _mockHopsInstance45: HopsSchedule = _mockHopsSchedule[1];
-      _mockHopsInstance45.addAt = 45;
+      _mockHopsInstance45.duration = 15;
       recipePage.variant.hops.push(_mockHopsInstance45);
 
       const _mockHopsToSortBefore: HopsSchedule = _mockHopsSchedule[2];
-      _mockHopsToSortBefore.addAt = 20;
+      _mockHopsToSortBefore.duration = 40;
       recipePage.variant.hops.push(_mockHopsToSortBefore);
 
       const _mockHopsToSortAfter: HopsSchedule = _mockHopsSchedule[3];
-      _mockHopsToSortAfter.addAt = 15;
+      _mockHopsToSortAfter.duration = 45;
       _mockHopsToSortAfter.dryHop = false;
       recipePage.variant.hops.push(_mockHopsToSortAfter);
 
       const _additionalHops: HopsSchedule[] = mockHopsSchedule();
       const _mockHopsSame1: HopsSchedule = _additionalHops[0];
-      _mockHopsSame1.addAt = 10;
+      _mockHopsSame1.duration = 50;
       recipePage.variant.hops.push(_mockHopsSame1);
 
       const _mockHopsSame2: HopsSchedule = _additionalHops[1];
-      _mockHopsSame2.addAt = 10;
+      _mockHopsSame2.duration = 50;
       recipePage.variant.hops.push(_mockHopsSame2);
 
       // make a pre-existing hops timer to clear
@@ -1039,48 +1041,6 @@ describe('Recipe Form', () => {
       recipePage.master = staticRecipeMasterActive;
       recipePage.variant = staticRecipeVariantComplete;
     });
-
-    // test('should get the weight percentage of a given quantity', () => {
-    //   fixture.detectChanges();
-    //
-    //   recipePage.getTotalGristWeight = jest
-    //     .fn()
-    //     .mockReturnValue(12.5);
-    //
-    //   expect(recipePage.getGristRatio(5)).toEqual(40);
-    // }); // end 'should get the weight percentage of a given quantity' test
-
-    test('should get time remaining of hops addition addAt time', () => {
-      fixture.detectChanges();
-
-      expect(recipePage.getHopsTimeRemaining(15)).toEqual(45);
-    }); // end 'should get time remaining of hops addition addAt time' test
-
-    // test('should get the IBU contribution of a particular hops addition instance', () => {
-    //   fixture.detectChanges();
-    //
-    //   calculator.getIBU = jest
-    //     .fn()
-    //     .mockReturnValue(42);
-    //
-    //   const calculateSpy: jest.SpyInstance = jest.spyOn(calculator, 'getIBU');
-    //
-    //   const _mockHopsSchedule: HopsSchedule = mockHopsSchedule()[0];
-    //   expect(recipePage.getIndividualIBU(_mockHopsSchedule)).toEqual(42);
-    //   expect(calculateSpy).toHaveBeenCalledWith(
-    //     _mockHopsSchedule.hopsType,
-    //     _mockHopsSchedule,
-    //     staticRecipeVariantComplete.originalGravity,
-    //     staticRecipeVariantComplete.batchVolume,
-    //     staticRecipeVariantComplete.boilVolume
-    //   );
-    // }); // end 'should get the IBU contribution of a particular hops addition instance' test
-
-    // test('should get the total weight of grain bill', () => {
-    //   fixture.detectChanges();
-    //
-    //   expect(recipePage.getTotalGristWeight()).toEqual(12.5);
-    // }); // end 'should get the total weight of grain bill' test
 
     test('should call recalculate all recipe values', () => {
       fixture.detectChanges();
@@ -1587,8 +1547,8 @@ describe('Recipe Form', () => {
 
       // Hops sorting
       const _mockHopsSchedule: HopsSchedule[] = mockHopsSchedule();
-      _mockHopsSchedule[0].addAt = 60;
-      _mockHopsSchedule[1].addAt = 60;
+      _mockHopsSchedule[0].duration = 60;
+      _mockHopsSchedule[1].duration = 60;
 
       const testSchedule: HopsSchedule[] = [
         _mockHopsSchedule[1],
@@ -1678,7 +1638,7 @@ describe('Recipe Form', () => {
       recipePage.variant = mockRecipeVariantComplete();
 
       const _mockHopsAddition: HopsSchedule = mockHopsSchedule()[0];
-      _mockHopsAddition.addAt = 61;
+      _mockHopsAddition.duration = 61;
 
       expect(recipePage.variant.hops.length).toBe(4);
 
@@ -1843,18 +1803,6 @@ describe('Recipe Form', () => {
 
       expect(navSpy).toHaveBeenCalled();
     }); // end 'should handle nav pop event' test
-
-    // test('should check if recipe is valid (denoted by a style being selected)', () => {
-    //   fixture.detectChanges();
-    //
-    //   recipePage.master = staticDefaultRecipeMaster;
-    //
-    //   expect(recipePage.isRecipeValid()).toBe(false);
-    //
-    //   recipePage.master = mockRecipeMasterInactive();
-    //
-    //   expect(recipePage.isRecipeValid()).toBe(true);
-    // }); // end 'should check if recipe is valid (denoted by a style being selected)' test
 
     test('should map updated recipe master and recipe values', () => {
       fixture.detectChanges();
