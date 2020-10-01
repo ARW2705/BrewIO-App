@@ -34,9 +34,13 @@ export class AppMock { }
 
 
 export class BackgroundModeMock {
-  enable() {
-    return;
+  public enable() { }
+  public on() {
+    return of({});
   }
+  public disableWebViewOptimizations() { }
+  public overrideBackButton() { }
+  public setDefaults() { }
 }
 
 
