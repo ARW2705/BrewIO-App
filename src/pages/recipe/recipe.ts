@@ -40,6 +40,7 @@ export class RecipePage implements OnInit, OnDestroy {
   masterList: RecipeMaster[] = null;
   refreshPipes: boolean = false;
   variantList: RecipeVariant[] = null;
+  _stackReset: () => void;
 
   constructor(
     public events: Events,
@@ -48,7 +49,9 @@ export class RecipePage implements OnInit, OnDestroy {
     public recipeService: RecipeProvider,
     public toastService: ToastProvider,
     public userService: UserProvider
-  ) { }
+  ) {
+    this._stackReset = this.handleStackReset.bind(this);
+  }
 
   /***** Lifecycle Hooks *****/
 
@@ -62,17 +65,21 @@ export class RecipePage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.events.unsubscribe('reset-stack');
     this.destroy$.next(true);
     this.destroy$.complete();
   }
 
   ngOnInit() {
+    this.events.subscribe('reset-stack', this._stackReset);
+
     this.recipeService.getMasterList()
       .pipe(takeUntil(this.destroy$))
       .subscribe((_masterList: BehaviorSubject<RecipeMaster>[]) => {
         this.masterList = getArrayFromObservables(_masterList);
         this.mapMasterRecipes();
       });
+
     this.userService.getUser()
       .pipe(takeUntil(this.destroy$))
       .subscribe((): void => {
@@ -84,6 +91,17 @@ export class RecipePage implements OnInit, OnDestroy {
 
 
   /***** Navigation *****/
+
+  /**
+   * Handle resetting the tab nav stack after a tab change event
+   *
+   * @params: none
+   * @return: none
+  **/
+  handleStackReset(): void {
+    console.log('handle recipe tab stack reset');
+    this.navCtrl.popToRoot();
+  }
 
   /**
    * Navigate to Process Page

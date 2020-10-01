@@ -99,12 +99,8 @@ describe('Recipe Page', () => {
     toastService = injector.get(ToastProvider);
     userService = injector.get(UserProvider);
     eventService = injector.get(Events);
-    navCtrl = injector.get(NavController);
 
     eventService.publish = jest
-      .fn();
-
-    navCtrl.push = jest
       .fn();
 
     recipeService.getCombinedHopsSchedule = jest
@@ -130,6 +126,12 @@ describe('Recipe Page', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(RecipePage);
     recipePage = fixture.componentInstance;
+    navCtrl = injector.get(NavController);
+
+    navCtrl.push = jest
+      .fn();
+    navCtrl.popToRoot = jest
+      .fn();
 
     originalNgOnInit = recipePage.ngOnInit;
     recipePage.ngOnInit = jest
@@ -216,6 +218,16 @@ describe('Recipe Page', () => {
   }); // end 'Component creation' section
 
   describe('Navigation handling', () => {
+
+    test('should handle a nav stack reset event', () => {
+      const navSpy: jest.SpyInstance = jest.spyOn(navCtrl, 'popToRoot');
+
+      fixture.detectChanges();
+
+      recipePage.handleStackReset();
+
+      expect(navSpy).toHaveBeenCalled();
+    }); // end 'should handle a nav stack reset event' test
 
     test('should navigate to brewing process page with a recipe', () => {
       fixture.detectChanges();
