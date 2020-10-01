@@ -17,7 +17,7 @@ export const mockHopsSchedule = () => {
         updatedAt: "2019-04-01T21:45:06.336Z"
       },
       quantity: 1,
-      addAt: 60,
+      duration: 60,
       dryHop: false,
       notes: []
     },
@@ -36,7 +36,7 @@ export const mockHopsSchedule = () => {
         updatedAt: "2019-04-01T21:45:06.342Z",
       },
       quantity: 0.5,
-      addAt: 30,
+      duration: 30,
       dryHop: false,
       notes: []
     },
@@ -55,7 +55,7 @@ export const mockHopsSchedule = () => {
         updatedAt: "2019-04-01T21:45:06.345Z",
       },
       quantity: 0.5,
-      addAt: 5,
+      duration: 5,
       dryHop: false,
       notes: []
     },
@@ -74,7 +74,7 @@ export const mockHopsSchedule = () => {
         updatedAt: "2019-04-01T21:45:06.336Z"
       },
       quantity: 1,
-      addAt: 0,
+      duration: 0,
       dryHop: true,
       notes: []
     }

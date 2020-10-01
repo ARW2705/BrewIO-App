@@ -7,7 +7,7 @@ export interface HopsSchedule {
   cid: string;
   hopsType: Hops;
   quantity: number; // oz or gz
-  addAt: number; // minutes
+  duration: number; // minutes
   dryHop: boolean;
   notes: string[];
 };
