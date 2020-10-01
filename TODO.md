@@ -6,15 +6,14 @@
 
 ### Expected Feature additions
 
+* User tips/guide
 * Export calendar to external calendar
 * Notification system
 * Implement standard/metric units (in progress)
 
 ### Quality of life updates
 
-* Add confirmation modal for large scale deletions (such as a recipe)
 * Sort recipe variants on page: master -> favorites (in alpha) -> other (in alpha)
-* Make loading scheme between pages that are less jarring when things suddenly load/remove
 * Add toast feedback on successful events
 * Implement quick recipe scaling
 * Lazy load and handle image caching
