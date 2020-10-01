@@ -45,6 +45,7 @@ export class ActiveBatchesComponent implements OnInit, OnDestroy {
   /***** Lifecycle Hooks *****/
 
   ngOnInit() {
+    console.log('active batch component init');
     // retrieve active batches only
     this.processService.getBatchList(true)
       .pipe(takeUntil(this.destroy$))

@@ -195,7 +195,7 @@ export class ProcessPage implements OnInit, OnDestroy {
   **/
   getAlerts(): Alert[] {
     return this.selectedBatch.process.alerts.filter((alert: Alert) => {
-      return  alert.title === this.selectedBatch.process
+      return alert.title === this.selectedBatch.process
         .schedule[this.selectedBatch.process.currentStep].name;
     });
   }

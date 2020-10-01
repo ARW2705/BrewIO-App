@@ -25,7 +25,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
   navStack: string[] = [];
   user: User = null;
   _headerNavUpdate: any;
-  _removeLastInstanceOfStackByName: any;
 
   constructor(
     public events: Events,

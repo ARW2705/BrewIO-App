@@ -48,7 +48,7 @@ export class ConnectionProvider {
    * @return: none
   **/
   monitor(): void {
-    console.log('Begin monitoring', this.network.onConnect, Network);
+    console.log('Begin monitoring');
     this.network.onConnect()
       .subscribe((): void => {
         console.log('on connect');
